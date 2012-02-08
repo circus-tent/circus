@@ -1,5 +1,7 @@
 import zmq
 
+from circus.sig_handler import SysHandler
+
 
 class Controller(object):
     def __init__(self, endpoint, workers, timeout=1.):
@@ -10,6 +12,8 @@ class Controller(object):
         self.poller.register(self.socket, zmq.POLLIN)
         self.workers = workers
         self.timeout = timeout * 1000
+
+        self.sys_hdl = SysHandler(endpoint)
 
     def poll(self):
         try:
@@ -31,4 +35,8 @@ class Controller(object):
                     print "ignored messaged %s" % msg
 
     def terminate(self):
-        self.context.destroy(0)
+        self.sys_hdl.terminate()
+        try:
+            self.context.destroy(0)
+        except:
+            pass
