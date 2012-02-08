@@ -2,18 +2,31 @@ import errno
 import os
 from subprocess import Popen
 import sys
+import time
 
 from circus.controller import Controller
 
 
-class Worker(Popen):
+class Worker(object):
     # XXX will hold stats and other info
-    def __init__(self, cmd):
-        Popen.__init__(self, cmd.split())
+    def __init__(self, wid, cmd):
+        self.wid = str(wid)
+        self.cmd = cmd.replace('$WID', self.wid)
+        self._worker = Popen(self.cmd.split())
         self.started = time.time()
+
+    def poll(self):
+        return self._worker.poll()
+
+    def terminate(self):
+        return self._worker.terminate()
 
     def age(self):
         return time.time() - self.started
+
+    @property
+    def pid(self):
+        return self._worker.pid
 
 
 class Workers(object):
@@ -25,7 +38,7 @@ class Workers(object):
         self.warmup_delay = warmup_delay
         self.ctrl = Controller(endpoint, self, self.check_delay)
         self.pid = os.getpid()
-        self.worker_age = 0
+        self._worker_counter = 0
         self.workers = {}
         print "Starting master on pid %s" % self.pid
 
@@ -63,10 +76,10 @@ class Workers(object):
             self.spawn_worker()
 
     def spawn_worker(self):
-        self.worker_age += 1
-        worker = Worker(self.cmd.split())
+        self._worker_counter += 1
+        worker = Worker(self._worker_counter, self.cmd)
         print 'running worker pid %d' % worker.pid
-        self.workers[self.worker_age] = worker
+        self.workers[self._worker_counter] = worker
 
     # TODO: we should manage more workers here.
     def kill_worker(self, worker):
