@@ -1,11 +1,7 @@
 import errno
 import os
-import signal
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen
 import sys
-import time
-
-import zmq
 
 from circus.controller import Controller
 
@@ -20,8 +16,7 @@ class Workers(object):
         self.ctrl = Controller(endpoint, self, self.check_delay)
         self.pid = os.getpid()
         self.worker_age = 0
-        self.WORKERS = {}
-
+        self.workers = {}
         print "Starting master on pid %s" % self.pid
 
     def handle_reload(self):
@@ -38,32 +33,30 @@ class Workers(object):
             self.ctrl.poll()
 
     def reap_workers(self):
-        for wid, worker in self.WORKERS.items():
+        for wid, worker in self.workers.items():
             if worker.poll() is not None:
-                self.WORKERS.pop(wid)
+                self.workers.pop(wid)
 
     def manage_workers(self):
-        if len(self.WORKERS.keys()) < self.num_workers:
+        if len(self.workers.keys()) < self.num_workers:
             self.spawn_workers()
 
-        workers = self.WORKERS.keys()
+        workers = self.workers.keys()
         workers.sort()
         while len(workers) > self.num_workers:
             wid = workers.pop(0)
-            worker = self.WORKERS.pop(wid)
+            worker = self.workers.pop(wid)
             self.kill_worker(worker)
 
-
     def spawn_workers(self):
-        for i in range(self.num_workers - len(self.WORKERS.keys())):
+        for i in range(self.num_workers - len(self.workers.keys())):
             self.spawn_worker()
 
     def spawn_worker(self):
         self.worker_age += 1
-        worker = Popen(self.cmd.split())   #, stdout=PIPE, stderr=PIPE)
+        worker = Popen(self.cmd.split())
         print 'running worker pid %d' % worker.pid
-        self.WORKERS[self.worker_age] = worker
-
+        self.workers[self.worker_age] = worker
 
     # TODO: we should manage more workers here.
     def kill_worker(self, worker):
@@ -71,9 +64,9 @@ class Workers(object):
         worker.terminate()
 
     def kill_workers(self):
-        for wid in self.WORKERS.keys():
+        for wid in self.workers.keys():
             try:
-                worker = self.WORKERS.pop(wid)
+                worker = self.workers.pop(wid)
                 self.kill_worker(worker)
             except OSError, e:
                 if e.errno != errno.ESRCH:
@@ -83,8 +76,6 @@ class Workers(object):
         self.terminate()
         sys.exit(exit_code)
 
-
     def terminate(self):
         self.kill_workers()
         self.ctrl.terminate()
-

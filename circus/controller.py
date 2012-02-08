@@ -1,6 +1,6 @@
 import zmq
 
-from circus.sig_handler import SysHandler
+from circus.sighandler import SysHandler
 
 
 class Controller(object):

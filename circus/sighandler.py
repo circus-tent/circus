@@ -1,6 +1,6 @@
-import sys
 import signal
 import zmq
+
 
 class SysHandler(object):
 
@@ -41,6 +41,5 @@ class SysHandler(object):
         try:
             self.ctx.destroy(0)
         except:
+            # XXX log
             pass
-
-

@@ -1,7 +1,7 @@
-from circus.workers import Workers
 import argparse
 import ConfigParser
 
+from circus.workers import Workers
 
 
 def main():
