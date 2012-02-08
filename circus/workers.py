@@ -1,16 +1,15 @@
+import errno
+import os
 from subprocess import Popen, PIPE, STDOUT
 import sys
-import os
 import time
 
 from circus.controller import Controller
 
 
-class Workers(list):
+class Workers(object):
 
     WORKERS = []
-    PIPE = []
-
 
     def __init__(self, num_workers, cmd, check_delay, warmup_delay, endpoint):
         self.cmd = cmd
@@ -57,11 +56,8 @@ class Workers(list):
             self.spawn_worker()
 
     def spawn_worker(self):
-        index = len(self)
-        run = self.cmd % index
-        print run
-        worker = Popen(run.split())   #, stdout=PIPE, stderr=PIPE)
-        print 'running worker pid %d' % res.pid
+        worker = Popen(self.cmd.split())   #, stdout=PIPE, stderr=PIPE)
+        print 'running worker pid %d' % worker.pid
         self.WORKERS.append(worker)
 
 
@@ -69,9 +65,14 @@ class Workers(list):
     def kill_worker(self, worker):
         worker.terminate()
 
-    def kill_workers(self, worker):
+    def kill_workers(self):
         for worker in self.WORKERS:
-            worker.terminate()
+            try:
+                self.kill_worker(worker)
+            except OSError, e:
+                if e.errno != errno.ESRCH:
+                    raise
+
 
 
     def halt(self, exit_code=0):
