@@ -18,14 +18,14 @@ class Controller(object):
             return
 
         for socket in events:
-            msg = socket.recv()
+            msg = socket.recv() or ""
+            msg = msg.lower()
 
-            if msg == 'NUMWORKERS':
+            if msg == 'numworkers':
                 socket.send(str(len(self.workers.WORKERS)))
             else:
                 try:
-                    handler = getattr(self.workers, "handle_%s" %
-                            msg.lower())
+                    handler = getattr(self.workers, "handle_%s" % msg)
                     handler()
                 except AttributeError:
                     print "ignored messaged %s" % msg
