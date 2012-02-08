@@ -24,7 +24,8 @@ class Controller(object):
                 socket.send(str(len(self.workers.WORKERS)))
             else:
                 try:
-                    handler = getattr(self.workers, "handle_%s" % msg)
+                    handler = getattr(self.workers, "handle_%s" %
+                            msg.lower())
                     handler()
                 except AttributeError:
                     print "ignored messaged %s" % msg
