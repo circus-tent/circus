@@ -6,6 +6,16 @@ import sys
 from circus.controller import Controller
 
 
+class Worker(Popen):
+    # XXX will hold stats and other info
+    def __init__(self, cmd):
+        Popen.__init__(self, cmd.split())
+        self.started = time.time()
+
+    def age(self):
+        return time.time() - self.started
+
+
 class Workers(object):
 
     def __init__(self, num_workers, cmd, check_delay, warmup_delay, endpoint):
@@ -54,7 +64,7 @@ class Workers(object):
 
     def spawn_worker(self):
         self.worker_age += 1
-        worker = Popen(self.cmd.split())
+        worker = Worker(self.cmd.split())
         print 'running worker pid %d' % worker.pid
         self.workers[self.worker_age] = worker
 
