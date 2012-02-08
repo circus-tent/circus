@@ -13,7 +13,7 @@ class Workers(list):
         self.size = size
         self.check_delay = check_delay
         self.warmup_delay = warmup_delay
-        self.ctrl = Controller(endpoint, self)
+        self.ctrl = Controller(endpoint, self, self.check_delay)
 
     def _run(self):
         index = len(self)
@@ -31,7 +31,6 @@ class Workers(list):
         while True:
             self.check()
             self.ctrl.poll()
-            time.sleep(check_delay)
 
     def check(self):
         for worker in self:
