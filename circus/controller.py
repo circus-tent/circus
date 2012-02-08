@@ -22,7 +22,7 @@ class Controller(object):
             msg = msg.lower()
 
             if msg == 'numworkers':
-                socket.send(str(len(self.workers.WORKERS)))
+                socket.send(str(len(self.workers.WORKERS.keys())))
             else:
                 try:
                     handler = getattr(self.workers, "handle_%s" % msg)
