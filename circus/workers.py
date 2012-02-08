@@ -3,14 +3,17 @@ import sys
 import os
 import time
 
+from circus.controller import Controller
+
 
 class Workers(list):
 
-    def __init__(self, size, cmd, check_delay, warmup_delay):
+    def __init__(self, size, cmd, check_delay, warmup_delay, endpoint):
         self.cmd = cmd
         self.size = size
         self.check_delay = check_delay
         self.warmup_delay = warmup_delay
+        self.ctrl = Controller(endpoint, self)
 
     def _run(self):
         index = len(self)
@@ -27,6 +30,7 @@ class Workers(list):
 
         while True:
             self.check()
+            self.ctrl.poll()
             time.sleep(check_delay)
 
     def check(self):

@@ -8,6 +8,7 @@ setup(name='circus',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
+      install_requires=['pyzmq'],
       entry_points="""
       [console_scripts]
       circus = circus:main

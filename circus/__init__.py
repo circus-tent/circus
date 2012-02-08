@@ -14,8 +14,9 @@ def main():
     cmd = cfg.get('circus', 'cmd') + ' ' + cfg.get('circus', 'args')
     check = int(cfg.get('circus', 'check_delay'))
     warmup = int(cfg.get('circus', 'warmup_delay'))
-    size = int(cfg.get('circus', 'num-workers'),)
-    workers = Workers(size, cmd, check, warmup)
+    size = int(cfg.get('circus', 'num-workers'))
+    endpoint = cfg.get('circus', 'endpoint')
+    workers = Workers(size, cmd, check, warmup, endpoint)
     try:
         workers.run()
     finally:
