@@ -24,3 +24,6 @@ class Controller(object):
                 socket.send(str(len(self.workers)))
             else:
                 raise NotImplementedError()
+
+    def terminate(self):
+        self.context.destroy(0)

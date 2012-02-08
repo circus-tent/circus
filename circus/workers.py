@@ -39,10 +39,10 @@ class Workers(list):
                 # respawn a worker
                 print 'respawning!'
                 self.remove(worker)
-                self.append(run_worker(cmd))
+                self.append(self._run())
 
     def terminate(self):
         for worker in self:
             worker.terminate()
-
+        self.ctrl.terminate()
 
