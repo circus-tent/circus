@@ -23,7 +23,11 @@ class Controller(object):
             if msg == 'NUMWORKERS':
                 socket.send(str(len(self.workers.WORKERS)))
             else:
-                raise NotImplementedError()
+                try:
+                    handler = getattr(self.workers, "handle_%s" % msg)
+                    handler()
+                except AttributeError:
+                    print "ignored messaged %s" % msg
 
     def terminate(self):
         self.context.destroy(0)

@@ -1,8 +1,11 @@
 import errno
 import os
+import signal
 from subprocess import Popen, PIPE, STDOUT
 import sys
 import time
+
+import zmq
 
 from circus.controller import Controller
 
@@ -11,14 +14,51 @@ class Workers(object):
 
     WORKERS = []
 
+    SIGNALS = map(
+        lambda x: getattr(signal, "SIG%s" % x),
+        "HUP QUIT INT TERM WINCH".split()
+    )
+
+    SIG_NAMES = dict(
+        (getattr(signal, name), name[3:].lower()) for name in dir(signal)
+    )
+
     def __init__(self, num_workers, cmd, check_delay, warmup_delay, endpoint):
         self.cmd = cmd
         self.num_workers = num_workers
         self.check_delay = check_delay
         self.warmup_delay = warmup_delay
         self.ctrl = Controller(endpoint, self, self.check_delay)
-        self.running = False
+        self.pid = os.getpid()
 
+        # set zmq socket
+        self.ctx = zmq.Context()
+        self.skt = self.ctx.socket(zmq.REQ)
+        self.skt.connect(endpoint)
+
+        # init signals
+        map(lambda s: signal.signal(s, self.signal), self.SIGNALS)
+        signal.signal(signal.SIGCHLD, self.handle_chld)
+
+        print "Starting master on pid %s" % self.pid
+
+    def signal(self, sig, frame):
+        if sig in self.SIG_NAMES:
+            signame = self.SIG_NAMES.get(sig)
+            self.skt.send(signame)
+
+
+    def handle_chld(self, *args):
+        pass
+
+    def handle_hup(self):
+        pass
+
+    def handle_quit(self):
+        self.halt()
+
+    def handle_int(self):
+        self.halt()
 
     def run(self):
         self.manage_workers()
@@ -72,8 +112,6 @@ class Workers(object):
             except OSError, e:
                 if e.errno != errno.ESRCH:
                     raise
-
-
 
     def halt(self, exit_code=0):
         self.terminate()
