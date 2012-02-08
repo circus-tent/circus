@@ -8,44 +8,79 @@ from circus.controller import Controller
 
 class Workers(list):
 
-    def __init__(self, size, cmd, check_delay, warmup_delay, endpoint):
+    WORKERS = []
+    PIPE = []
+
+
+    def __init__(self, num_workers, cmd, check_delay, warmup_delay, endpoint):
         self.cmd = cmd
-        self.size = size
+        self.num_workers = num_workers
         self.check_delay = check_delay
         self.warmup_delay = warmup_delay
         self.ctrl = Controller(endpoint, self, self.check_delay)
         self.running = False
 
-    def _run(self):
+
+    def run(self):
+        self.manage_workers()
+        while True:
+            try:
+                self.reap_workers()
+                self.manage_workers()
+
+                self.ctrl.poll()
+            except KeyboardInterrupt:
+                self.halt()
+            except SystemExit:
+                raise
+
+
+    def reap_workers(self):
+        for worker in self.WORKERS:
+            if worker.poll() is not None:
+                self.WORKERS.pop(worker)
+
+    def manage_workers(self):
+        if len(self.WORKERS) < self.num_workers:
+            self.spawn_workers()
+
+        workers = self.WORKERS
+
+        workers.sort()
+        while len(workers) > self.num_workers:
+            worker = workers.pop(0)
+            self.kill_worker(worker)
+
+
+    def spawn_workers(self):
+        for i in range(self.num_workers - len(self.WORKERS)):
+            self.spawn_worker()
+
+    def spawn_worker(self):
         index = len(self)
         run = self.cmd % index
         print run
-        res = Popen(run.split())   #, stdout=PIPE, stderr=PIPE)
+        worker = Popen(run.split())   #, stdout=PIPE, stderr=PIPE)
         print 'running worker pid %d' % res.pid
-        return res
+        self.WORKERS.append(worker)
 
-    def run(self):
-        self.running = True
 
-        for i in range(self.size):
-            self.append(self._run())
-            time.sleep(self.warmup_delay)
+    # TODO: we should manage more workers here.
+    def kill_worker(self, worker):
+        worker.terminate()
 
-        while self.running:
-            self.check()
-            self.ctrl.poll()
+    def kill_workers(self, worker):
+        for worker in self.WORKERS:
+            worker.terminate()
 
-    def check(self):
-        for worker in self:
-            res = worker.poll()
-            if res is not None:
-                # respawn a worker
-                print 'respawning!'
-                self.remove(worker)
-                self.append(self._run())
+
+    def halt(self, exit_code=0):
+        self.terminate()
+        sys.exit(exit_code)
+
 
     def terminate(self):
-        self.running = False
-        for worker in self:
-            worker.terminate()
+        self.kill_workers()
         self.ctrl.terminate()
+
+

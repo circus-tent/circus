@@ -21,7 +21,7 @@ class Controller(object):
             msg = socket.recv()
 
             if msg == 'NUMWORKERS':
-                socket.send(str(len(self.workers)))
+                socket.send(str(len(self.workers.WORKERS)))
             else:
                 raise NotImplementedError()
 
