@@ -84,10 +84,11 @@ class Workers(object):
         if len(self.WORKERS.keys()) < self.num_workers:
             self.spawn_workers()
 
-        workers = self.WORKERS.items()
-        workers.sort(key=lambda w: w[0])
+        workers = self.WORKERS.keys()
+        workers.sort()
         while len(workers) > self.num_workers:
-            worker = workers.pop(0)
+            wid = workers.pop(0)
+            worker = self.WORKERS.pop(wid)
             self.kill_worker(worker)
 
 
