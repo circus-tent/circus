@@ -1,0 +1,45 @@
+from subprocess import Popen, PIPE, STDOUT
+import sys
+import os
+import time
+
+
+class Workers(list):
+
+    def __init__(self, size, cmd, check_delay, warmup_delay):
+        self.cmd = cmd
+        self.size = size
+        self.check_delay = check_delay
+        self.warmup_delay = warmup_delay
+
+    def _run(self):
+        index = len(self)
+        run = self.cmd % index
+        print run
+        res = Popen(run.split())   #, stdout=PIPE, stderr=PIPE)
+        print 'running worker pid %d' % res.pid
+        return res
+
+    def run(self):
+        for i in range(self.size):
+            self.append(self._run())
+            time.sleep(self.warmup_delay)
+
+        while True:
+            self.check()
+            time.sleep(check_delay)
+
+    def check(self):
+        for worker in self:
+            res = worker.poll()
+            if res is not None:
+                # respawn a worker
+                print 'respawning!'
+                self.remove(worker)
+                self.append(run_worker(cmd))
+
+    def terminate(self):
+        for worker in self:
+            worker.terminate()
+
+
