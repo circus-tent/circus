@@ -11,5 +11,5 @@ setup(name='circus',
       install_requires=['pyzmq'],
       entry_points="""
       [console_scripts]
-      circus = circus:main
+      circusd = circus:main
       """)
