@@ -19,11 +19,11 @@ class SysHandler(object):
             "quit": "quit"
     }
 
-    def __init__(self, endpoint):
+    def __init__(self):
         # set zmq socket
         self.ctx = zmq.Context()
         self.skt = self.ctx.socket(zmq.REQ)
-        self.skt.connect(endpoint)
+        self.skt.connect("ipc://workers")
 
         # init signals
         map(lambda s: signal.signal(s, self.signal), self.SIGNALS)

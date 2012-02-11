@@ -6,13 +6,21 @@ from circus.sighandler import SysHandler
 class Controller(object):
     def __init__(self, endpoint, workers, timeout=1.):
         self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.REP)
-        self.socket.bind(endpoint)
+
+        self.skt = self.context.socket(zmq.REP)
+        self.skt.bind(endpoint)
+
+        # bind the socket to internal ipc.
+        self.skt.bind("ipc://workers")
+
         self.poller = zmq.Poller()
-        self.poller.register(self.socket, zmq.POLLIN)
+        self.poller.register(self.skt, zmq.POLLIN)
+
         self.workers = workers
         self.timeout = timeout * 1000
-        self.sys_hdl = SysHandler(endpoint)
+
+        # start the sys handler
+        self.sys_hdl = SysHandler()
 
     def poll(self):
         try:
