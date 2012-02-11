@@ -28,35 +28,17 @@ class Worker(object):
     def pid(self):
         return self._worker.pid
 
+class Program(object):
 
-class Workers(object):
-
-    def __init__(self, num_workers, cmd, check_delay, warmup_delay, endpoint):
-        self.cmd = cmd
+    def __init__(self, cmd, num_workers, warmup_delay):
         self.num_workers = num_workers
-        self.check_delay = check_delay
         self.warmup_delay = warmup_delay
-        self.ctrl = Controller(endpoint, self, self.check_delay)
-        self.pid = os.getpid()
+        self.cmd = cmd
         self._worker_counter = 0
         self.workers = {}
-        print "Starting master on pid %s" % self.pid
 
     def __len__(self):
         return len(self.workers)
-
-    def handle_reload(self):
-        pass
-
-    def handle_quit(self):
-        self.halt()
-
-    def run(self):
-        self.manage_workers()
-        while True:
-            self.reap_workers()
-            self.manage_workers()
-            self.ctrl.poll()
 
     def reap_workers(self):
         for wid, worker in self.workers.items():
@@ -77,6 +59,7 @@ class Workers(object):
     def spawn_workers(self):
         for i in range(self.num_workers - len(self.workers.keys())):
             self.spawn_worker()
+            time.sleep(self.warmup_delay)
 
     def spawn_worker(self):
         self._worker_counter += 1
@@ -98,10 +81,43 @@ class Workers(object):
                 if e.errno != errno.ESRCH:
                     raise
 
+class Manager(object):
+
+    def __init__(self, programs, check_delay, endpoint):
+        self.programs = programs
+        self.check_delay = check_delay
+        self.ctrl = Controller(endpoint, self, self.check_delay)
+        self.pid = os.getpid()
+        print "Starting master on pid %s" % self.pid
+
+    def handle_reload(self):
+        pass
+
+    def handle_quit(self):
+        self.halt()
+
+    def run(self):
+        # launch workers
+        for program in self.programs:
+            program.manage_workers()
+
+        while True:
+            # manage and reap workers
+            for program in self.programs:
+                program.reap_workers()
+                program.manage_workers()
+
+            # wait for the controller
+            self.ctrl.poll()
+
+
     def halt(self, exit_code=0):
         self.terminate()
         sys.exit(exit_code)
 
     def terminate(self):
-        self.kill_workers()
+        # kill workers
+        for program in self.programs:
+            program.kill_workers()
+
         self.ctrl.terminate()
