@@ -4,7 +4,7 @@ from circus.sighandler import SysHandler
 
 
 class Controller(object):
-    def __init__(self, endpoint, workers, timeout=1.):
+    def __init__(self, endpoint, workers, timeout=1.0):
         self.context = zmq.Context()
 
         self.skt = self.context.socket(zmq.REP)
