@@ -18,10 +18,8 @@ class Controller(object):
         if not ipc_prefix:
             ipc_prefix = tempfile.gettempdir()
         ipc_path = os.path.join(os.path.dirname(ipc_prefix), ipc_name)
-
         self.skt.bind("ipc://%s" % ipc_path)
 
-        print "ipc path %s" % ipc_path
         self.poller = zmq.Poller()
         self.poller.register(self.skt, zmq.POLLIN)
 
