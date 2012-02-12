@@ -22,7 +22,12 @@ def main():
 
     check = int(cfg.get('circus', 'check_delay'))
     endpoint = cfg.get('circus', 'endpoint')
-    manager = Manager(programs, check, endpoint)
+    if cfg.has_option('circus', 'ipc_prefix'):
+        ipc_prefix = cfg.get('circus', 'ipc_prefix')
+    else:
+        ipc_prefix = None
+
+    manager = Manager(programs, check, endpoint, ipc_prefix)
     try:
         manager.run()
     finally:

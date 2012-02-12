@@ -83,10 +83,12 @@ class Program(object):
 
 class Manager(object):
 
-    def __init__(self, programs, check_delay, endpoint):
+    def __init__(self, programs, check_delay, endpoint, ipc_path):
         self.programs = programs
         self.check_delay = check_delay
-        self.ctrl = Controller(endpoint, self, self.check_delay)
+        self.ipc_path = ipc_path
+        self.ctrl = Controller(endpoint, self, self.check_delay,
+                self.ipc_path)
         self.pid = os.getpid()
         print "Starting master on pid %s" % self.pid
 
