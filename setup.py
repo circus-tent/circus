@@ -12,4 +12,5 @@ setup(name='circus',
       entry_points="""
       [console_scripts]
       circusd = circus:main
+      circusctl = circus.client:main
       """)

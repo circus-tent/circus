@@ -42,6 +42,9 @@ class Workers(object):
         self.workers = {}
         print "Starting master on pid %s" % self.pid
 
+    def __len__(self):
+        return len(self.workers)
+
     def handle_reload(self):
         pass
 

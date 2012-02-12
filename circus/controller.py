@@ -12,7 +12,6 @@ class Controller(object):
         self.poller.register(self.socket, zmq.POLLIN)
         self.workers = workers
         self.timeout = timeout * 1000
-
         self.sys_hdl = SysHandler(endpoint)
 
     def poll(self):
@@ -26,7 +25,7 @@ class Controller(object):
             msg = msg.lower()
 
             if msg == 'numworkers':
-                socket.send(str(len(self.workers.WORKERS.keys())))
+                socket.send(str(len(self.workers)))
             else:
                 try:
                     handler = getattr(self.workers, "handle_%s" % msg)
