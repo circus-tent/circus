@@ -1,6 +1,5 @@
 import os
 import tempfile
-from uuid import uuid4
 import zmq
 
 from circus.sighandler import SysHandler
@@ -14,7 +13,7 @@ class Controller(object):
         self.skt.bind(endpoint)
 
         # bind the socket to internal ipc.
-        ipc_name = "circus-ipc-%s" % uuid4().hex
+        ipc_name = "circus-ipc-%s" % os.getpid()
         if not ipc_prefix:
             ipc_prefix = tempfile.gettempdir()
         ipc_path = os.path.join(os.path.dirname(ipc_prefix), ipc_name)
