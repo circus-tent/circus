@@ -42,6 +42,8 @@ class Controller(object):
             if len(msg_parts) == 1: # manager commands
                 if msg == 'numworkers':
                     socket.send(str(self.manager.num_workers()))
+                elif msg == 'programs':
+                    socket.send(self.manager.list_programs())
                 else:
                     try:
                         handler = getattr(self.manager, "handle_%s" % msg)
@@ -72,9 +74,6 @@ class Controller(object):
                                 (msg, str(e)))
                 except IndexError:
                     socket.send("program %s not found" % msg_parts[1])
-
-
-
 
     def terminate(self):
         self.sys_hdl.terminate()

@@ -129,6 +129,9 @@ class Manager(object):
     def get_program(self, name):
         return self._programs_names[name]
 
+    def list_programs(self):
+        return ",".join(self._programs_names.keys())
+
     def handle_reload(self):
         return "ok"
 
