@@ -9,11 +9,25 @@ from circus.trainer import Trainer
 from circus.show import Show
 
 
+class DefaultConfigParser(ConfigParser.ConfigParser):
+    def dget(self, section, option, default=None, type=str):
+        if not self.has_option(section, option):
+            return default
+        if type is str:
+            return self.get(section, option)
+        elif type is int:
+            return self.getint(section, option)
+        elif type is bool:
+            return self.getboolean(section, option)
+        else:
+            raise NotImplementedError()
+
+
 def main():
     parser = argparse.ArgumentParser(description='Run some shows.')
     parser.add_argument('config', help='configuration file')
     args = parser.parse_args()
-    cfg = ConfigParser.ConfigParser()
+    cfg = DefaultConfigParser()
     cfg.read(args.config)
 
     # Initialize shows to manage
@@ -24,25 +38,17 @@ def main():
             cmd = cfg.get(section, 'cmd') + ' ' + cfg.get(section, 'args')
             num_flies = cfg.getint(section, 'num_flies')
             warmup_delay = cfg.getint(section, 'warmup_delay')
-            if cfg.has_option(section, 'working_dir'):
-                working_dir = cfg.get(section, 'working_dir')
-            else:
-                working_dir = os.getcwd()
-            if cfg.has_option(section, 'shell'):
-                shell = cfg.getboolean(section, 'shell')
-            else:
-                shell = False
 
+            working_dir = cfg.dget(section, 'working_dir', os.getcwd())
+            shell = cfg.dget(section, 'shell', False, bool)
+            uid = cfg.dget(section, 'uid')
+            gid = cfg.dget(section, 'gid')
             shows.append(Show(name, cmd, num_flies, warmup_delay, working_dir,
-                              shell))
+                              shell, uid, gid))
 
-    check = int(cfg.get('circus', 'check_delay'))
+    check = cfg.getint('circus', 'check_delay')
     endpoint = cfg.get('circus', 'endpoint')
-    if cfg.has_option('circus', 'ipc_prefix'):
-        ipc_prefix = cfg.get('circus', 'ipc_prefix')
-    else:
-        ipc_prefix = None
-
+    ipc_prefix = cfg.dget('circus', 'ipc_prefix')
     trainer = Trainer(shows, check, endpoint, ipc_prefix)
     try:
         trainer.run()
