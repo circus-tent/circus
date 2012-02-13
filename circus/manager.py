@@ -136,7 +136,16 @@ class Manager(object):
 
     def handle_quit(self):
         self.halt()
-        return "ok"
+
+    def handle_winch(self):
+        "SIGWINCH handling"
+        if os.getppid() == 1 or os.getpgrp() != os.getpid():
+            for program in self.programs:
+                program.num_workers = 0
+                program.kill_workers()
+        else:
+            # SIGWINCH ignored. Not daemonized
+            pass
 
     def num_workers(self):
         l = 0
