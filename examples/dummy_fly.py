@@ -4,7 +4,7 @@ import sys
 import time
 
 
-class DummyWorker(object):
+class DummyFly(object):
 
     def __init__(self, wid):
         self.wid = wid
@@ -23,10 +23,10 @@ class DummyWorker(object):
         return
 
     def run(self):
-        print "hello, worker #%s (pid: %s) is alive" % (self.wid, os.getpid())
+        print "hello, fly #%s (pid: %s) is alive" % (self.wid, os.getpid())
 
         while self.alive:
             time.sleep(0.1)
 
 if __name__ == "__main__":
-    DummyWorker(sys.argv[1]).run()
+    DummyFly(sys.argv[1]).run()

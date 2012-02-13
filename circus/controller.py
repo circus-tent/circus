@@ -6,7 +6,7 @@ from circus.sighandler import SysHandler
 
 
 class Controller(object):
-    def __init__(self, endpoint, manager, timeout=1.0, ipc_prefix=None):
+    def __init__(self, endpoint, trainer, timeout=1.0, ipc_prefix=None):
         self.context = zmq.Context()
 
         self.skt = self.context.socket(zmq.REP)
@@ -22,7 +22,7 @@ class Controller(object):
         self.poller = zmq.Poller()
         self.poller.register(self.skt, zmq.POLLIN)
 
-        self.manager = manager
+        self.trainer = trainer
         self.timeout = timeout * 1000
 
         # start the sys handler
@@ -49,7 +49,7 @@ class Controller(object):
                 # COMMAND PROGRAM ARGS
 
                 try:
-                    program = self.manager.get_program(msg_parts[1])
+                    program = self.trainer.get_program(msg_parts[1])
                     cmd = msg_parts[0].lower()
 
                     if len(msg_parts)> 2:
@@ -69,19 +69,18 @@ class Controller(object):
                 except IndexError:
                     socket.send("error: program %s not found" % msg_parts[1])
             else:
-                # manager commands
+                # trainer commands
                 if msg == 'numworkers':
-                    socket.send(str(self.manager.num_workers()))
+                    socket.send(str(self.trainer.num_workers()))
                 elif msg == 'programs':
-                    socket.send(self.manager.list_programs())
+                    socket.send(self.trainer.list_programs())
                 else:
                     try:
-                        handler = getattr(self.manager, "handle_%s" % msg)
+                        handler = getattr(self.trainer, "handle_%s" % msg)
                         ret = handler()
                         socket.send(ret)
                     except AttributeError:
                         socket.send("error: ignored messaged %r" % msg)
-
 
     def terminate(self):
         self.sys_hdl.terminate()
