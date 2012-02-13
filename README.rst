@@ -11,6 +11,6 @@ Test it
 
 To test it run the following command:
 
-    $ cd examples && circus circus.ini
+    $ cd examples && circusd circus.ini
 
 It should launch 5 workers.
