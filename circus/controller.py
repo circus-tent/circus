@@ -55,7 +55,7 @@ class Controller(object):
                     program = self.trainer.get_program(msg_parts[1])
                     cmd = msg_parts[0].lower()
 
-                    if len(msg_parts)> 2:
+                    if len(msg_parts) > 2:
                         args = msg_parts[2:]
                     else:
                         args = []

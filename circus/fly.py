@@ -24,6 +24,3 @@ class Fly(object):
     @property
     def pid(self):
         return self._worker.pid
-
-
-
