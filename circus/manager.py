@@ -98,6 +98,12 @@ class Manager(object):
     def handle_quit(self):
         self.halt()
 
+    def num_workers(self):
+        l = 0
+        for program in self.programs:
+            l += len(program)
+        return l
+
     def run(self):
         # launch workers
         for program in self.programs:
