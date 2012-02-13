@@ -30,7 +30,8 @@ class Worker(object):
 
 class Program(object):
 
-    def __init__(self, cmd, num_workers, warmup_delay):
+    def __init__(self, name, cmd, num_workers, warmup_delay):
+        self.name = name
         self.num_workers = num_workers
         self.warmup_delay = warmup_delay
         self.cmd = cmd
@@ -64,7 +65,7 @@ class Program(object):
     def spawn_worker(self):
         self._worker_counter += 1
         worker = Worker(self._worker_counter, self.cmd)
-        print 'running worker pid %d' % worker.pid
+        print 'running %s worker [pid %d]' % (self.name, worker.pid)
         self.workers[self._worker_counter] = worker
 
     # TODO: we should manage more workers here.

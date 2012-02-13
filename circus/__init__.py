@@ -15,10 +15,11 @@ def main():
     programs = []
     for section in cfg.sections():
         if section.startswith("program:"):
+            name = section.split("program:", 1)[1]
             cmd = cfg.get(section, 'cmd') + ' ' + cfg.get(section, 'args')
             num_workers = int(cfg.get(section, 'num-workers'))
             warmup_delay = int(cfg.get(section, 'warmup_delay'))
-            programs.append(Program(cmd, num_workers, warmup_delay))
+            programs.append(Program(name, cmd, num_workers, warmup_delay))
 
     check = int(cfg.get('circus', 'check_delay'))
     endpoint = cfg.get('circus', 'endpoint')
