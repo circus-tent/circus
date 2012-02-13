@@ -1,18 +1,32 @@
+import os
+import tempfile
 import zmq
 
 from circus.sighandler import SysHandler
 
 
 class Controller(object):
-    def __init__(self, endpoint, workers, timeout=1.):
+    def __init__(self, endpoint, manager, timeout=1.0, ipc_prefix=None):
         self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.REP)
-        self.socket.bind(endpoint)
+
+        self.skt = self.context.socket(zmq.REP)
+        self.skt.bind(endpoint)
+
+        # bind the socket to internal ipc.
+        ipc_name = "circus-ipc-%s" % os.getpid()
+        if not ipc_prefix:
+            ipc_prefix = tempfile.gettempdir()
+        ipc_path = os.path.join(os.path.dirname(ipc_prefix), ipc_name)
+        self.skt.bind("ipc://%s" % ipc_path)
+
         self.poller = zmq.Poller()
-        self.poller.register(self.socket, zmq.POLLIN)
-        self.workers = workers
+        self.poller.register(self.skt, zmq.POLLIN)
+
+        self.manager = manager
         self.timeout = timeout * 1000
-        self.sys_hdl = SysHandler(endpoint)
+
+        # start the sys handler
+        self.sys_hdl = SysHandler(ipc_path)
 
     def poll(self):
         try:
@@ -24,14 +38,42 @@ class Controller(object):
             msg = socket.recv() or ""
             msg = msg.lower()
 
-            if msg == 'numworkers':
-                socket.send(str(len(self.workers)))
-            else:
+            msg_parts = msg.split(" ")
+            if len(msg_parts) == 1: # manager commands
+                if msg == 'numworkers':
+                    socket.send(str(self.manager.num_workers()))
+                elif msg == 'programs':
+                    socket.send(self.manager.list_programs())
+                else:
+                    try:
+                        handler = getattr(self.manager, "handle_%s" % msg)
+                        ret = handler()
+                        socket.send(ret)
+                    except AttributeError:
+                        socket.send("error: ignored messaged %s" % msg)
+            else: # program command
+                # a program command passed with the format
+                # COMMAND PROGRAM ARGS
                 try:
-                    handler = getattr(self.workers, "handle_%s" % msg)
-                    handler()
-                except AttributeError:
-                    print "ignored messaged %s" % msg
+                    program = self.manager.get_program(msg_parts[1])
+                    cmd = msg_parts[0].lower()
+
+                    if len(msg_parts) > 2:
+                        args = msg_parts[2:]
+                    else:
+                        args = []
+
+                    try:
+                        handler = getattr(program, "handle_%s" % cmd)
+                        ret = handler(*args)
+                        socket.send(ret)
+                    except AttributeError:
+                        socket.send("error: ignored messaged %s" % msg)
+                    except Exception, e:
+                        socket.send("error: command '%s': %s" %
+                                (msg, str(e)))
+                except IndexError:
+                    socket.send("error: program %s not found" % msg_parts[1])
 
     def terminate(self):
         self.sys_hdl.terminate()
