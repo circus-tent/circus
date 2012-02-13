@@ -6,10 +6,13 @@ import time
 
 
 class Fly(object):
-    def __init__(self, wid, cmd):
+    def __init__(self, wid, cmd, wdir, shell):
         self.wid = str(wid)
+        self.wdir = wdir
+        self.shell = shell
         self.cmd = cmd.replace('$WID', self.wid)
-        self._worker = Popen(self.cmd.split())
+        print self.cmd
+        self._worker = Popen(self.cmd.split(), cwd=self.wdir, shell=shell)
         self.started = time.time()
 
     def poll(self):

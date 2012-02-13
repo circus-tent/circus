@@ -10,13 +10,16 @@ from circus import logger
 
 class Show(object):
 
-    def __init__(self, name, cmd, num_flies, warmup_delay):
+    def __init__(self, name, cmd, num_flies, warmup_delay, working_dir,
+                 shell):
         self.name = name
         self.num_flies = num_flies
         self.warmup_delay = warmup_delay
         self.cmd = cmd
         self._fly_counter = 0
+        self.working_dir = working_dir
         self.flies = {}
+        self.shell = shell
 
     def __len__(self):
         return len(self.flies)
@@ -47,7 +50,7 @@ class Show(object):
 
     def spawn_fly(self):
         self._fly_counter += 1
-        fly = Fly(self._fly_counter, self.cmd)
+        fly = Fly(self._fly_counter, self.cmd, self.working_dir, self.shell)
         logger.info('running %s fly [pid %d]' % (self.name, fly.pid))
         self.flies[self._fly_counter] = fly
 
