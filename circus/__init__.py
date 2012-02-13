@@ -1,7 +1,7 @@
 import argparse
 import ConfigParser
 
-from circus.workers import Workers
+from circus.manager import Manager, Program
 
 
 def main():
@@ -10,16 +10,29 @@ def main():
     args = parser.parse_args()
     cfg = ConfigParser.ConfigParser()
     cfg.read(args.config)
-    cmd = cfg.get('circus', 'cmd') + ' ' + cfg.get('circus', 'args')
+
+    # Initialize programs to manage
+    programs = []
+    for section in cfg.sections():
+        if section.startswith("program:"):
+            name = section.split("program:", 1)[1]
+            cmd = cfg.get(section, 'cmd') + ' ' + cfg.get(section, 'args')
+            num_workers = int(cfg.get(section, 'num-workers'))
+            warmup_delay = int(cfg.get(section, 'warmup_delay'))
+            programs.append(Program(name, cmd, num_workers, warmup_delay))
+
     check = int(cfg.get('circus', 'check_delay'))
-    warmup = int(cfg.get('circus', 'warmup_delay'))
-    size = int(cfg.get('circus', 'num-workers'))
     endpoint = cfg.get('circus', 'endpoint')
-    workers = Workers(size, cmd, check, warmup, endpoint)
+    if cfg.has_option('circus', 'ipc_prefix'):
+        ipc_prefix = cfg.get('circus', 'ipc_prefix')
+    else:
+        ipc_prefix = None
+
+    manager = Manager(programs, check, endpoint, ipc_prefix)
     try:
-        workers.run()
+        manager.run()
     finally:
-        workers.terminate()
+        manager.terminate()
 
 
 if __name__ == '__main__':

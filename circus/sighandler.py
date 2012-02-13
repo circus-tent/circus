@@ -16,14 +16,15 @@ class SysHandler(object):
     CMD_MAP = {
             "hup": "reload",
             "int": "quit",
+            "term": "quit",
             "quit": "quit"
     }
 
-    def __init__(self, endpoint):
+    def __init__(self, ipc_path):
         # set zmq socket
         self.ctx = zmq.Context()
         self.skt = self.ctx.socket(zmq.REQ)
-        self.skt.connect(endpoint)
+        self.skt.connect("ipc://%s" % ipc_path)
 
         # init signals
         map(lambda s: signal.signal(s, self.signal), self.SIGNALS)
