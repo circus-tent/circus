@@ -17,7 +17,6 @@ class Trainer(object):
         self.ctrl = Controller(endpoint, self, self.check_delay,
                 self.ipc_path)
         self.pid = os.getpid()
-
         self._shows_names = {}
         self.setup()
         logger.info("Starting master on pid %s" % self.pid)
@@ -49,10 +48,7 @@ class Trainer(object):
             pass
 
     def num_flies(self):
-        l = 0
-        for show in self.shows:
-            l += len(show)
-        return l
+        return sum([len(show) for show in self.shows])
 
     def run(self):
         # launch flies
