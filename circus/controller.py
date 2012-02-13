@@ -50,7 +50,7 @@ class Controller(object):
                         ret = handler()
                         socket.send(ret)
                     except AttributeError:
-                        socket.send("ignored messaged %s" % msg)
+                        socket.send("error: ignored messaged %s" % msg)
             else: # program command
                 # a program command passed with the format
                 # COMMAND PROGRAM ARGS
@@ -68,12 +68,12 @@ class Controller(object):
                         ret = handler(*args)
                         socket.send(ret)
                     except AttributeError:
-                        socket.send("ignored messaged %s" % msg)
+                        socket.send("error: ignored messaged %s" % msg)
                     except Exception, e:
-                        socket.send("error with the command '%s': %s" %
+                        socket.send("error: command '%s': %s" %
                                 (msg, str(e)))
                 except IndexError:
-                    socket.send("program %s not found" % msg_parts[1])
+                    socket.send("error: program %s not found" % msg_parts[1])
 
     def terminate(self):
         self.sys_hdl.terminate()
