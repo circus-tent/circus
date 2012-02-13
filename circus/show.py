@@ -5,6 +5,7 @@ import errno
 import time
 
 from circus.fly import Fly
+from circus import logger
 
 
 class Show(object):
@@ -47,12 +48,12 @@ class Show(object):
     def spawn_fly(self):
         self._fly_counter += 1
         fly = Fly(self._fly_counter, self.cmd)
-        print 'running %s fly [pid %d]' % (self.name, fly.pid)
+        logger.info('running %s fly [pid %d]' % (self.name, fly.pid))
         self.flies[self._fly_counter] = fly
 
     # TODO: we should manage more flies here.
     def kill_fly(self, fly):
-        print "kill fly %s" % fly.pid
+        logger.info("kill fly %s" % fly.pid)
         fly.terminate()
 
     def kill_flies(self):

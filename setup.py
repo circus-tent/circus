@@ -12,6 +12,6 @@ setup(name='circus',
       install_requires=['pyzmq'],
       entry_points="""
       [console_scripts]
-      circusd = circus:main
+      circusd = circus.server:main
       circusctl = circus.client:main
       """)

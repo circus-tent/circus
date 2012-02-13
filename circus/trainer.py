@@ -5,6 +5,7 @@ import os
 import sys
 
 from circus.controller import Controller
+from circus import logger
 
 
 class Trainer(object):
@@ -19,7 +20,7 @@ class Trainer(object):
 
         self._shows_names = {}
         self.setup()
-        print "Starting master on pid %s" % self.pid
+        logger.info("Starting master on pid %s" % self.pid)
 
     def setup(self):
         for show in self.shows:
