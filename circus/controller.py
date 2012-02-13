@@ -36,10 +36,40 @@ class Controller(object):
 
         for socket in events:
             msg = socket.recv() or ""
-            msg = msg.lower()
+            msg = msg.lower().strip()
+            if not msg:
+                socket.send("error: empty command")
+                continue
 
             msg_parts = msg.split(" ")
-            if len(msg_parts) == 1: # manager commands
+
+            if len(msg_parts) > 1 and msg_parts[1]:
+                # program command
+                # a program command passed with the format
+                # COMMAND PROGRAM ARGS
+
+                try:
+                    program = self.manager.get_program(msg_parts[1])
+                    cmd = msg_parts[0].lower()
+
+                    if len(msg_parts)> 2:
+                        args = msg_parts[2:]
+                    else:
+                        args = []
+
+                    try:
+                        handler = getattr(program, "handle_%s" % cmd)
+                        ret = handler(*args)
+                        socket.send(ret)
+                    except AttributeError:
+                        socket.send("error: ignored messaged %r" % msg)
+                    except Exception, e:
+                        socket.send("error: command %r: %s" %
+                                (msg, str(e)))
+                except IndexError:
+                    socket.send("error: program %s not found" % msg_parts[1])
+            else:
+                # manager commands
                 if msg == 'numworkers':
                     socket.send(str(self.manager.num_workers()))
                 elif msg == 'programs':
@@ -50,30 +80,8 @@ class Controller(object):
                         ret = handler()
                         socket.send(ret)
                     except AttributeError:
-                        socket.send("error: ignored messaged %s" % msg)
-            else: # program command
-                # a program command passed with the format
-                # COMMAND PROGRAM ARGS
-                try:
-                    program = self.manager.get_program(msg_parts[1])
-                    cmd = msg_parts[0].lower()
+                        socket.send("error: ignored messaged %r" % msg)
 
-                    if len(msg_parts) > 2:
-                        args = msg_parts[2:]
-                    else:
-                        args = []
-
-                    try:
-                        handler = getattr(program, "handle_%s" % cmd)
-                        ret = handler(*args)
-                        socket.send(ret)
-                    except AttributeError:
-                        socket.send("error: ignored messaged %s" % msg)
-                    except Exception, e:
-                        socket.send("error: command '%s': %s" %
-                                (msg, str(e)))
-                except IndexError:
-                    socket.send("error: program %s not found" % msg_parts[1])
 
     def terminate(self):
         self.sys_hdl.terminate()

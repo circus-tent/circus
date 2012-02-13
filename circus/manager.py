@@ -41,6 +41,9 @@ class Program(object):
     def __len__(self):
         return len(self.workers)
 
+    def handle_numworkers(self, *args):
+        return str(self.num_workers)
+
     def reap_workers(self):
         for wid, worker in self.workers.items():
             if worker.poll() is not None:
@@ -82,9 +85,6 @@ class Program(object):
                 if e.errno != errno.ESRCH:
                     raise
 
-    def handle_numworkers(self, *args):
-        return str(self.num_workers)
-
     def handle_quit(self, *args):
         self.kill_workers()
         self.num_workers = 0
@@ -106,7 +106,6 @@ class Program(object):
         self.num_workers -= 1
         self.manage_workers()
         return str(self.num_workers)
-
 
 class Manager(object):
 
