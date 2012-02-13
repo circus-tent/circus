@@ -38,14 +38,43 @@ class Controller(object):
             msg = socket.recv() or ""
             msg = msg.lower()
 
-            if msg == 'numworkers':
-                socket.send(str(self.manager.num_workers()))
-            else:
+            msg_parts = msg.split(" ")
+            if len(msg_parts) == 1: # manager commands
+                if msg == 'numworkers':
+                    socket.send(str(self.manager.num_workers()))
+                else:
+                    try:
+                        handler = getattr(self.manager, "handle_%s" % msg)
+                        ret = handler()
+                        socket.send(ret)
+                    except AttributeError:
+                        socket.send("ignored messaged %s" % msg)
+            else: # program command
+                # a program command passed with the format
+                # COMMAND PROGRAM ARGS
                 try:
-                    handler = getattr(self.manager, "handle_%s" % msg)
-                    handler()
-                except AttributeError:
-                    print "ignored messaged %s" % msg
+                    program = self.manager.get_program(msg_parts[1])
+                    cmd = msg_parts[0].lower()
+
+                    if len(msg_parts) > 2:
+                        args = msg_parts[2:]
+                    else:
+                        args = []
+
+                    try:
+                        handler = getattr(program, "handle_%s" % cmd)
+                        ret = handler(*args)
+                        socket.send(ret)
+                    except AttributeError:
+                        socket.send("ignored messaged %s" % msg)
+                    except Exception, e:
+                        socket.send("error with the command '%s': %s" %
+                                (msg, str(e)))
+                except IndexError:
+                    socket.send("program %s not found" % msg_parts[1])
+
+
+
 
     def terminate(self):
         self.sys_hdl.terminate()

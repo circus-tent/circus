@@ -16,6 +16,7 @@ class SysHandler(object):
     CMD_MAP = {
             "hup": "reload",
             "int": "quit",
+            "term": "quit",
             "quit": "quit"
     }
 

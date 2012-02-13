@@ -82,6 +82,32 @@ class Program(object):
                 if e.errno != errno.ESRCH:
                     raise
 
+    def handle_numworkers(self, *args):
+        return str(self.num_workers)
+
+    def handle_quit(self, *args):
+        self.kill_workers()
+        self.num_workers = 0
+        return "ok"
+
+    def handle_reload(self, *args):
+        for i in range(self.num_workers):
+            self.spawn_worker()
+        self.manage_workers()
+        return "ok"
+    handle_hup = handle_reload
+
+    def handle_ttin(self, *args):
+        self.num_workers += 1
+        self.manage_workers()
+        return str(self.num_workers)
+
+    def handle_ttou(self, *args):
+        self.num_workers -= 1
+        self.manage_workers()
+        return str(self.num_workers)
+
+
 class Manager(object):
 
     def __init__(self, programs, check_delay, endpoint, ipc_path):
@@ -91,13 +117,24 @@ class Manager(object):
         self.ctrl = Controller(endpoint, self, self.check_delay,
                 self.ipc_path)
         self.pid = os.getpid()
+
+        self._programs_names = {}
+        self.setup()
         print "Starting master on pid %s" % self.pid
 
+    def setup(self):
+        for program in self.programs:
+            self._programs_names[program.name] = program
+
+    def get_program(self, name):
+        return self._programs_names[name]
+
     def handle_reload(self):
-        pass
+        return "ok"
 
     def handle_quit(self):
         self.halt()
+        return "ok"
 
     def num_workers(self):
         l = 0
