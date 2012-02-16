@@ -26,9 +26,6 @@ class Show(object):
     def __len__(self):
         return len(self.flies)
 
-    def handle_numflies(self, *args):
-        return str(self.num_flies)
-
     def reap_flies(self):
         for wid, fly in self.flies.items():
             if fly.poll() is not None:
@@ -70,6 +67,13 @@ class Show(object):
             except OSError, e:
                 if e.errno != errno.ESRCH:
                     raise
+
+    #################
+    # show commands #
+    #################
+
+    def handle_numflies(self, *args):
+        return str(self.num_flies)
 
     def handle_quit(self, *args):
         if len(args) > 0:
