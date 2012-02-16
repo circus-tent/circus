@@ -4,10 +4,22 @@
 import argparse
 import ConfigParser
 import os
+import logging
 
+from circus import logger
 from circus.trainer import Trainer
 from circus.show import Show
 
+
+LOG_LEVELS = {
+    "critical": logging.CRITICAL,
+    "error": logging.ERROR,
+    "warning": logging.WARNING,
+    "info": logging.INFO,
+    "debug": logging.DEBUG}
+
+LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
+LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
 
 class DefaultConfigParser(ConfigParser.ConfigParser):
     def dget(self, section, option, default=None, type=str):
@@ -26,9 +38,24 @@ class DefaultConfigParser(ConfigParser.ConfigParser):
 def main():
     parser = argparse.ArgumentParser(description='Run some shows.')
     parser.add_argument('config', help='configuration file')
+    parser.add_argument('--log-level', dest='loglevel', default='info',
+            help="log level")
+    parser.add_argument('--log-output', dest='logoutput', default='-',
+            help="log output")
     args = parser.parse_args()
     cfg = DefaultConfigParser()
     cfg.read(args.config)
+
+    # configure the logger
+    loglevel = LOG_LEVELS.get(args.loglevel.lower(), logging.INFO)
+    logger.setLevel(loglevel)
+    if args.logoutput == "-":
+        h = logging.StreamHandler()
+    else:
+        h = logging.FileHandler(output)
+    fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
+    h.setFormatter(fmt)
+    logger.addHandler(h)
 
     # Initialize shows to manage
     shows = []
