@@ -52,7 +52,7 @@ class Controller(object):
                 # COMMAND PROGRAM ARGS
 
                 try:
-                    program = self.trainer.get_program(msg_parts[1])
+                    program = self.trainer.get_show(msg_parts[1])
                     cmd = msg_parts[0].lower()
 
                     if len(msg_parts) > 2:
@@ -73,10 +73,10 @@ class Controller(object):
                     socket.send("error: program %s not found" % msg_parts[1])
             else:
                 # trainer commands
-                if msg == 'numworkers':
-                    socket.send(str(self.trainer.num_workers()))
-                elif msg == 'programs':
-                    socket.send(self.trainer.list_programs())
+                if msg == 'numflies':
+                    socket.send(str(self.trainer.num_flies()))
+                elif msg == 'shows':
+                    socket.send(self.trainer.list_shows())
                 else:
                     try:
                         handler = getattr(self.trainer, "handle_%s" % msg)
