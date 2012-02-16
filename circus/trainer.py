@@ -18,6 +18,7 @@ class Trainer(object):
                 self.ipc_path)
         self.pid = os.getpid()
         self._shows_names = {}
+        self.alive = True
         self.setup()
         logger.info("Starting master on pid %s" % self.pid)
 
@@ -61,7 +62,7 @@ class Trainer(object):
         for show in self.shows:
             show.manage_flies()
 
-        while True:
+        while self.alive:
             # manage and reap flies
             for show in self.shows:
                 show.reap_flies()
@@ -70,9 +71,9 @@ class Trainer(object):
             # wait for the controller
             self.ctrl.poll()
 
-    def halt(self, exit_code=0):
+    def halt(self):
+        self.alive = False
         self.terminate()
-        sys.exit(exit_code)
 
     def terminate(self):
         # kill flies

@@ -78,6 +78,9 @@ class Controller(object):
                     resp = self.trainer.list_shows()
                 elif msg == 'flies':
                     resp = self.trainer.list_flies()
+                elif msg == 'quit' or msg == 'halt':
+                    socket.send("ok")
+                    return self.trainer.halt()
                 else:
                     try:
                         handler = getattr(self.trainer, "handle_%s" % msg)
@@ -88,6 +91,7 @@ class Controller(object):
             socket.send(resp)
 
     def terminate(self):
+
         self.sys_hdl.terminate()
         try:
             self.context.destroy(0)
