@@ -91,7 +91,6 @@ class Controller(object):
             socket.send(resp)
 
     def terminate(self):
-
         self.sys_hdl.terminate()
         try:
             self.context.destroy(0)
