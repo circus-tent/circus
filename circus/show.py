@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 import errno
+import signal
 import time
 
 from circus.fly import Fly
@@ -11,7 +12,7 @@ from circus import logger
 class Show(object):
 
     def __init__(self, name, cmd, num_flies, warmup_delay, working_dir,
-                 shell, uid=None, gid=None):
+                 shell, uid=None, gid=None, send_hup=False):
         self.name = name
         self.num_flies = num_flies
         self.warmup_delay = warmup_delay
@@ -22,6 +23,7 @@ class Show(object):
         self.shell = shell
         self.uid = uid
         self.gid = gid
+        self.send_hup = send_hup
 
     def __len__(self):
         return len(self.flies)
@@ -83,7 +85,7 @@ class Show(object):
             wid = int(args[0])
             if wid in self.flies:
                 try:
-                    fly =  fly = self.flies.pop(wid)
+                    fly = self.flies.pop(wid)
                     self.kill_fly(fly)
                     return "ok"
                 except OSError, e:
@@ -99,9 +101,14 @@ class Show(object):
     handle_kill = handle_quit
 
     def handle_reload(self, *args):
-        for i in range(self.num_flies):
-            self.spawn_fly()
-        self.manage_flies()
+        if self.send_hup:
+            for wid, fly in self.flies.items():
+                logger.info("SEND HUP to %s [%s]" % (wid, fly.pid))
+                fly.send_signal(signal.SIGHUP)
+        else:
+            for i in range(self.num_flies):
+                self.spawn_fly()
+            self.manage_flies()
         return "ok"
 
     handle_hup = handle_reload

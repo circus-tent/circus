@@ -38,6 +38,9 @@ class Fly(object):
     def poll(self):
         return self._worker.poll()
 
+    def send_signal(self, sig):
+        return self._worker.send_signal(sig)
+
     def terminate(self):
         return self._worker.terminate()
 
