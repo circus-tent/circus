@@ -52,7 +52,7 @@ def main():
     if args.logoutput == "-":
         h = logging.StreamHandler()
     else:
-        h = logging.FileHandler(output)
+        h = logging.FileHandler(args.logoutput)
     fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
     h.setFormatter(fmt)
     logger.addHandler(h)
