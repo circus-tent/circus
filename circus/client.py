@@ -43,7 +43,7 @@ class CircusClient(object):
 def main():
     client = CircusClient(sys.argv[1])
     try:
-        return client.call(sys.argv[2].lower())
+        return client.call(" ".join(sys.argv[1:]).lower())
     finally:
         client.terminate()
 
