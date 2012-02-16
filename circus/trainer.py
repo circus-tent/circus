@@ -31,6 +31,12 @@ class Trainer(object):
     def list_shows(self):
         return ",".join(self._shows_names.keys())
 
+    def list_flies(self):
+        flies = []
+        for show in self.shows:
+            flies.append("%s: %s" % (show.name, show.handle_flies()))
+        return buffer("\n".join(flies))
+
     def handle_reload(self):
         return "ok"
 

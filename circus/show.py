@@ -72,6 +72,9 @@ class Show(object):
     # show commands #
     #################
 
+    def handle_flies(self, *args):
+        return ",".join([str(wid) for wid in self.flies.keys()])
+
     def handle_numflies(self, *args):
         return str(self.num_flies)
 
