@@ -72,9 +72,22 @@ class Show(object):
                     raise
 
     def handle_quit(self, *args):
-        self.kill_flies()
-        self.num_flies = 0
-        return "ok"
+        if len(args) > 0:
+            wid = int(args[0])
+            if wid in self.flies:
+                try:
+                    fly =  fly = self.flies.pop(wid)
+                    self.kill_fly(fly)
+                    return "ok"
+                except OSError, e:
+                    if e.errno != errno.ESRCH:
+                        raise
+            else:
+                return "error: fly '%s' not found" % wid
+        else:
+            self.kill_flies()
+            self.num_flies = 0
+            return "ok"
 
     def handle_reload(self, *args):
         for i in range(self.num_flies):
