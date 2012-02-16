@@ -46,6 +46,7 @@ class Controller(object):
 
             msg_parts = msg.split(" ")
 
+            resp = ""
             if len(msg_parts) > 1 and msg_parts[1]:
                 # program command
                 # a program command passed with the format
@@ -62,28 +63,29 @@ class Controller(object):
 
                     try:
                         handler = getattr(program, "handle_%s" % cmd)
-                        ret = handler(*args)
-                        socket.send(ret)
+                        resp = handler(*args)
                     except AttributeError:
-                        socket.send("error: ignored messaged %r" % msg)
+                        resp = "error: ignored messaged %r" % msg
                     except Exception, e:
-                        socket.send("error: command %r: %s" %
-                                (msg, str(e)))
+                        resp = "error: command %r: %s" % (msg, str(e))
                 except IndexError:
-                    socket.send("error: program %s not found" % msg_parts[1])
+                    resp = "error: program %s not found" % msg_parts[1]
             else:
                 # trainer commands
                 if msg == 'numflies':
-                    socket.send(str(self.trainer.num_flies()))
+                    resp = str(self.trainer.num_flies())
                 elif msg == 'shows':
-                    socket.send(self.trainer.list_shows())
+                    resp = self.trainer.list_shows()
+                elif msg == 'flies':
+                    resp = self.trainer.list_flies()
                 else:
                     try:
                         handler = getattr(self.trainer, "handle_%s" % msg)
-                        ret = handler()
-                        socket.send(ret)
+                        resp = handler()
                     except AttributeError:
-                        socket.send("error: ignored messaged %r" % msg)
+                        resp = "error: ignored messaged %r" % msg
+
+            socket.send(resp)
 
     def terminate(self):
         self.sys_hdl.terminate()

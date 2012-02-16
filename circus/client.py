@@ -23,7 +23,7 @@ class CircusClient(object):
 
     def call(self, cmd):
         try:
-            self.socket.send(cmd, zmq.NOBLOCK)
+            self.socket.send(cmd)
         except zmq.ZMQError, e:
             raise CallError(str(e))
 
@@ -37,21 +37,20 @@ class CircusClient(object):
 
         for socket in events:
             msg = socket.recv()
-            return msg.lower()
+            return msg
 
 
 def main():
     client = CircusClient(sys.argv[1])
     try:
-        return client.call(" ".join(sys.argv[1:]).lower())
-    finally:
-        client.terminate()
-
-
-if __name__ == '__main__':
-    try:
-        print main()
+        print client.call(" ".join(sys.argv[2:]).lower())
         sys.exit(0)
     except CallError, e:
         print str(e)
         sys.exit(1)
+
+    finally:
+        client.terminate()
+
+if __name__ == '__main__':
+    main()
