@@ -96,6 +96,8 @@ class Show(object):
             self.num_flies = 0
             return "ok"
 
+    handle_kill = handle_quit
+
     def handle_reload(self, *args):
         for i in range(self.num_flies):
             self.spawn_fly()
