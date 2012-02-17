@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -
-#
-# This file is part of gunicorn released under the MIT license.
-# See the NOTICE for more information.
+# This file is part of circus. See the NOTICE for more information.
 
 import errno
 import os
