@@ -70,6 +70,22 @@ class Show(object):
                 if e.errno != errno.ESRCH:
                     raise
 
+    def send_signal_child(self, wid, pid, signum):
+        wid = int(wid)
+        if wid in self.flies:
+            fly = self.flies[wid]
+            return fly.send_signal_child(int(pid), signum)
+        else:
+            return "error: fly not found"
+
+    def send_signal_children(self, wid, signum):
+        wid = int(wid)
+        if wid in self.flies:
+            fly = self.flies[wid]
+            return fly.send_signal_children(signum)
+        else:
+            return "error: fly not found"
+
     #################
     # show commands #
     #################
@@ -134,20 +150,11 @@ class Show(object):
         self.manage_flies()
         return str(self.num_flies)
 
-    def handle_quit_children(self, wid, pid):
-        if wid in self.flies:
-            fly = self.flies[wid]
-            return fly.quit_children(int(pid))
-        else:
-            return "error: fly not found"
+    def handle_kill_child(self, wid, pid):
+        return self.send_signal_child(wid, pid, signal.SIGKILL)
 
-    def handle_kill_children(self, wid, pid):
-        wid = int(wid)
-        if wid in self.flies:
-            fly = self.flies[wid]
-            return fly.kill_children(int(pid))
-        else:
-            return "error: fly not found"
+    def handle_quit_child(self, wid, pid):
+        return self.send_signal_child(wid, pid, signal.SIGQUIT)
 
     def handle_children(self, wid):
         wid = int(wid)
@@ -156,3 +163,9 @@ class Show(object):
             return fly.children()
         else:
             return "error: fly not found"
+
+    def handle_kill_children(self, wid):
+        return self.send_signal_children(wid, signal.SIGKILL)
+
+    def handle_quit_children(self, wid):
+        return self.send_signal_children(wid, signal.SIGQUIT)

@@ -7,7 +7,6 @@ import os
 from pwd import getpwnam
 from grp import getgrnam
 from datetime import timedelta
-import signal
 import time
 
 
@@ -115,28 +114,24 @@ class Fly(object):
         except AccessDenied:
             return "error: access denied"
 
-    def kill_children(self, pid):
+    def send_signal_child(self, pid, signum):
         try:
             pids = [child.pid for child in self._worker.get_children()]
             if pid in pids:
-                child.send_signal(signal.SIGKILL)
+                child.send_signal(signum)
                 return "ok"
             else:
                 return "error: child not found"
         except AccessDenied:
             return "error: access denied"
 
-    def quit_children(self, pid):
+    def send_signal_children(self, signum):
         try:
-            pids = [child.pid for child in self._worker.get_children()]
-            if pid in pids:
-                child.send_signal(signal.SIGQUIT)
-                return "ok"
-            else:
-                return "error: child not found"
+            for child in self._worker.get_children():
+                child.send_signal(signum)
+            return "ok"
         except AccessDenied:
             return "error: access denied"
-
 
     @property
     def pid(self):
