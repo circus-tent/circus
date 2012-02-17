@@ -71,7 +71,7 @@ class Controller(object):
                         tb = traceback.format_exc()
                         resp = "error: command %r: %s [%s]" % (msg,
                                 str(e), tb)
-                except IndexError:
+                except KeyError:
                     resp = "error: program %s not found" % msg_parts[1]
             else:
                 # trainer commands
