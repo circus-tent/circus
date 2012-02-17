@@ -16,6 +16,10 @@ def bytes2human(n):
     >>> bytes2human(100001221)
     '95M'
     """
+
+    if not isinstance(n, int):
+        return n
+
     symbols = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
     prefix = {}
     for i, s in enumerate(symbols):
