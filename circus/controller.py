@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
 import tempfile
+import traceback
 import zmq
 
 from circus.sighandler import SysHandler
@@ -67,7 +68,9 @@ class Controller(object):
                     except AttributeError:
                         resp = "error: ignored messaged %r" % msg
                     except Exception, e:
-                        resp = "error: command %r: %s" % (msg, str(e))
+                        tb = traceback.format_exc()
+                        resp = "error: command %r: %s [%s]" % (msg,
+                                str(e), tb)
                 except IndexError:
                     resp = "error: program %s not found" % msg_parts[1]
             else:
@@ -78,6 +81,8 @@ class Controller(object):
                     resp = self.trainer.list_shows()
                 elif msg == 'flies':
                     resp = self.trainer.list_flies()
+                elif msg == 'info':
+                    resp = self.trainer.info_shows()
                 elif msg == 'quit' or msg == 'halt':
                     socket.send("ok")
                     return self.trainer.halt()
@@ -87,6 +92,10 @@ class Controller(object):
                         resp = handler()
                     except AttributeError:
                         resp = "error: ignored messaged %r" % msg
+                    except Exception, e:
+                        tb = traceback.format_exc()
+                        resp = "error: command %r: %s [%s]" % (msg,
+                                str(e), tb)
 
             socket.send(resp)
 

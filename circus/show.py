@@ -80,6 +80,17 @@ class Show(object):
     def handle_numflies(self, *args):
         return str(self.num_flies)
 
+    def handle_info(self, *args):
+        if len(args) > 0:
+            wid = int(args[0])
+            if wid in self.flies:
+                fly = self.flies[wid]
+                return fly.info()
+            else:
+                return "error: fly '%s' not found" % wid
+        else:
+            return "\n".join([fly.info() for _, fly in self.flies.items()])
+
     def handle_quit(self, *args):
         if len(args) > 0:
             wid = int(args[0])

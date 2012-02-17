@@ -9,7 +9,7 @@ setup(name='circus',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      install_requires=['pyzmq'],
+      install_requires=['pyzmq', 'psutil'],
       entry_points="""
       [console_scripts]
       circusd = circus.server:main

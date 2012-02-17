@@ -38,6 +38,13 @@ class Trainer(object):
             flies.append("%s: %s" % (show.name, show.handle_flies()))
         return buffer("\n".join(flies))
 
+    def info_shows(self):
+        infos = []
+        for show in self.shows:
+            infos.append("%s:\n" % show.name)
+            infos.append("%s\n" % show.handle_info())
+        return buffer("".join(infos))
+
     def handle_reload(self):
         return "ok"
 
