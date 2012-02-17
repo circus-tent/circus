@@ -28,6 +28,38 @@ def bytes2human(n):
             return '%s%s' % (value, s)
     return "%sB" % n
 
+def info_line(p):
+    try:
+        mem_info = p.get_memory_info()
+    except AccessDenied:
+        mem_info = ("N/A", "N/A")
+
+    try:
+        cpu = p.get_cpu_percent(interval=0.1)
+    except AccessDenied:
+        cpu = "N/A"
+
+    try:
+        mem = round(p.get_memory_percent(), 1)
+    except AccessDenied:
+        mem = "N/A"
+
+    try:
+        cpu_times = p.get_cpu_times()
+
+        ctime = timedelta(seconds=sum(cpu_times))
+        ctime = "%s:%s.%s" % (ctime.seconds // 60 % 60,
+                          str((ctime.seconds % 60)).zfill(2),
+                          str(ctime.microseconds)[:2])
+
+    except AccessDenied:
+        ctime = "N/A"
+
+    return "%s %s %s %s %s %s %s %s" % (p.pid, p.username, p.nice,
+            bytes2human(mem_info[1]), bytes2human(mem_info[0]), cpu,
+            mem, ctime)
+
+
 class Fly(object):
     def __init__(self, wid, cmd, wdir, shell, uid=None, gid=None):
         self.wid = str(wid)
@@ -68,36 +100,13 @@ class Fly(object):
 
     def info(self):
         """ return process info """
+        lines = ["%s: %s" % (self.wid, info_line(self._worker))]
         try:
-            mem_info = self._worker.get_memory_info()
+            for child in self._worker.get_children():
+                lines.append("   %s" % info_line(child))
         except AccessDenied:
-            mem_info = ("N/A", "N/A")
-
-        try:
-            cpu = self._worker.get_cpu_percent(interval=0.1)
-        except AccessDenied:
-            cpu = "N/A"
-
-        try:
-            mem = round(self._worker.get_memory_percent(), 1)
-        except AccessDenied:
-            mem = "N/A"
-
-        try:
-            cpu_times = self._worker.get_cpu_times()
-
-            ctime = timedelta(seconds=sum(cpu_times))
-            ctime = "%s:%s.%s" % (ctime.seconds // 60 % 60,
-                              str((ctime.seconds % 60)).zfill(2),
-                              str(ctime.microseconds)[:2])
-
-        except AccessDenied:
-            ctime = "N/A"
-
-        return "%s: %s %s %s %s %s %s %s %s" % (self.wid, self._worker.pid,
-                self._worker.username, self._worker.nice,
-                bytes2human(mem_info[1]), bytes2human(mem_info[0]), cpu,
-                mem, ctime)
+            pass
+        return "\n".join(lines)
 
     @property
     def pid(self):

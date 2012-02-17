@@ -9,7 +9,7 @@ class CallError(Exception):
     pass
 
 class CircusClient(object):
-    def __init__(self, endpoint, timeout=1.):
+    def __init__(self, endpoint, timeout=5.0):
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REQ)
         self.socket.connect(endpoint)
