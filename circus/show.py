@@ -163,6 +163,20 @@ class Show(object):
         else:
             return "error: fly not found"
 
+    def handle_signal_fly(self, wid, sig):
+        try:
+            signum = getattr(signal, "SIG%s" % sig.upper())
+        except AttributeError:
+            return "error: unknown signal %s" % sig
+
+        wid = int(wid)
+        if wid in self.flies:
+            fly = self.flies[wid]
+            fly.send_signal(signum)
+            return "ok"
+        else:
+            return "error: fly not found"
+
     def handle_kill_children(self, wid):
         return self.send_signal_children(wid, signal.SIGKILL)
 
