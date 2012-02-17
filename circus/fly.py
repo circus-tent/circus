@@ -35,7 +35,7 @@ def info_line(p):
         mem_info = ("N/A", "N/A")
 
     try:
-        cpu = p.get_cpu_percent(interval=0.1)
+        cpu = p.get_cpu_percent(interval=0)
     except AccessDenied:
         cpu = "N/A"
 
