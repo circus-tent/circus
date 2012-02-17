@@ -133,3 +133,26 @@ class Show(object):
         self.num_flies -= 1
         self.manage_flies()
         return str(self.num_flies)
+
+    def handle_quit_children(self, wid, pid):
+        if wid in self.flies:
+            fly = self.flies[wid]
+            return fly.quit_children(int(pid))
+        else:
+            return "error: fly not found"
+
+    def handle_kill_children(self, wid, pid):
+        wid = int(wid)
+        if wid in self.flies:
+            fly = self.flies[wid]
+            return fly.kill_children(int(pid))
+        else:
+            return "error: fly not found"
+
+    def handle_children(self, wid):
+        wid = int(wid)
+        if wid in self.flies:
+            fly = self.flies[wid]
+            return fly.children()
+        else:
+            return "error: fly not found"
