@@ -1,7 +1,5 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this file,
-# You can obtain one at http://mozilla.org/MPL/2.0/.
 import errno
+import signal
 import time
 
 from circus.fly import Fly
@@ -11,7 +9,7 @@ from circus import logger
 class Show(object):
 
     def __init__(self, name, cmd, num_flies, warmup_delay, working_dir,
-                 shell, uid=None, gid=None):
+                 shell, uid=None, gid=None, send_hup=False):
         self.name = name
         self.num_flies = num_flies
         self.warmup_delay = warmup_delay
@@ -22,12 +20,10 @@ class Show(object):
         self.shell = shell
         self.uid = uid
         self.gid = gid
+        self.send_hup = send_hup
 
     def __len__(self):
         return len(self.flies)
-
-    def handle_numflies(self, *args):
-        return str(self.num_flies)
 
     def reap_flies(self):
         for wid, fly in self.flies.items():
@@ -71,15 +67,72 @@ class Show(object):
                 if e.errno != errno.ESRCH:
                     raise
 
+    def send_signal_child(self, wid, pid, signum):
+        wid = int(wid)
+        if wid in self.flies:
+            fly = self.flies[wid]
+            return fly.send_signal_child(int(pid), signum)
+        else:
+            return "error: fly not found"
+
+    def send_signal_children(self, wid, signum):
+        wid = int(wid)
+        if wid in self.flies:
+            fly = self.flies[wid]
+            return fly.send_signal_children(signum)
+        else:
+            return "error: fly not found"
+
+    #################
+    # show commands #
+    #################
+
+    def handle_flies(self, *args):
+        return ",".join([str(wid) for wid in self.flies.keys()])
+
+    def handle_numflies(self, *args):
+        return str(self.num_flies)
+
+    def handle_info(self, *args):
+        if len(args) > 0:
+            wid = int(args[0])
+            if wid in self.flies:
+                fly = self.flies[wid]
+                return fly.info()
+            else:
+                return "error: fly '%s' not found" % wid
+        else:
+            return "\n".join([fly.info() for _, fly in self.flies.items()])
+
     def handle_quit(self, *args):
-        self.kill_flies()
-        self.num_flies = 0
-        return "ok"
+        if len(args) > 0:
+            wid = int(args[0])
+            if wid in self.flies:
+                try:
+                    fly = self.flies.pop(wid)
+                    self.kill_fly(fly)
+                    return "ok"
+                except OSError, e:
+                    if e.errno != errno.ESRCH:
+                        raise
+            else:
+                return "error: fly '%s' not found" % wid
+        else:
+            self.kill_flies()
+            self.num_flies = 0
+            return "ok"
+
+    handle_kill = handle_quit
 
     def handle_reload(self, *args):
-        for i in range(self.num_flies):
-            self.spawn_fly()
-        self.manage_flies()
+        if self.send_hup:
+            for wid, fly in self.flies.items():
+                logger.info("SEND HUP to %s [%s]" % (wid, fly.pid))
+                fly.send_signal(signal.SIGHUP)
+        else:
+            for i in range(self.num_flies):
+                self.spawn_fly()
+            self.manage_flies()
         return "ok"
 
     handle_hup = handle_reload
@@ -93,3 +146,37 @@ class Show(object):
         self.num_flies -= 1
         self.manage_flies()
         return str(self.num_flies)
+
+    def handle_kill_child(self, wid, pid):
+        return self.send_signal_child(wid, pid, signal.SIGKILL)
+
+    def handle_quit_child(self, wid, pid):
+        return self.send_signal_child(wid, pid, signal.SIGQUIT)
+
+    def handle_children(self, wid):
+        wid = int(wid)
+        if wid in self.flies:
+            fly = self.flies[wid]
+            return fly.children()
+        else:
+            return "error: fly not found"
+
+    def handle_signal_fly(self, wid, sig):
+        try:
+            signum = getattr(signal, "SIG%s" % sig.upper())
+        except AttributeError:
+            return "error: unknown signal %s" % sig
+
+        wid = int(wid)
+        if wid in self.flies:
+            fly = self.flies[wid]
+            fly.send_signal(signum)
+            return "ok"
+        else:
+            return "error: fly not found"
+
+    def handle_kill_children(self, wid):
+        return self.send_signal_children(wid, signal.SIGKILL)
+
+    def handle_quit_children(self, wid):
+        return self.send_signal_children(wid, signal.SIGQUIT)

@@ -1,8 +1,6 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this file,
-# You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
 import tempfile
+import traceback
 import zmq
 
 from circus.sighandler import SysHandler
@@ -46,13 +44,14 @@ class Controller(object):
 
             msg_parts = msg.split(" ")
 
+            resp = ""
             if len(msg_parts) > 1 and msg_parts[1]:
                 # program command
                 # a program command passed with the format
                 # COMMAND PROGRAM ARGS
 
                 try:
-                    program = self.trainer.get_program(msg_parts[1])
+                    program = self.trainer.get_show(msg_parts[1])
                     cmd = msg_parts[0].lower()
 
                     if len(msg_parts) > 2:
@@ -62,28 +61,40 @@ class Controller(object):
 
                     try:
                         handler = getattr(program, "handle_%s" % cmd)
-                        ret = handler(*args)
-                        socket.send(ret)
+                        resp = handler(*args)
                     except AttributeError:
-                        socket.send("error: ignored messaged %r" % msg)
+                        resp = "error: ignored messaged %r" % msg
                     except Exception, e:
-                        socket.send("error: command %r: %s" %
-                                (msg, str(e)))
-                except IndexError:
-                    socket.send("error: program %s not found" % msg_parts[1])
+                        tb = traceback.format_exc()
+                        resp = "error: command %r: %s [%s]" % (msg,
+                                str(e), tb)
+                except KeyError:
+                    resp = "error: program %s not found" % msg_parts[1]
             else:
                 # trainer commands
-                if msg == 'numworkers':
-                    socket.send(str(self.trainer.num_workers()))
-                elif msg == 'programs':
-                    socket.send(self.trainer.list_programs())
+                if msg == 'numflies':
+                    resp = str(self.trainer.num_flies())
+                elif msg == 'shows':
+                    resp = self.trainer.list_shows()
+                elif msg == 'flies':
+                    resp = self.trainer.list_flies()
+                elif msg == 'info':
+                    resp = self.trainer.info_shows()
+                elif msg == 'quit' or msg == 'halt':
+                    socket.send("ok")
+                    return self.trainer.halt()
                 else:
                     try:
                         handler = getattr(self.trainer, "handle_%s" % msg)
-                        ret = handler()
-                        socket.send(ret)
+                        resp = handler()
                     except AttributeError:
-                        socket.send("error: ignored messaged %r" % msg)
+                        resp = "error: ignored messaged %r" % msg
+                    except Exception, e:
+                        tb = traceback.format_exc()
+                        resp = "error: command %r: %s [%s]" % (msg,
+                                str(e), tb)
+
+            socket.send(resp)
 
     def terminate(self):
         self.sys_hdl.terminate()
