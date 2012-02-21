@@ -80,6 +80,8 @@ def daemonize():
 def main():
     parser = argparse.ArgumentParser(description='Run some shows.')
     parser.add_argument('config', help='configuration file')
+
+    # XXX we should be able to add all these options in the config file as well
     parser.add_argument('--log-level', dest='loglevel', default='info',
             help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
