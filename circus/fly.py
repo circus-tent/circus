@@ -82,6 +82,7 @@ class Fly(object):
             if self.gid:
                 os.setuid(self.gid)
 
+        print('running ' + self.cmd)
         self._worker = Popen(self.cmd.split(), cwd=self.wdir, shell=shell,
                              preexec_fn=preexec_fn)
         self.started = time.time()

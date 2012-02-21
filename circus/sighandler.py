@@ -31,9 +31,10 @@ class SysHandler(object):
         signal.signal(signal.SIGCHLD, self.handle_chld)
 
     def signal(self, sig, frame):
-        if sig in self.SIG_NAMES:
-            signame = self.SIG_NAMES.get(sig)
-            self.skt.send(self.CMD_MAP[signame])
+        signame = self.SIG_NAMES.get(sig)
+        if signame in ('winch', None):
+            return
+        self.skt.send(self.CMD_MAP[signame])
 
     def handle_chld(self, *args):
         pass

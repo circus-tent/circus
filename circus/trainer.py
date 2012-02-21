@@ -7,7 +7,7 @@ from circus import logger
 
 class Trainer(object):
 
-    def __init__(self, shows, check_delay, endpoint, ipc_path):
+    def __init__(self, shows, endpoint, check_delay=1., ipc_path=None):
         self.shows = shows
         self.check_delay = check_delay
         self.ipc_path = ipc_path

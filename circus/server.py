@@ -143,7 +143,7 @@ def main():
     check = cfg.dget('circus', 'check_delay', 5, int)
     endpoint = cfg.dget('circus', 'endpoint', 'tcp://127.0.0.1:5555')
     ipc_prefix = cfg.dget('circus', 'ipc_prefix')
-    trainer = Trainer(shows, check, endpoint, ipc_prefix)
+    trainer = Trainer(shows, endpoint, check, ipc_prefix)
     try:
         trainer.run()
     finally:

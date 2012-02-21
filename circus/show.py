@@ -1,6 +1,7 @@
 import errno
 import signal
 import time
+import os
 
 from circus.fly import Fly
 from circus import logger
@@ -8,8 +9,9 @@ from circus import logger
 
 class Show(object):
 
-    def __init__(self, name, cmd, num_flies, warmup_delay, working_dir,
-                 shell, uid=None, gid=None, send_hup=False):
+    def __init__(self, name, cmd, num_flies=5, warmup_delay=1.,
+                 working_dir=os.getcwd(), shell=False, uid=None,
+                 gid=None, send_hup=False):
         self.name = name
         self.num_flies = num_flies
         self.warmup_delay = warmup_delay
