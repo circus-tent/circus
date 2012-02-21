@@ -1,6 +1,3 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this file,
-# You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
 import sys
 
@@ -18,6 +15,7 @@ class Trainer(object):
                 self.ipc_path)
         self.pid = os.getpid()
         self._shows_names = {}
+        self.alive = True
         self.setup()
         logger.info("Starting master on pid %s" % self.pid)
 
@@ -30,6 +28,19 @@ class Trainer(object):
 
     def list_shows(self):
         return ",".join(self._shows_names.keys())
+
+    def list_flies(self):
+        flies = []
+        for show in self.shows:
+            flies.append("%s: %s" % (show.name, show.handle_flies()))
+        return buffer("\n".join(flies))
+
+    def info_shows(self):
+        infos = []
+        for show in self.shows:
+            infos.append("%s:\n" % show.name)
+            infos.append("%s\n" % show.handle_info())
+        return buffer("".join(infos))
 
     def handle_reload(self):
         return "ok"
@@ -55,7 +66,7 @@ class Trainer(object):
         for show in self.shows:
             show.manage_flies()
 
-        while True:
+        while self.alive:
             # manage and reap flies
             for show in self.shows:
                 show.reap_flies()
@@ -64,9 +75,9 @@ class Trainer(object):
             # wait for the controller
             self.ctrl.poll()
 
-    def halt(self, exit_code=0):
+    def halt(self):
+        self.alive = False
         self.terminate()
-        sys.exit(exit_code)
 
     def terminate(self):
         # kill flies
