@@ -17,7 +17,8 @@ class SysHandler(object):
             "hup": "reload",
             "int": "quit",
             "term": "quit",
-            "quit": "quit"
+            "quit": "quit",
+            "winch": "winch"
     }
 
     def __init__(self, ipc_path):
@@ -32,9 +33,8 @@ class SysHandler(object):
 
     def signal(self, sig, frame):
         signame = self.SIG_NAMES.get(sig)
-        if signame in ('winch', None):
-            return
-        self.skt.send(self.CMD_MAP[signame])
+        if signame is not None:
+            self.skt.send(self.CMD_MAP[signame])
 
     def handle_chld(self, *args):
         pass
