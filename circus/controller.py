@@ -94,6 +94,13 @@ class Controller(object):
                         resp = "error: command %r: %s [%s]" % (msg,
                                 str(e), tb)
 
+            if resp is None:
+                continue
+
+            if not isinstance(resp, str):
+                msg = 'msg %r tried to send a non-string: %s' (msg, str(resp))
+                raise ValueError(msg)
+
             socket.send(resp)
 
     def terminate(self):
