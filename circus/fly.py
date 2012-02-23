@@ -6,6 +6,8 @@ from grp import getgrnam
 from datetime import timedelta
 import time
 
+from circus import logger
+
 
 def bytes2human(n):
     """
@@ -82,7 +84,7 @@ class Fly(object):
             if self.gid:
                 os.setuid(self.gid)
 
-        print('running ' + self.cmd)
+        logger.debug('running ' + self.cmd)
         self._worker = Popen(self.cmd.split(), cwd=self.wdir, shell=shell,
                              preexec_fn=preexec_fn)
         self.started = time.time()
