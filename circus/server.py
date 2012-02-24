@@ -10,10 +10,10 @@ from circus.show import Show
 from circus.pidfile import Pidfile
 
 MAXFD = 1024
-if (hasattr(os, "devnull")):
-   REDIRECT_TO = os.devnull
+if hasattr(os, "devnull"):
+    REDIRECT_TO = os.devnull
 else:
-   REDIRECT_TO = "/dev/null"
+    REDIRECT_TO = "/dev/null"
 
 LOG_LEVELS = {
     "critical": logging.CRITICAL,
@@ -24,6 +24,7 @@ LOG_LEVELS = {
 
 LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
 LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
+
 
 class DefaultConfigParser(ConfigParser.ConfigParser):
     def dget(self, section, option, default=None, type=str):
@@ -38,29 +39,31 @@ class DefaultConfigParser(ConfigParser.ConfigParser):
         else:
             raise NotImplementedError()
 
+
 def get_maxfd():
     maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
     if (maxfd == resource.RLIM_INFINITY):
         maxfd = MAXFD
     return maxfd
 
+
 try:
     from os import closerange
 except ImportError:
-    def closerange(fd_low, fd_high):
+    def closerange(fd_low, fd_high):    # NOQA
         # Iterate through and close all file descriptors.
         for fd in xrange(fd_low, fd_high):
             try:
                 os.close(fd)
-            except OSError:	# ERROR, fd wasn't open to begin with (ignored)
+            except OSError:    # ERROR, fd wasn't open to begin with (ignored)
                 pass
+
 
 def daemonize():
     """\
     Standard daemonization of a process.
     http://www.svbug.com/documentation/comp.unix.programmer-FAQ/faq_2.html#SEC16
     """
-
     #if not 'CIRCUS_PID' in os.environ:
     if os.fork():
         os._exit(0)
@@ -76,6 +79,7 @@ def daemonize():
     os.open(REDIRECT_TO, os.O_RDWR)
     os.dup2(0, 1)
     os.dup2(0, 2)
+
 
 def main():
     parser = argparse.ArgumentParser(description='Run some shows.')

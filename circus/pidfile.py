@@ -27,7 +27,8 @@ class Pidfile(object):
         # Write pidfile
         fdir = os.path.dirname(self.fname)
         if fdir and not os.path.isdir(fdir):
-            raise RuntimeError("%s doesn't exist. Can't create pidfile." % fdir)
+            raise RuntimeError("%s doesn't exist. Can't create pidfile." \
+                                    % fdir)
         fd, fname = tempfile.mkstemp(dir=fdir)
         os.write(fd, "%s\n" % self.pid)
         if self.fname:
@@ -48,7 +49,7 @@ class Pidfile(object):
         """ delete pidfile"""
         try:
             with open(self.fname, "r") as f:
-                pid1 =  int(f.read() or 0)
+                pid1 = int(f.read() or 0)
 
             if pid1 == self.pid:
                 os.unlink(self.fname)
