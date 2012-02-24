@@ -82,7 +82,7 @@ class Controller(object):
                     resp = self.trainer.info_shows()
                 elif msg == 'quit' or msg == 'halt':
                     socket.send("ok")
-                    return self.trainer.halt()
+                    return self.trainer.stop()
                 else:
                     try:
                         handler = getattr(self.trainer, "handle_%s" % msg)
