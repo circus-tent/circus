@@ -6,6 +6,9 @@ setup(name='circus',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
+      classifiers=[
+        "Programming Language :: Python",
+        "License :: OSI Approved :: Apache Software License"],
       install_requires=['pyzmq', 'psutil'],
       entry_points="""
       [console_scripts]
