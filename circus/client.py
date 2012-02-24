@@ -5,6 +5,7 @@ import sys
 class CallError(Exception):
     pass
 
+
 class CircusClient(object):
     def __init__(self, endpoint, timeout=5.0):
         self.context = zmq.Context()
