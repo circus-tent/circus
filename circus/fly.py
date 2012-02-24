@@ -95,7 +95,7 @@ class Fly(object):
     def send_signal(self, sig):
         return self._worker.send_signal(sig)
 
-    def terminate(self):
+    def stop(self):
         return self._worker.terminate()
 
     def age(self):

@@ -61,7 +61,7 @@ class Trainer(object):
     def num_flies(self):
         return sum([len(show) for show in self.shows])
 
-    def run(self):
+    def start(self):
         # launch flies
         for show in self.shows:
             show.manage_flies()
@@ -75,13 +75,10 @@ class Trainer(object):
             # wait for the controller
             self.ctrl.poll()
 
-    def halt(self):
+    def stop(self):
         self.alive = False
-        self.terminate()
-
-    def terminate(self):
         # kill flies
         for show in self.shows:
             show.kill_flies()
 
-        self.ctrl.terminate()
+        self.ctrl.stop()

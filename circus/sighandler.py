@@ -39,7 +39,7 @@ class SysHandler(object):
     def handle_chld(self, *args):
         pass
 
-    def terminate(self):
+    def stop(self):
         try:
             self.ctx.destroy(0)
         except:

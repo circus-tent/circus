@@ -14,7 +14,7 @@ class CircusClient(object):
         self.poller.register(self.socket, zmq.POLLIN)
         self.timeout = timeout * 1000
 
-    def terminate(self):
+    def stop(self):
         self.context.destroy(0)
 
     def call(self, cmd):
@@ -46,7 +46,8 @@ def main():
         sys.exit(1)
 
     finally:
-        client.terminate()
+        client.stop()
+
 
 if __name__ == '__main__':
     main()

@@ -145,9 +145,9 @@ def main():
     ipc_prefix = cfg.dget('circus', 'ipc_prefix')
     trainer = Trainer(shows, endpoint, check, ipc_prefix)
     try:
-        trainer.run()
+        trainer.start()
     finally:
-        trainer.terminate()
+        trainer.stop()
         if pidfile is not None:
             pidfile.unlink()
 

@@ -58,7 +58,7 @@ class Show(object):
     # TODO: we should manage more flies here.
     def kill_fly(self, fly):
         logger.info("kill fly %s" % fly.pid)
-        fly.terminate()
+        fly.stop()
 
     def kill_flies(self):
         for wid in self.flies.keys():

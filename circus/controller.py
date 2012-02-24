@@ -103,8 +103,8 @@ class Controller(object):
 
             socket.send(resp)
 
-    def terminate(self):
-        self.sys_hdl.terminate()
+    def stop(self):
+        self.sys_hdl.stop()
         try:
             self.context.destroy(0)
         except:
