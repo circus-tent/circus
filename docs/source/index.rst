@@ -1,10 +1,5 @@
-.. Circus documentation master file, created by
-   sphinx-quickstart on Fri Feb 24 15:30:44 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to Circus's documentation!
-==================================
+Welcome to Circus' documentation!
+=================================
 
 Contents:
 
@@ -12,11 +7,58 @@ Contents:
    :maxdepth: 2
 
 
+XXX to reorganize
 
-Indices and tables
-==================
+Circus is a program that runs and watches several processes.
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+Circus can be driven through a CLI.
+
+
+Organization and terms
+----------------------
+
+- Each program to run is called a *show*
+- Each show can run with a certain amount of *flies*
+- A *fly* spawns a independant process
+- A *trainer* is responsible to run all the *shows* and make sure all the flies
+  behave.
+
+::
+
+    Trainer
+       |
+       |-- show 1
+       |    |
+       |    |-- fly 1
+       |    |-- fly 2
+       |
+       |-- show 2
+            |
+            |-- fly 3
+
+Configuration
+-------------
+
+Circus is configured with a ini-style file. Example::
+
+    [circus]
+    check_delay = 5
+    endpoint = tcp://127.0.0.1:5555
+
+    [show:myprogram]
+    cmd = python
+    args = -u myprogram.py $WID
+    warmup_delay = 0
+    num_flies = 5
+
+
+
+Test it
+-------
+
+To test it run the following command:
+
+    $ cd examples && circusd circus.ini
+
+It should launch 5 workers.
 
