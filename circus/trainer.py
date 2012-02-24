@@ -1,5 +1,4 @@
 import os
-import sys
 
 from circus.controller import Controller
 from circus import logger
