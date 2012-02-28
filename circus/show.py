@@ -44,7 +44,9 @@ class Show(object):
             self.kill_fly(fly)
 
     def spawn_flies(self):
-        for i in range(self.num_flies - len(self.flies.keys())):
+        to_spawn = int(self.num_flies - len(self.flies.keys()))
+
+        for i in range(to_spawn):
             self.spawn_fly()
             time.sleep(self.warmup_delay)
 
