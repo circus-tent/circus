@@ -53,8 +53,7 @@ class Runner(threading.Thread):
 
     def join(self):
         self.trainer.stop()
-        if os.path.exists(self.test_file):
-            os.remove(self.test_file)
+
         threading.Thread.join(self)
 
 
@@ -62,9 +61,13 @@ class TestCircus(unittest.TestCase):
 
     def setUp(self):
         self.runners = []
+        self.files = []
 
     def tearDown(self):
         self._stop_runners()
+        for file in self.files:
+            if os.path.exists(file):
+                os.remove(file)
 
     def _run_circus(self, callable):
         resolve_name(callable)   # used to check the callable
@@ -72,11 +75,12 @@ class TestCircus(unittest.TestCase):
         os.close(fd)
         wdir = os.path.dirname(__file__)
         cmd = '%s generic.py %s %s' % (sys.executable, callable, testfile)
-        trainer = get_trainer(cmd, working_dir=wdir, check=.5)
+        trainer = get_trainer(cmd, working_dir=wdir, num_workers=1, check=.5)
         runner = Runner(trainer, testfile)
         runner.start()
         time.sleep(0.1)
         self.runners.append(runner)
+        self.files.append(testfile)
         return testfile
 
     def _stop_runners(self):
