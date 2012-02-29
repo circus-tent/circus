@@ -10,14 +10,29 @@ from circus import logger
 class Show(object):
 
     def __init__(self, name, cmd, num_flies=5, warmup_delay=1.,
-                 working_dir=os.getcwd(), shell=False, uid=None,
+                 working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False):
         self.name = name
         self.num_flies = int(num_flies)
         self.warmup_delay = warmup_delay
         self.cmd = cmd
         self._fly_counter = 0
+
+        if not working_dir:
+            # working dir hasn't been set
+            # get current path, try to use PWD env first
+            try:
+                a = os.stat(os.environ['PWD'])
+                b = os.stat(os.getcwd())
+                if a.ino == b.ino and a.dev == b.dev:
+                    working_dir = os.environ['PWD']
+                else:
+                    working_dir = os.getcwd()
+            except:
+                working_dir = os.getcwd()
+
         self.working_dir = working_dir
+
         self.flies = {}
         self.shell = shell
         self.uid = uid
