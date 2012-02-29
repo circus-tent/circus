@@ -1,11 +1,11 @@
 import errno
 import signal
 import time
-import os
 
 from circus.fly import Fly
 from circus import logger
 from circus import util
+
 
 class Show(object):
 

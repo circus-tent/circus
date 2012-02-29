@@ -7,8 +7,9 @@ from psutil import Popen as PSPopen
 
 _SYMBOLS = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 
+
 def get_working_dir():
-    # get current path, try to use PWD env first
+    """Returns current path, try to use PWD env first"""
     try:
         a = os.stat(os.environ['PWD'])
         b = os.stat(os.getcwd())
@@ -19,6 +20,7 @@ def get_working_dir():
     except:
         working_dir = os.getcwd()
     return working_dir
+
 
 def bytes2human(n):
     """
