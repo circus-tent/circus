@@ -6,7 +6,7 @@ logger = logging.getLogger('circus')
 
 def get_trainer(cmd, num_workers=5., timeout=1.0, check=5., warmup_delay=1.,
                 controller='tcp://127.0.0.1:5555',
-                working_dir=get_working_dir()):
+                working_dir=None):
 
     from circus.show import Show
     from circus.trainer import Trainer
