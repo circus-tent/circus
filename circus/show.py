@@ -13,7 +13,7 @@ class Show(object):
                  working_dir=os.getcwd(), shell=False, uid=None,
                  gid=None, send_hup=False):
         self.name = name
-        self.num_flies = num_flies
+        self.num_flies = int(num_flies)
         self.warmup_delay = warmup_delay
         self.cmd = cmd
         self._fly_counter = 0
@@ -44,9 +44,7 @@ class Show(object):
             self.kill_fly(fly)
 
     def spawn_flies(self):
-        to_spawn = int(self.num_flies - len(self.flies.keys()))
-
-        for i in range(to_spawn):
+        for i in range(self.num_flies - len(self.flies.keys())):
             self.spawn_fly()
             time.sleep(self.warmup_delay)
 
