@@ -5,7 +5,7 @@ import os
 
 from circus.fly import Fly
 from circus import logger
-
+from circus import util
 
 class Show(object):
 
@@ -20,16 +20,7 @@ class Show(object):
 
         if not working_dir:
             # working dir hasn't been set
-            # get current path, try to use PWD env first
-            try:
-                a = os.stat(os.environ['PWD'])
-                b = os.stat(os.getcwd())
-                if a.ino == b.ino and a.dev == b.dev:
-                    working_dir = os.environ['PWD']
-                else:
-                    working_dir = os.getcwd()
-            except:
-                working_dir = os.getcwd()
+            working_dir = util.get_working_dir()
 
         self.working_dir = working_dir
 

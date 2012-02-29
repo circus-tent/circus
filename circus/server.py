@@ -10,6 +10,7 @@ from circus import logger
 from circus.trainer import Trainer
 from circus.show import Show
 from circus.pidfile import Pidfile
+from circus import util
 
 MAXFD = 1024
 if hasattr(os, "devnull"):
@@ -138,7 +139,8 @@ def main():
             num_flies = cfg.dget(section, 'num_flies', 1, int)
             warmup_delay = cfg.dget(section, 'warmup_delay', 0, int)
 
-            working_dir = cfg.dget(section, 'working_dir', os.getcwd())
+            working_dir = cfg.dget(section, 'working_dir',
+                    util.get_working_dir())
             shell = cfg.dget(section, 'shell', False, bool)
             uid = cfg.dget(section, 'uid')
             gid = cfg.dget(section, 'gid')
