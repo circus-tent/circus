@@ -1,4 +1,5 @@
 from datetime import timedelta
+import os
 
 from psutil.error import AccessDenied
 from psutil import Popen as PSPopen
@@ -6,6 +7,18 @@ from psutil import Popen as PSPopen
 
 _SYMBOLS = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 
+def get_working_dir():
+    # get current path, try to use PWD env first
+    try:
+        a = os.stat(os.environ['PWD'])
+        b = os.stat(os.getcwd())
+        if a.ino == b.ino and a.dev == b.dev:
+            working_dir = os.environ['PWD']
+        else:
+            working_dir = os.getcwd()
+    except:
+        working_dir = os.getcwd()
+    return working_dir
 
 def bytes2human(n):
     """
