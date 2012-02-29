@@ -5,19 +5,25 @@ import os
 
 from circus.fly import Fly
 from circus import logger
-
+from circus import util
 
 class Show(object):
 
     def __init__(self, name, cmd, num_flies=5, warmup_delay=1.,
-                 working_dir=os.getcwd(), shell=False, uid=None,
+                 working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False):
         self.name = name
-        self.num_flies = num_flies
+        self.num_flies = int(num_flies)
         self.warmup_delay = warmup_delay
         self.cmd = cmd
         self._fly_counter = 0
+
+        if not working_dir:
+            # working dir hasn't been set
+            working_dir = util.get_working_dir()
+
         self.working_dir = working_dir
+
         self.flies = {}
         self.shell = shell
         self.uid = uid
@@ -44,9 +50,7 @@ class Show(object):
             self.kill_fly(fly)
 
     def spawn_flies(self):
-        to_spawn = int(self.num_flies - len(self.flies.keys()))
-
-        for i in range(to_spawn):
+        for i in range(self.num_flies - len(self.flies.keys())):
             self.spawn_fly()
             time.sleep(self.warmup_delay)
 
