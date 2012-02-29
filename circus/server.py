@@ -139,8 +139,7 @@ def main():
             num_flies = cfg.dget(section, 'num_flies', 1, int)
             warmup_delay = cfg.dget(section, 'warmup_delay', 0, int)
 
-            working_dir = cfg.dget(section, 'working_dir',
-                    util.get_working_dir())
+            working_dir = cfg.dget(section, 'working_dir')
             shell = cfg.dget(section, 'shell', False, bool)
             uid = cfg.dget(section, 'uid')
             gid = cfg.dget(section, 'gid')
