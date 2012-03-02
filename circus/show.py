@@ -17,6 +17,7 @@ class Show(object):
         self.warmup_delay = warmup_delay
         self.cmd = cmd
         self._fly_counter = 0
+        self.stopped = False
 
         if not working_dir:
             # working dir hasn't been set
@@ -35,11 +36,17 @@ class Show(object):
         return len(self.flies)
 
     def reap_flies(self):
+        if self.stopped:
+            return
+
         for wid, fly in self.flies.items():
             if fly.poll() is not None:
                 self.flies.pop(wid)
 
     def manage_flies(self):
+        if self.stopped:
+            return
+
         if len(self.flies.keys()) < self.num_flies:
             self.spawn_flies()
 
@@ -92,9 +99,47 @@ class Show(object):
         else:
             return "error: fly not found"
 
+    def stop(self):
+        if self.stopped:
+            return
+
+        self.stopped = True
+        self.kill_flies()
+        logger.info('%s stopped' % self.name)
+
+    def start(self):
+        if not self.stopped:
+            return
+
+        self.stopped = False
+        self.manage_flies()
+        logger.info('%s started' % self.name)
+
+    def restart(self):
+        self.stop()
+        self.start()
+        logger.info('%s restarted' % self.name)
+
     #################
     # show commands #
     #################
+
+    def handle_status(self, *args):
+        if self.stopped:
+            return "stopped"
+        return "active"
+
+    def handle_stop(self, *args):
+        self.stop()
+        return "ok"
+
+    def handle_start(self, *args):
+        self.start()
+        return "ok"
+
+    def handle_restart(self, *args):
+        self.restart()
+        return "ok"
 
     def handle_flies(self, *args):
         return ",".join([str(wid) for wid in self.flies.keys()])
@@ -127,8 +172,7 @@ class Show(object):
             else:
                 return "error: fly '%s' not found" % wid
         else:
-            self.kill_flies()
-            self.num_flies = 0
+            self.stop()
             return "ok"
 
     handle_kill = handle_quit
