@@ -83,6 +83,12 @@ class Controller(object):
                 elif msg == 'quit' or msg == 'halt':
                     socket.send("ok")
                     return self.trainer.stop()
+                elif msg == "start_shows":
+                    resp = self.trainer.start_shows()
+                elif msg == "stop_shows":
+                    resp = self.trainer.stop_shows()
+                elif msg == "restart_shows":
+                    resp = self.trainer.restart_shows()
                 else:
                     try:
                         handler = getattr(self.trainer, "handle_%s" % msg)

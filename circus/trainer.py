@@ -81,3 +81,19 @@ class Trainer(object):
             show.kill_flies()
 
         self.ctrl.stop()
+
+    def stop_shows(self):
+        for show in self.shows:
+            show.stop()
+
+        return "ok"
+
+    def start_shows(self):
+        for show in self.shows:
+            show.start()
+        return "ok"
+
+    def restart_shows(self):
+        for show in self.shows:
+            show.restart()
+        return "ok"
