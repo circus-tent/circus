@@ -74,21 +74,9 @@ class Controller(object):
                 # trainer commands
                 if msg == 'numflies':
                     resp = str(self.trainer.num_flies())
-                elif msg == 'shows':
-                    resp = self.trainer.list_shows()
-                elif msg == 'flies':
-                    resp = self.trainer.list_flies()
-                elif msg == 'info':
-                    resp = self.trainer.info_shows()
                 elif msg == 'quit' or msg == 'halt':
                     socket.send("ok")
                     return self.trainer.stop()
-                elif msg == "start_shows":
-                    resp = self.trainer.start_shows()
-                elif msg == "stop_shows":
-                    resp = self.trainer.stop_shows()
-                elif msg == "restart_shows":
-                    resp = self.trainer.restart_shows()
                 else:
                     try:
                         handler = getattr(self.trainer, "handle_%s" % msg)
@@ -103,8 +91,9 @@ class Controller(object):
             if resp is None:
                 continue
 
-            if not isinstance(resp, str):
-                msg = 'msg %r tried to send a non-string: %s' (msg, str(resp))
+            if not isinstance(resp, (str, buffer,)):
+                msg = "msg %r tried to send a non-string: %s" % (msg,
+                        str(resp))
                 raise ValueError(msg)
 
             socket.send(resp)
