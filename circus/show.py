@@ -11,7 +11,7 @@ class Show(object):
 
     def __init__(self, name, cmd, num_flies=5, warmup_delay=1.,
                  working_dir=None, shell=False, uid=None,
-                 gid=None, send_hup=False):
+                 gid=None, send_hup=False, env=None):
         self.name = name
         self.num_flies = int(num_flies)
         self.warmup_delay = warmup_delay
@@ -28,6 +28,7 @@ class Show(object):
         self.shell = shell
         self.uid = uid
         self.gid = gid
+        self.env = env
         self.send_hup = send_hup
 
     def __len__(self):
@@ -56,8 +57,8 @@ class Show(object):
 
     def spawn_fly(self):
         self._fly_counter += 1
-        fly = Fly(self._fly_counter, self.cmd, self.working_dir, self.shell,
-                  self.uid, self.gid)
+        fly = Fly(self._fly_counter, self.cmd, wdir=self.working_dir,
+                  shell=self.shell, uid=self.uid, gid=self.gid, env=self.env)
         logger.info('running %s fly [pid %d]' % (self.name, fly.pid))
         self.flies[self._fly_counter] = fly
 

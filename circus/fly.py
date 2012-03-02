@@ -12,10 +12,11 @@ _INFOLINE = ("%(pid)s %(username)s %(nice)s %(mem_info1)s "
 
 
 class Fly(object):
-    def __init__(self, wid, cmd, wdir, shell, uid=None, gid=None):
+    def __init__(self, wid, cmd, wdir, shell, uid=None, gid=None, env=None):
         self.wid = str(wid)
         self.wdir = wdir
         self.shell = shell
+        self.env = env
         self.cmd = cmd.replace('$WID', self.wid)
         if uid is not None:
             self.uid = getpwnam(uid)[2]
@@ -35,7 +36,7 @@ class Fly(object):
 
         logger.debug('running ' + self.cmd)
         self._worker = Popen(self.cmd.split(), cwd=self.wdir, shell=shell,
-                             preexec_fn=preexec_fn)
+                             preexec_fn=preexec_fn, env=self.env)
         self.started = time.time()
 
     def poll(self):
