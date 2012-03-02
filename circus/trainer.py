@@ -44,9 +44,11 @@ class Trainer(object):
 
         self.ctrl.stop()
 
-
     def num_flies(self):
         return sum([len(show) for show in self.shows])
+
+    def num_shows(self):
+        return len(self.shows)
 
     def get_show(self, name):
         return self._shows_names[name]

@@ -74,6 +74,8 @@ class Controller(object):
                 # trainer commands
                 if msg == 'numflies':
                     resp = str(self.trainer.num_flies())
+                elif msg == 'numshows':
+                    resp = str(self.trainer.num_shows())
                 elif msg == 'quit' or msg == 'halt':
                     socket.send("ok")
                     return self.trainer.stop()
