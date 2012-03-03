@@ -108,7 +108,6 @@ class Trainer(object):
     def handle_stop_shows(self):
         for show in self.shows:
             show.stop()
-
         return "ok"
 
     def handle_start_shows(self):
