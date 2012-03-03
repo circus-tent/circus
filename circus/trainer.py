@@ -9,6 +9,7 @@ class Trainer(object):
 
     def __init__(self, shows, endpoint, check_delay=1., ipc_path=None):
         self.shows = shows
+        self.endpoint = endpoint
         self.check_delay = check_delay
         self.ipc_path = ipc_path
         self.ctrl = Controller(endpoint, self, self.check_delay,
