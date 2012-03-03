@@ -140,6 +140,7 @@ class Show(object):
         - 1: trigger a graceful reload of the flies;
         """
 
+        action = 0
         if key == "num_flies":
             self.num_flies = int(val)
         elif key == "warmup_delay":

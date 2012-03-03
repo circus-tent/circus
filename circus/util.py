@@ -123,10 +123,7 @@ def parse_env(env_str):
     env = {}
     for kvs in env_str.split(","):
         k, v = kvs.split("=")
-        k = k.strip()
-        if k in env:
-            env[k] += v.strip()
-        env[k] = v.strip()
+        env[k.strip()] = v.strip()
     return env
 
 def env_to_str(env):
