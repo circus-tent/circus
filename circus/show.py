@@ -196,16 +196,15 @@ class Show(object):
         return "ok"
 
     def handle_mset(self, *args):
-        if len(args) < 2:
+        if len(args) < 2 or len(args) % 2 != 0:
             return "error: invalid number of parameters"
         action = 0
-        if len(args) % 2 == 0:
-            rest = args
-            while len(rest) > 0:
-                kv, rest = rest[:2], rest[2:]
-                new_action = self.set_opt(kv[0], kv[1])
-                if new_action == 1:
-                    action = 1
+        rest = args
+        while len(rest) > 0:
+            kv, rest = rest[:2], rest[2:]
+            new_action = self.set_opt(kv[0], kv[1])
+            if new_action == 1:
+                action = 1
         self.do_action(action)
         return "ok"
 
