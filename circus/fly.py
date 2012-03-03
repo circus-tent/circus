@@ -1,10 +1,20 @@
+try:
+    import ctypes
+except MemoryError:
+    # selinux execmem denial
+    # https://bugzilla.redhat.com/show_bug.cgi?id=488396
+    ctypes = None
+except ImportError:
+    # Python on Solaris compiled with Sun Studio doesn't have ctypes
+    ctypes = None
+
 import os
 from pwd import getpwnam
 from grp import getgrnam
 import time
 
 from circus import logger
-from circus.util import Popen
+from circus.util import Popen, to_uid, to_gid
 
 
 _INFOLINE = ("%(pid)s %(username)s %(nice)s %(mem_info1)s "
@@ -18,21 +28,33 @@ class Fly(object):
         self.shell = shell
         self.env = env
         self.cmd = cmd.replace('$WID', self.wid)
+
+        self.uid = to_uid(uid)
+        self.gid = to_gid(gid)
+
         if uid is not None:
-            self.uid = getpwnam(uid)[2]
+            self.uid = to_uid(uid)
         else:
             self.uid = None
 
         if gid is not None:
-            self.gid = getgrnam(gid)[2]
+            self.gid = to_gid(gid)
         else:
             self.gid = None
 
         def preexec_fn():
-            if self.uid:
-                os.setgid(self.uid)
-            if self.gid:
-                os.setuid(self.gid)
+            if gid:
+                try:
+                    os.setgid(gid)
+                except OverflowError:
+                    if not ctypes:
+                        raise
+                    # versions of python < 2.6.2 don't manage unsigned int for
+                    # groups like on osx or fedora
+                    os.setgid(-ctypes.c_int(-gid).value)
+
+            if uid:
+                os.setuid(uid)
 
         logger.debug('running ' + self.cmd)
         self._worker = Popen(self.cmd.split(), cwd=self.wdir, shell=shell,

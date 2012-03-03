@@ -1,8 +1,9 @@
 import os
+from threading import Lock
 
 from circus.controller import Controller
+from circus.exc import AlreadyExist
 from circus import logger
-
 
 class Trainer(object):
 
@@ -15,6 +16,7 @@ class Trainer(object):
         self.pid = os.getpid()
         self._shows_names = {}
         self.alive = True
+        self._lock = Lock()
         self.setup()
         logger.info("Starting master on pid %s" % self.pid)
 
@@ -52,6 +54,22 @@ class Trainer(object):
 
     def get_show(self, name):
         return self._shows_names[name]
+
+    def add_show(self, show):
+        with self._lock:
+            if show.name in self._shows_names:
+                raise AlreadyExist("%r already exist" % show.name)
+            self.shows.append(show)
+            self._shows_names[show.name] = show
+
+    def del_show(self, name):
+        with self._lock:
+            del self._shows_names[name]
+            for i, show in enumerate(self.shows):
+                if show.name == name:
+                    show.stop()
+                    del self.shows[i]
+                    break
 
     ###################
     # commands
