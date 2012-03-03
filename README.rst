@@ -10,13 +10,13 @@ Circus can be used as a library or through the command line.
 Library
 -------
 
-Circus provides high-level Classes and functions that will let you run 
+Circus provides high-level Classes and functions that will let you run
 processes. For example, if you just want to run 4 workers forever, you
 can write::
 
     from circus import get_trainer
 
-    trainer = get_trainer("myprogram", 3)
+    trainer = get_trainer("myprogram", "commandline", 3)
     try:
         trainer.start()
     finally:
@@ -30,7 +30,7 @@ See http://packages.python.org/circus for a full Library documentation.
 Command-Line Interface
 -----------------------
 
-Circus provides a command line script that can be used to run one or several 
+Circus provides a command line script that can be used to run one or several
 types of processes.
 
 It's an ini-style like file. Example::
@@ -49,10 +49,10 @@ The file is then run using *circusd*::
 
     $ circusd example.ini
 
-There's also a *circusctl* command line tool to query Circus to perform 
+There's also a *circusctl* command line tool to query Circus to perform
 actions like adding or removing workers, or getting back some statistics.
 
-See http://packages.python.org/circus for a full documentation on the 
+See http://packages.python.org/circus for a full documentation on the
 configuration file and the commands options.
 
 
