@@ -10,7 +10,7 @@ from circus import util
 class Show(object):
 
 
-    def __init__(self, name, cmd, num_flies=5, warmup_delay=1.,
+    def __init__(self, name, cmd, num_flies=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False, env=None, stopped=False):
         self.name = name
