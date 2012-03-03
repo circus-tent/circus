@@ -9,14 +9,20 @@ from circus import util
 
 class Show(object):
 
-    def __init__(self, name, cmd, num_flies=5, warmup_delay=1.,
+
+    def __init__(self, name, cmd, num_flies=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
-                 gid=None, send_hup=False, env=None):
+                 gid=None, send_hup=False, env=None, stopped=False):
         self.name = name
         self.num_flies = int(num_flies)
         self.warmup_delay = warmup_delay
         self.cmd = cmd
         self._fly_counter = 0
+        self.stopped = stopped
+        self.idx = 0
+
+        self.optnames = ("num_flies", "warmup_delay", "working_dir",
+                "uid",  "gid", "send_hup", "shell", "env")
 
         if not working_dir:
             # working dir hasn't been set
@@ -35,11 +41,17 @@ class Show(object):
         return len(self.flies)
 
     def reap_flies(self):
+        if self.stopped:
+            return
+
         for wid, fly in self.flies.items():
             if fly.poll() is not None:
                 self.flies.pop(wid)
 
     def manage_flies(self):
+        if self.stopped:
+            return
+
         if len(self.flies.keys()) < self.num_flies:
             self.spawn_flies()
 
@@ -49,6 +61,10 @@ class Show(object):
             wid = flies.pop(0)
             fly = self.flies.pop(wid)
             self.kill_fly(fly)
+
+    def reap_and_manage_flies(self):
+        self.reap_flies()
+        self.manage_flies()
 
     def spawn_flies(self):
         for i in range(self.num_flies - len(self.flies.keys())):
@@ -92,9 +108,152 @@ class Show(object):
         else:
             return "error: fly not found"
 
+    def stop(self):
+        if self.stopped:
+            return
+
+        self.stopped = True
+        self.kill_flies()
+        logger.info('%s stopped' % self.name)
+
+    def start(self):
+        if not self.stopped:
+            return
+
+        self.stopped = False
+        self.reap_flies()
+        self.manage_flies()
+        logger.info('%s started' % self.name)
+
+    def restart(self):
+        self.stop()
+        self.start()
+        logger.info('%s restarted' % self.name)
+
+    def set_opt(self, key, val):
+        """ set a show option
+
+        This function set the show options. unknown keys are ignored.
+        This function return an action number:
+
+        - 0: trigger the process management
+        - 1: trigger a graceful reload of the flies;
+        """
+
+        action = 0
+        if key == "num_flies":
+            self.num_flies = int(val)
+        elif key == "warmup_delay":
+            self.warmup_delay = float(val)
+        elif key == "working_dir":
+            self.working_dir = val
+            action = 1
+        elif key == "uid":
+            self.uid = util.to_uid(val)
+            action = 1
+        elif key == "gid":
+            self.gid = util.to_gid(val)
+            action = 1
+        elif key == "send_hup":
+            self.send_hup = util.to_bool(val)
+        elif key == "shell":
+            self.shell = util.to_bool(val)
+            action = 1
+        elif key == "env":
+            self.env = util.parse_env(val)
+            action = 1
+        return action
+
+    def do_action(self, num):
+        if num == 1:
+            for i in range(self.num_flies):
+                self.spawn_fly()
+            self.manage_flies()
+        else:
+            self.reap_and_manage_flies()
+
+    def get_opt(self, name):
+        val = getattr(self, name)
+        if name == "env":
+            val = util.env_to_str(val)
+        else:
+            if val is None:
+                val = ""
+            else:
+                val = str(val).lower()
+        return val
+
     #################
     # show commands #
     #################
+
+    def handle_set(self, *args):
+        if len(args) < 2:
+            return "error: invalid number of parameters"
+
+        action = self.set_opt(args[0], args[1])
+        self.do_action(action)
+        return "ok"
+
+    def handle_mset(self, *args):
+        if len(args) < 2 or len(args) % 2 != 0:
+            return "error: invalid number of parameters"
+        action = 0
+        rest = args
+        while len(rest) > 0:
+            kv, rest = rest[:2], rest[2:]
+            new_action = self.set_opt(kv[0], kv[1])
+            if new_action == 1:
+                action = 1
+        self.do_action(action)
+        return "ok"
+
+    def handle_get(self, *args):
+        if len(args) < 1:
+            return "error: invalid number of parameters"
+
+        if args[0] in self.optnames:
+            return self.get_opt(args[0])
+        else:
+            return "error: %r option not found" % args[0]
+
+    def handle_mget(self, *args):
+        if len(args) < 1:
+            return "error: invalid number of parameters"
+
+        ret = []
+        for name in args:
+            if name in self.optnames:
+                val = self.get_opt(name)
+                ret.append("%s: %s" % (name, val))
+            else:
+                return "error: %r option not found" % name
+        return  "\n".join(ret)
+
+
+    def handle_options(self, *args):
+        ret = []
+        for name in self.optnames:
+            val = self.get_opt(name)
+            ret.append("%s: %s" % (name, val))
+        return "\n".join(ret)
+
+    def handle_status(self, *args):
+        if self.stopped:
+            return "stopped"
+        return "active"
+
+    def handle_stop(self, *args):
+        self.stop()
+        return "ok"
+
+    def handle_start(self, *args):
+        self.start()
+        return "ok"
+
+    def handle_restart(self, *args):
+        self.restart()
+        return "ok"
 
     def handle_flies(self, *args):
         return ",".join([str(wid) for wid in self.flies.keys()])
@@ -127,8 +286,7 @@ class Show(object):
             else:
                 return "error: fly '%s' not found" % wid
         else:
-            self.kill_flies()
-            self.num_flies = 0
+            self.stop()
             return "ok"
 
     handle_kill = handle_quit
