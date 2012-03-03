@@ -46,9 +46,9 @@ class Fly(object):
             if self.uid:
                 os.setuid(self.uid)
 
-        logger.debug('running ' + self.cmd)
-        self._worker = Popen(self.cmd.split(), cwd=self.wdir, shell=shell,
-                             preexec_fn=preexec_fn, env=self.env)
+        self._worker = Popen(self.cmd.split(), cwd=self.wdir,
+                             shell=self.shell, preexec_fn=preexec_fn,
+                             env=self.env)
         self.started = time.time()
 
     def poll(self):
