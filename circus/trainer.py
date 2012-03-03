@@ -65,12 +65,12 @@ class Trainer(object):
 
     def del_show(self, name):
         with self._lock:
-            del self._shows_names[name]
-            for i, show in enumerate(self.shows):
-                if show.name == name:
-                    show.stop()
-                    del self.shows[i]
-                    break
+            # remove the show from the list
+            show = self._shows_names.pop(name)
+            del self.shows[self.shows.index(show)]
+
+            # stop the show
+            show.stop()
 
     ###################
     # commands
