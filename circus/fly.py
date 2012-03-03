@@ -32,29 +32,19 @@ class Fly(object):
         self.uid = to_uid(uid)
         self.gid = to_gid(gid)
 
-        if uid is not None:
-            self.uid = to_uid(uid)
-        else:
-            self.uid = None
-
-        if gid is not None:
-            self.gid = to_gid(gid)
-        else:
-            self.gid = None
-
         def preexec_fn():
-            if gid:
+            if self.gid:
                 try:
-                    os.setgid(gid)
+                    os.setgid(self.gid)
                 except OverflowError:
                     if not ctypes:
                         raise
                     # versions of python < 2.6.2 don't manage unsigned int for
                     # groups like on osx or fedora
-                    os.setgid(-ctypes.c_int(-gid).value)
+                    os.setgid(-ctypes.c_int(-self.gid).value)
 
-            if uid:
-                os.setuid(uid)
+            if self.uid:
+                os.setuid(self.uid)
 
         logger.debug('running ' + self.cmd)
         self._worker = Popen(self.cmd.split(), cwd=self.wdir, shell=shell,
