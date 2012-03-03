@@ -1,5 +1,7 @@
 from datetime import timedelta
+import grp
 import os
+import pwd
 
 from psutil.error import AccessDenied
 from psutil import Popen as PSPopen
@@ -81,3 +83,51 @@ class Popen(PSPopen):
                 info[name] = 'N/A'
 
         return info
+
+def to_bool(s):
+    if s.lower().strip() in ("true", "1",):
+        return True
+    elif s.lower().strip() in ("false", "0"):
+        return False
+    else:
+        raise ValueError("%r isn't not a boolean" % s)
+
+def to_uid(val):
+    if val is None:
+        return val
+
+    elif isinstance(val, int):
+        return val
+    elif val.isdigit():
+        return int(val)
+    else:
+        try:
+            return pwd.getpwnam(val).pw_uid
+        except KeyError:
+            raise ValueError("%r isn't a valid uid")
+
+def to_gid(val):
+    if val is None:
+        return val
+    elif isinstance(val, int):
+        return val
+    elif val.isdigit():
+        return int(val)
+    else:
+        try:
+            return grp.getgrnam(val).gr_gid
+        except KeyError:
+            raise ConfigError("No such group: '%s'" % val)
+
+def parse_env(env_str):
+    env = {}
+    for kvs in env_str.split(","):
+        k, v = kvs.split("=")
+        env[k.strip()] = v.strip()
+    return env
+
+def env_to_str(env):
+    if not env:
+        return ""
+    return ",".join(["%s=%s" % (k,v) for k, v in env.items()])
+

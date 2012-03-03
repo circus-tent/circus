@@ -3,8 +3,9 @@ import tempfile
 import traceback
 import zmq
 
+from circus.exc import AlreadyExist
 from circus.sighandler import SysHandler
-
+from circus.show import Show
 
 class Controller(object):
     def __init__(self, endpoint, trainer, timeout=1.0, ipc_prefix=None):
@@ -50,36 +51,52 @@ class Controller(object):
                 # a program command passed with the format
                 # COMMAND PROGRAM ARGS
 
-                try:
-                    program = self.trainer.get_show(msg_parts[1])
-                    cmd = msg_parts[0].lower()
+                cmd = msg_parts[0].lower()
 
-                    if len(msg_parts) > 2:
-                        args = msg_parts[2:]
+                if cmd == "add_show":
+                    if len(msg_parts) < 3:
+                        resp = "error: invalid number of parameters"
                     else:
-                        args = []
+                        show_cmd = " ".join(msg_parts[2:])
+                        show = Show(msg_parts[1], show_cmd, stopped=True)
+                        try:
+                            self.trainer.add_show(show)
+                            resp = "ok"
+                        except AlreadyExist, e:
+                            resp = "error: %s" % str(e)
 
+                elif cmd == "del_show":
                     try:
-                        handler = getattr(program, "handle_%s" % cmd)
-                        resp = handler(*args)
-                    except AttributeError:
-                        resp = "error: ignored messaged %r" % msg
-                    except Exception, e:
-                        tb = traceback.format_exc()
-                        resp = "error: command %r: %s [%s]" % (msg,
-                                str(e), tb)
-                except KeyError:
-                    resp = "error: program %s not found" % msg_parts[1]
+                        self.trainer.del_show(msg_parts[1])
+                        resp = "ok"
+                    except KeyError:
+                        resp = "error: program %s not found" % msg_parts[1]
+                else:
+                    try:
+                        program = self.trainer.get_show(msg_parts[1])
+
+                        if len(msg_parts) > 2:
+                            args = msg_parts[2:]
+                        else:
+                            args = []
+
+                        try:
+                            handler = getattr(program, "handle_%s" % cmd)
+                            resp = handler(*args)
+                        except AttributeError:
+                            resp = "error: ignored messaged %r" % msg
+                        except Exception, e:
+                            tb = traceback.format_exc()
+                            resp = "error: command %r: %s [%s]" % (msg,
+                                    str(e), tb)
+                    except KeyError:
+                        resp = "error: program %s not found" % msg_parts[1]
             else:
                 # trainer commands
                 if msg == 'numflies':
                     resp = str(self.trainer.num_flies())
-                elif msg == 'shows':
-                    resp = self.trainer.list_shows()
-                elif msg == 'flies':
-                    resp = self.trainer.list_flies()
-                elif msg == 'info':
-                    resp = self.trainer.info_shows()
+                elif msg == 'numshows':
+                    resp = str(self.trainer.num_shows())
                 elif msg == 'quit' or msg == 'halt':
                     socket.send("ok")
                     return self.trainer.stop()
@@ -97,8 +114,9 @@ class Controller(object):
             if resp is None:
                 continue
 
-            if not isinstance(resp, str):
-                msg = 'msg %r tried to send a non-string: %s' (msg, str(resp))
+            if not isinstance(resp, (str, buffer,)):
+                msg = "msg %r tried to send a non-string: %s" % (msg,
+                        str(resp))
                 raise ValueError(msg)
 
             socket.send(resp)
