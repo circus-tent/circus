@@ -16,7 +16,7 @@ can write::
 
     from circus import get_trainer
 
-    trainer = get_trainer("myprogram", "commandline", 3)
+    trainer = get_trainer("myprogram", 3)
     try:
         trainer.start()
     finally:
