@@ -39,8 +39,17 @@ class CircusClient(object):
 
 def main():
     client = CircusClient(sys.argv[1])
+
+    cmd_parts = sys.argv[2:]
+
+    if len(cmd_parts) >= 2:
+        cmd = " ".join(cmd_parts[:2]).lower() + " " + " ".join(cmd_parts[2:])
+    else:
+        cmd = cmd_parts[0].lower()
+
+
     try:
-        print client.call(" ".join(sys.argv[2:]).lower())
+        print client.call(cmd.strip())
         sys.exit(0)
     except CallError, e:
         print str(e)

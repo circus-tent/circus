@@ -22,7 +22,7 @@ class Show(object):
         self.idx = 0
 
         self.optnames = ("num_flies", "warmup_delay", "working_dir",
-                "uid",  "gid", "send_hup", "shell", "env")
+                "uid",  "gid", "send_hup", "shell", "env", "cmd")
 
         if not working_dir:
             # working dir hasn't been set
@@ -162,6 +162,9 @@ class Show(object):
         elif key == "env":
             self.env = util.parse_env(val)
             action = 1
+        elif key == "cmd":
+            self.cmd = val
+            action = 1
         return action
 
     def do_action(self, num):
@@ -191,7 +194,7 @@ class Show(object):
         if len(args) < 2:
             return "error: invalid number of parameters"
 
-        action = self.set_opt(args[0], args[1])
+        action = self.set_opt(args[0], " ".join(args[1:]))
         self.do_action(action)
         return "ok"
 
