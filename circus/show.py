@@ -183,7 +183,7 @@ class Show(object):
             if val is None:
                 val = ""
             else:
-                val = str(val).lower()
+                val = str(val)
         return val
 
     #################
