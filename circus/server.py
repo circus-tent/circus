@@ -144,6 +144,11 @@ def main():
             uid = cfg.dget(section, 'uid')
             gid = cfg.dget(section, 'gid')
             send_hup = cfg.dget(section, 'send_hup', False, bool)
+            times = cfg.dget(section, "times", 2, int)
+            within = cfg.dget(section, "within", 1, int)
+            retry_in = cfg.dget(section, "retry_in", 7, int)
+            max_retry = cfg.dget(section, "max_retry", 5, int)
+
             shows.append(Show(name, cmd, num_flies, warmup_delay, working_dir,
                               shell, uid, gid, send_hup))
 

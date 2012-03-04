@@ -43,7 +43,7 @@ class Trainer(object):
         self.alive = False
         # kill flies
         for show in self.shows:
-            show.kill_flies()
+            show.stop()
 
         self.ctrl.stop()
 
