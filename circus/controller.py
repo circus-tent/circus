@@ -62,6 +62,8 @@ class Controller(object):
                         try:
                             self.trainer.add_show(show)
                             resp = "ok"
+                        except OSError, e:
+                            resp = "error: %s" % str(e)
                         except AlreadyExist, e:
                             resp = "error: %s" % str(e)
 
@@ -85,6 +87,8 @@ class Controller(object):
                             resp = handler(*args)
                         except AttributeError:
                             resp = "error: ignored messaged %r" % msg
+                        except OSError, e:
+                            resp = "error: %s" % str(e)
                         except Exception, e:
                             tb = traceback.format_exc()
                             resp = "error: command %r: %s [%s]" % (msg,
@@ -104,6 +108,8 @@ class Controller(object):
                     try:
                         handler = getattr(self.trainer, "handle_%s" % msg)
                         resp = handler()
+                    except OSError, e:
+                        resp = "error: %s" % str(e)
                     except AttributeError:
                         resp = "error: ignored messaged %r" % msg
                     except Exception, e:

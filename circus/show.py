@@ -2,6 +2,7 @@ import errno
 import signal
 import time
 
+from circus.flapping import Flapping
 from circus.fly import Fly
 from circus import logger
 from circus import util
@@ -12,17 +13,20 @@ class Show(object):
 
     def __init__(self, name, cmd, num_flies=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
-                 gid=None, send_hup=False, env=None, stopped=False):
+                 gid=None, send_hup=False, env=None, stopped=False,
+                 times=2, within=1., retry_in=7., max_retry=5):
         self.name = name
         self.num_flies = int(num_flies)
         self.warmup_delay = warmup_delay
         self.cmd = cmd
         self._fly_counter = 0
         self.stopped = stopped
-        self.idx = 0
+        self.max_retry = max_retry
 
         self.optnames = ("num_flies", "warmup_delay", "working_dir",
-                "uid",  "gid", "send_hup", "shell", "env", "cmd")
+                         "uid", "gid", "send_hup", "shell", "env",
+                         "cmd", "times", "within", "retry_in",
+                         "max_retry")
 
         if not working_dir:
             # working dir hasn't been set
@@ -37,6 +41,10 @@ class Show(object):
         self.env = env
         self.send_hup = send_hup
 
+        # define flapping object
+        self.flapping = Flapping(self, times, within, retry_in, max_retry)
+
+
     def __len__(self):
         return len(self.flies)
 
@@ -46,6 +54,9 @@ class Show(object):
 
         for wid, fly in self.flies.items():
             if fly.poll() is not None:
+                self.flapping.notify()
+                if self.stopped:
+                    break
                 self.flies.pop(wid)
 
     def manage_flies(self):
@@ -72,15 +83,33 @@ class Show(object):
             time.sleep(self.warmup_delay)
 
     def spawn_fly(self):
+        if self.stopped:
+            return
         self._fly_counter += 1
-        fly = Fly(self._fly_counter, self.cmd, wdir=self.working_dir,
-                  shell=self.shell, uid=self.uid, gid=self.gid, env=self.env)
-        logger.info('running %s fly [pid %d]' % (self.name, fly.pid))
-        self.flies[self._fly_counter] = fly
+        nb_tries = 0
+        while nb_tries < self.max_retry:
+            fly = None
+            try:
+                fly = Fly(self._fly_counter, self.cmd, wdir=self.working_dir,
+                          shell=self.shell, uid=self.uid, gid=self.gid,
+                          env=self.env)
+                self.flies[self._fly_counter] = fly
+                logger.info('running %s fly [pid %d]' % (self.name, fly.pid))
+            except OSError, e:
+                logger.warning('error in %r: %s' % (self.name, str(e)))
+
+            if fly is None:
+                nb_tries += 1
+                continue
+            else:
+                return
+
+        self.stop()
+
 
     # TODO: we should manage more flies here.
     def kill_fly(self, fly):
-        logger.info("kill fly %s" % fly.pid)
+        logger.info("%s: kill fly %s" % (self.name, fly.pid))
         fly.stop()
 
     def kill_flies(self):
@@ -109,10 +138,8 @@ class Show(object):
             return "error: fly not found"
 
     def stop(self):
-        if self.stopped:
-            return
-
         self.stopped = True
+        self.flapping.reset()
         self.kill_flies()
         logger.info('%s stopped' % self.name)
 
@@ -165,10 +192,21 @@ class Show(object):
         elif key == "cmd":
             self.cmd = val
             action = 1
+        elif key == "times":
+            self.flapping.times = int(val)
+            action = -1
+        elif key == "within":
+            self.flapping.within = float(val)
+        elif key == "retry_in":
+            self.flapping.retry_in = float(val)
+        elif key == "max_retry":
+            self.flapping.max_retry = int(val)
         return action
 
     def do_action(self, num):
+        self.stopped = False
         if num == 1:
+            self.flapping.reset()
             for i in range(self.num_flies):
                 self.spawn_fly()
             self.manage_flies()
