@@ -90,9 +90,9 @@ class Show(object):
         while nb_tries < self.max_retry:
             fly = None
             try:
-                fly = Fly(self._fly_counter, self.cmd, wdir=self.working_dir,
-                          shell=self.shell, uid=self.uid, gid=self.gid,
-                          env=self.env)
+                fly = Fly(self._fly_counter, self.cmd,
+                          working_dir=self.working_dir, shell=self.shell,
+                          uid=self.uid, gid=self.gid, env=self.env)
                 self.flies[self._fly_counter] = fly
                 logger.info('running %s fly [pid %d]' % (self.name, fly.pid))
             except OSError, e:
