@@ -34,15 +34,16 @@ class Flapping(object):
             duration = self.timeline[-1] - self.timeline[0]
             if duration <= self.within:
                 if self.tries <  self.max_retry:
-                    logger.info("flapping detected: retry in %2ds" %
-                            self.retry_in)
+                    logger.info("%s: flapping detected: retry in %2ds" %
+                            (self.show.name, self.retry_in))
                     self.show.stopped = True
                     self.timeline = []
                     self.tries += 1
                     self.timer = Timer(self.retry_in, self.show.start)
                     self.timer.start()
                 else:
-                    logger.info("flapping detected: max retry limit")
+                    logger.info("%s: flapping detected: max retry limit" %
+                            self.show.name)
                     self.timeline = []
                     self.tries = 0
                     self.show.stop()
