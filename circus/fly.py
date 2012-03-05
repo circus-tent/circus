@@ -18,7 +18,7 @@ from psutil import Popen
 from circus import logger
 from circus.util import get_info, to_uid, to_gid
 
-_INFOLINE = ("%(pid)s %(username)s %(nice)s %(mem_info1)s "
+_INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
              "%(mem_info2)s %(cpu)s %(mem)s %(ctime)s")
 
 
