@@ -23,11 +23,11 @@ _INFOLINE = ("%(pid)s %(username)s %(nice)s %(mem_info1)s "
 
 class Fly(object):
     def __init__(self, wid, cmd, wdir, shell, uid=None, gid=None, env=None):
-        self.wid = str(wid)
+        self.wid = wid
         self.wdir = wdir
         self.shell = shell
         self.env = env
-        self.cmd = cmd.replace('$WID', self.wid)
+        self.cmd = cmd.replace('$WID', str(self.wid))
 
         self.uid = to_uid(uid)
         self.gid = to_gid(gid)
@@ -58,7 +58,8 @@ class Fly(object):
         return self._worker.send_signal(sig)
 
     def stop(self):
-        return self._worker.terminate()
+        if self._worker.poll() is None:
+            return self._worker.terminate()
 
     def age(self):
         return time.time() - self.started
