@@ -35,6 +35,7 @@ class Fly(object):
         self.gid = to_gid(gid)
 
         def preexec_fn():
+            os.setsid()
             if self.gid:
                 try:
                     os.setgid(self.gid)

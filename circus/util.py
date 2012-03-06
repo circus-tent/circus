@@ -137,3 +137,8 @@ def env_to_str(env):
         return ""
     return ",".join(["%s=%s" % (k,v) for k, v in env.items()])
 
+
+def close_on_exec(fd):
+    flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+    flags |= fcntl.FD_CLOEXEC
+    fcntl.fcntl(fd, fcntl.F_SETFD, flags)
