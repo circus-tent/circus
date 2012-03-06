@@ -46,7 +46,7 @@ class Flapping(object):
                             self.show.name)
                     self.timeline = []
                     self.tries = 0
-                    self.show.stop()
+                    self.show.stop(graceful=False)
             else:
                 self.timeline = []
                 self.tries = 0
