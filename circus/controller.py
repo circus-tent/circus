@@ -104,6 +104,9 @@ class Controller(object):
                 elif msg in ('quit', 'halt', 'stop',):
                     socket.send("ok")
                     return self.trainer.stop()
+                elif msg == "terminate":
+                    socket.send("ok")
+                    return self.trainer.stop(graceful=False)
                 else:
                     try:
                         handler = getattr(self.trainer, "handle_%s" % msg)

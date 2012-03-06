@@ -51,7 +51,7 @@ class Fly(object):
 
         self._worker = Popen(self.cmd.split(), cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
-                             env=self.env)
+                             env=self.env, close_fds=True)
         self.started = time.time()
 
     def poll(self):

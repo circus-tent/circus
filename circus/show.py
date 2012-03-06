@@ -14,7 +14,8 @@ class Show(object):
     def __init__(self, name, cmd, num_flies=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False, env=None, stopped=False,
-                 times=2, within=1., retry_in=7., max_retry=5):
+                 times=2, within=1., retry_in=7., max_retry=5,
+                 graceful_timeout=30. , prereload_fn=None):
         self.name = name
         self.num_flies = int(num_flies)
         self.warmup_delay = warmup_delay
@@ -22,6 +23,8 @@ class Show(object):
         self._fly_counter = 0
         self.stopped = stopped
         self.max_retry = max_retry
+        self.graceful_timeout = 30
+        self.prereload_fn = prereload_fn
 
         self.optnames = ("num_flies", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env",
@@ -108,15 +111,15 @@ class Show(object):
 
 
     # TODO: we should manage more flies here.
-    def kill_fly(self, fly):
+    def kill_fly(self, fly, sig=signal.SIGTERM):
         logger.info("%s: kill fly %s" % (self.name, fly.pid))
-        fly.stop()
+        fly.send_signal(sig)
 
-    def kill_flies(self):
+    def kill_flies(self, sig):
         for wid in self.flies.keys():
             try:
                 fly = self.flies.pop(wid)
-                self.kill_fly(fly)
+                self.kill_fly(fly, sig)
             except OSError, e:
                 if e.errno != errno.ESRCH:
                     raise
@@ -137,10 +140,24 @@ class Show(object):
         else:
             return "error: fly not found"
 
-    def stop(self):
+    def stop(self, graceful=True):
         self.stopped = True
         self.flapping.reset()
-        self.kill_flies()
+
+        sig = signal.SIGQUIT
+        if not graceful:
+            sig = signal.SIGTERM
+
+        limit = time.time() + self.graceful_timeout
+        while self.flies and time.time() < limit:
+            self.kill_flies(sig)
+            time.sleep(0.1)
+            # reap flies
+            for wid, fly in self.flies.items():
+                if fly.poll() is not None:
+                    del  self.flies[wid]
+        self.kill_flies(signal.SIGKILL)
+
         logger.info('%s stopped' % self.name)
 
     def start(self):
@@ -156,6 +173,19 @@ class Show(object):
         self.stop()
         self.start()
         logger.info('%s restarted' % self.name)
+
+    def reload(self):
+        if self.prereload_fn is not None:
+            self.prereload_fn(self)
+
+        if self.send_hup:
+            for wid, fly in self.flies.items():
+                logger.info("SEND HUP to %s [%s]" % (wid, fly.pid))
+                fly.send_signal(signal.SIGHUP)
+        else:
+            for i in range(self.num_flies):
+                self.spawn_fly()
+            self.manage_flies()
 
     def set_opt(self, key, val):
         """ set a show option
@@ -330,17 +360,29 @@ class Show(object):
             self.stop()
             return "ok"
 
-    handle_kill = handle_quit
+    handle_kill = handle_stop = handle_quit
+
+    def handle_terminate(self, *args):
+        if len(args) > 0:
+            wid = int(args[0])
+            if wid in self.flies:
+                try:
+                    fly = self.flies.pop(wid)
+                    self.kill_fly(fly, signal.SIGTERM)
+                    return "ok"
+                except OSError, e:
+                    if e.errno != errno.ESRCH:
+                        raise
+            else:
+                return "error: fly '%s' not found" % wid
+        else:
+            self.stop(graceful=False)
+            return "ok"
+
 
     def handle_reload(self, *args):
-        if self.send_hup:
-            for wid, fly in self.flies.items():
-                logger.info("SEND HUP to %s [%s]" % (wid, fly.pid))
-                fly.send_signal(signal.SIGHUP)
-        else:
-            for i in range(self.num_flies):
-                self.spawn_fly()
-            self.manage_flies()
+        self.reload()
+        logger.info("%r reloaded" % self.name)
         return "ok"
 
     handle_hup = handle_reload
