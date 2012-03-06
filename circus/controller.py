@@ -28,12 +28,12 @@ class Controller(object):
         self.timeout = timeout * 1000
 
         # start the sys handler
-        self.sys_hdl = SysHandler(ipc_path)
+        self.sys_hdl = SysHandler(trainer)
 
     def poll(self):
         try:
             events = dict(self.poller.poll(self.timeout))
-        except zmq.ZMQError:
+        except zmq.ZMQError, e:
             return
 
         for socket in events:
@@ -101,7 +101,7 @@ class Controller(object):
                     resp = str(self.trainer.num_flies())
                 elif msg == 'numshows':
                     resp = str(self.trainer.num_shows())
-                elif msg == 'quit' or msg == 'halt':
+                elif msg in ('quit', 'halt', 'stop',):
                     socket.send("ok")
                     return self.trainer.stop()
                 else:
@@ -128,7 +128,6 @@ class Controller(object):
             socket.send(resp)
 
     def stop(self):
-        self.sys_hdl.stop()
         try:
             self.context.destroy(0)
         except:

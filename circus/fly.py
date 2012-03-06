@@ -13,11 +13,12 @@ from pwd import getpwnam
 from grp import getgrnam
 import time
 
+from psutil import Popen
+
 from circus import logger
-from circus.util import Popen, to_uid, to_gid
+from circus.util import get_info, to_uid, to_gid
 
-
-_INFOLINE = ("%(pid)s %(username)s %(nice)s %(mem_info1)s "
+_INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
              "%(mem_info2)s %(cpu)s %(mem)s %(ctime)s")
 
 
@@ -34,6 +35,7 @@ class Fly(object):
         self.gid = to_gid(gid)
 
         def preexec_fn():
+            os.setsid()
             if self.gid:
                 try:
                     os.setgid(self.gid)
@@ -67,11 +69,11 @@ class Fly(object):
 
     def info(self):
         """ return process info """
-        info = _INFOLINE % self._worker.get_info()
+        info = _INFOLINE % get_info(self._worker)
         lines = ["%s: %s" % (self.wid, info)]
 
         for child in self._worker.get_children():
-            info = _INFOLINE % child.get_info()
+            info = _INFOLINE % get_info(child)
             lines.append("   %s" % info)
 
         return "\n".join(lines)

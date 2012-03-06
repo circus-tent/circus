@@ -4,8 +4,6 @@ import os
 import pwd
 
 from psutil.error import AccessDenied
-from psutil import Popen as PSPopen
-
 
 _SYMBOLS = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 
@@ -45,44 +43,52 @@ def bytes2human(n):
     return "%sB" % n
 
 
-class Popen(PSPopen):
-    def get_info(self):
-        info = {}
+def get_info(process):
+    info = {}
+    try:
+        mem_info = process.get_memory_info()
+        info['mem_info1'] = bytes2human(mem_info[0])
+        info['mem_info2'] = bytes2human(mem_info[1])
+    except AccessDenied:
+        info['mem_info1'] = info['mem_info2'] = "N/A"
+
+    try:
+        info['cpu'] = process.get_cpu_percent(interval=0)
+    except AccessDenied:
+        info['cpu'] = "N/A"
+
+    try:
+        info['mem'] = round(process.get_memory_percent(), 1)
+    except AccessDenied:
+        info['mem'] = "N/A"
+
+    try:
+        cpu_times = process.get_cpu_times()
+        ctime = timedelta(seconds=sum(cpu_times))
+        ctime = "%s:%s.%s" % (ctime.seconds // 60 % 60,
+                        str((ctime.seconds % 60)).zfill(2),
+                        str(ctime.microseconds)[:2])
+    except AccessDenied:
+        ctime = "N/A"
+
+    info['ctime'] = ctime
+
+    for name in ('pid', 'username', 'nice'):
         try:
-            mem_info = self.get_memory_info()
-            info['mem_info1'] = bytes2human(mem_info[0])
-            info['mem_info2'] = bytes2human(mem_info[1])
+            info[name] = getattr(process, name)
         except AccessDenied:
-            info['mem_info1'] = info['mem_info2'] = "N/A"
+            info[name] = 'N/A'
 
-        try:
-            info['cpu'] = self.get_cpu_percent(interval=0)
-        except AccessDenied:
-            info['cpu'] = "N/A"
 
-        try:
-            info['mem'] = round(self.get_memory_percent(), 1)
-        except AccessDenied:
-            info['mem'] = "N/A"
+    try:
+        cmdline = os.path.basename(process.cmdline[0])
+    except AccessDenied:
+        cmdline = "N/A"
 
-        try:
-            cpu_times = self.get_cpu_times()
-            ctime = timedelta(seconds=sum(cpu_times))
-            ctime = "%s:%s.%s" % (ctime.seconds // 60 % 60,
-                            str((ctime.seconds % 60)).zfill(2),
-                            str(ctime.microseconds)[:2])
-        except AccessDenied:
-            ctime = "N/A"
+    info['cmdline'] = cmdline
 
-        info['ctime'] = ctime
+    return info
 
-        for name in ('pid', 'username', 'nice'):
-            try:
-                info[name] = getattr(self, name)
-            except AccessDenied:
-                info[name] = 'N/A'
-
-        return info
 
 def to_bool(s):
     if s.lower().strip() in ("true", "1",):
@@ -131,3 +137,8 @@ def env_to_str(env):
         return ""
     return ",".join(["%s=%s" % (k,v) for k, v in env.items()])
 
+
+def close_on_exec(fd):
+    flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+    flags |= fcntl.FD_CLOEXEC
+    fcntl.fcntl(fd, fcntl.F_SETFD, flags)
