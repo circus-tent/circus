@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from threading import Lock
@@ -8,11 +9,14 @@ from circus import logger
 
 class Trainer(object):
 
-    def __init__(self, shows, endpoint, check_delay=1., ipc_path=None):
+    def __init__(self, shows, endpoint, check_delay=1., ipc_path=None,
+            prereload_fn=None):
         self.shows = shows
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.ipc_path = ipc_path
+        self.prereload_fn = prereload_fn
+
         self.ctrl = Controller(endpoint, self, self.check_delay,
                 self.ipc_path)
         self.pid = os.getpid()
@@ -50,6 +54,9 @@ class Trainer(object):
         sys.exit(0)
 
     def reload(self):
+        if self.prereload_fn is not None:
+            self.prereload_fn(self)
+
         # reopen log files
         for handler in logger.handlers:
             if isinstance(handler, logging.FileHandler):
