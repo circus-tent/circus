@@ -29,7 +29,7 @@ class Show(object):
         self.optnames = ("num_flies", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env",
                          "cmd", "times", "within", "retry_in",
-                         "max_retry")
+                         "max_retry", "graceful_timeout")
 
         if not working_dir:
             # working dir hasn't been set
@@ -231,6 +231,9 @@ class Show(object):
             self.flapping.retry_in = float(val)
         elif key == "max_retry":
             self.flapping.max_retry = int(val)
+        elif key == "graceful_timeout":
+            self.graceful_timeout = float(val)
+            action = -1
         return action
 
     def do_action(self, num):

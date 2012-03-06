@@ -149,9 +149,15 @@ def main():
             within = cfg.dget(section, "within", 1, int)
             retry_in = cfg.dget(section, "retry_in", 7, int)
             max_retry = cfg.dget(section, "max_retry", 5, int)
+            graceful_timeout = cfg.dget(section, "graceful_timeout", 30, int)
 
-            shows.append(Show(name, cmd, num_flies, warmup_delay, working_dir,
-                              shell, uid, gid, send_hup))
+            show = Show(name, cmd, num_flies=num_flies,
+                        warmup_delay=warmup_delay, working_dir=working_dir,
+                        shell=shell, uid=uid, gid=gid, send_hup=send_hup,
+                        times=times, within=within, retry_in=retry_in,
+                        max_retry=max_retry, graceful_timeout=graceful_timeout)
+
+            shows.append(show)
 
     check = cfg.dget('circus', 'check_delay', 5, int)
     endpoint = cfg.dget('circus', 'endpoint', 'tcp://127.0.0.1:5555')
