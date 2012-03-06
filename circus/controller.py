@@ -101,7 +101,7 @@ class Controller(object):
                     resp = str(self.trainer.num_flies())
                 elif msg == 'numshows':
                     resp = str(self.trainer.num_shows())
-                elif msg in ('quit', 'halt',):
+                elif msg in ('quit', 'halt', 'stop',):
                     socket.send("ok")
                     return self.trainer.stop()
                 else:
