@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from threading import Lock
@@ -8,11 +9,14 @@ from circus import logger
 
 class Trainer(object):
 
-    def __init__(self, shows, endpoint, check_delay=1., ipc_path=None):
+    def __init__(self, shows, endpoint, check_delay=1., ipc_path=None,
+            prereload_fn=None):
         self.shows = shows
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.ipc_path = ipc_path
+        self.prereload_fn = prereload_fn
+
         self.ctrl = Controller(endpoint, self, self.check_delay,
                 self.ipc_path)
         self.pid = os.getpid()
@@ -40,14 +44,31 @@ class Trainer(object):
             # wait for the controller
             self.ctrl.poll()
 
-    def stop(self):
+    def stop(self, graceful=True):
         self.alive = False
         # kill flies
         for show in self.shows:
-            show.stop()
+            show.stop(graceful=graceful)
 
         self.ctrl.stop()
         sys.exit(0)
+
+    def reload(self):
+        if self.prereload_fn is not None:
+            self.prereload_fn(self)
+
+        # reopen log files
+        for handler in logger.handlers:
+            if isinstance(handler, logging.FileHandler):
+                handler.acquire()
+                handler.stream.close()
+                handler.stream = open(handler.baseFilename,
+                        handler.mode)
+                handler.release()
+
+        # gracefully reload shows
+        for show in self.shows:
+            show.reload()
 
     def num_flies(self):
         return sum([len(show) for show in self.shows])
@@ -95,17 +116,8 @@ class Trainer(object):
         return buffer("".join(infos))
 
     def handle_reload(self):
+        self.reload()
         return "ok"
-
-    def handle_winch(self):
-        "SIGWINCH handling"
-        if os.getppid() == 1 or os.getpgrp() != os.getpid():
-            for show in self.shows:
-                show.num_flies = 0
-                show.kill_flies()
-        else:
-            # SIGWINCH ignored. Not daemonized
-            pass
 
     def handle_stop_shows(self):
         for show in self.shows:
