@@ -1,4 +1,5 @@
 import os
+import sys
 from threading import Lock
 
 from circus.controller import Controller
@@ -46,6 +47,7 @@ class Trainer(object):
             show.stop()
 
         self.ctrl.stop()
+        sys.exit(0)
 
     def num_flies(self):
         return sum([len(show) for show in self.shows])
