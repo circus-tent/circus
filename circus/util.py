@@ -3,7 +3,6 @@ import grp
 import os
 import pwd
 import fcntl
-from ConfigParser import ConfigError
 
 from psutil.error import AccessDenied
 
@@ -126,7 +125,7 @@ def to_gid(val):
         try:
             return grp.getgrnam(val).gr_gid
         except KeyError:
-            raise ConfigError("No such group: '%s'" % val)
+            raise ValueError("No such group: '%s'" % val)
 
 
 def parse_env(env_str):
