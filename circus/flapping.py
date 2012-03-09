@@ -7,13 +7,12 @@ from circus import logger
 class Flapping(object):
 
     def __init__(self, show, times=2, within=1., retry_in=7.,
-            max_retry=5):
+                 max_retry=5):
         self.show = show
         self.times = times
         self.within = within
         self.retry_in = retry_in
         self.max_retry = max_retry
-
         self.tries = 0
         self.timeline = []
         self.timer = None
