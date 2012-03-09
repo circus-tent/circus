@@ -81,7 +81,6 @@ def get_info(process):
         except AccessDenied:
             info[name] = 'N/A'
 
-
     try:
         cmdline = os.path.basename(process.cmdline[0])
     except AccessDenied:
@@ -100,6 +99,7 @@ def to_bool(s):
     else:
         raise ValueError("%r isn't not a boolean" % s)
 
+
 def to_uid(val):
     if val is None:
         return val
@@ -114,6 +114,7 @@ def to_uid(val):
         except KeyError:
             raise ValueError("%r isn't a valid uid")
 
+
 def to_gid(val):
     if val is None:
         return val
@@ -127,6 +128,7 @@ def to_gid(val):
         except KeyError:
             raise ConfigError("No such group: '%s'" % val)
 
+
 def parse_env(env_str):
     env = {}
     for kvs in env_str.split(","):
@@ -134,10 +136,11 @@ def parse_env(env_str):
         env[k.strip()] = v.strip()
     return env
 
+
 def env_to_str(env):
     if not env:
         return ""
-    return ",".join(["%s=%s" % (k,v) for k, v in env.items()])
+    return ",".join(["%s=%s" % (k, v) for k, v in env.items()])
 
 
 def close_on_exec(fd):

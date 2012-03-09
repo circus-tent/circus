@@ -3,6 +3,7 @@ import time
 
 from circus import logger
 
+
 class Flapping(object):
 
     def __init__(self, show, times=2, within=1., retry_in=7.,
@@ -16,7 +17,6 @@ class Flapping(object):
         self.tries = 0
         self.timeline = []
         self.timer = None
-
 
     def notify(self):
         self.timeline.append(time.time())
@@ -33,7 +33,7 @@ class Flapping(object):
         if len(self.timeline) == self.times:
             duration = self.timeline[-1] - self.timeline[0]
             if duration <= self.within:
-                if self.tries <  self.max_retry:
+                if self.tries < self.max_retry:
                     logger.info("%s: flapping detected: retry in %2ds" %
                             (self.show.name, self.retry_in))
                     self.show.stopped = True

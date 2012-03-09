@@ -10,12 +10,11 @@ from circus import util
 
 class Show(object):
 
-
     def __init__(self, name, cmd, num_flies=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False, env=None, stopped=False,
                  times=2, within=1., retry_in=7., max_retry=5,
-                 graceful_timeout=30. , prereload_fn=None):
+                 graceful_timeout=30., prereload_fn=None):
         self.name = name
         self.num_flies = int(num_flies)
         self.warmup_delay = warmup_delay
@@ -46,7 +45,6 @@ class Show(object):
 
         # define flapping object
         self.flapping = Flapping(self, times, within, retry_in, max_retry)
-
 
     def __len__(self):
         return len(self.flies)
@@ -109,8 +107,6 @@ class Show(object):
 
         self.stop()
 
-
-    # TODO: we should manage more flies here.
     def kill_fly(self, fly, sig=signal.SIGTERM):
         logger.info("%s: kill fly %s" % (self.name, fly.pid))
         fly.send_signal(sig)
@@ -304,7 +300,6 @@ class Show(object):
                 return "error: %r option not found" % name
         return  "\n".join(ret)
 
-
     def handle_options(self, *args):
         ret = []
         for name in self.optnames:
@@ -381,7 +376,6 @@ class Show(object):
         else:
             self.stop(graceful=False)
             return "ok"
-
 
     def handle_reload(self, *args):
         self.reload()

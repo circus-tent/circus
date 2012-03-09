@@ -3,20 +3,19 @@ try:
 except MemoryError:
     # selinux execmem denial
     # https://bugzilla.redhat.com/show_bug.cgi?id=488396
-    ctypes = None
+    ctypes = None       # NOQA
 except ImportError:
     # Python on Solaris compiled with Sun Studio doesn't have ctypes
-    ctypes = None
+    ctypes = None       # NOQA
 
 import os
-from pwd import getpwnam
-from grp import getgrnam
 import time
 
 from psutil import Popen
 
 from circus import logger
 from circus.util import get_info, to_uid, to_gid
+
 
 _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
              "%(mem_info2)s %(cpu)s %(mem)s %(ctime)s")

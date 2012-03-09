@@ -7,6 +7,7 @@ from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
 
+
 class Trainer(object):
 
     def __init__(self, shows, endpoint, check_delay=1., ipc_path=None,

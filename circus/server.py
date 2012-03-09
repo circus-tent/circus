@@ -2,7 +2,6 @@ import sys
 import argparse
 import ConfigParser
 import os
-import sys
 import logging
 import resource
 

@@ -1,7 +1,6 @@
 import logging
 import os
 
-from circus.util import get_working_dir
 
 logger = logging.getLogger('circus')
 

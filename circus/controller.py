@@ -7,6 +7,7 @@ from circus.exc import AlreadyExist
 from circus.sighandler import SysHandler
 from circus.show import Show
 
+
 class Controller(object):
     def __init__(self, endpoint, trainer, timeout=1.0, ipc_prefix=None):
         self.context = zmq.Context()

@@ -47,7 +47,6 @@ def main():
     else:
         cmd = cmd_parts[0].lower()
 
-
     try:
         print client.call(cmd.strip())
         sys.exit(0)

@@ -1,8 +1,9 @@
 import signal
 import traceback
-import zmq
+import sys
 
 from circus import logger
+
 
 class SysHandler(object):
 
@@ -21,7 +22,6 @@ class SysHandler(object):
 
         # init signals
         map(lambda s: signal.signal(s, self.signal), self.SIGNALS)
-
 
     def signal(self, sig, frame):
         signame = self.SIG_NAMES.get(sig)
