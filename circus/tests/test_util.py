@@ -1,5 +1,6 @@
 import unittest
-from circus.util import Popen
+from psutil import Popen
+from circus.util import get_info
 
 
 class TestUtil(unittest.TestCase):
@@ -8,7 +9,7 @@ class TestUtil(unittest.TestCase):
 
         worker = Popen(['top'], shell=True)
         try:
-            info = worker.get_info()
+            info = get_info(worker)
         finally:
             worker.terminate()
 

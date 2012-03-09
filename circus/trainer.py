@@ -52,7 +52,6 @@ class Trainer(object):
             show.stop(graceful=graceful)
 
         self.ctrl.stop()
-        sys.exit(0)
 
     def reload(self):
         if self.prereload_fn is not None:

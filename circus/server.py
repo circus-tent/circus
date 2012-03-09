@@ -169,6 +169,7 @@ def main():
         if pidfile is not None:
             pidfile.unlink()
 
+     sys.exit(0)
 
 if __name__ == '__main__':
     main()
