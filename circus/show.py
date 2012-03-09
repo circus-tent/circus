@@ -21,6 +21,9 @@ class Show(object):
         self.cmd = cmd
         self._fly_counter = 0
         self.stopped = stopped
+        self.times = times
+        self.within = within
+        self.retry_in = retry_in
         self.max_retry = max_retry
         self.graceful_timeout = 30
         self.prereload_fn = prereload_fn
@@ -219,14 +222,14 @@ class Show(object):
             self.cmd = val
             action = 1
         elif key == "times":
-            self.flapping.times = int(val)
+            self.flapping.times = self.times = int(val)
             action = -1
         elif key == "within":
-            self.flapping.within = float(val)
+            self.flapping.within = self.within = float(val)
         elif key == "retry_in":
-            self.flapping.retry_in = float(val)
+            self.flapping.retry_in = self.retry_in = float(val)
         elif key == "max_retry":
-            self.flapping.max_retry = int(val)
+            self.flapping.max_retry = self.max_retry = int(val)
         elif key == "graceful_timeout":
             self.graceful_timeout = float(val)
             action = -1
