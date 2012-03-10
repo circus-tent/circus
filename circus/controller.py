@@ -98,11 +98,7 @@ class Controller(object):
                         resp = "error: program %s not found" % msg_parts[1]
             else:
                 # trainer commands
-                if msg == 'numflies':
-                    resp = str(self.trainer.num_flies())
-                elif msg == 'numshows':
-                    resp = str(self.trainer.num_shows())
-                elif msg in ('quit', 'halt', 'stop',):
+                if msg in ('quit', 'halt', 'stop',):
                     socket.send("ok")
                     return self.trainer.stop()
                 elif msg == "terminate":
