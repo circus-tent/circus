@@ -99,6 +99,13 @@ class Trainer(object):
     # commands
     ###################
 
+
+    def handle_numflies(self):
+        return str(self.num_flies())
+
+    def handle_numshows(self):
+        return str(self.num_shows())
+
     def handle_shows(self):
         return ",".join(self._shows_names.keys())
 
