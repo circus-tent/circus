@@ -3,7 +3,7 @@ import sys
 from tempfile import mkstemp
 import time
 
-from circus.client import CircusClient
+from circus.client import CallError, CircusClient
 from circus.tests.support import TestCircus
 
 TEST_ENDPOINT="tcp://127.0.0.1:5555"
@@ -86,3 +86,14 @@ class TestTrainer(TestCircus):
         self.cli.call("shows")
         resp = self.cli.call("numshows")
         self.assertEqual(resp, "2")
+
+    def test_del_show(self):
+        cmd = self._get_cmd()
+        self.cli.call("add_show test1 %s" % cmd)
+        self.cli.call("del_show test1")
+        resp = self.cli.call("numshows")
+        self.assertEqual(resp, "1")
+
+    def test_stop(self):
+        self.cli.call("stop")
+        self.assertRaises(CallError, self.cli.call, "shows")
