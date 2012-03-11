@@ -125,7 +125,11 @@ class Controller(object):
                         str(resp))
                 raise ValueError(msg)
 
-            socket.send(resp)
+            try:
+                socket.send(resp)
+            except zmq.ZMQError, e:
+                raise ValueError("Received %r - Could not send back %r - %s" %
+                                    (msg, resp, str(e)))
 
     def stop(self):
         try:
