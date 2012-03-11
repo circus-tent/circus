@@ -78,6 +78,8 @@ class Show(object):
             self.kill_fly(fly)
 
     def reap_and_manage_flies(self):
+        if self.stopped:
+            return
         self.reap_flies()
         self.manage_flies()
 
@@ -89,6 +91,7 @@ class Show(object):
     def spawn_fly(self):
         if self.stopped:
             return
+
         self._fly_counter += 1
         nb_tries = 0
         while nb_tries < self.max_retry:
@@ -154,7 +157,7 @@ class Show(object):
             # reap flies
             for wid, fly in self.flies.items():
                 if fly.poll() is not None:
-                    del  self.flies[wid]
+                    del self.flies[wid]
         self.kill_flies(signal.SIGKILL)
 
         logger.info('%s stopped' % self.name)
