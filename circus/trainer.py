@@ -10,16 +10,13 @@ from circus import logger
 
 class Trainer(object):
 
-    def __init__(self, shows, endpoint, check_delay=1., ipc_path=None,
-            prereload_fn=None):
+    def __init__(self, shows, endpoint, check_delay=1., prereload_fn=None):
         self.shows = shows
         self.endpoint = endpoint
         self.check_delay = check_delay
-        self.ipc_path = ipc_path
         self.prereload_fn = prereload_fn
 
-        self.ctrl = Controller(endpoint, self, self.check_delay,
-                self.ipc_path)
+        self.ctrl = Controller(endpoint, self, self.check_delay)
         self.pid = os.getpid()
         self._shows_names = {}
         self.alive = True

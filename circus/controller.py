@@ -1,5 +1,4 @@
 import os
-import tempfile
 import traceback
 import zmq
 
@@ -9,18 +8,10 @@ from circus.show import Show
 
 
 class Controller(object):
-    def __init__(self, endpoint, trainer, timeout=1.0, ipc_prefix=None):
+    def __init__(self, endpoint, trainer, timeout=1.0):
         self.context = zmq.Context()
-
         self.skt = self.context.socket(zmq.REP)
         self.skt.bind(endpoint)
-
-        # bind the socket to internal ipc.
-        ipc_name = "circus-ipc-%s" % os.getpid()
-        if not ipc_prefix:
-            ipc_prefix = tempfile.gettempdir()
-        ipc_path = os.path.join(os.path.dirname(ipc_prefix), ipc_name)
-        self.skt.bind("ipc://%s" % ipc_path)
 
         self.poller = zmq.Poller()
         self.poller.register(self.skt, zmq.POLLIN)
