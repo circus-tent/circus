@@ -6,6 +6,8 @@ Circus is a program that runs and watches several processes.
 
 Circus can be used as a library or through the command line.
 
+For more information about the motivation for this project, see `this blog post <http://ziade.org/2012/02/24/circus-a-process-controller/>`_.
+
 
 Library
 -------
