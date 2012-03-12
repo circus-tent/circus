@@ -52,6 +52,7 @@ class Show(object):
     def __len__(self):
         return len(self.flies)
 
+    @util.debuglog
     def reap_flies(self):
         if self.stopped:
             return
@@ -63,6 +64,7 @@ class Show(object):
                     break
                 self.flies.pop(wid)
 
+    @util.debuglog
     def manage_flies(self):
         if self.stopped:
             return
@@ -77,12 +79,14 @@ class Show(object):
             fly = self.flies.pop(wid)
             self.kill_fly(fly)
 
+    @util.debuglog
     def reap_and_manage_flies(self):
         if self.stopped:
             return
         self.reap_flies()
         self.manage_flies()
 
+    @util.debuglog
     def spawn_flies(self):
         for i in range(self.num_flies - len(self.flies.keys())):
             self.spawn_fly()
@@ -117,6 +121,7 @@ class Show(object):
         logger.info("%s: kill fly %s" % (self.name, fly.pid))
         fly.send_signal(sig)
 
+    @util.debuglog
     def kill_flies(self, sig):
         for wid in self.flies.keys():
             try:
@@ -126,6 +131,7 @@ class Show(object):
                 if e.errno != errno.ESRCH:
                     raise
 
+    @util.debuglog
     def send_signal_child(self, wid, pid, signum):
         wid = int(wid)
         if wid in self.flies:
@@ -134,6 +140,7 @@ class Show(object):
         else:
             return "error: fly not found"
 
+    @util.debuglog
     def send_signal_children(self, wid, signum):
         wid = int(wid)
         if wid in self.flies:
@@ -142,6 +149,7 @@ class Show(object):
         else:
             return "error: fly not found"
 
+    @util.debuglog
     def stop(self, graceful=True):
         self.stopped = True
         self.flapping.reset()
@@ -162,6 +170,7 @@ class Show(object):
 
         logger.info('%s stopped' % self.name)
 
+    @util.debuglog
     def start(self):
         if not self.stopped:
             return
@@ -171,11 +180,13 @@ class Show(object):
         self.manage_flies()
         logger.info('%s started' % self.name)
 
+    @util.debuglog
     def restart(self):
         self.stop()
         self.start()
         logger.info('%s restarted' % self.name)
 
+    @util.debuglog
     def reload(self):
         if self.prereload_fn is not None:
             self.prereload_fn(self)
@@ -263,6 +274,7 @@ class Show(object):
     # show commands #
     #################
 
+    @util.debuglog
     def handle_set(self, *args):
         if len(args) < 2:
             return "error: invalid number of parameters"
@@ -271,6 +283,7 @@ class Show(object):
         self.do_action(action)
         return "ok"
 
+    @util.debuglog
     def handle_mset(self, *args):
         if len(args) < 2 or len(args) % 2 != 0:
             return "error: invalid number of parameters"
@@ -284,6 +297,7 @@ class Show(object):
         self.do_action(action)
         return "ok"
 
+    @util.debuglog
     def handle_get(self, *args):
         if len(args) < 1:
             return "error: invalid number of parameters"
@@ -293,6 +307,7 @@ class Show(object):
         else:
             return "error: %r option not found" % args[0]
 
+    @util.debuglog
     def handle_mget(self, *args):
         if len(args) < 1:
             return "error: invalid number of parameters"
@@ -306,6 +321,7 @@ class Show(object):
                 return "error: %r option not found" % name
         return  "\n".join(ret)
 
+    @util.debuglog
     def handle_options(self, *args):
         ret = []
         for name in self.optnames:
@@ -313,6 +329,7 @@ class Show(object):
             ret.append("%s: %s" % (name, val))
         return "\n".join(ret)
 
+    @util.debuglog
     def handle_status(self, *args):
         if self.stopped:
             return "stopped"
@@ -347,6 +364,7 @@ class Show(object):
         else:
             return "\n".join([fly.info() for _, fly in self.flies.items()])
 
+    @util.debuglog
     def handle_quit(self, *args):
         if len(args) > 0:
             wid = int(args[0])
@@ -366,6 +384,7 @@ class Show(object):
 
     handle_kill = handle_stop = handle_quit
 
+    @util.debuglog
     def handle_terminate(self, *args):
         if len(args) > 0:
             wid = int(args[0])
@@ -414,6 +433,7 @@ class Show(object):
         else:
             return "error: fly not found"
 
+    @util.debuglog
     def handle_signal_fly(self, wid, sig):
         try:
             signum = getattr(signal, "SIG%s" % sig.upper())

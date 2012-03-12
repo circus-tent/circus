@@ -7,18 +7,7 @@ from functools import wraps
 from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
-
-
-def command(func):
-    @wraps(func)
-    def _command(*args, **kw):
-        logger.debug("Trainer %r starts" % func.func_name)
-        try:
-            return func(*args, **kw)
-        finally:
-            logger.debug("Trainer %r ends" % func.func_name)
-
-    return _command
+from circus.util import debuglog
 
 
 class Trainer(object):
@@ -118,26 +107,26 @@ class Trainer(object):
     # commands
     ###################
 
-    @command
+    @debuglog
     def handle_numflies(self):
         return str(self.num_flies())
 
-    @command
+    @debuglog
     def handle_numshows(self):
         return str(self.num_shows())
 
-    @command
+    @debuglog
     def handle_shows(self):
         return ",".join(self._shows_names.keys())
 
-    @command
+    @debuglog
     def handle_flies(self):
         flies = []
         for show in self.shows:
             flies.append("%s: %s" % (show.name, show.handle_flies()))
         return buffer("\n".join(flies))
 
-    @command
+    @debuglog
     def handle_info_shows(self):
         infos = []
         for show in self.shows:
@@ -145,24 +134,24 @@ class Trainer(object):
             infos.append("%s\n" % show.handle_info())
         return buffer("".join(infos))
 
-    @command
+    @debuglog
     def handle_reload(self):
         self.reload()
         return "ok"
 
-    @command
+    @debuglog
     def handle_stop_shows(self):
         for show in self.shows:
             show.stop()
         return "ok"
 
-    @command
+    @debuglog
     def handle_start_shows(self):
         for show in self.shows:
             show.start()
         return "ok"
 
-    @command
+    @debuglog
     def handle_restart_shows(self):
         for show in self.shows:
             show.restart()

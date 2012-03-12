@@ -3,8 +3,12 @@ import grp
 import os
 import pwd
 import fcntl
+from functools import wraps
 
 from psutil.error import AccessDenied
+
+from circus import logger
+
 
 _SYMBOLS = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 
@@ -146,3 +150,16 @@ def close_on_exec(fd):
     flags = fcntl.fcntl(fd, fcntl.F_GETFD)
     flags |= fcntl.FD_CLOEXEC
     fcntl.fcntl(fd, fcntl.F_SETFD, flags)
+
+
+def debuglog(func):
+    @wraps(func)
+    def _log(self, *args, **kw):
+        cls = self.__class__.__name__
+        logger.debug("'%s.%s' starts" % (cls, func.func_name))
+        try:
+            return func(self, *args, **kw)
+        finally:
+            logger.debug("'%s.%s' ends" % (cls, func.func_name))
+
+    return _log

@@ -14,7 +14,7 @@ import time
 from psutil import Popen
 
 from circus import logger
-from circus.util import get_info, to_uid, to_gid
+from circus.util import get_info, to_uid, to_gid, debuglog
 
 
 _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
@@ -53,12 +53,15 @@ class Fly(object):
                              env=self.env, close_fds=True)
         self.started = time.time()
 
+    @debuglog
     def poll(self):
         return self._worker.poll()
 
+    @debuglog
     def send_signal(self, sig):
         return self._worker.send_signal(sig)
 
+    @debuglog
     def stop(self):
         if self._worker.poll() is None:
             return self._worker.terminate()
@@ -81,6 +84,7 @@ class Fly(object):
         return ",".join(["%s" % child.pid
                          for child in self._worker.get_children()])
 
+    @debuglog
     def send_signal_child(self, pid, signum):
         pids = [child.pid for child in self._worker.get_children()]
         if pid in pids:
@@ -89,6 +93,7 @@ class Fly(object):
         else:
             return "error: child not found"
 
+    @debuglog
     def send_signal_children(self, signum):
         for child in self._worker.get_children():
             child.send_signal(signum)
