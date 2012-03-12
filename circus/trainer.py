@@ -2,10 +2,23 @@ import logging
 import os
 import sys
 from threading import Lock
+from functools import wraps
 
 from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
+
+
+def command(func):
+    @wraps(func)
+    def _command(*args, **kw):
+        logger.debug("Trainer %r starts" % func.func_name)
+        try:
+            return func(*args, **kw)
+        finally:
+            logger.debug("Trainer %r ends" % func.func_name)
+
+    return _command
 
 
 class Trainer(object):
@@ -15,7 +28,6 @@ class Trainer(object):
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
-
         self.ctrl = Controller(endpoint, self, self.check_delay)
         self.pid = os.getpid()
         self._shows_names = {}
@@ -29,6 +41,8 @@ class Trainer(object):
             self._shows_names[show.name] = show
 
     def start(self):
+        logger.debug('Starting the controller')
+
         # launch flies
         for show in self.shows:
             show.manage_flies()
@@ -43,14 +57,18 @@ class Trainer(object):
             self.ctrl.poll()
 
     def stop(self, graceful=True):
+        logger.debug('Stopping the trainer')
         self.alive = False
         # kill flies
         for show in self.shows:
             show.stop(graceful=graceful)
 
         self.ctrl.stop()
+        logger.debug('Trainer stopped')
 
     def reload(self):
+        logger.debug('Reloading the controller')
+
         if self.prereload_fn is not None:
             self.prereload_fn(self)
 
@@ -77,6 +95,8 @@ class Trainer(object):
         return self._shows_names[name]
 
     def add_show(self, show):
+        logger.debug('Adding a %r show' % show.name)
+
         with self._lock:
             if show.name in self._shows_names:
                 raise AlreadyExist("%r already exist" % show.name)
@@ -84,6 +104,8 @@ class Trainer(object):
             self._shows_names[show.name] = show
 
     def del_show(self, name):
+        logger.debug('Deleting %r show' % name)
+
         with self._lock:
             # remove the show from the list
             show = self._shows_names.pop(name)
@@ -96,22 +118,26 @@ class Trainer(object):
     # commands
     ###################
 
-
+    @command
     def handle_numflies(self):
         return str(self.num_flies())
 
+    @command
     def handle_numshows(self):
         return str(self.num_shows())
 
+    @command
     def handle_shows(self):
         return ",".join(self._shows_names.keys())
 
+    @command
     def handle_flies(self):
         flies = []
         for show in self.shows:
             flies.append("%s: %s" % (show.name, show.handle_flies()))
         return buffer("\n".join(flies))
 
+    @command
     def handle_info_shows(self):
         infos = []
         for show in self.shows:
@@ -119,20 +145,24 @@ class Trainer(object):
             infos.append("%s\n" % show.handle_info())
         return buffer("".join(infos))
 
+    @command
     def handle_reload(self):
         self.reload()
         return "ok"
 
+    @command
     def handle_stop_shows(self):
         for show in self.shows:
             show.stop()
         return "ok"
 
+    @command
     def handle_start_shows(self):
         for show in self.shows:
             show.start()
         return "ok"
 
+    @command
     def handle_restart_shows(self):
         for show in self.shows:
             show.restart()
