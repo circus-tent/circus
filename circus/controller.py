@@ -132,7 +132,4 @@ class Controller(object):
                                     (msg, resp, str(e)))
 
     def stop(self):
-        try:
-            self.context.destroy(0)
-        except:
-            pass
+        self.context.destroy(0)
