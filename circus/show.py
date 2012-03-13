@@ -10,13 +10,13 @@ from circus import util
 
 class Show(object):
 
-    def __init__(self, name, cmd, num_flies=1, warmup_delay=0.,
+    def __init__(self, name, cmd, numflies=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False, env=None, stopped=False,
                  times=2, within=1., retry_in=7., max_retry=5,
                  graceful_timeout=30., prereload_fn=None):
         self.name = name
-        self.num_flies = int(num_flies)
+        self.numflies = int(numflies)
         self.warmup_delay = warmup_delay
         self.cmd = cmd
         self._fly_counter = 0
@@ -28,7 +28,7 @@ class Show(object):
         self.graceful_timeout = 30
         self.prereload_fn = prereload_fn
 
-        self.optnames = ("num_flies", "warmup_delay", "working_dir",
+        self.optnames = ("numflies", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env",
                          "cmd", "times", "within", "retry_in",
                          "max_retry", "graceful_timeout")
@@ -69,12 +69,12 @@ class Show(object):
         if self.stopped:
             return
 
-        if len(self.flies.keys()) < self.num_flies:
+        if len(self.flies.keys()) < self.numflies:
             self.spawn_flies()
 
         flies = self.flies.keys()
         flies.sort()
-        while len(flies) > self.num_flies:
+        while len(flies) > self.numflies:
             wid = flies.pop(0)
             fly = self.flies.pop(wid)
             self.kill_fly(fly)
@@ -88,7 +88,7 @@ class Show(object):
 
     @util.debuglog
     def spawn_flies(self):
-        for i in range(self.num_flies - len(self.flies.keys())):
+        for i in range(self.numflies - len(self.flies.keys())):
             self.spawn_fly()
             time.sleep(self.warmup_delay)
 
@@ -196,7 +196,7 @@ class Show(object):
                 logger.info("SEND HUP to %s [%s]" % (wid, fly.pid))
                 fly.send_signal(signal.SIGHUP)
         else:
-            for i in range(self.num_flies):
+            for i in range(self.numflies):
                 self.spawn_fly()
             self.manage_flies()
 
@@ -211,8 +211,8 @@ class Show(object):
         """
 
         action = 0
-        if key == "num_flies":
-            self.num_flies = int(val)
+        if key == "numflies":
+            self.numflies = int(val)
         elif key == "warmup_delay":
             self.warmup_delay = float(val)
         elif key == "working_dir":
@@ -253,7 +253,7 @@ class Show(object):
         self.stopped = False
         if num == 1:
             self.flapping.reset()
-            for i in range(self.num_flies):
+            for i in range(self.numflies):
                 self.spawn_fly()
             self.manage_flies()
         else:
@@ -351,7 +351,7 @@ class Show(object):
         return ",".join([str(wid) for wid in self.flies.keys()])
 
     def handle_numflies(self, *args):
-        return str(self.num_flies)
+        return str(self.numflies)
 
     def handle_info(self, *args):
         if len(args) > 0:
@@ -410,14 +410,14 @@ class Show(object):
     handle_hup = handle_reload
 
     def handle_ttin(self, *args):
-        self.num_flies += 1
+        self.numflies += 1
         self.manage_flies()
-        return str(self.num_flies)
+        return str(self.numflies)
 
     def handle_ttou(self, *args):
-        self.num_flies -= 1
+        self.numflies -= 1
         self.manage_flies()
-        return str(self.num_flies)
+        return str(self.numflies)
 
     def handle_kill_child(self, wid, pid):
         return self.send_signal_child(wid, pid, signal.SIGKILL)
