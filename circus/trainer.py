@@ -59,7 +59,7 @@ class Trainer(object):
 
         try:
             self.context.destroy(0)
-        except zmq.ZmqError as e:
+        except zmq.ZMQError as e:
             if e.errno == errno.EINTR:
                 pass
             else:
