@@ -1,45 +1,47 @@
-Welcome to Circus' documentation!
-=================================
+Circus Process Watcher 
+======================
 
-Contents:
+.. image:: images/circus-medium.png
+   :align: right
 
-.. toctree::
-   :maxdepth: 2
+Circus is a program that will let you run and watch several processes.
+
+Circus can be driven through a CLI or used via its APIs.
+
+It shares some of the goals Supervisord, BluePill and Daemontools have.
+
+To install it, check out :ref:`installation`
 
 
-XXX to reorganize
+Used as a library
+-----------------
 
-Circus is a program that runs and watches several processes.
+Circus provides high-level Classes and functions that will let you run
+processes. For example, if you just want to run 4 workers forever, you
+can write.
 
-Circus can be driven through a CLI.
+.. code-block:: python
+
+    from circus import get_trainer
+
+    trainer = get_trainer("myprogram", 3)
+    try:
+        trainer.start()
+    finally:
+        trainer.stop()
+
+This snippet will run 3 *myprogram* processes and watch them for you.
+
+To learn more about this, see :ref:`library`
 
 
-Organization and terms
-----------------------
+Used through the command-line 
+-----------------------------
 
-- Each program to run is called a *show*
-- Each show can run with a certain amount of *flies*
-- A *fly* spawns a independant process
-- A *trainer* is responsible to run all the *shows* and make sure all the flies
-  behave.
+Circus provides a command line script that can be used to run one or several
+types of processes.
 
-::
-
-    Trainer
-       |
-       |-- show 1
-       |    |
-       |    |-- fly 1
-       |    |-- fly 2
-       |
-       |-- show 2
-            |
-            |-- fly 3
-
-Configuration
--------------
-
-Circus is configured with a ini-style file. Example::
+It's an ini-style like file. Example::
 
     [circus]
     check_delay = 5
@@ -51,14 +53,34 @@ Circus is configured with a ini-style file. Example::
     warmup_delay = 0
     num_flies = 5
 
+The file is then run using *circusd*::
+
+    $ circusd example.ini
+
+There's also a *circusctl* command line tool to query Circus to perform
+actions like adding or removing workers, or getting back some usage
+statistics.
+
+To learn more about this, see :ref:`cli`
 
 
-Test it
--------
+More documentation
+------------------
 
-To test it run the following command:
+.. toctree::
+   :maxdepth: 2
 
-    $ cd examples && circusd circus.ini
+   installation
+   configuration
+   cli
+   library
+   architecture
 
-It should launch 5 workers.
+
+Contributions and Feedback
+--------------------------
+
+You can reach us for any feedback, bug report, or to contribute, at
+https://github.com/mozilla-services/circus
+
 

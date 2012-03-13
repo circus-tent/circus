@@ -91,7 +91,11 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+sys.path.append(os.path.abspath('_themes'))
+html_theme_path = ['_themes']
+html_theme = 'bootstrap'
+html_short_title = "Circus"
+#html_logo = "images/circus32.png"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -132,6 +136,16 @@ html_static_path = ['_static']
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
+
+CURDIR = os.path.dirname(__file__)
+sidebars = []
+for f in os.listdir(CURDIR):
+    name, ext = os.path.splitext(f)
+    if ext != '.rst':
+        continue
+    sidebars.append((name, 'indexsidebar.html'))
+
+html_sidebars = dict(sidebars)
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
