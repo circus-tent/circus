@@ -10,6 +10,7 @@ from circus import logger
 from circus.show import Show
 from circus.util import debuglog
 
+
 class Trainer(object):
 
     def __init__(self, shows, endpoint, check_delay=1., prereload_fn=None):
@@ -74,7 +75,7 @@ class Trainer(object):
         for show in self.shows:
             show.reload()
 
-    def num_flies(self):
+    def numflies(self):
         return sum([len(show) for show in self.shows])
 
     def num_shows(self):
@@ -118,7 +119,7 @@ class Trainer(object):
 
     @debuglog
     def handle_numflies(self):
-        return str(self.num_flies())
+        return str(self.numflies())
 
     @debuglog
     def handle_numshows(self):
