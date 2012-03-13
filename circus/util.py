@@ -155,6 +155,9 @@ def close_on_exec(fd):
 def debuglog(func):
     @wraps(func)
     def _log(self, *args, **kw):
+        if os.environ.get('DEBUG') is None:
+            return func(self, *args, **kw)
+
         cls = self.__class__.__name__
         logger.debug("'%s.%s' starts" % (cls, func.func_name))
         try:
