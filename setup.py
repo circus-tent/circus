@@ -9,7 +9,8 @@ setup(name='circus',
       classifiers=[
         "Programming Language :: Python",
         "License :: OSI Approved :: Apache Software License"],
-      install_requires=['pyzmq', 'psutil'],
+      install_requires=['pyzmq', 'psutil', 'nose'],
+      test_suite = 'nose.collector',
       entry_points="""
       [console_scripts]
       circusd = circus.server:main
