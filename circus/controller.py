@@ -6,6 +6,8 @@ from circus.exc import AlreadyExist
 from circus.sighandler import SysHandler
 from circus.show import Show
 
+class MessageError(Exception):
+    """ error raised when a message is invalid """
 
 class Controller(object):
     def __init__(self, endpoint, trainer, timeout=1.0):
@@ -28,85 +30,39 @@ class Controller(object):
         except zmq.ZMQError, e:
             return
 
-        for socket in events:
-            msg = socket.recv() or ""
-            msg = msg.lower().strip()
+        for client in events:
+            msg = client.recv() or ""
+            msg = msg.strip()
             if not msg:
-                socket.send("error: empty command")
+                self.send_response(client, "error: empty command")
                 continue
 
             msg_parts = msg.split(" ")
-
             resp = ""
-            if len(msg_parts) > 1 and msg_parts[1]:
-                # program command
-                # a program command passed with the format
-                # COMMAND PROGRAM ARGS
+            handler = None
+            try:
+                cmd, inst, args = self.parse_message(msg_parts)
+                handler = getattr(inst, "handle_%s" % cmd)
+            except MessageError as e:
+                resp = "error: %s" % str(e)
+            except AttributeError as e:
+                resp = "error: message %r" % msg
 
-                cmd = msg_parts[0].lower()
+            if handler is not None:
+                ## hacky part we should be abble to handlle the response
+                ## before the controller stop
+                if cmd in ('stop', 'quit', 'terminate') and \
+                        isinstance(handler, self.trainer):
+                    self.send_response(client, "ok")
 
-                if cmd == "add_show":
-                    if len(msg_parts) < 3:
-                        resp = "error: invalid number of parameters"
-                    else:
-                        show_cmd = " ".join(msg_parts[2:])
-                        show = Show(msg_parts[1], show_cmd, stopped=True)
-                        try:
-                            self.trainer.add_show(show)
-                            resp = "ok"
-                        except OSError, e:
-                            resp = "error: %s" % str(e)
-                        except AlreadyExist, e:
-                            resp = "error: %s" % str(e)
+                try:
+                    resp = handler(*args)
+                except OSError as e:
+                    resp = "error: %s" % e
 
-                elif cmd == "del_show":
-                    try:
-                        self.trainer.del_show(msg_parts[1])
-                        resp = "ok"
-                    except KeyError:
-                        resp = "error: program %s not found" % msg_parts[1]
-                else:
-                    try:
-                        program = self.trainer.get_show(msg_parts[1])
-
-                        if len(msg_parts) > 2:
-                            args = msg_parts[2:]
-                        else:
-                            args = []
-
-                        try:
-                            handler = getattr(program, "handle_%s" % cmd)
-                            resp = handler(*args)
-                        except AttributeError:
-                            resp = "error: ignored messaged %r" % msg
-                        except OSError, e:
-                            resp = "error: %s" % str(e)
-                        except Exception, e:
-                            tb = traceback.format_exc()
-                            resp = "error: command %r: %s [%s]" % (msg,
-                                    str(e), tb)
-                    except KeyError:
-                        resp = "error: program %s not found" % msg_parts[1]
-            else:
-                # trainer commands
-                if msg in ('quit', 'halt', 'stop',):
-                    socket.send("ok")
-                    return self.trainer.stop()
-                elif msg == "terminate":
-                    socket.send("ok")
-                    return self.trainer.stop(graceful=False)
-                else:
-                    try:
-                        handler = getattr(self.trainer, "handle_%s" % msg)
-                        resp = handler()
-                    except OSError, e:
-                        resp = "error: %s" % str(e)
-                    except AttributeError:
-                        resp = "error: ignored messaged %r" % msg
-                    except Exception, e:
-                        tb = traceback.format_exc()
-                        resp = "error: command %r: %s [%s]" % (msg,
-                                str(e), tb)
+                except Exception, e:
+                    tb = traceback.format_exc()
+                    resp = "error: command %r: %s [%s]" % (msg, str(e), tb)
 
             if resp is None:
                 continue
@@ -116,11 +72,44 @@ class Controller(object):
                         str(resp))
                 raise ValueError(msg)
 
-            try:
-                socket.send(resp)
-            except zmq.ZMQError, e:
-                raise ValueError("Received %r - Could not send back %r - %s" %
-                                    (msg, resp, str(e)))
+            self.send_response(client, resp)
+
+    def send_response(self, sock, resp):
+        try:
+            sock.send(resp)
+        except zmq.ZMQError, e:
+            logger.error("Received %r - Could not send back %r - %s" %
+                                (msg, resp, str(e)))
+
+    def _get_show(self, show_name):
+        try:
+            return self.trainer.get_show(show_name)
+        except KeyError:
+            raise MessageError("program %s not found" % show_name)
+
+
+    def parse_message(self, msg_parts):
+        cmd = msg_parts[0].lower()
+        args = []
+        inst = self.trainer
+
+        if len(msg_parts) > 1 and msg_parts[1]:
+            show_name = msg_parts[1].lower()
+            if cmd == "add_show":
+                if len(msg_parts) < 3:
+                    raise MessageError("invalid number of parameters")
+
+                show_cmd = " ".join(msg_parts[2:])
+                args = [show_name, show_cmd]
+            elif cmd == "del_show":
+                self._get_show(show_name)
+                args = [show_name]
+            else:
+                inst = self._get_show(show_name)
+                if len(msg_parts) > 2:
+                    args = msg_parts[2:]
+
+        return cmd, inst, args
 
     def stop(self):
         self.context.destroy(0)

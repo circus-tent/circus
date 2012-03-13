@@ -27,7 +27,7 @@ class Trainer(object):
 
     def setup(self):
         for show in self.shows:
-            self._shows_names[show.name] = show
+            self._shows_names[show.name.lower()] = show
 
     def start(self):
         logger.debug('Starting the controller')
@@ -83,14 +83,20 @@ class Trainer(object):
     def get_show(self, name):
         return self._shows_names[name]
 
+<<<<<<< HEAD
     def add_show(self, show):
         logger.debug('Adding a %r show' % show.name)
 
+=======
+    def add_show(self, name, cmd):
+>>>>>>> 1651504... refactor the controller to make it more readable.
         with self._lock:
-            if show.name in self._shows_names:
+            if name in self._shows_names:
                 raise AlreadyExist("%r already exist" % show.name)
+
+            show = Show(name, cmd, stopped=True)
             self.shows.append(show)
-            self._shows_names[show.name] = show
+            self._shows_names[show.name.lower()] = show
 
     def del_show(self, name):
         logger.debug('Deleting %r show' % name)
@@ -106,6 +112,15 @@ class Trainer(object):
     ###################
     # commands
     ###################
+
+    @debuglog
+    def handle_stop(self):
+        self.stop()
+    handle_quit = handle_stop
+
+    @debuglog
+    def handle_terminate(self):
+        self.stop(graceful=False)
 
     @debuglog
     def handle_numflies(self):
@@ -137,6 +152,16 @@ class Trainer(object):
     @debuglog
     def handle_reload(self):
         self.reload()
+        return "ok"
+
+    @debuglog
+    def handle_add_show(self, name, cmd):
+        self.add_show(name, cmd)
+        return "ok"
+
+    @debuglog
+    def handle_del_show(self, name):
+        self.del_show(name)
         return "ok"
 
     @debuglog
