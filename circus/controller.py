@@ -121,4 +121,10 @@ class Controller(object):
         return cmd, inst, args
 
     def stop(self):
-        self.context.destroy(0)
+        try:
+            self.context.destroy(0)
+        except ZmqError as e:
+            if e.errno == errno.EINTR:
+                pass
+            else:
+                raise

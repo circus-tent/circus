@@ -23,7 +23,13 @@ class CircusClient(object):
             signal.siginterrupt(signal.SIGUSR1, False)
 
     def stop(self):
-        self.context.destroy(0)
+        try:
+            self.context.destroy(0)
+        except zmq.ZMQError as e:
+            if e.errno == errno.EINTR:
+                pass
+            else:
+                raise
 
     def call(self, cmd):
         try:
