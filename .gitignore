@@ -6,3 +6,5 @@ bin
 lib
 include
 .Python
+.coverage
+html
