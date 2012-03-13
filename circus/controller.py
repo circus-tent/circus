@@ -1,3 +1,4 @@
+import errno
 import os
 import traceback
 import zmq
@@ -27,10 +28,16 @@ class Controller(object):
         self.sys_hdl = SysHandler(trainer)
 
     def poll(self):
-        try:
-            events = dict(self.poller.poll(self.timeout))
-        except zmq.ZMQError, e:
-            return
+        while True:
+            try:
+                events = dict(self.poller.poll(self.timeout))
+            except zmq.ZMQError, e:
+                if e.errno == errno.EINTR:
+                    continue
+                else:
+                    return
+            else:
+                break
 
         for client in events:
             msg = client.recv() or ""

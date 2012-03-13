@@ -1,6 +1,7 @@
+import errno
 import zmq
 import sys
-
+import signal
 
 class CallError(Exception):
     pass
@@ -15,6 +16,12 @@ class CircusClient(object):
         self.poller.register(self.socket, zmq.POLLIN)
         self.timeout = timeout * 1000
 
+        # Don't let SIGQUIT and SIGUSR1 disturb active requests
+        # by interrupting system calls
+        if hasattr(signal, 'siginterrupt'):  # python >= 2.6
+            signal.siginterrupt(signal.SIGQUIT, False)
+            signal.siginterrupt(signal.SIGUSR1, False)
+
     def stop(self):
         self.context.destroy(0)
 
@@ -24,10 +31,16 @@ class CircusClient(object):
         except zmq.ZMQError, e:
             raise CallError(str(e))
 
-        try:
-            events = dict(self.poller.poll(self.timeout))
-        except zmq.ZMQError, e:
-            raise CallError(str(e))
+        while True:
+            try:
+                events = dict(self.poller.poll(self.timeout))
+            except zmq.ZMQError, e:
+                if e.errno == errno.EINTR:
+                    continue
+                else:
+                    raise CallError(str(e))
+            else:
+                break
 
         if len(events) == 0:
             raise CallError("Timed out")
