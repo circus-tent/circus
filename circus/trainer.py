@@ -83,13 +83,7 @@ class Trainer(object):
     def get_show(self, name):
         return self._shows_names[name]
 
-<<<<<<< HEAD
-    def add_show(self, show):
-        logger.debug('Adding a %r show' % show.name)
-
-=======
     def add_show(self, name, cmd):
->>>>>>> 1651504... refactor the controller to make it more readable.
         with self._lock:
             if name in self._shows_names:
                 raise AlreadyExist("%r already exist" % show.name)
