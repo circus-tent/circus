@@ -28,11 +28,7 @@ def get_working_dir():
 
 
 def bytes2human(n):
-    """
-    >>> bytes2human(10000)
-    '9K'
-    >>> bytes2human(100001221)
-    '95M'
+    """Translates bytes into a human repr.
     """
     if not isinstance(n, int):
         return n
