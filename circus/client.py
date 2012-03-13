@@ -40,7 +40,7 @@ class CircusClient(object):
         while True:
             try:
                 events = dict(self.poller.poll(self.timeout))
-            except zmq.ZMQError, e:
+            except zmq.ZMQError as e:
                 if e.errno == errno.EINTR:
                     continue
                 else:
@@ -69,7 +69,7 @@ def main():
     try:
         print client.call(cmd.strip())
         sys.exit(0)
-    except CallError, e:
+    except CallError as e:
         print str(e)
         sys.exit(1)
 

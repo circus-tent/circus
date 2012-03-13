@@ -37,7 +37,7 @@ class SysHandler(object):
                 handler()
             except AttributeError:
                 pass
-            except Exception, e:
+            except Exception as e:
                 tb = traceback.format_exc()
                 logger.error("error: %s [%s]" % (e, tb))
                 sys.exit(1)

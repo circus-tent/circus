@@ -4,13 +4,11 @@ import traceback
 import zmq
 
 from circus import logger
-from circus.exc import AlreadyExist
+from circus.exc import AlreadyExist, MessageError
 from circus.sighandler import SysHandler
 from circus.show import Show
 
 
-class MessageError(Exception):
-    """ error raised when a message is invalid """
 
 class Controller(object):
     def __init__(self, endpoint, trainer, timeout=1.0):
@@ -31,7 +29,7 @@ class Controller(object):
         while True:
             try:
                 events = dict(self.poller.poll(self.timeout))
-            except zmq.ZMQError, e:
+            except zmq.ZMQError as e:
                 if e.errno == errno.EINTR:
                     continue
                 else:
@@ -69,7 +67,7 @@ class Controller(object):
                 except OSError as e:
                     resp = "error: %s" % e
 
-                except Exception, e:
+                except Exception as e:
                     tb = traceback.format_exc()
                     resp = "error: command %r: %s [%s]" % (msg, str(e), tb)
 
@@ -86,7 +84,7 @@ class Controller(object):
     def send_response(self, sock, msg, resp):
         try:
             sock.send(resp)
-        except zmq.ZMQError, e:
+        except zmq.ZMQError as e:
             logger.error("Received %r - Could not send back %r - %s" %
                                 (msg, resp, str(e)))
 
@@ -123,7 +121,7 @@ class Controller(object):
     def stop(self):
         try:
             self.context.destroy(0)
-        except ZmqError as e:
+        except zmq.ZmqError as e:
             if e.errno == errno.EINTR:
                 pass
             else:
