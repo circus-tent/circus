@@ -23,6 +23,12 @@ class SysHandler(object):
         # init signals
         map(lambda s: signal.signal(s, self.signal), self.SIGNALS)
 
+        # Don't let SIGQUIT and SIGUSR1 disturb active requests
+        # by interrupting system calls
+        if hasattr(signal, 'siginterrupt'):  # python >= 2.6
+            signal.siginterrupt(signal.SIGQUIT, False)
+            signal.siginterrupt(signal.SIGUSR1, False)
+
     def signal(self, sig, frame):
         signame = self.SIG_NAMES.get(sig)
         if signame is not None:
