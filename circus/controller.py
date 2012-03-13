@@ -2,9 +2,11 @@ import os
 import traceback
 import zmq
 
+from circus import logger
 from circus.exc import AlreadyExist
 from circus.sighandler import SysHandler
 from circus.show import Show
+
 
 class MessageError(Exception):
     """ error raised when a message is invalid """
@@ -34,7 +36,7 @@ class Controller(object):
             msg = client.recv() or ""
             msg = msg.strip()
             if not msg:
-                self.send_response(client, "error: empty command")
+                self.send_response(client, msg, "error: empty command")
                 continue
 
             msg_parts = msg.split(" ")
@@ -52,8 +54,8 @@ class Controller(object):
                 ## hacky part we should be abble to handlle the response
                 ## before the controller stop
                 if cmd in ('stop', 'quit', 'terminate') and \
-                        isinstance(handler, self.trainer):
-                    self.send_response(client, "ok")
+                        inst == self.trainer:
+                    self.send_response(client, msg, "ok")
 
                 try:
                     resp = handler(*args)
@@ -72,9 +74,9 @@ class Controller(object):
                         str(resp))
                 raise ValueError(msg)
 
-            self.send_response(client, resp)
+            self.send_response(client, msg, resp)
 
-    def send_response(self, sock, resp):
+    def send_response(self, sock, msg, resp):
         try:
             sock.send(resp)
         except zmq.ZMQError, e:

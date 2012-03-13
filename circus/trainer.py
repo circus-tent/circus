@@ -7,8 +7,8 @@ from functools import wraps
 from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
+from circus.show import Show
 from circus.util import debuglog
-
 
 class Trainer(object):
 
