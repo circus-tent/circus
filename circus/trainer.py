@@ -1,8 +1,11 @@
+import errno
 import logging
 import os
 import sys
 from threading import Lock
 from functools import wraps
+
+import zmq
 
 from circus.controller import Controller
 from circus.exc import AlreadyExist
@@ -17,7 +20,8 @@ class Trainer(object):
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
-        self.ctrl = Controller(endpoint, self, self.check_delay)
+        self.context = zmq.Context()
+        self.ctrl = Controller(self.context, endpoint, self, self.check_delay)
         self.pid = os.getpid()
         self._shows_names = {}
         self.alive = True
@@ -52,7 +56,14 @@ class Trainer(object):
         for show in self.shows:
             show.stop(graceful=graceful)
 
-        self.ctrl.stop()
+        try:
+            self.context.destroy(0)
+        except zmq.ZmqError as e:
+            if e.errno == errno.EINTR:
+                pass
+            else:
+                raise
+
         logger.debug('Trainer stopped')
 
     def reload(self):

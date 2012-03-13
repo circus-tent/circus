@@ -1,5 +1,6 @@
 import errno
 import os
+import tempfile
 import traceback
 import zmq
 
@@ -8,14 +9,11 @@ from circus.exc import AlreadyExist, MessageError
 from circus.sighandler import SysHandler
 from circus.show import Show
 
-
-
 class Controller(object):
-    def __init__(self, endpoint, trainer, timeout=1.0):
-        self.context = zmq.Context()
-        self.skt = self.context.socket(zmq.REP)
+    def __init__(self, context, endpoint, trainer, timeout=1.0):
+        self.context = context
+        self.skt = self.context.socket(zmq.ROUTER)
         self.skt.bind(endpoint)
-
         self.poller = zmq.Poller()
         self.poller.register(self.skt, zmq.POLLIN)
 
@@ -24,6 +22,10 @@ class Controller(object):
 
         # start the sys handler
         self.sys_hdl = SysHandler(trainer)
+
+
+    def send(self, msg):
+        self.skt.send(msg)
 
     def poll(self):
         while True:
@@ -38,10 +40,12 @@ class Controller(object):
                 break
 
         for client in events:
+            _id = client.recv()
             msg = client.recv() or ""
             msg = msg.strip()
             if not msg:
-                self.send_response(client, msg, "error: empty command")
+                self.send_response(_id, client, msg,
+                        "error: empty command")
                 continue
 
             msg_parts = msg.split(" ")
@@ -60,7 +64,7 @@ class Controller(object):
                 ## before the controller stop
                 if cmd in ('stop', 'quit', 'terminate') and \
                         inst == self.trainer:
-                    self.send_response(client, msg, "ok")
+                    self.send_response(_id, client, msg, "ok")
 
                 try:
                     resp = handler(*args)
@@ -79,10 +83,11 @@ class Controller(object):
                         str(resp))
                 raise ValueError(msg)
 
-            self.send_response(client, msg, resp)
+            self.send_response(_id, client, msg, resp)
 
-    def send_response(self, sock, msg, resp):
+    def send_response(self, client_id, sock, msg, resp):
         try:
+            sock.send(client_id, zmq.SNDMORE)
             sock.send(resp)
         except zmq.ZMQError as e:
             logger.error("Received %r - Could not send back %r - %s" %
@@ -117,12 +122,3 @@ class Controller(object):
                     args = msg_parts[2:]
 
         return cmd, inst, args
-
-    def stop(self):
-        try:
-            self.context.destroy(0)
-        except zmq.ZmqError as e:
-            if e.errno == errno.EINTR:
-                pass
-            else:
-                raise

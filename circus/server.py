@@ -10,6 +10,7 @@ from circus.trainer import Trainer
 from circus.show import Show
 from circus.pidfile import Pidfile
 from circus import util
+from circus.channel import StatChannel
 
 MAXFD = 1024
 if hasattr(os, "devnull"):
@@ -158,8 +159,10 @@ def main():
 
             shows.append(show)
 
+    # main circus options
     check = cfg.dget('circus', 'check_delay', 5, int)
     endpoint = cfg.dget('circus', 'endpoint', 'tcp://127.0.0.1:5555')
+
     trainer = Trainer(shows, endpoint, check)
     try:
         trainer.start()

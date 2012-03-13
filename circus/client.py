@@ -3,6 +3,8 @@ import zmq
 import sys
 import signal
 
+import uuid
+
 class CallError(Exception):
     pass
 
@@ -10,7 +12,11 @@ class CallError(Exception):
 class CircusClient(object):
     def __init__(self, endpoint, timeout=5.0):
         self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.REQ)
+
+        self._id = uuid.uuid4().hex
+        self.socket = self.context.socket(zmq.DEALER)
+        self.socket.setsockopt(zmq.IDENTITY, self._id)
+
         self.socket.connect(endpoint)
         self.poller = zmq.Poller()
         self.poller.register(self.socket, zmq.POLLIN)
