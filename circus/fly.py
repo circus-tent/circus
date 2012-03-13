@@ -9,7 +9,9 @@ except ImportError:
     ctypes = None       # NOQA
 
 import os
+from subprocess import PIPE
 import time
+
 
 from psutil import Popen
 
@@ -50,7 +52,8 @@ class Fly(object):
 
         self._worker = Popen(self.cmd.split(), cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
-                             env=self.env, close_fds=True)
+                             env=self.env, close_fds=True, stdout=PIPE,
+                             stderr=PIPE)
         self.started = time.time()
 
     @debuglog
@@ -102,3 +105,11 @@ class Fly(object):
     @property
     def pid(self):
         return self._worker.pid
+
+    @property
+    def stdout(self):
+        return self._worker.stdout
+
+    @property
+    def stderr(self):
+        return self._worker.stderr
