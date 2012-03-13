@@ -1,4 +1,5 @@
 import errno
+import json
 import signal
 import time
 
@@ -16,6 +17,8 @@ class Show(object):
                  times=2, within=1., retry_in=7., max_retry=5,
                  graceful_timeout=30., prereload_fn=None):
         self.name = name
+
+        self.res_name = name.lower().replace(" ", "_")
         self.numflies = int(numflies)
         self.warmup_delay = warmup_delay
         self.cmd = cmd
@@ -45,12 +48,18 @@ class Show(object):
         self.gid = gid
         self.env = env
         self.send_hup = send_hup
+        self.pubsub_io = None
 
         # define flapping object
         self.flapping = Flapping(self, times, within, retry_in, max_retry)
 
     def __len__(self):
         return len(self.flies)
+
+    def send_msg(self, topic, msg):
+        multipart_msg = ["show.%s.%s" % (self.res_name, topic),
+                         json.dumps(msg)]
+        self.pubsub_io.send_multipart(multipart_msg)
 
     @util.debuglog
     def reap_flies(self):
@@ -59,7 +68,9 @@ class Show(object):
 
         for wid, fly in self.flies.items():
             if fly.poll() is not None:
-                self.flapping.notify()
+                self.send_msg("reap", {"fly_id": wid,
+                                       "fly_pid": fly.pid,
+                                       "time": time.time()})
                 if self.stopped:
                     break
                 self.flies.pop(wid)
@@ -113,11 +124,15 @@ class Show(object):
                 nb_tries += 1
                 continue
             else:
+                self.send_msg("spawn", {"fly_id": fly.wid,
+                                        "fly_pid": fly.pid,
+                                        "time": time.time()})
                 return
 
         self.stop()
 
     def kill_fly(self, fly, sig=signal.SIGTERM):
+        self.send_msg("kill", {"fly_id": fly.wid, "time": time.time()})
         logger.info("%s: kill fly %s" % (self.name, fly.pid))
         fly.send_signal(sig)
 
@@ -179,9 +194,11 @@ class Show(object):
         self.reap_flies()
         self.manage_flies()
         logger.info('%s started' % self.name)
+        self.send_msg("start", {"time": time.time()})
 
     @util.debuglog
     def restart(self):
+        self.send_msg("restart", {"time": time.time()})
         self.stop()
         self.start()
         logger.info('%s restarted' % self.name)
@@ -199,6 +216,7 @@ class Show(object):
             for i in range(self.numflies):
                 self.spawn_fly()
             self.manage_flies()
+        self.send_msg("reload", {"time": time.time()})
 
     def set_opt(self, key, val):
         """ set a show option
@@ -247,6 +265,7 @@ class Show(object):
         elif key == "graceful_timeout":
             self.graceful_timeout = float(val)
             action = -1
+        self.send_msg("updated", {"time": time.time()})
         return action
 
     def do_action(self, num):

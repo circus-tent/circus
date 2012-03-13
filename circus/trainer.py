@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 from threading import Lock
+import time
 from functools import wraps
 
 import zmq
@@ -16,12 +17,16 @@ from circus.util import debuglog
 
 class Trainer(object):
 
-    def __init__(self, shows, endpoint, check_delay=1., prereload_fn=None):
+    def __init__(self, shows, endpoint, pubsub_endpoint, check_delay=1.,
+                 prereload_fn=None):
+
         self.shows = shows
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
+        self.pubsub_endpoint = pubsub_endpoint
         self.context = zmq.Context()
+
         self.ctrl = Controller(self.context, endpoint, self, self.check_delay)
         self.pid = os.getpid()
         self._shows_names = {}
@@ -31,8 +36,13 @@ class Trainer(object):
         logger.info("Starting master on pid %s" % self.pid)
 
     def setup(self):
+        # set pubsub endpoint
+        self.pubsub_io  = self.context.socket(zmq.PUB)
+        self.pubsub_io.bind(self.pubsub_endpoint)
+
         for show in self.shows:
             self._shows_names[show.name.lower()] = show
+            show.pubsub_io = self.pubsub_io
 
     def start(self):
         logger.debug('Starting the controller')
@@ -57,6 +67,7 @@ class Trainer(object):
         for show in self.shows:
             show.stop(graceful=graceful)
 
+        time.sleep(0.5)
         try:
             self.context.destroy(0)
         except zmq.ZMQError as e:

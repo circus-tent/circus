@@ -1,4 +1,5 @@
 import errno
+import json
 import zmq
 import sys
 import signal
@@ -61,26 +62,73 @@ class CircusClient(object):
             msg = socket.recv()
             return msg
 
+class CircusConsumer(object):
+    def __init__(self, topics, endpoint='tcp://127.0.0.1:5556', timeout=5.0):
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.SUB)
+        self.socket.connect(endpoint)
+        for topic in topics:
+            self.socket.setsockopt(zmq.SUBSCRIBE, topic)
+
+
+    def start(self):
+        try:
+            while True:
+                try:
+                    topic, msg = self.socket.recv_multipart()
+                    print '   %s: %s' % (topic, json.loads(msg))
+                except zmq.ZMQError as e:
+                    raise CallError(str(e))
+
+        except KeyboardInterrupt:
+            pass
+
+    def stop(self):
+        try:
+            self.context.destroy(0)
+        except zmq.ZMQError as e:
+            if e.errno == errno.EINTR:
+                pass
+            else:
+                raise
 
 def main():
-    client = CircusClient(sys.argv[1])
 
-    cmd_parts = sys.argv[2:]
+    if sys.argv[1] == "listen":
+        if len(sys.argv) < 3:
+            sys.stderr.write("incorrect usage")
+            sys.exit(1)
+        else:
+            if len(sys.argv) > 3:
+                topics = sys.argv[2:]
+            else:
+                topics = ['']
 
-    if len(cmd_parts) >= 2:
-        cmd = " ".join(cmd_parts[:2]).lower() + " " + " ".join(cmd_parts[2:])
+            client = CircusConsumer(topics, sys.argv[2])
+            try:
+                client.start()
+            except CallError as e:
+                sys.stderr.write(str(e))
+                sys.exit(1)
+            sys.exit(0)
     else:
-        cmd = cmd_parts[0].lower()
+        client = CircusClient(sys.argv[1])
+        cmd_parts = sys.argv[2:]
 
-    try:
-        print client.call(cmd.strip())
-        sys.exit(0)
-    except CallError as e:
-        print str(e)
-        sys.exit(1)
+        if len(cmd_parts) >= 2:
+            cmd = " ".join(cmd_parts[:2]).lower() + " " + " ".join(cmd_parts[2:])
+        else:
+            cmd = cmd_parts[0].lower()
 
-    finally:
-        client.stop()
+        try:
+            print client.call(cmd.strip())
+            sys.exit(0)
+        except CallError as e:
+            print str(e)
+            sys.exit(1)
+
+        finally:
+            client.stop()
 
 
 if __name__ == '__main__':

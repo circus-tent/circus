@@ -7,6 +7,7 @@ logger = logging.getLogger('circus')
 
 def get_trainer(cmd, num_workers=1., timeout=1.0, check=1.,
                 warmup_delay=0., controller='tcp://127.0.0.1:5555',
+                pubsub_endpoint='tcp://127.0.0.1:5556',
                 shell=False, working_dir=None, uid=None, gid=None,
                 env=None, name=None):
     from circus.show import Show
@@ -18,4 +19,4 @@ def get_trainer(cmd, num_workers=1., timeout=1.0, check=1.,
     show = Show(name, cmd, num_workers, working_dir=working_dir,
                  warmup_delay=warmup_delay, shell=shell, uid=uid, gid=gid,
                  env=env)
-    return Trainer([show], controller)
+    return Trainer([show], controller, pubsub_endpoint)
