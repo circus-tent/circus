@@ -86,7 +86,7 @@ def get_info(process):
 
     try:
         cmdline = os.path.basename(process.cmdline[0])
-    except AccessDenied:
+    except (AccessDenied, IndexError):
         cmdline = "N/A"
 
     info['cmdline'] = cmdline
