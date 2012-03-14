@@ -28,7 +28,7 @@ Example:
 
 
 .. autoclass:: circus.trainer.Trainer
-   :members: start, stop, reload, numflies, numshows, get_show, add_show, del_show
+   :members: start, stop, reload, numflies, num_shows, get_show, add_show, del_show
 
 
 

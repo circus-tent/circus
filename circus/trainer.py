@@ -80,7 +80,7 @@ class Trainer(object):
 
     @debuglog
     def stop(self, graceful=True):
-        """Stops all shows and their flies.i
+        """Stops all shows and their flies.
 
         Options:
         - **graceful**: sends a SIGTERM to every fly and waits a bit
@@ -128,15 +128,25 @@ class Trainer(object):
             show.reload()
 
     def numflies(self):
+        """Return the number of flies running across all shows."""
         return sum([len(show) for show in self.shows])
 
     def num_shows(self):
+        """Return the number of shows."""
         return len(self.shows)
 
     def get_show(self, name):
+        """Return the show *name*."""
         return self._shows_names[name]
 
     def add_show(self, name, cmd):
+        """Adds a show.
+
+        Options:
+
+        - **name**: name of the show to add
+        - **cmd**: command to run.
+        """
         with self._lock:
             if name in self._shows_names:
                 raise AlreadyExist("%r already exist" % show.name)
@@ -147,6 +157,12 @@ class Trainer(object):
             self._shows_names[show.name.lower()] = show
 
     def del_show(self, name):
+        """Deletes a show.
+
+        Options:
+
+        - **name**: name of the show to delete
+        """
         logger.debug('Deleting %r show' % name)
 
         with self._lock:
