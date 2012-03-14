@@ -30,7 +30,6 @@ class Trainer(object):
     """
     def __init__(self, shows, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None):
-
         self.shows = shows
         self.endpoint = endpoint
         self.check_delay = check_delay

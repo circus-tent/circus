@@ -51,10 +51,10 @@ class Runner(threading.Thread):
     def run(self):
         self.trainer.start()
 
-    def join(self):
+    def stop(self):
         self.trainer.stop()
-
-        threading.Thread.join(self)
+        time.sleep(0.5)
+        self.join()
 
 
 class TestCircus(unittest.TestCase):
@@ -86,5 +86,5 @@ class TestCircus(unittest.TestCase):
 
     def _stop_runners(self):
         for runner in self.runners:
-            runner.join()
+            runner.stop()
         self.runners = []

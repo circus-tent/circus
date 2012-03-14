@@ -94,6 +94,7 @@ class Flapping(Thread):
 
     def stop(self):
         self.ioloop.stop()
+        self.context.destroy(0)
         self.join()
 
     def reset(self, show_name):
