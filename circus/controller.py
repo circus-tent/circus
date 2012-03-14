@@ -10,8 +10,8 @@ from circus.sighandler import SysHandler
 from circus.show import Show
 
 class Controller(object):
-    def __init__(self, endpoint, trainer, timeout=1.0):
-        self.context = zmq.Context()
+    def __init__(self, context, endpoint, trainer, timeout=1.0):
+        self.context = context
         self.skt = self.context.socket(zmq.ROUTER)
         self.skt.bind(endpoint)
         self.poller = zmq.Poller()
@@ -122,13 +122,3 @@ class Controller(object):
                     args = msg_parts[2:]
 
         return cmd, inst, args
-
-    def stop(self):
-        try:
-            self.context.destroy(0)
-        except zmq.ZMQError as e:
-            if e.errno == errno.EINTR:
-                pass
-            else:
-                raise
-

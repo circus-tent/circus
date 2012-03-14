@@ -38,8 +38,8 @@ class Trainer(object):
         self.pubsub_endpoint = pubsub_endpoint
         self.context = zmq.Context()
 
-        self.ctrl = Controller(endpoint, self, self.check_delay)
-        self.flapping = Flapping(endpoint, pubsub_endpoint, shows)
+        self.ctrl = Controller(self.context, endpoint, self, self.check_delay)
+        self.flapping = Flapping(endpoint, pubsub_endpoint, check_delay)
 
         self.pid = os.getpid()
         self._shows_names = {}
@@ -65,6 +65,10 @@ class Trainer(object):
         for any command from a client and that watches all the
         flies and restarts them if needed.
         """
+
+        # start flapping
+        self.flapping.start()
+
         # launch flies
         for show in self.shows:
             show.manage_flies()
@@ -90,11 +94,13 @@ class Trainer(object):
             return
 
         self.alive = False
+
+        self.flapping.stop()
+
         # kill flies
         for show in self.shows:
             show.stop(graceful=graceful)
 
-        self.ctrl.stop()
         time.sleep(0.5)
         try:
             self.context.destroy(0)

@@ -250,14 +250,14 @@ class Show(object):
             self.cmd = val
             action = 1
         elif key == "times":
-            self.flapping.times = self.times = int(val)
+            self.times = int(val)
             action = -1
         elif key == "within":
-            self.flapping.within = self.within = float(val)
+             self.within = float(val)
         elif key == "retry_in":
-            self.flapping.retry_in = self.retry_in = float(val)
+            self.retry_in = float(val)
         elif key == "max_retry":
-            self.flapping.max_retry = self.max_retry = int(val)
+            self.max_retry = int(val)
         elif key == "graceful_timeout":
             self.graceful_timeout = float(val)
             action = -1
