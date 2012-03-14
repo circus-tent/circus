@@ -9,6 +9,7 @@ from circus.exc import AlreadyExist, MessageError
 from circus.sighandler import SysHandler
 from circus.show import Show
 
+
 class Controller(object):
     def __init__(self, context, endpoint, trainer, timeout=1.0):
         self.context = context
@@ -22,7 +23,6 @@ class Controller(object):
 
         # start the sys handler
         self.sys_hdl = SysHandler(trainer)
-
 
     def send(self, msg):
         self.skt.send(msg)
