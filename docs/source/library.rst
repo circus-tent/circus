@@ -28,8 +28,12 @@ Example:
 
 
 
+.. autoclass:: circus.show.Show
+   :members: send_msg, reap_flies, manage_flies, reap_and_manage_flies,
+             spawn_flies, spawn_fly, kill_fly,kill_flies, send_signal_child, stop,start,
+             restart, reload, do_action, get_opt
+
+
 .. autoclass:: circus.trainer.Trainer
    :members: start, stop, reload, numflies, num_shows, get_show, add_show, del_show
-
-
 
