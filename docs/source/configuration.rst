@@ -1,7 +1,7 @@
 Configuration
 -------------
 
-Circus can be configured to run with an ini-style file. 
+Circus can be configured using an ini-style configuration file.
 
 Example::
 
@@ -18,19 +18,18 @@ Example::
 circus
 ~~~~~~
     **endpoint**
-        The endpoint where to bind the ZMQ socket.   
+        The endpoint to which the ZMQ socket will be bound.
     **check_delay**
         The polling interval for the ZMQ socket.
 
 
 show
 ~~~~
-    **cmd** 
+    **cmd**
         The executable program to run.
-    **args** 
-        Arguments to pass to the program.
-    **warmup_delay** 
-        The delay (in seconds) in between running flies.
+    **args**
+        Command-line arguments to pass to the program
+    **warmup_delay**
+        The delay (in seconds) between running flies.
     **num_flies**
         The number of flies to run for this show.
-        
