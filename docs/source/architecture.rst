@@ -18,6 +18,12 @@ Architecture
 **Controller**
     A *controller* contains the set of actions that con be performed on
     the trainer.
-**Client**
-    The *client* allows you to communicate with the controller via ZMQ to
-    control Circus.
+**PubSub**
+    Circus has a *pubsub* that receives events from the shows and dispatches
+    them to all subscribers.
+**Flapping detection**
+    The *flapping detection* subscribes to events and detects when some
+    flies are constantly restarting.
+**Remote controller**
+    The *remote controller* allows you to communicate with the controller 
+    via ZMQ to control Circus.
