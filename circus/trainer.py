@@ -67,7 +67,7 @@ class Trainer(object):
         if not self.alive:
             return
 
-        logger.info('Stopping the trainer')
+        logger.debug('Stopping the trainer')
         self.alive = False
         # kill flies
         for show in self.shows:
