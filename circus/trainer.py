@@ -17,7 +17,17 @@ from circus.util import debuglog
 
 
 class Trainer(object):
+    """Class used to control a list of shows.
 
+    Options:
+
+    - **shows**: a list of Show objects
+    - **endpoint**: the controller ZMQ endpoint
+    - **pubsub_endpoint**: the pubsub endpoint
+    - **check_delay**: the delay between two controller points (defaults: 1 s)
+    - **prereload_fn**: callable that will be executed on each reload (defaults:
+      None)
+    """
     def __init__(self, shows, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None):
 
@@ -35,10 +45,10 @@ class Trainer(object):
         self._shows_names = {}
         self.alive = True
         self._lock = Lock()
-        self.setup()
+        self._setup()
         logger.info("Starting master on pid %s" % self.pid)
 
-    def setup(self):
+    def _setup(self):
         # set pubsub endpoint
         self.pubsub_io  = self.context.socket(zmq.PUB)
         self.pubsub_io.bind(self.pubsub_endpoint)
@@ -47,9 +57,14 @@ class Trainer(object):
             self._shows_names[show.name.lower()] = show
             show.pubsub_io = self.pubsub_io
 
+    @debuglog
     def start(self):
-        logger.debug('Starting the controller')
+        """Starts all the shows.
 
+        The start command is an infinite loop that waits
+        for any command from a client and that watches all the
+        flies and restarts them if needed.
+        """
         # launch flies
         for show in self.shows:
             show.manage_flies()
@@ -63,11 +78,17 @@ class Trainer(object):
             # wait for the controller
             self.ctrl.poll()
 
+    @debuglog
     def stop(self, graceful=True):
+        """Stops all shows and their flies.i
+
+        Options:
+        - **graceful**: sends a SIGTERM to every fly and waits a bit
+          before killing it (default: True)
+        """
         if not self.alive:
             return
 
-        logger.debug('Stopping the trainer')
         self.alive = False
         # kill flies
         for show in self.shows:
@@ -83,11 +104,13 @@ class Trainer(object):
             else:
                 raise
 
-        logger.debug('Trainer stopped')
-
+    @debuglog
     def reload(self):
-        logger.debug('Reloading the controller')
+        """Reloads everything.
 
+        Run the :func:`prereload_fn` callable if any, then gracefuly
+        reload all shows.
+        """
         if self.prereload_fn is not None:
             self.prereload_fn(self)
 
