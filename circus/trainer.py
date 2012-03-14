@@ -87,6 +87,7 @@ class Trainer(object):
         """Stops all shows and their flies.
 
         Options:
+
         - **graceful**: sends a SIGTERM to every fly and waits a bit
           before killing it (default: True)
         """

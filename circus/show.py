@@ -15,6 +15,8 @@ class Show(object):
                  gid=None, send_hup=False, env=None, stopped=False,
                  times=2, within=1., retry_in=7., max_retry=5,
                  graceful_timeout=30., prereload_fn=None):
+        """ init
+        """
         self.name = name
 
         self.res_name = name.lower().replace(" ", "_")
@@ -53,12 +55,15 @@ class Show(object):
         return len(self.flies)
 
     def send_msg(self, topic, msg):
+        """send msg"""
         multipart_msg = ["show.%s.%s" % (self.res_name, topic),
                          json.dumps(msg)]
         self.pubsub_io.send_multipart(multipart_msg)
 
     @util.debuglog
     def reap_flies(self):
+        """ reap flies
+        """
         if self.stopped:
             return
 
@@ -73,6 +78,8 @@ class Show(object):
 
     @util.debuglog
     def manage_flies(self):
+        """ manage flies
+        """
         if self.stopped:
             return
 
@@ -88,6 +95,8 @@ class Show(object):
 
     @util.debuglog
     def reap_and_manage_flies(self):
+        """ reap +manage flies
+        """
         if self.stopped:
             return
         self.reap_flies()
@@ -95,11 +104,15 @@ class Show(object):
 
     @util.debuglog
     def spawn_flies(self):
+        """ spawn flies
+        """
         for i in range(self.numflies - len(self.flies.keys())):
             self.spawn_fly()
             time.sleep(self.warmup_delay)
 
     def spawn_fly(self):
+        """ spawn fly
+        """
         if self.stopped:
             return
 
@@ -128,12 +141,16 @@ class Show(object):
         self.stop()
 
     def kill_fly(self, fly, sig=signal.SIGTERM):
+        """ kill fly
+        """
         self.send_msg("kill", {"fly_id": fly.wid, "time": time.time()})
         logger.info("%s: kill fly %s" % (self.name, fly.pid))
         fly.send_signal(sig)
 
     @util.debuglog
     def kill_flies(self, sig):
+        """ kill flies
+        """
         for wid in self.flies.keys():
             try:
                 fly = self.flies.pop(wid)
@@ -144,6 +161,8 @@ class Show(object):
 
     @util.debuglog
     def send_signal_child(self, wid, pid, signum):
+        """ send signal child
+        """
         wid = int(wid)
         if wid in self.flies:
             fly = self.flies[wid]
@@ -153,6 +172,8 @@ class Show(object):
 
     @util.debuglog
     def send_signal_children(self, wid, signum):
+        """ send signal children
+        """
         wid = int(wid)
         if wid in self.flies:
             fly = self.flies[wid]
@@ -162,6 +183,8 @@ class Show(object):
 
     @util.debuglog
     def stop(self, graceful=True):
+        """ stop
+        """
         self.stopped = True
 
         sig = signal.SIGQUIT
@@ -183,6 +206,8 @@ class Show(object):
 
     @util.debuglog
     def start(self):
+        """ start
+        """
         if not self.stopped:
             return
 
@@ -194,6 +219,8 @@ class Show(object):
 
     @util.debuglog
     def restart(self):
+        """ restart
+        """
         self.send_msg("restart", {"time": time.time()})
         self.stop()
         self.start()
@@ -201,6 +228,8 @@ class Show(object):
 
     @util.debuglog
     def reload(self):
+        """ reload
+        """
         if self.prereload_fn is not None:
             self.prereload_fn(self)
 
@@ -265,6 +294,8 @@ class Show(object):
         return action
 
     def do_action(self, num):
+        """ do action
+        """
         self.stopped = False
         if num == 1:
             for i in range(self.numflies):
@@ -274,6 +305,8 @@ class Show(object):
             self.reap_and_manage_flies()
 
     def get_opt(self, name):
+        """ get opt
+        """
         val = getattr(self, name)
         if name == "env":
             val = util.env_to_str(val)
