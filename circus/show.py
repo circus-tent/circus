@@ -178,7 +178,7 @@ class Show(object):
                     del self.flies[wid]
         self.kill_flies(signal.SIGKILL)
 
-        #self.send_msg("stop", {"time": time.time()})
+        self.send_msg("stop", {"time": time.time()})
         logger.info('%s stopped' % self.name)
 
     @util.debuglog

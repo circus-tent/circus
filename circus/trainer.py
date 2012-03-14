@@ -28,7 +28,7 @@ class Trainer(object):
         self.pubsub_endpoint = pubsub_endpoint
         self.context = zmq.Context()
 
-        self.ctrl = Controller(self.context, endpoint, self, self.check_delay)
+        self.ctrl = Controller(endpoint, self, self.check_delay)
         self.flapping = Flapping(endpoint, pubsub_endpoint, shows)
 
         self.pid = os.getpid()
@@ -64,12 +64,16 @@ class Trainer(object):
             self.ctrl.poll()
 
     def stop(self, graceful=True):
-        logger.debug('Stopping the trainer')
+        if not self.alive:
+            return
+
+        logger.info('Stopping the trainer')
         self.alive = False
         # kill flies
         for show in self.shows:
             show.stop(graceful=graceful)
 
+        self.ctrl.stop()
         time.sleep(0.5)
         try:
             self.context.destroy(0)
