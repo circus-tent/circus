@@ -3,9 +3,20 @@
 Installing Circus
 -----------------
 
-To test it run the following command:
+Using EasyInstall::
+    
+    $ easy_install circus
+
+Or pip::
+
+    $ pip install circus
+
+Trying out Circus
+-----------------
+
+To test it run the following command::
 
     $ cd examples && circusd circus.ini
 
-It should launch 5 workers.
+This will launch 5 test workers.
 
