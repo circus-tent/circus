@@ -39,7 +39,6 @@ class Trainer(object):
         self.context = zmq.Context()
 
         self.ctrl = Controller(self.context, endpoint, self, self.check_delay)
-        self.flapping = Flapping(endpoint, pubsub_endpoint, check_delay)
 
         self.pid = os.getpid()
         self._shows_names = {}
@@ -57,6 +56,12 @@ class Trainer(object):
             self._shows_names[show.name.lower()] = show
             show.pubsub_io = self.pubsub_io
 
+    def start_flapping(self):
+        self.flapping = Flapping(self.endpoint, self.pubsub_endpoint,
+                self.check_delay)
+        self.flapping.start()
+
+
     @debuglog
     def start(self):
         """Starts all the shows.
@@ -67,7 +72,7 @@ class Trainer(object):
         """
 
         # start flapping
-        self.flapping.start()
+        self.start_flapping()
 
         # launch flies
         for show in self.shows:
@@ -78,6 +83,10 @@ class Trainer(object):
             for show in self.shows:
                 show.reap_flies()
                 show.manage_flies()
+
+            if not self.flapping.is_alive():
+                # flapping is dead, relaunch it.
+                self.start_flapping()
 
             # wait for the controller
             self.ctrl.poll()
