@@ -1,4 +1,4 @@
-Circus Process Watcher 
+Circus Process Watcher
 ======================
 
 .. image:: images/circus-medium.png
@@ -6,19 +6,20 @@ Circus Process Watcher
 
 Circus is a program that will let you run and watch multiple processes.
 
-Circus can be driven through a CLI or used via its APIs.
+Circus can be driven through a command-line interface, or programmatically
+through its APIs.
 
 It shares some of the goals Supervisord, BluePill and Daemontools.
 
 To install it, check out :ref:`installation`
 
 
-Using as a library
--------------------
+Using as a Library
+------------------
 
-Circus provides high-level Classes and functions that will let you run
-processes. For example, if you just want to run 4 workers forever, you
-can write.
+Circus provides high-level classes and functions that will let you run
+processes. For example, if you just want to run four workers forever, you
+can write:
 
 .. code-block:: python
 
@@ -30,19 +31,20 @@ can write.
     finally:
         trainer.stop()
 
-This snippet will run 3 *myprogram* processes and watch them for you, 
+This snippet will run instances of *myprogram* and watch them for you,
 restarting them if they die unexpectedly.
 
 To learn more about this, see :ref:`library`
 
 
-Using it through the command-line 
+Using it through the command-line
 ---------------------------------
 
-Circus provides a command line script that can be used to manage one or more 
-programs each running as one or more process instance.
+Circus provides a command-line script that can be used to manage one or
+more programs, each running as one or more process instance.
 
-It uses an ini-style file. Example::
+Circus's command-line tool is configurable using an ini-style
+configuration file. Here is a minimal example::
 
     [circus]
     check_delay = 5
@@ -58,8 +60,8 @@ The file is then run using *circusd*::
 
     $ circusd example.ini
 
-There's also a *circusctl* command line tool to query Circus to perform
-actions like adding or removing workers, or getting back some usage
+Circus also provides a management console, *circusctl*. You can use it to
+perform actions such as adding or removing workers or to display various
 statistics.
 
 To learn more about this, see :ref:`cli`
