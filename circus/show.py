@@ -3,7 +3,6 @@ import json
 import signal
 import time
 
-from circus.flapping import Flapping
 from circus.fly import Fly
 from circus import logger
 from circus import util
@@ -49,9 +48,6 @@ class Show(object):
         self.env = env
         self.send_hup = send_hup
         self.pubsub_io = None
-
-        # define flapping object
-        self.flapping = Flapping(self, times, within, retry_in, max_retry)
 
     def __len__(self):
         return len(self.flies)
@@ -167,7 +163,6 @@ class Show(object):
     @util.debuglog
     def stop(self, graceful=True):
         self.stopped = True
-        self.flapping.reset()
 
         sig = signal.SIGQUIT
         if not graceful:
@@ -183,6 +178,7 @@ class Show(object):
                     del self.flies[wid]
         self.kill_flies(signal.SIGKILL)
 
+        #self.send_msg("stop", {"time": time.time()})
         logger.info('%s stopped' % self.name)
 
     @util.debuglog
@@ -271,7 +267,6 @@ class Show(object):
     def do_action(self, num):
         self.stopped = False
         if num == 1:
-            self.flapping.reset()
             for i in range(self.numflies):
                 self.spawn_fly()
             self.manage_flies()

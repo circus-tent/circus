@@ -10,6 +10,7 @@ import zmq
 
 from circus.controller import Controller
 from circus.exc import AlreadyExist
+from circus.flapping import Flapping
 from circus import logger
 from circus.show import Show
 from circus.util import debuglog
@@ -28,6 +29,8 @@ class Trainer(object):
         self.context = zmq.Context()
 
         self.ctrl = Controller(self.context, endpoint, self, self.check_delay)
+        self.flapping = Flapping(endpoint, pubsub_endpoint, shows)
+
         self.pid = os.getpid()
         self._shows_names = {}
         self.alive = True
@@ -112,6 +115,7 @@ class Trainer(object):
                 raise AlreadyExist("%r already exist" % show.name)
 
             show = Show(name, cmd, stopped=True)
+            show.pubsub_io = self.pubsub_io
             self.shows.append(show)
             self._shows_names[show.name.lower()] = show
 

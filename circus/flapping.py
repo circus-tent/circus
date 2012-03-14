@@ -1,25 +1,19 @@
-from threading import Timer
+from threading import Thread, Timer
 import time
 
 from circus import logger
 
 
-class Flapping(object):
+class Flapping(Thread):
 
-    def __init__(self, show, times=2, within=1., retry_in=7.,
-                 max_retry=5):
-        self.show = show
-        self.times = times
-        self.within = within
-        self.retry_in = retry_in
-        self.max_retry = max_retry
-        self.tries = 0
+    def __init__(self, endpoint, pubsub_endpoint, shows):
+        self.show = shows
+
         self.timeline = []
         self.timer = None
 
-    def notify(self):
-        self.timeline.append(time.time())
-        self.check()
+    def run(self):
+        pass
 
     def reset(self):
         self.timeline = []
