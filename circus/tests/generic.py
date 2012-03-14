@@ -39,4 +39,7 @@ def resolve_name(name):
 if __name__ == '__main__':
     callable = resolve_name(sys.argv[1])
     test_file = sys.argv[2]
-    sys.exit(callable(test_file))
+    try:
+        sys.exit(callable(test_file))
+    except:
+        sys.exit(1)
