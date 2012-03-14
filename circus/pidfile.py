@@ -4,7 +4,7 @@ import tempfile
 
 
 class Pidfile(object):
-    """\
+    """
     Manage a PID file. If a specific name is provided
     it and '"%s.oldpid" % name' will be used. Otherwise
     we create a temp file using os.mkstemp.
