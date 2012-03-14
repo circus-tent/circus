@@ -8,3 +8,4 @@ include
 .Python
 .coverage
 html
+docs/build

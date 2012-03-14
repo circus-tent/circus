@@ -6,13 +6,14 @@ Architecture
 
 
 
-- Each program to run is called a **Show**
-- Each show can run with a certain amount of **Flies**
-- A **Fly** spawns a independant process
-- A **Trainer** is responsible to run all the **Shows** and make sure all the 
-  flies behave corectly
-- A **Controller** is a set of actions to perform on the trainer.
-- The **Client** communicates via ZMQ with the **Controller** to interact
-  with the system.
-
+**Show**
+    A show is the program you tell to circus to run.  A single circus instance an run one or more shows.
+**Flies**
+    A fly is an independent OS process instance of your program. A single show can run one or more flies.
+**Trainer** 
+    The trainer is responsible for managing all the **Shows** within circus and ensures all the flies run correctly.
+**Controller** 
+    A controller contains the set of actions that con be perform on the trainer.
+**Client**
+    The client allows you to communicate with the **Controller** via ZMQ to control circus.
 
