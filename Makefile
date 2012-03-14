@@ -1,3 +1,5 @@
+.PHONY: docs
+
 build:
 	virtualenv --no-site-packages .
 	bin/python setup.py develop
@@ -9,3 +11,6 @@ test:
 
 coverage:
 	bin/nosetests --with-coverage --cover-html --cover-html-dir=html --cover-package=circus
+
+docs: html
+	$(MAKE) -C docs $^
