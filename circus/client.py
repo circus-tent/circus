@@ -71,6 +71,24 @@ class CircusConsumer(object):
             self.socket.setsockopt(zmq.SUBSCRIBE, topic)
 
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """ On context manager exit, destroy the zmq context """
+        self.stop()
+
+    def __iter__(self):
+        return self.iter_messages()
+
+    def iter_messages(self):
+        """ Yields tuples of (topic, message) """
+        with self:
+            while True:
+                topic, raw_message = self.socket.recv_multipart()
+                message = json.loads(raw_message)
+                yield topic, message
+
     def start(self):
         try:
             while True:
@@ -104,13 +122,9 @@ def main():
             else:
                 topics = ['']
 
-            client = CircusConsumer(topics, sys.argv[2])
-            try:
-                client.start()
-            except CallError as e:
-                sys.stderr.write(str(e))
-                sys.exit(1)
-            sys.exit(0)
+            for message, topic in CircusConsumer(topics, sys.argv[2]):
+                print message, topic
+
     else:
         client = CircusClient(sys.argv[1])
         cmd_parts = sys.argv[2:]
