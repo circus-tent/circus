@@ -1,0 +1,3 @@
+gevent
+flask
+hg+https://bitbucket.org/Jeffrey/gevent-websocket#egg=gevent-websocket
