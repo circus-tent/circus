@@ -1,3 +1,4 @@
+import errno
 import json
 from threading import Thread, Timer
 import time
@@ -94,6 +95,7 @@ class Flapping(Thread):
 
     def stop(self):
         self.ioloop.stop()
+        self.context.destroy(0)
         self.join()
 
     def reset(self, show_name):
