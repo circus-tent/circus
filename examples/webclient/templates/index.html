@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>Circus Web Client</title>
+    <link rel=stylesheet href=/static/bootstrap.css>
+    <style>
+      html     { background: #f8f8f8 url('/static/circus.gif') no-repeat fixed left top; }
+      body     { background: #f8f8f8; }
+      body     { width: 640px; margin: 30px auto; }
+      h1       { color: #999; margin-bottom: 40px; }
+      pre code { display: block; }
+      .bread   { color: #fc9864; }
+      .circus  { color: #f54e3e; }
+    </style>
+  </head>
+  <body>
+
+    <!-- title text -->
+    <h1 class=circus>Circus</h1>
+
+    <!-- form for topic to listen to -->
+    <form class=form-inline>
+      <input type=text name=topic class=input-small placeholder=Topic>
+      <button type=submit class="btn btn-success">Go</button>
+    </form>
+
+    <!-- messages go here -->
+    <pre></pre>
+
+    <script>
+      window.onsubmit = function (e) {
+        var topic = document.getElementsByName('topic')[0].value;
+        bread.subscribe(topic);
+        return false;
+      };
+    </script>
+    <script src=/static/bread.js></script>
+  </body>
+</html>
