@@ -96,7 +96,7 @@ def to_bool(s):
     elif s.lower().strip() in ("false", "0"):
         return False
     else:
-        raise ValueError("%r isn't not a boolean" % s)
+        raise ValueError("%r is not a boolean" % s)
 
 
 def to_uid(name):
