@@ -15,7 +15,7 @@ import time
 
 from psutil import Popen
 
-from circus.util import get_info, to_uid, to_gid, debuglog
+from circus.util import get_info, to_uid, to_gid, debuglog, get_working_dir
 
 
 _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
@@ -23,14 +23,16 @@ _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
 
 
 class Fly(object):
-    def __init__(self, wid, cmd, working_dir, shell, uid=None, gid=None,
-                 env=None):
+    def __init__(self, wid, cmd, working_dir=None, shell=False, uid=None,
+                 gid=None, env=None):
         self.wid = wid
-        self.working_dir = working_dir
+        if working_dir is None:
+            self.working_dir = get_working_dir()
+        else:
+            self.working_dir = working_dir
         self.shell = shell
         self.env = env
         self.cmd = cmd.replace('$WID', str(self.wid))
-
         self.uid = to_uid(uid)
         self.gid = to_gid(gid)
 
