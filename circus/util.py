@@ -31,7 +31,7 @@ def bytes2human(n):
     """Translates bytes into a human repr.
     """
     if not isinstance(n, int):
-        return n
+        raise TypeError(n)
 
     prefix = {}
     for i, s in enumerate(_SYMBOLS):

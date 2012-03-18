@@ -21,6 +21,7 @@ class TestUtil(unittest.TestCase):
     def test_bytes2human(self):
         self.assertEqual(bytes2human(10000), '9K')
         self.assertEqual(bytes2human(100001221), '95M')
+        self.assertRaises(TypeError, bytes2human, '1')
 
     def test_tobool(self):
         for value in ('True ', '1', 'true'):
