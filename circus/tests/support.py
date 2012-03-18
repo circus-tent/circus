@@ -5,7 +5,6 @@ import threading
 import time
 import sys
 
-import zmq
 from circus import get_trainer
 
 
@@ -54,6 +53,7 @@ class Runner(threading.Thread):
 
     def stop(self):
         self.trainer.terminate()
+        time.sleep(0.25)
         self.join()
 
 

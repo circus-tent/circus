@@ -7,7 +7,7 @@ except MemoryError:
 except ImportError:
     # Python on Solaris compiled with Sun Studio doesn't have ctypes
     ctypes = None       # NOQA
-
+import errno
 import os
 from subprocess import PIPE
 import time
@@ -15,7 +15,6 @@ import time
 
 from psutil import Popen
 
-from circus import logger
 from circus.util import get_info, to_uid, to_gid, debuglog
 
 
@@ -95,7 +94,7 @@ class Fly(object):
 
     @debuglog
     def send_signal_child(self, pid, signum):
-        children = sict([(child.pid, child) \
+        children = dict([(child.pid, child) \
                 for child in self._worker.get_children()])
 
         children[pid].send_signal(signum)

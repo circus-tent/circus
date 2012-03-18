@@ -17,8 +17,8 @@ class SysHandler(object):
         if name[:3] == "SIG" and name[3] != "_"
     )
 
-    def __init__(self, trainer):
-        self.trainer = trainer
+    def __init__(self, controller):
+        self.controller = controller
 
         # init signals
         map(lambda s: signal.signal(s, self.signal), self.SIGNALS)
@@ -43,16 +43,16 @@ class SysHandler(object):
                 sys.exit(1)
 
     def handle_int(self):
-        self.trainer.stop(False)
+        self.controller.add_job(None, "QUIT")
 
     def handle_term(self):
-        self.trainer.stop(False)
+        self.controller.add_job(None, "QUIT")
 
     def handle_quit(self):
-        self.trainer.stop()
+        self.controller.add_job(None, "QUIT graceful")
 
     def handle_winch(self):
         pass
 
     def handle_hup(self):
-        self.trainer.reload()
+        self.controller.add_job(None, "RELOAD graceful")

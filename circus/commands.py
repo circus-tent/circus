@@ -83,7 +83,6 @@ class Quit(Command):
 
     def message(self, *args, **opts):
         if not opts.get("terminate"):
-            print "ici"
             return "QUIT graceful"
         return "QUIT"
 
@@ -218,7 +217,7 @@ class List(Command):
             raise ArgumentError("invalid number of arguments")
 
         if len(args) == 1:
-            return "LIST %s" % args[1]
+            return "LIST %s" % args[0]
         else:
             return "LIST"
 

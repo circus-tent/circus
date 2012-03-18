@@ -51,7 +51,6 @@ class Show(object):
         self.send_hup = send_hup
         self.evpub_socket = None
 
-
     def initialize(self, evpub_socket):
         self.evpub_socket = evpub_socket
 

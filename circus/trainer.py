@@ -1,3 +1,4 @@
+from collections import deque
 import errno
 import logging
 import os
@@ -6,13 +7,13 @@ import time
 from functools import wraps
 
 import zmq
+from zmq.eventloop import ioloop, zmqstream
 
 from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus.flapping import Flapping
 from circus import logger
 from circus.show import Show
-from circus.sighandler import SysHandler
 from circus.util import debuglog
 
 
@@ -29,49 +30,42 @@ class Trainer(object):
       None)
     """
     def __init__(self, shows, endpoint, pubsub_endpoint, check_delay=1.,
-                 prereload_fn=None, context=None):
+                 prereload_fn=None, context=None, loop=None):
         self.shows = shows
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
         self.pubsub_endpoint = pubsub_endpoint
         self.context = context or zmq.Context()
+        self.loop = loop or ioloop.IOLoop()
+
         self.pid = os.getpid()
         self._shows_names = {}
         self.alive = True
-
         self.initialize()
 
-    def initialize_sockets(self):
+        self.busy = False
+
+    def initialize(self):
+        # event pub socket
         self.evpub_socket  = self.context.socket(zmq.PUB)
         self.evpub_socket.bind(self.pubsub_endpoint)
 
-        self.ctrl_socket = self.skt = self.context.socket(zmq.ROUTER)
-        self.ctrl_socket.bind(self.endpoint)
+        # initialize controller
+        ctrl_socket = self.context.socket(zmq.ROUTER)
+        ctrl_socket.bind(self.endpoint)
+        self.ctrl = Controller(zmqstream.ZMQStream(ctrl_socket, self.loop),
+                               self.loop, self, self.check_delay)
 
-    def initialize_shows(self):
+        # initialize flapping
+        self.flapping = Flapping(self.endpoint, self.pubsub_endpoint,
+                self.check_delay)
+
+        # initialize shows
         for show in self.shows:
             self._shows_names[show.name.lower()] = show
             show.initialize(self.evpub_socket)
-            show.manage_flies()
 
-    def start_flapping(self):
-        self.flapping = Flapping(self.endpoint, self.pubsub_endpoint,
-                self.check_delay)
-        self.flapping.start()
-
-    def start_controller(self):
-        self.ctrl = Controller(self.ctrl_socket, self, self.check_delay)
-        self.ctrl.start()
-
-    def initialize(self):
-        # start the sys handler
-        self.sys_hdl = SysHandler(self)
-
-        self.initialize_sockets()
-        self.start_controller()
-        self.initialize_shows()
-        self.start_flapping()
 
     @debuglog
     def start(self):
@@ -84,17 +78,40 @@ class Trainer(object):
 
         logger.info("Starting master on pid %s" % self.pid)
 
+        # start controller
+        self.ctrl.start()
+
+        # start flapping
+        self.flapping.start()
+
+        # initialize flies
+        for show in self.shows:
+            show.manage_flies()
+
         while self.alive:
+            try:
+                self.loop.start()
+            except zmq.ZMQError as e:
+                if e.errno == errno.EINTR:
+                    continue
+                else:
+                    raise
+            else:
+                break
+
+    def manage_shows(self):
+        if not self.busy and self.alive:
+            self.busy = True
             # manage and reap flies
             for show in self.shows:
                 show.reap_flies()
                 show.manage_flies()
 
-                if not self.flapping.is_alive():
-                    self.start_flapping()
+            if not self.flapping.is_alive():
+                self.start_flapping()
 
-           # wait for the controller
-            self.ctrl.poll()
+            self.busy = False
+
 
     @debuglog
     def stop(self, graceful=True):
@@ -109,18 +126,19 @@ class Trainer(object):
             return
 
         self.alive = False
-
         self.flapping.stop()
-
         # kill flies
         for show in self.shows:
             show.stop(graceful=graceful)
 
-        time.sleep(0.1)
+        self.ctrl.stop()
 
     def terminate(self, destroy_context=True):
         if self.alive:
             self.stop(graceful=False)
+
+        time.sleep(0.1)
+        self.loop.stop()
 
         if self.context is not None and destroy_context:
             if not self.context.closed:
