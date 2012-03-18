@@ -1,11 +1,12 @@
 """ circus commands """
-
+import signal
 import copy
 import textwrap
 
 from circus.exc import ArgumentError, MessageError
 
 KNOWN_COMMANDS = []
+
 
 def get_commands():
     commands = {}
@@ -117,6 +118,7 @@ class Start(Command):
             trainer.start_shows()
         return "ok"
 
+
 class Stop(Command):
     """\
         Stop a show or all shows gracefully or not
@@ -124,7 +126,6 @@ class Stop(Command):
 
     name = "stop"
     options = [('', 'terminate', False, "stop immediately")]
-
 
     def message(self, *args, **opts):
         if len(args) > 1:
@@ -150,6 +151,7 @@ class Stop(Command):
             trainer.stop_shows(graceful=graceful)
         return "ok"
 
+
 class Restart(Command):
     """Restart the trainer or a show """
 
@@ -174,6 +176,7 @@ class Restart(Command):
         else:
             trainer.restart()
         return "ok"
+
 
 class Reload(Command):
     """Reload the trainer or a show """
@@ -206,6 +209,7 @@ class Reload(Command):
         else:
             trainer.reload(graceful=graceful)
         return "ok"
+
 
 class List(Command):
     """ Get list of shows or flies in a show """
@@ -321,7 +325,7 @@ class Stats(Command):
         if len(args) > 2:
             raise MessageError("message invalid")
 
-        if len(args) ==  2:
+        if len(args) == 2:
             show = self._get_show(trainer, args[0])
             try:
                 return show.fly_info(args[1])
@@ -405,6 +409,7 @@ class IncrShow(Command):
         show = self._get_show(trainer, args[0])
         return str(show.incr())
 
+
 class DecrShow(Command):
     """Decrement the number of flies in a show"""
 
@@ -424,6 +429,7 @@ class DecrShow(Command):
         show = self._get_show(trainer, args[0])
         return str(show.decr())
 
+
 class Options(Command):
     """Get show options"""
 
@@ -442,6 +448,7 @@ class Options(Command):
 
         show = self._get_show(trainer, args[0])
         return "\n".join(["%s:%s" % (k, v) for k, v in show.options()])
+
 
 class Set(Command):
     """ Set a show option"""
@@ -479,6 +486,7 @@ class Set(Command):
         # trigger needed action
         show.do_action(action)
 
+
 class Get(Command):
     """Get the value of a show option"""
 
@@ -506,6 +514,7 @@ class Get(Command):
                 return "error: %r option not found" % name
         return "\n".join(ret)
 
+
 class Signal(Command):
     """Send a signal """
 
@@ -518,8 +527,7 @@ class Signal(Command):
         if largs < 2 or largs > 4:
             raise ArgumentError("number of arguments invalid")
 
-
-        msg =  "SIGNAL %s" % " ".join(args)
+        msg = "SIGNAL %s" % " ".join(args)
         if not opts.get("children", False):
             return msg
         return "%s children" % msg
@@ -530,7 +538,7 @@ class Signal(Command):
         try:
             if len(args) == 3:
                 if args[2] == "children":
-                     show.send_signal_children(args[1], signum)
+                    show.send_signal_children(args[1], signum)
                 else:
                     show.send_signal_child(args[1], args[2], signum)
             elif len(args) == 2:
@@ -540,6 +548,7 @@ class Signal(Command):
         except (KeyError, OSError) as e:
             raise MessageError(str(e))
         return "ok"
+
 
 class Listen(Command):
     """Suscribe to a show event"""

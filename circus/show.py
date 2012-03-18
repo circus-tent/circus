@@ -63,7 +63,7 @@ class Show(object):
                          json.dumps(msg)]
 
         if not self.evpub_socket.closed:
-            ret = self.evpub_socket.send_multipart(multipart_msg)
+            self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
     def reap_flies(self):
@@ -177,7 +177,6 @@ class Show(object):
                 if e.errno != errno.ESRCH:
                     raise
 
-
     @util.debuglog
     def send_signal_child(self, wid, pid, signum):
         """ send signal child
@@ -210,7 +209,6 @@ class Show(object):
     @util.debuglog
     def info(self):
         return [fly.info() for _, fly in self.flies.items()]
-
 
     @util.debuglog
     def stop(self, graceful=True):
@@ -290,10 +288,8 @@ class Show(object):
             self.manage_flies()
         return self.numflies
 
-
     def get_fly(self, wid):
         return self.flies[wid]
-
 
     def set_opt(self, key, val):
         """ set a show option
@@ -334,7 +330,7 @@ class Show(object):
             self.times = int(val)
             action = -1
         elif key == "within":
-             self.within = float(val)
+            self.within = float(val)
         elif key == "retry_in":
             self.retry_in = float(val)
         elif key == "max_retry":
@@ -345,6 +341,7 @@ class Show(object):
 
         # send update event
         self.send_msg("updated", {"time": time.time()})
+        return action
 
     def do_action(self, num):
         # trigger needed action

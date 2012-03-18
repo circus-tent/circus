@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -
 
 import errno
-import signal
 import uuid
 
 import zmq
 
 from circus.exc import CallError
+
 
 class CircusClient(object):
     def __init__(self, context=None, endpoint='tcp://127.0.0.1:5555',

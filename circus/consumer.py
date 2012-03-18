@@ -1,8 +1,6 @@
 import errno
-
 import zmq
 
-from circus.exc import CallError
 
 class CircusConsumer(object):
     def __init__(self, topics, context=None, endpoint='tcp://127.0.0.1:5556'):
@@ -24,14 +22,12 @@ class CircusConsumer(object):
     def __iter__(self):
         return self.iter_messages()
 
-
     def iter_messages(self):
         """ Yields tuples of (topic, message) """
         with self:
             while True:
                 topic, message = self.pubsub_socket.recv_multipart()
                 yield topic, message
-
 
     def stop(self):
         try:

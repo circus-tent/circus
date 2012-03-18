@@ -1,10 +1,7 @@
-from collections import deque
 import errno
 import logging
 import os
-import sys
 import time
-from functools import wraps
 
 import zmq
 from zmq.eventloop import ioloop, zmqstream
@@ -25,9 +22,9 @@ class Trainer(object):
     - **shows**: a list of Show objects
     - **endpoint**: the controller ZMQ endpoint
     - **pubsub_endpoint**: the pubsub endpoint
-    - **check_delay**: the delay between two controller points (defaults: 1 s)
-    - **prereload_fn**: callable that will be executed on each reload (defaults:
-      None)
+    - **check_delay**: the delay between two controller points (default: 1 s)
+    - **prereload_fn**: callable that will be executed on each reload
+      (default: None)
     """
     def __init__(self, shows, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None):
@@ -48,7 +45,7 @@ class Trainer(object):
 
     def initialize(self):
         # event pub socket
-        self.evpub_socket  = self.context.socket(zmq.PUB)
+        self.evpub_socket = self.context.socket(zmq.PUB)
         self.evpub_socket.bind(self.pubsub_endpoint)
 
         # initialize controller
@@ -65,7 +62,6 @@ class Trainer(object):
         for show in self.shows:
             self._shows_names[show.name.lower()] = show
             show.initialize(self.evpub_socket)
-
 
     @debuglog
     def start(self):
@@ -113,7 +109,6 @@ class Trainer(object):
                 self.flapping.start()
 
             self.busy = False
-
 
     @debuglog
     def stop(self, graceful=True):
@@ -184,7 +179,8 @@ class Trainer(object):
         return self._shows_names[name]
 
     def statuses(self):
-        statuses = ["%s: %s" % (show.name, show.status()) for show in self.shows]
+        statuses = ["%s: %s" % (show.name, show.status())
+                    for show in self.shows]
         return "\n".join(statuses)
 
     def add_show(self, name, cmd):
@@ -196,7 +192,7 @@ class Trainer(object):
         - **cmd**: command to run.
         """
         if name in self._shows_names:
-            raise AlreadyExist("%r already exist" % show.name)
+            raise AlreadyExist("%r already exist" % name)
 
         show = Show(name, cmd, stopped=True)
         show.initialize(self.evpub_socket)

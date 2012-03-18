@@ -6,6 +6,7 @@ import time
 from circus.client import CallError, CircusClient
 from circus.tests.support import TestCircus
 
+
 class DummyFly(object):
 
     def __init__(self, testfile):
@@ -35,10 +36,12 @@ class DummyFly(object):
             time.sleep(0.1)
         self._write('STOP')
 
+
 def run_dummy(test_file):
     dummy = DummyFly(test_file)
     dummy.run()
     return 1
+
 
 class TestTrainer(TestCircus):
 
@@ -118,15 +121,14 @@ class TestTrainer(TestCircus):
         resp = self.cli.call("reload")
         self.assertEqual(resp, "ok")
 
-
     def test_reload1(self):
         flies0 = self.cli.call("list test")
-        resp = self.cli.call("reload")
+        self.cli.call("reload")
         time.sleep(0.5)
         flies1 = self.cli.call("list test")
         self.assertNotEqual(flies0, flies1)
 
-    def test_reload(self):
+    def test_reload2(self):
         flies1 = self.cli.call("list test")
         self.assertEqual(flies1, "1")
         self.cli.call("reload")
@@ -143,7 +145,7 @@ class TestTrainer(TestCircus):
         resp = self.cli.call("status test")
         self.assertEqual(resp, "stopped")
 
-    def test_stop_shows(self):
+    def test_stop_shows2(self):
         self.cli.call("stop test")
         resp = self.cli.call("status test")
         self.assertEqual(resp, "stopped")

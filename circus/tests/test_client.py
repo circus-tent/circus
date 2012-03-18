@@ -15,7 +15,7 @@ def run_fly(test_file):
 class TestSigHandler(TestCircus):
 
     def test_handler(self):
-        test_file = self._run_circus('circus.tests.test_client.run_fly')
+        self._run_circus('circus.tests.test_client.run_fly')
         time.sleep(.5)
 
         # playing around with the show

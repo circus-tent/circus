@@ -1,23 +1,19 @@
-import errno
-import os
 import sys
-import time
-import tempfile
 import traceback
 try:
-    from queue import Queue, Empty
+    from queue import Queue, Empty  # NOQA
 except ImportError:
-    from Queue import Queue, Empty
+    from Queue import Queue, Empty  # NOQA
 
 
 import zmq
-from zmq.eventloop import zmqstream, ioloop
+from zmq.eventloop import ioloop
 
 from circus.commands import get_commands
 from circus import logger
-from circus.exc import AlreadyExist, MessageError
-from circus.show import Show
+from circus.exc import MessageError
 from circus.sighandler import SysHandler
+
 
 class Controller(object):
     def __init__(self, stream, loop, trainer, endpoint, check_delay=1.0):
@@ -57,7 +53,7 @@ class Controller(object):
         self.wakeup()
 
     def handle_message(self, raw_msg):
-        cid, msg  = raw_msg
+        cid, msg = raw_msg
         msg = msg.strip()
 
         if not msg:
@@ -119,7 +115,6 @@ class Controller(object):
         except zmq.ZMQError as e:
             logger.info("Received %r - Could not send back %r - %s" %
                                 (msg, resp, str(e)))
-
 
     def stop(self):
         self.caller.stop()

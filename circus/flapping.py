@@ -1,5 +1,4 @@
 import errno
-import json
 from threading import Thread, Timer
 import time
 import uuid
@@ -58,7 +57,6 @@ class Flapping(Thread):
         topic, msg = data
         topic_parts = topic.split(".")
         if topic_parts[2] == "reap":
-            json_obj = json.loads(msg)
             timeline = self.timelines.get(topic_parts[1], [])
             timeline.append(time.time())
             self.timelines[topic_parts[1]] = timeline
@@ -66,7 +64,6 @@ class Flapping(Thread):
             self.check(topic_parts[1])
         elif topic_parts[2] == "updated":
             self.update_conf(topic_parts[1])
-
 
     def call(self, cmd):
         self.client.send(cmd)
@@ -81,17 +78,16 @@ class Flapping(Thread):
             k1 = k.strip()
 
             if k1 == "times":
-                conf[k1]  = int(v.strip())
+                conf[k1] = int(v.strip())
             elif k1 == "within":
-                conf[k1]  = float(v.strip())
+                conf[k1] = float(v.strip())
             elif k1 == "retry_in":
-                conf[k1]  = float(v.strip())
+                conf[k1] = float(v.strip())
             elif k1 == "max_retry":
                 conf[k1] = int(v.strip())
 
         self.configs[show_name] = conf
         return conf
-
 
     def stop(self):
         self.alive = False

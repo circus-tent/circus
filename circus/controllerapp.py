@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -
 
-import errno
 import getopt
-import zmq
 import sys
-import signal
 import traceback
 
 
@@ -14,13 +11,13 @@ from circus.commands import get_commands
 from circus.exc import CallError, ArgumentError
 
 
-
 globalopts = [
     ('', 'endpoint', "tcp://127.0.0.1:5555", "connection endpointt"),
     ('', 'timeout', 5, "connection timeout"),
     ('h', 'help', None, "display help and exit"),
     ('v', 'version', None, "display version and exit")
 ]
+
 
 def _get_switch_str(opt):
     """
@@ -36,6 +33,7 @@ def _get_switch_str(opt):
     else:
         # only has a long option
         return "--%s %s" % (opt[1], default)
+
 
 class ControllerApp(object):
 
@@ -83,8 +81,6 @@ class ControllerApp(object):
         return getattr(self, "handle_%s" % cmd.msg_type)(msg, endpoint,
                 timeout)
 
-
-
     def display_help(self, *args, **opts):
         if opts.get('version', False):
             self.display_version(*args, **opts)
@@ -103,7 +99,7 @@ class ControllerApp(object):
         max_len = len(max(commands, key=len))
         for name in commands:
             if name == "help":
-                desc =  "Get help on a command"
+                desc = "Get help on a command"
                 print("\t%-*s\t%s" % (max_len, name, desc))
             else:
                 cmd = self.commands[name]
@@ -112,7 +108,6 @@ class ControllerApp(object):
                 print ("\t%-*s\t%s" % (max_len, name, cmd.desc))
 
         return 0
-
 
     def display_version(self, *args, **opts):
         from circus import __version__
@@ -140,11 +135,10 @@ class ControllerApp(object):
             client.stop()
         return 0
 
-
     def _parse(self, args):
         options = {}
         cmdoptions = {}
-        args = self._parseopts(args,globalopts, options)
+        args = self._parseopts(args, globalopts, options)
 
         if args:
             cmd, args = args[0], args[1:]
@@ -170,7 +164,6 @@ class ControllerApp(object):
 
         return cmd, options, cmdoptions, args
 
-
     def _parseopts(self, args, options, state):
         namelist = []
         shortlist = ''
@@ -189,8 +182,10 @@ class ControllerApp(object):
                 state[name] = default
 
             if not (default is None or default is True or default is False):
-                if short: short += ':'
-                if oname: oname += '='
+                if short:
+                    short += ':'
+                if oname:
+                    oname += '='
             if short:
                 shortlist += short
             if name:
@@ -210,6 +205,7 @@ class ControllerApp(object):
                 state[name] = True
 
         return args
+
 
 def main():
     controller = ControllerApp()

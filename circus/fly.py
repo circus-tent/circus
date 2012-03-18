@@ -107,6 +107,7 @@ class Fly(object):
             except OSError as e:
                 if e.errno != errno.ESRCH:
                     raise
+
     @property
     def pid(self):
         return self._worker.pid
