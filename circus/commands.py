@@ -75,7 +75,7 @@ Command = CommandMeta('Command', (Command,), {})
 
 class Quit(Command):
     """\
-        quit the trainer immediately.
+        Quit the trainer immediately.
     """
 
     name = "quit"
@@ -151,7 +151,7 @@ class Stop(Command):
         return "ok"
 
 class Restart(Command):
-    """restart the trainer or a show """
+    """Restart the trainer or a show """
 
     name = "restart"
 
@@ -176,7 +176,7 @@ class Restart(Command):
         return "ok"
 
 class Reload(Command):
-    """reload the trainer or a show """
+    """Reload the trainer or a show """
 
     name = "reload"
     options = [('', 'terminate', False, "stop immediately")]
@@ -444,7 +444,7 @@ class Options(Command):
         return "\n".join(["%s:%s" % (k, v) for k, v in show.options()])
 
 class Set(Command):
-    """ set a show option"""
+    """ Set a show option"""
 
     name = "set"
 
