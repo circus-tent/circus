@@ -26,13 +26,13 @@ class Flapping(Thread):
 
         self.pubsub_endpoint = pubsub_endpoint
         self.endpoint = endpoint
-        self.alive = True
         self.initialize()
 
     def initialize(self):
         self.client = self.context.socket(zmq.DEALER)
         self.client.setsockopt(zmq.IDENTITY, self._id)
         self.client.connect(self.endpoint)
+        self.client.setsockopt(zmq.LINGER, 0)
 
         self.sub_socket = self.context.socket(zmq.SUB)
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, b'show.')
@@ -42,7 +42,7 @@ class Flapping(Thread):
         self.substream.on_recv(self.handle_recv)
 
     def run(self):
-        while self.alive:
+        while True:
             try:
                 self.loop.start()
             except zmq.ZMQError as e:
@@ -95,7 +95,7 @@ class Flapping(Thread):
             timer.cancel()
         self.loop.stop()
         time.sleep(0.1)
-        self.context.destroy(0)
+        self.context.destroy()
         self.join()
 
     def reset(self, show_name):

@@ -17,6 +17,7 @@ class CircusClient(object):
         self._id = uuid.uuid4().hex
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
+        self.socket.setsockopt(zmq.LINGER, 0)
 
         self.socket.connect(endpoint)
         self.poller = zmq.Poller()
@@ -28,7 +29,7 @@ class CircusClient(object):
             return
 
         try:
-            self.context.destroy(0)
+            self.context.destroy()
         except zmq.ZMQError as e:
             if e.errno == errno.EINTR:
                 pass

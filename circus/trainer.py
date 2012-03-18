@@ -33,7 +33,7 @@ class Trainer(object):
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
         self.pubsub_endpoint = pubsub_endpoint
-        self.context = context or zmq.Context()
+        self.context = context or zmq.Context.instance()
         self.loop = loop or ioloop.IOLoop()
 
         self.pid = os.getpid()
@@ -51,6 +51,7 @@ class Trainer(object):
         # initialize controller
         ctrl_socket = self.context.socket(zmq.ROUTER)
         ctrl_socket.bind(self.endpoint)
+        ctrl_socket.setsockopt(zmq.LINGER, 0)
         self.ctrl = Controller(zmqstream.ZMQStream(ctrl_socket, self.loop),
                                self.loop, self, self.check_delay)
 
@@ -84,7 +85,7 @@ class Trainer(object):
         for show in self.shows:
             show.manage_flies()
 
-        while self.alive:
+        while True:
             try:
                 self.loop.start()
             except zmq.ZMQError as e:
@@ -130,17 +131,15 @@ class Trainer(object):
             show.stop(graceful=graceful)
 
         self.ctrl.stop()
+        self.loop.stop()
 
     def terminate(self, destroy_context=True):
         if self.alive:
             self.stop(graceful=False)
 
-        time.sleep(0.1)
-        self.loop.stop()
-
         if self.context is not None and destroy_context:
             if not self.context.closed:
-                self.context.destroy(0)
+                self.context.destroy()
             self.context = None
 
     @debuglog
