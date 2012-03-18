@@ -2,7 +2,6 @@ import errno
 import logging
 import os
 import sys
-from threading import Lock
 import time
 from functools import wraps
 
@@ -13,6 +12,7 @@ from circus.exc import AlreadyExist
 from circus.flapping import Flapping
 from circus import logger
 from circus.show import Show
+from circus.sighandler import SysHandler
 from circus.util import debuglog
 
 
@@ -29,37 +29,49 @@ class Trainer(object):
       None)
     """
     def __init__(self, shows, endpoint, pubsub_endpoint, check_delay=1.,
-                 prereload_fn=None):
+                 prereload_fn=None, context=None):
         self.shows = shows
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
         self.pubsub_endpoint = pubsub_endpoint
-        self.context = zmq.Context()
-
-        self.ctrl = Controller(self.context, endpoint, self, self.check_delay)
-
+        self.context = context or zmq.Context()
         self.pid = os.getpid()
         self._shows_names = {}
         self.alive = True
-        self._lock = Lock()
-        self._setup()
-        logger.info("Starting master on pid %s" % self.pid)
 
-    def _setup(self):
-        # set pubsub endpoint
-        self.pubsub_io  = self.context.socket(zmq.PUB)
-        self.pubsub_io.bind(self.pubsub_endpoint)
+        self.initialize()
 
+    def initialize_sockets(self):
+        self.evpub_socket  = self.context.socket(zmq.PUB)
+        self.evpub_socket.bind(self.pubsub_endpoint)
+
+        self.ctrl_socket = self.skt = self.context.socket(zmq.ROUTER)
+        self.ctrl_socket.bind(self.endpoint)
+
+    def initialize_shows(self):
         for show in self.shows:
             self._shows_names[show.name.lower()] = show
-            show.pubsub_io = self.pubsub_io
+            show.initialize(self.evpub_socket)
+            show.manage_flies()
 
     def start_flapping(self):
         self.flapping = Flapping(self.endpoint, self.pubsub_endpoint,
                 self.check_delay)
         self.flapping.start()
 
+    def start_controller(self):
+        self.ctrl = Controller(self.ctrl_socket, self, self.check_delay)
+        self.ctrl.start()
+
+    def initialize(self):
+        # start the sys handler
+        self.sys_hdl = SysHandler(self)
+
+        self.initialize_sockets()
+        self.start_controller()
+        self.initialize_shows()
+        self.start_flapping()
 
     @debuglog
     def start(self):
@@ -70,12 +82,7 @@ class Trainer(object):
         flies and restarts them if needed.
         """
 
-        # start flapping
-        self.start_flapping()
-
-        # launch flies
-        for show in self.shows:
-            show.manage_flies()
+        logger.info("Starting master on pid %s" % self.pid)
 
         while self.alive:
             # manage and reap flies
@@ -83,11 +90,10 @@ class Trainer(object):
                 show.reap_flies()
                 show.manage_flies()
 
-            if not self.flapping.is_alive():
-                # flapping is dead, relaunch it.
-                self.start_flapping()
+                if not self.flapping.is_alive():
+                    self.start_flapping()
 
-            # wait for the controller
+           # wait for the controller
             self.ctrl.poll()
 
     @debuglog
@@ -110,17 +116,19 @@ class Trainer(object):
         for show in self.shows:
             show.stop(graceful=graceful)
 
-        time.sleep(0.5)
-        try:
-            self.context.destroy(0)
-        except zmq.ZMQError as e:
-            if e.errno == errno.EINTR:
-                pass
-            else:
-                raise
+        time.sleep(0.1)
+
+    def terminate(self, destroy_context=True):
+        if self.alive:
+            self.stop(graceful=False)
+
+        if self.context is not None and destroy_context:
+            if not self.context.closed:
+                self.context.destroy(0)
+            self.context = None
 
     @debuglog
-    def reload(self):
+    def reload(self, graceful=True):
         """Reloads everything.
 
         Run the :func:`prereload_fn` callable if any, then gracefuly
@@ -140,19 +148,23 @@ class Trainer(object):
 
         # gracefully reload shows
         for show in self.shows:
-            show.reload()
+            show.reload(graceful=graceful)
 
     def numflies(self):
         """Return the number of flies running across all shows."""
         return sum([len(show) for show in self.shows])
 
-    def num_shows(self):
+    def numshows(self):
         """Return the number of shows."""
         return len(self.shows)
 
     def get_show(self, name):
         """Return the show *name*."""
         return self._shows_names[name]
+
+    def statuses(self):
+        statuses = ["%s: %s" % (show.name, show.status()) for show in self.shows]
+        return "\n".join(statuses)
 
     def add_show(self, name, cmd):
         """Adds a show.
@@ -162,16 +174,15 @@ class Trainer(object):
         - **name**: name of the show to add
         - **cmd**: command to run.
         """
-        with self._lock:
-            if name in self._shows_names:
-                raise AlreadyExist("%r already exist" % show.name)
+        if name in self._shows_names:
+            raise AlreadyExist("%r already exist" % show.name)
 
-            show = Show(name, cmd, stopped=True)
-            show.pubsub_io = self.pubsub_io
-            self.shows.append(show)
-            self._shows_names[show.name.lower()] = show
+        show = Show(name, cmd, stopped=True)
+        show.initialize(self.evpub_socket)
+        self.shows.append(show)
+        self._shows_names[show.name.lower()] = show
 
-    def del_show(self, name):
+    def rm_show(self, name):
         """Deletes a show.
 
         Options:
@@ -180,83 +191,17 @@ class Trainer(object):
         """
         logger.debug('Deleting %r show' % name)
 
-        with self._lock:
-            # remove the show from the list
-            show = self._shows_names.pop(name)
-            del self.shows[self.shows.index(show)]
+        # remove the show from the list
+        show = self._shows_names.pop(name)
+        del self.shows[self.shows.index(show)]
 
-            # stop the show
-            show.stop()
+        # stop the show
+        show.stop()
 
-    ###################
-    # commands
-    ###################
-
-    @debuglog
-    def handle_stop(self):
-        self.stop()
-    handle_quit = handle_stop
-
-    @debuglog
-    def handle_terminate(self):
-        self.stop(graceful=False)
-
-    @debuglog
-    def handle_numflies(self):
-        return str(self.numflies())
-
-    @debuglog
-    def handle_numshows(self):
-        return str(self.num_shows())
-
-    @debuglog
-    def handle_shows(self):
-        return ",".join(self._shows_names.keys())
-
-    @debuglog
-    def handle_flies(self):
-        flies = []
-        for show in self.shows:
-            flies.append("%s: %s" % (show.name, show.handle_flies()))
-        return buffer("\n".join(flies))
-
-    @debuglog
-    def handle_info_shows(self):
-        infos = []
-        for show in self.shows:
-            infos.append("%s:\n" % show.name)
-            infos.append("%s\n" % show.handle_info())
-        return buffer("".join(infos))
-
-    @debuglog
-    def handle_reload(self):
-        self.reload()
-        return "ok"
-
-    @debuglog
-    def handle_add_show(self, name, cmd):
-        self.add_show(name, cmd)
-        return "ok"
-
-    @debuglog
-    def handle_del_show(self, name):
-        self.del_show(name)
-        return "ok"
-
-    @debuglog
-    def handle_stop_shows(self):
-        for show in self.shows:
-            show.stop()
-        return "ok"
-
-    @debuglog
-    def handle_start_shows(self):
+    def start_shows(self):
         for show in self.shows:
             show.start()
-        return "ok"
 
-    @debuglog
-    def handle_restart_shows(self):
+    def stop_shows(self, graceful=True):
         for show in self.shows:
-            show.restart()
-        return "ok"
+            show.stop(graceful=graceful)

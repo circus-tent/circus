@@ -6,8 +6,6 @@ import time
 from circus.client import CallError, CircusClient
 from circus.tests.support import TestCircus
 
-TEST_ENDPOINT="tcp://127.0.0.1:5555"
-
 class DummyFly(object):
 
     def __init__(self, testfile):
@@ -46,9 +44,9 @@ class TestTrainer(TestCircus):
 
     def setUp(self):
         super(TestTrainer, self).setUp()
-        self.test_file = self._run_circus('circus.tests.test_trainer.run_dummy')
-        time.sleep(0.5)
-        self.cli = CircusClient(TEST_ENDPOINT)
+        dummy_fly = 'circus.tests.test_trainer.run_dummy'
+        self.test_file = self._run_circus(dummy_fly)
+        self.cli = CircusClient()
 
     def tearDown(self):
         super(TestTrainer, self).tearDown()
@@ -63,11 +61,14 @@ class TestTrainer(TestCircus):
         self.assertEqual(resp, "1")
 
     def test_flies(self):
-        resp = self.cli.call("flies")
-        self.assertEqual(resp, "test: 1")
+        resp = self.cli.call("list test")
+        self.assertEqual(resp, "1")
+        self.cli.call("incr test")
+        resp = self.cli.call("list test")
+        self.assertEqual(resp, "1,2")
 
     def test_shows(self):
-        resp = self.cli.call("shows")
+        resp = self.cli.call("list")
         self.assertEqual(resp, "test")
 
     def _get_cmd(self):
@@ -80,37 +81,38 @@ class TestTrainer(TestCircus):
 
     def test_add_show(self):
         cmd = self._get_cmd()
-        resp = self.cli.call("add_show test1 %s" % cmd)
+        resp = self.cli.call("add test1 %s" % cmd)
         self.assertEqual(resp, "ok")
 
     def test_add_show1(self):
         cmd = self._get_cmd()
-        self.cli.call("add_show test1 %s" % cmd)
-        resp = self.cli.call("shows")
+        self.cli.call("add test1 %s" % cmd)
+        resp = self.cli.call("list")
         self.assertTrue(resp.endswith("test1"))
 
     def test_add_show2(self):
         cmd = self._get_cmd()
-        self.cli.call("add_show test1 %s" % cmd)
+        self.cli.call("add test1 %s" % cmd)
         resp = self.cli.call("numshows")
         self.assertEqual(resp, "2")
 
     def test_add_show3(self):
         cmd = self._get_cmd()
-        self.cli.call("add_show test1 %s" % cmd)
-        resp = self.cli.call("add_show test1 %s" % cmd)
+        self.cli.call("add test1 %s" % cmd)
+        resp = self.cli.call("add test1 %s" % cmd)
         self.assertTrue(resp.startswith("error:"))
 
-    def test_del_show(self):
+    def test_rm_show(self):
         cmd = self._get_cmd()
-        self.cli.call("add_show test1 %s" % cmd)
-        self.cli.call("del_show test1")
+        self.cli.call("add test1 %s" % cmd)
+        self.cli.call("rm test1")
         resp = self.cli.call("numshows")
         self.assertEqual(resp, "1")
 
     def test_stop(self):
-        self.cli.call("stop")
-        self.assertRaises(CallError, self.cli.call, "shows")
+        resp = self.cli.call("quit")
+        self.assertEqual(resp, "ok")
+        self.assertRaises(CallError, self.cli.call, "list")
 
     def test_reload(self):
         resp = self.cli.call("reload")
@@ -118,23 +120,30 @@ class TestTrainer(TestCircus):
 
 
     def test_reload1(self):
-        flies0 = self.cli.call("flies")
+        flies0 = self.cli.call("list test")
         resp = self.cli.call("reload")
         time.sleep(0.5)
-        flies1 = self.cli.call("flies")
+        flies1 = self.cli.call("list test")
         self.assertNotEqual(flies0, flies1)
 
     def test_reload(self):
+        flies1 = self.cli.call("list test")
+        self.assertEqual(flies1, "1")
         self.cli.call("reload")
         time.sleep(0.5)
-        flies = self.cli.call("flies")
-        self.assertEqual(flies, "test: 2")
+        flies = self.cli.call("list test")
+        self.assertEqual(flies, "2")
 
     def test_stop_shows(self):
-        resp = self.cli.call("stop_shows")
+        resp = self.cli.call("stop")
         self.assertEqual(resp, "ok")
 
     def test_stop_shows1(self):
-        self.cli.call("stop_shows")
+        self.cli.call("stop")
+        resp = self.cli.call("status test")
+        self.assertEqual(resp, "stopped")
+
+    def test_stop_shows(self):
+        self.cli.call("stop test")
         resp = self.cli.call("status test")
         self.assertEqual(resp, "stopped")

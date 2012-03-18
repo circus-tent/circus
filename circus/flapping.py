@@ -27,6 +27,7 @@ class Flapping(Thread):
 
         self.pubsub_endpoint = pubsub_endpoint
         self.endpoint = endpoint
+        self.alive = True
 
 
     def run(self):
@@ -43,7 +44,7 @@ class Flapping(Thread):
         self.stream = zmqstream.ZMQStream(self.pubsub_io, self.ioloop)
         self.stream.on_recv(self.handle_recv)
 
-        while True:
+        while self.alive:
             try:
                 self.ioloop.start()
             except zmq.ZMQError as e:
@@ -77,7 +78,7 @@ class Flapping(Thread):
         options_str = self.call("options %s" % show_name)
         conf = self.configs.get(show_name, {})
         for line in options_str.split("\n"):
-            k, v = line.split(":")
+            k, v = line.split(":", 1)
             k1 = k.strip()
 
             if k1 == "times":
@@ -94,8 +95,12 @@ class Flapping(Thread):
 
 
     def stop(self):
+        self.alive = False
+        for _, timer in self.timers.items():
+            timer.cancel()
         self.ioloop.stop()
         self.context.destroy(0)
+        time.sleep(0.1)
         self.join()
 
     def reset(self, show_name):
@@ -106,7 +111,6 @@ class Flapping(Thread):
             timer.cancel()
 
     def check(self, show_name):
-        logger.info("check %s" % show_name)
         timeline = self.timelines[show_name]
         if show_name in self.configs:
             conf = self.configs[show_name]
@@ -117,8 +121,6 @@ class Flapping(Thread):
 
         if len(timeline) == conf['times']:
             duration = timeline[-1] - timeline[0] - self.check_delay
-
-            print duration
             if duration <= conf['within']:
                 if tries < conf['max_retry']:
                     logger.info("%s: flapping detected: retry in %2ds" %
@@ -140,9 +142,7 @@ class Flapping(Thread):
                             show_name)
                     self.timelines[show_name] = []
                     self.tries[show_name] = 0
-
-                    self.client.send("terminate %s" % show_name)
-
+                    self.client.send("stop %s" % show_name)
             else:
                 self.timelines[show_name] = []
                 self.tries[show_name] = 0

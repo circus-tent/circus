@@ -87,21 +87,27 @@ class Fly(object):
         return ",".join(["%s" % child.pid
                          for child in self._worker.get_children()])
 
-    @debuglog
-    def send_signal_child(self, pid, signum):
+    def is_child(self, pid):
         pids = [child.pid for child in self._worker.get_children()]
         if pid in pids:
-            child.send_signal(signum)
-            return "ok"
-        else:
-            return "error: child not found"
+            return True
+        return False
+
+    @debuglog
+    def send_signal_child(self, pid, signum):
+        children = sict([(child.pid, child) \
+                for child in self._worker.get_children()])
+
+        children[pid].send_signal(signum)
 
     @debuglog
     def send_signal_children(self, signum):
         for child in self._worker.get_children():
-            child.send_signal(signum)
-        return "ok"
-
+            try:
+                child.send_signal(signum)
+            except OSError as e:
+                if e.errno != errno.ESRCH:
+                    raise
     @property
     def pid(self):
         return self._worker.pid

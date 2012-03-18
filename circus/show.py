@@ -49,7 +49,11 @@ class Show(object):
         self.gid = gid
         self.env = env
         self.send_hup = send_hup
-        self.pubsub_io = None
+        self.evpub_socket = None
+
+
+    def initialize(self, evpub_socket):
+        self.evpub_socket = evpub_socket
 
     def __len__(self):
         return len(self.flies)
@@ -58,7 +62,9 @@ class Show(object):
         """send msg"""
         multipart_msg = ["show.%s.%s" % (self.res_name, topic),
                          json.dumps(msg)]
-        self.pubsub_io.send_multipart(multipart_msg)
+
+        if not self.evpub_socket.closed:
+            ret = self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
     def reap_flies(self):
@@ -136,6 +142,7 @@ class Show(object):
                 self.send_msg("spawn", {"fly_id": fly.wid,
                                         "fly_pid": fly.pid,
                                         "time": time.time()})
+                time.sleep(self.warmup_delay)
                 return
 
         self.stop()
@@ -155,31 +162,56 @@ class Show(object):
             try:
                 fly = self.flies.pop(wid)
                 self.kill_fly(fly, sig)
-            except OSError, e:
+            except OSError as e:
                 if e.errno != errno.ESRCH:
                     raise
+
+    @util.debuglog
+    def send_signal(self, wid, signum):
+        self.flies[wid].send_signal(signum)
+
+    def send_signal_flies(self, signum):
+        for fly in self.flies:
+            try:
+                fly.send_signal(signum)
+            except OSError as e:
+                if e.errno != errno.ESRCH:
+                    raise
+
 
     @util.debuglog
     def send_signal_child(self, wid, pid, signum):
         """ send signal child
         """
-        wid = int(wid)
-        if wid in self.flies:
-            fly = self.flies[wid]
-            return fly.send_signal_child(int(pid), signum)
-        else:
-            return "error: fly not found"
+        fly = self.flies[int(wid)]
+        try:
+            fly.send_signal_child(int(pid), signum)
+        except OSError as e:
+            if e.errno != errno.ESRCH:
+                raise
 
     @util.debuglog
     def send_signal_children(self, wid, signum):
         """ send signal children
         """
-        wid = int(wid)
-        if wid in self.flies:
-            fly = self.flies[wid]
-            return fly.send_signal_children(signum)
-        else:
-            return "error: fly not found"
+        fly = self.flies[int(wid)]
+        fly.send_signal_children(signum)
+
+    @util.debuglog
+    def status(self):
+        if self.stopped:
+            return "stopped"
+        return "active"
+
+    @util.debuglog
+    def fly_info(self, wid):
+        fly = self.flies[int(wid)]
+        return fly.info()
+
+    @util.debuglog
+    def info(self):
+        return [fly.info() for _, fly in self.flies.items()]
+
 
     @util.debuglog
     def stop(self, graceful=True):
@@ -227,11 +259,14 @@ class Show(object):
         logger.info('%s restarted' % self.name)
 
     @util.debuglog
-    def reload(self):
+    def reload(self, graceful=True):
         """ reload
         """
         if self.prereload_fn is not None:
             self.prereload_fn(self)
+
+        if not graceful:
+            return self.restart()
 
         if self.send_hup:
             for wid, fly in self.flies.items():
@@ -242,6 +277,24 @@ class Show(object):
                 self.spawn_fly()
             self.manage_flies()
         self.send_msg("reload", {"time": time.time()})
+
+    @util.debuglog
+    def incr(self):
+        self.numflies += 1
+        self.manage_flies()
+        return self.numflies
+
+    @util.debuglog
+    def decr(self):
+        if self.numflies > 0:
+            self.numflies -= 1
+            self.manage_flies()
+        return self.numflies
+
+
+    def get_fly(self, wid):
+        return self.flies[wid]
+
 
     def set_opt(self, key, val):
         """ set a show option
@@ -290,12 +343,12 @@ class Show(object):
         elif key == "graceful_timeout":
             self.graceful_timeout = float(val)
             action = -1
+
+        # send update event
         self.send_msg("updated", {"time": time.time()})
-        return action
 
     def do_action(self, num):
-        """ do action
-        """
+        # trigger needed action
         self.stopped = False
         if num == 1:
             for i in range(self.numflies):
@@ -317,186 +370,6 @@ class Show(object):
                 val = str(val)
         return val
 
-    #################
-    # show commands #
-    #################
-
     @util.debuglog
-    def handle_set(self, *args):
-        if len(args) < 2:
-            return "error: invalid number of parameters"
-
-        action = self.set_opt(args[0], " ".join(args[1:]))
-        self.do_action(action)
-        return "ok"
-
-    @util.debuglog
-    def handle_mset(self, *args):
-        if len(args) < 2 or len(args) % 2 != 0:
-            return "error: invalid number of parameters"
-        action = 0
-        rest = args
-        while len(rest) > 0:
-            kv, rest = rest[:2], rest[2:]
-            new_action = self.set_opt(kv[0], kv[1])
-            if new_action == 1:
-                action = 1
-        self.do_action(action)
-        return "ok"
-
-    @util.debuglog
-    def handle_get(self, *args):
-        if len(args) < 1:
-            return "error: invalid number of parameters"
-
-        if args[0] in self.optnames:
-            return self.get_opt(args[0])
-        else:
-            return "error: %r option not found" % args[0]
-
-    @util.debuglog
-    def handle_mget(self, *args):
-        if len(args) < 1:
-            return "error: invalid number of parameters"
-
-        ret = []
-        for name in args:
-            if name in self.optnames:
-                val = self.get_opt(name)
-                ret.append("%s: %s" % (name, val))
-            else:
-                return "error: %r option not found" % name
-        return  "\n".join(ret)
-
-    @util.debuglog
-    def handle_options(self, *args):
-        ret = []
-        for name in self.optnames:
-            val = self.get_opt(name)
-            ret.append("%s: %s" % (name, val))
-        return "\n".join(ret)
-
-    @util.debuglog
-    def handle_status(self, *args):
-        if self.stopped:
-            return "stopped"
-        return "active"
-
-    def handle_stop(self, *args):
-        self.stop()
-        return "ok"
-
-    def handle_start(self, *args):
-        self.start()
-        return "ok"
-
-    def handle_restart(self, *args):
-        self.restart()
-        return "ok"
-
-    def handle_flies(self, *args):
-        return ",".join([str(wid) for wid in self.flies.keys()])
-
-    def handle_numflies(self, *args):
-        return str(self.numflies)
-
-    def handle_info(self, *args):
-        if len(args) > 0:
-            wid = int(args[0])
-            if wid in self.flies:
-                fly = self.flies[wid]
-                return fly.info()
-            else:
-                return "error: fly '%s' not found" % wid
-        else:
-            return "\n".join([fly.info() for _, fly in self.flies.items()])
-
-    @util.debuglog
-    def handle_quit(self, *args):
-        if len(args) > 0:
-            wid = int(args[0])
-            if wid in self.flies:
-                try:
-                    fly = self.flies.pop(wid)
-                    self.kill_fly(fly)
-                    return "ok"
-                except OSError, e:
-                    if e.errno != errno.ESRCH:
-                        raise
-            else:
-                return "error: fly '%s' not found" % wid
-        else:
-            self.stop()
-            return "ok"
-
-    handle_kill = handle_stop = handle_quit
-
-    @util.debuglog
-    def handle_terminate(self, *args):
-        if len(args) > 0:
-            wid = int(args[0])
-            if wid in self.flies:
-                try:
-                    fly = self.flies.pop(wid)
-                    self.kill_fly(fly, signal.SIGTERM)
-                    return "ok"
-                except OSError, e:
-                    if e.errno != errno.ESRCH:
-                        raise
-            else:
-                return "error: fly '%s' not found" % wid
-        else:
-            self.stop(graceful=False)
-            return "ok"
-
-    def handle_reload(self, *args):
-        self.reload()
-        logger.info("%r reloaded" % self.name)
-        return "ok"
-
-    handle_hup = handle_reload
-
-    def handle_ttin(self, *args):
-        self.numflies += 1
-        self.manage_flies()
-        return str(self.numflies)
-
-    def handle_ttou(self, *args):
-        self.numflies -= 1
-        self.manage_flies()
-        return str(self.numflies)
-
-    def handle_kill_child(self, wid, pid):
-        return self.send_signal_child(wid, pid, signal.SIGKILL)
-
-    def handle_quit_child(self, wid, pid):
-        return self.send_signal_child(wid, pid, signal.SIGQUIT)
-
-    def handle_children(self, wid):
-        wid = int(wid)
-        if wid in self.flies:
-            fly = self.flies[wid]
-            return fly.children()
-        else:
-            return "error: fly not found"
-
-    @util.debuglog
-    def handle_signal_fly(self, wid, sig):
-        try:
-            signum = getattr(signal, "SIG%s" % sig.upper())
-        except AttributeError:
-            return "error: unknown signal %s" % sig
-
-        wid = int(wid)
-        if wid in self.flies:
-            fly = self.flies[wid]
-            fly.send_signal(signum)
-            return "ok"
-        else:
-            return "error: fly not found"
-
-    def handle_kill_children(self, wid):
-        return self.send_signal_children(wid, signal.SIGKILL)
-
-    def handle_quit_children(self, wid):
-        return self.send_signal_children(wid, signal.SIGQUIT)
+    def options(self, *args):
+        return [(name, self.get_opt(name)) for name in sorted(self.optnames)]

@@ -1,31 +1,29 @@
 import errno
 import os
+import sys
 import tempfile
 import traceback
+
 import zmq
 
+from circus.commands import get_commands
 from circus import logger
 from circus.exc import AlreadyExist, MessageError
-from circus.sighandler import SysHandler
 from circus.show import Show
 
 
 class Controller(object):
-    def __init__(self, context, endpoint, trainer, timeout=1.0):
-        self.context = context
-        self.skt = self.context.socket(zmq.ROUTER)
-        self.skt.bind(endpoint)
-        self.poller = zmq.Poller()
-        self.poller.register(self.skt, zmq.POLLIN)
-
+    def __init__(self, socket, trainer, timeout=1.0):
+        self.socket = socket
         self.trainer = trainer
         self.timeout = timeout * 1000
 
-        # start the sys handler
-        self.sys_hdl = SysHandler(trainer)
+        # get registered commands
+        self.commands = get_commands()
 
-    def send(self, msg):
-        self.skt.send(msg)
+    def start(self):
+        self.poller = zmq.Poller()
+        self.poller.register(self.socket, zmq.POLLIN)
 
     def poll(self):
         while True:
@@ -48,35 +46,35 @@ class Controller(object):
                         "error: empty command")
                 continue
 
+            logger.debug("got message %s" % msg)
             msg_parts = msg.split(" ")
             resp = ""
-            handler = None
+
+            cmd_name = msg_parts.pop(0)
+
             try:
-                cmd, inst, args = self.parse_message(msg_parts)
-                handler = getattr(inst, "handle_%s" % cmd)
+                cmd = self.commands[cmd_name.lower()]
+            except KeyError:
+                error = "error: unknown command: %r" % cmd_name
+                return self.send_response(_id, client, msg, error)
+
+            try:
+                resp = cmd.execute(self.trainer, msg_parts)
             except MessageError as e:
                 resp = "error: %s" % str(e)
-            except AttributeError as e:
-                resp = "error: message %r" % msg
+            except OSError as e:
+                resp = "error: %s" % e
 
-            if handler is not None:
-                ## hacky part we should be abble to handlle the response
-                ## before the controller stop
-                if cmd in ('stop', 'quit', 'terminate') and \
-                        inst == self.trainer:
-                    self.send_response(_id, client, msg, "ok")
-
-                try:
-                    resp = handler(*args)
-                except OSError as e:
-                    resp = "error: %s" % e
-
-                except Exception as e:
-                    tb = traceback.format_exc()
-                    resp = "error: command %r: %s [%s]" % (msg, str(e), tb)
+            except:
+                exctype, value = sys.exc_info()[:2]
+                tb = traceback.format_exc()
+                resp = "error: command %r: %s" % (msg, value)
+                logger.debug("error: command %r: %s\n\n%s" % (msg,
+                    value, tb))
+                sys.exc_clear()
 
             if resp is None:
-                continue
+                resp = "ok"
 
             if not isinstance(resp, (str, buffer,)):
                 msg = "msg %r tried to send a non-string: %s" % (msg,
@@ -84,6 +82,9 @@ class Controller(object):
                 raise ValueError(msg)
 
             self.send_response(_id, client, msg, resp)
+
+            if cmd_name.lower() == "quit":
+                self.trainer.terminate()
 
     def send_response(self, client_id, sock, msg, resp):
         try:
@@ -93,32 +94,4 @@ class Controller(object):
             logger.error("Received %r - Could not send back %r - %s" %
                                 (msg, resp, str(e)))
 
-    def _get_show(self, show_name):
-        try:
-            return self.trainer.get_show(show_name)
-        except KeyError:
-            raise MessageError("program %s not found" % show_name)
 
-
-    def parse_message(self, msg_parts):
-        cmd = msg_parts[0].lower()
-        args = []
-        inst = self.trainer
-
-        if len(msg_parts) > 1 and msg_parts[1]:
-            show_name = msg_parts[1].lower()
-            if cmd == "add_show":
-                if len(msg_parts) < 3:
-                    raise MessageError("invalid number of parameters")
-
-                show_cmd = " ".join(msg_parts[2:])
-                args = [show_name, show_cmd]
-            elif cmd == "del_show":
-                self._get_show(show_name)
-                args = [show_name]
-            else:
-                inst = self._get_show(show_name)
-                if len(msg_parts) > 2:
-                    args = msg_parts[2:]
-
-        return cmd, inst, args

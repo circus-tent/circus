@@ -136,7 +136,7 @@ def main():
             if args:
                 cmd = "%s %s" % (cmd, args)
 
-            num_flies = cfg.dget(section, 'num_flies', 1, int)
+            numflies = cfg.dget(section, 'numflies', 1, int)
             warmup_delay = cfg.dget(section, 'warmup_delay', 0, int)
 
             working_dir = cfg.dget(section, 'working_dir')
@@ -150,7 +150,7 @@ def main():
             max_retry = cfg.dget(section, "max_retry", 5, int)
             graceful_timeout = cfg.dget(section, "graceful_timeout", 30, int)
 
-            show = Show(name, cmd, numflies=num_flies,
+            show = Show(name, cmd, numflies=numflies,
                         warmup_delay=warmup_delay, working_dir=working_dir,
                         shell=shell, uid=uid, gid=gid, send_hup=send_hup,
                         times=times, within=within, retry_in=retry_in,
@@ -168,7 +168,7 @@ def main():
     try:
         trainer.start()
     finally:
-        trainer.stop()
+        trainer.terminate()
         if pidfile is not None:
             pidfile.unlink()
 

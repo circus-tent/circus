@@ -9,7 +9,7 @@ class SysHandler(object):
 
     SIGNALS = map(
         lambda x: getattr(signal, "SIG%s" % x),
-        "HUP QUIT INT TERM WINCH CHLD".split()
+        "HUP QUIT INT TERM WINCH".split()
     )
 
     SIG_NAMES = dict(
@@ -41,9 +41,6 @@ class SysHandler(object):
                 tb = traceback.format_exc()
                 logger.error("error: %s [%s]" % (e, tb))
                 sys.exit(1)
-
-    def handle_chld(self):
-        pass
 
     def handle_int(self):
         self.trainer.stop(False)

@@ -1,6 +1,9 @@
 import logging
 import os
 
+version_info = (0, 1, 0)
+__version__ = ".".join(map(str, version_info))
+
 
 logger = logging.getLogger('circus')
 
@@ -9,7 +12,7 @@ def get_trainer(cmd, numflies=1.,
                 warmup_delay=0., controller='tcp://127.0.0.1:5555',
                 pubsub_endpoint='tcp://127.0.0.1:5556',
                 shell=False, working_dir=None, uid=None, gid=None,
-                env=None, name=None):
+                env=None, name=None, context=None):
     """Creates a Trainer and a single show in it.
 
     Options:
@@ -37,4 +40,4 @@ def get_trainer(cmd, numflies=1.,
     show = Show(name, cmd, numflies, working_dir=working_dir,
                 warmup_delay=warmup_delay, shell=shell, uid=uid, gid=gid,
                 env=env)
-    return Trainer([show], controller, pubsub_endpoint)
+    return Trainer([show], controller, pubsub_endpoint, context=context)

@@ -5,6 +5,7 @@ import threading
 import time
 import sys
 
+import zmq
 from circus import get_trainer
 
 
@@ -52,8 +53,7 @@ class Runner(threading.Thread):
         self.trainer.start()
 
     def stop(self):
-        self.trainer.stop()
-        time.sleep(0.5)
+        self.trainer.terminate()
         self.join()
 
 
@@ -79,7 +79,7 @@ class TestCircus(unittest.TestCase):
                               name="test")
         runner = Runner(trainer, testfile)
         runner.start()
-        time.sleep(0.1)
+        time.sleep(0.3)
         self.runners.append(runner)
         self.files.append(testfile)
         return testfile
