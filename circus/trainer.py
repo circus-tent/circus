@@ -1,7 +1,6 @@
 import errno
 import logging
 import os
-import time
 
 import zmq
 from zmq.eventloop import ioloop, zmqstream
