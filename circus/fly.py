@@ -33,8 +33,15 @@ class Fly(object):
         self.shell = shell
         self.env = env
         self.cmd = cmd.replace('$WID', str(self.wid))
-        self.uid = to_uid(uid)
-        self.gid = to_gid(gid)
+        if uid is None:
+            self.uid = None
+        else:
+            self.uid = to_uid(uid)
+
+        if gid is None:
+            self.gid = None
+        else:
+            self.gid = to_gid(gid)
 
         def preexec_fn():
             os.setsid()
