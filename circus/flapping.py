@@ -18,7 +18,7 @@ class Flapping(Thread):
 
         self.check_delay = check_delay
         self.context = zmq.Context()
-        self.ioloop = ioloop.IOLoop()
+        self.loop = ioloop.IOLoop()
         self._id = uuid.uuid4().hex
         self.timelines = {}
         self.timers = {}
@@ -28,25 +28,24 @@ class Flapping(Thread):
         self.pubsub_endpoint = pubsub_endpoint
         self.endpoint = endpoint
         self.alive = True
+        self.initialize()
 
-
-    def run(self):
+    def initialize(self):
         self.client = self.context.socket(zmq.DEALER)
         self.client.setsockopt(zmq.IDENTITY, self._id)
         self.client.connect(self.endpoint)
-        self.poller = zmq.Poller()
-        self.poller.register(self.client, zmq.POLLIN)
 
-        self.pubsub_io = self.context.socket(zmq.SUB)
-        self.pubsub_io.setsockopt(zmq.SUBSCRIBE, b'show.')
+        self.sub_socket = self.context.socket(zmq.SUB)
+        self.sub_socket.setsockopt(zmq.SUBSCRIBE, b'show.')
+        self.sub_socket.connect(self.pubsub_endpoint)
 
-        self.pubsub_io.connect(self.pubsub_endpoint)
-        self.stream = zmqstream.ZMQStream(self.pubsub_io, self.ioloop)
-        self.stream.on_recv(self.handle_recv)
+        self.substream = zmqstream.ZMQStream(self.sub_socket, self.loop)
+        self.substream.on_recv(self.handle_recv)
 
+    def run(self):
         while self.alive:
             try:
-                self.ioloop.start()
+                self.loop.start()
             except zmq.ZMQError as e:
                 if e.errno == errno.EINTR:
                     continue
@@ -98,9 +97,9 @@ class Flapping(Thread):
         self.alive = False
         for _, timer in self.timers.items():
             timer.cancel()
-        self.ioloop.stop()
-        self.context.destroy(0)
+        self.loop.stop()
         time.sleep(0.1)
+        self.context.destroy(0)
         self.join()
 
     def reset(self, show_name):

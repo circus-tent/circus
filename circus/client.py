@@ -23,12 +23,6 @@ class CircusClient(object):
         self.poller.register(self.socket, zmq.POLLIN)
         self.timeout = timeout * 1000
 
-        # Don't let SIGQUIT and SIGUSR1 disturb active requests
-        # by interrupting system calls
-        if hasattr(signal, 'siginterrupt'):  # python >= 2.6
-            signal.siginterrupt(signal.SIGQUIT, False)
-            signal.siginterrupt(signal.SIGUSR1, False)
-
     def stop(self):
         if self.context.closed:
             return

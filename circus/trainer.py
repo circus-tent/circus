@@ -99,6 +99,8 @@ class Trainer(object):
             else:
                 break
 
+        self.flapping.stop()
+
     def manage_shows(self):
         if not self.busy and self.alive:
             self.busy = True
@@ -108,7 +110,9 @@ class Trainer(object):
                 show.manage_flies()
 
             if not self.flapping.is_alive():
-                self.start_flapping()
+                self.flapping = Flapping(self.endpoint, self.pubsub_endpoint,
+                                         self.check_delay)
+                self.flapping.start()
 
             self.busy = False
 
@@ -126,7 +130,7 @@ class Trainer(object):
             return
 
         self.alive = False
-        self.flapping.stop()
+
         # kill flies
         for show in self.shows:
             show.stop(graceful=graceful)

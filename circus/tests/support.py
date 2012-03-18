@@ -52,8 +52,9 @@ class Runner(threading.Thread):
         self.trainer.start()
 
     def stop(self):
-        self.trainer.terminate()
         time.sleep(0.25)
+        self.trainer.terminate()
+
         self.join()
 
 
@@ -79,7 +80,6 @@ class TestCircus(unittest.TestCase):
                               name="test")
         runner = Runner(trainer, testfile)
         runner.start()
-        time.sleep(0.3)
         self.runners.append(runner)
         self.files.append(testfile)
         return testfile
