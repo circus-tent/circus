@@ -99,33 +99,30 @@ def to_bool(s):
         raise ValueError("%r isn't not a boolean" % s)
 
 
-def to_uid(val):
-    if val is None:
-        return val
+def to_uid(name):
+    """Return an uid, given a user name.
 
-    elif isinstance(val, int):
-        return val
-    elif val.isdigit():
-        return int(val)
-    else:
-        try:
-            return pwd.getpwnam(val).pw_uid
-        except KeyError:
-            raise ValueError("%r isn't a valid uid")
+    If the user name is unknown, raises a ValueError.
+    """
+    if not isinstance(name, str):
+        raise TypeError(name)
+    try:
+        return pwd.getpwnam(name).pw_uid
+    except KeyError:
+        raise ValueError("%r isn't a valid user name" % name)
 
 
-def to_gid(val):
-    if val is None:
-        return val
-    elif isinstance(val, int):
-        return val
-    elif val.isdigit():
-        return int(val)
-    else:
-        try:
-            return grp.getgrnam(val).gr_gid
-        except KeyError:
-            raise ValueError("No such group: '%s'" % val)
+def to_gid(name):
+    """Return a gid, given a group name
+
+    If the group name is unknown, raises a ValueError.
+    """
+    if not isinstance(name, str):
+        raise TypeError(name)
+    try:
+        return grp.getgrnam(name).gr_gid
+    except KeyError:
+        raise ValueError("No such group: %r" % name)
 
 
 def parse_env(env_str):

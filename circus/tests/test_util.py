@@ -2,7 +2,7 @@ import unittest
 from psutil import Popen
 
 from circus.util import (get_info, bytes2human, to_bool, parse_env,
-                         env_to_str)
+                         env_to_str, to_uid, to_gid)
 
 
 class TestUtil(unittest.TestCase):
@@ -37,3 +37,9 @@ class TestUtil(unittest.TestCase):
         env = 'test=1,booo=2'
         parsed = parse_env(env)
         self.assertEqual(env_to_str(parsed), env)
+
+    def test_to_uidgid(self):
+        self.assertRaises(ValueError, to_uid, 'xxxxxxx')
+        self.assertRaises(ValueError, to_gid, 'xxxxxxx')
+        self.assertRaises(TypeError, to_uid, 12)
+        self.assertRaises(TypeError, to_gid, 12)
