@@ -1,6 +1,7 @@
 import signal
 import copy
 import textwrap
+import time
 
 from circus.exc import MessageError
 
@@ -14,11 +15,19 @@ def get_commands():
         commands[c.name] = cmd.copy()
     return commands
 
+def ok(props=None):
+    resp = {"status": "ok", "time": time.time()}
+    if props:
+        resp.update(props)
+    return resp
 
-def check_is_graceful(args):
-    if len(args) > 0 and args[-1] == "graceful":
-        return args[:-1], True
-    return args, False
+def error(reason="unknown", tb=None):
+    return {
+        "status": "error",
+        "reason": reason,
+        "tb": tb,
+        "time": time.time()
+    }
 
 class CommandMeta(type):
 
@@ -30,12 +39,13 @@ class CommandMeta(type):
         attrs["order"] = len(KNOWN_COMMANDS)
         new_class = super_new(cls, name, bases, attrs)
         new_class.fmt_desc()
-        print "add %s" % new_class.__name__
         KNOWN_COMMANDS.append(new_class)
         return new_class
 
     def fmt_desc(cls):
-        setattr(cls, "desc", textwrap.dedent(cls.__doc__).strip())
+        desc  = textwrap.dedent(cls.__doc__).strip()
+        setattr(cls, "desc",  desc)
+        setattr(cls, "short", desc.splitlines()[0])
 
 
 class Command(object):
@@ -43,6 +53,11 @@ class Command(object):
     name = None
     msg_type = "dealer"
     options = []
+    properties = []
+
+    def make_message(self, **props):
+        name = props.pop("command", self.name)
+        return {"command": name, "properties": props or {}}
 
     def message(self, *args, **opts):
         raise NotImplementedError("message function isn't implemented")
@@ -60,9 +75,19 @@ class Command(object):
         except KeyError:
             raise MessageError("program %s not found" % show_name)
 
-    def _get_signal(self, args):
-        if args[-1].lower() in ('quit', 'hup', 'kill', 'term',):
-            return args[:-1], getattr(signal, "SIG%s" % args[-1].upper())
-        raise MessageError("signal %r not supported" % args[-1])
+    def _get_signal(self, sig):
+        if sig.lower() in ('quit', 'hup', 'kill', 'term', 'ttin', 'ttou'):
+            return getattr(signal, "SIG%s" % sig.upper())
+        raise ArgumentError("signal %r not supported" % args[-1])
+
+    def validate(self, props):
+        if not self.properties:
+            return
+
+        print props
+        for propname in self.properties:
+            if propname not in props:
+                raise MessageError("message invalid %r is missing" %
+                        propname)
 
 Command = CommandMeta('Command', (Command,), {})

@@ -1,7 +1,8 @@
 import errno
-import json
 import signal
 import time
+
+from zmq.utils.jsonapi import jsonmod as json
 
 from circus.fly import Fly, DEAD_OR_ZOMBIE
 from circus import logger
@@ -59,8 +60,18 @@ class Show(object):
 
     def send_msg(self, topic, msg):
         """send msg"""
-        multipart_msg = ["show.%s.%s" % (self.res_name, topic),
-                         json.dumps(msg)]
+
+        json_msg = json.dumps(msg)
+        if isinstance(json_msg, unicode):
+            json_msg = json_msg.encode('utf8')
+
+        if isinstance(self.res_name, unicode):
+            name = self.res_name.encode('utf8')
+        else:
+            name = self.res_name
+
+        multipart_msg = ["show.%s.%s" % (name, topic), json.dumps(msg)]
+
 
         if not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)
@@ -211,7 +222,8 @@ class Show(object):
 
     @util.debuglog
     def info(self):
-        return [fly.info() for _, fly in self.flies.items()]
+        return dict([(fid, fly.info()) for fid, fly in
+            self.flies.items()])
 
     @util.debuglog
     def stop(self, graceful=True):
@@ -319,12 +331,12 @@ class Show(object):
             self.gid = util.to_gid(val)
             action = 1
         elif key == "send_hup":
-            self.send_hup = util.to_bool(val)
+            self.send_hup = val
         elif key == "shell":
-            self.shell = util.to_bool(val)
+            self.shell = val
             action = 1
         elif key == "env":
-            self.env = util.parse_env(val)
+            self.env = val
             action = 1
         elif key == "cmd":
             self.cmd = val
@@ -371,4 +383,4 @@ class Show(object):
 
     @util.debuglog
     def options(self, *args):
-        return [(name, self.get_opt(name)) for name in sorted(self.optnames)]
+        return [(name, getattr(self, name)) for name in sorted(self.optnames)]

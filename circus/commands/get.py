@@ -1,29 +1,28 @@
-from circus.commands.base import Command
+from circus.commands.base import Command, ok, error
 from circus.exc import ArgumentError, MessageError
 
 class Get(Command):
     """Get the value of a show option"""
 
     name = "get"
+    properties = ['name', 'keys']
 
     def message(self, *args, **opts):
         if len(args) < 2:
             raise ArgumentError("number of arguments invalid")
-        return "GET %s %s" % (args[0], args[1])
 
-    def execute(self, trainer, args):
-        if len(args) < 2:
-            raise MessageError("invalid number of parameters")
+        return self.make_message(name=args[0], keys=args[1:])
 
-        show = self._get_show(trainer, args.pop(0))
+    def execute(self, trainer, props):
+        show = self._get_show(trainer, props.get('name'))
 
         # get options values. It return an error if one of the asked
         # options isn't found
-        ret = []
-        for name in args:
+        options = {}
+        for name in props.get('keys', []):
             if name in show.optnames:
-                val = show.get_opt(name)
-                ret.append("%s: %s" % (name, val))
+                options[name] = getattr(show, name)
             else:
-                return "error: %r option not found" % name
-        return "\n".join(ret)
+                raise MessageError("%r option not found" % name)
+
+        return {"options": options}

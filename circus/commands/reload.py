@@ -1,4 +1,4 @@
-from circus.commands.base import Command, check_is_graceful
+from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
 
 class Reload(Command):
@@ -11,24 +11,15 @@ class Reload(Command):
         if len(args) > 1:
             raise ArgumentError("invalid number of arguments")
 
+        graceful = not opts.get("terminate", False)
         if len(args) == 1:
-            msg = "RELOAD %s" % args[0]
+            return self.make_message(name=args[0], graceful=graceful)
         else:
-            msg = "RELOAD"
+            return self.make_message(graceful=graceful)
 
-        if not opts.get("terminate", False):
-            return "%s graceful" % msg
-
-        return msg
-
-    def execute(self, trainer, args):
-        args, graceful = check_is_graceful(args)
-        if len(args) > 1:
-            raise MessageError("message invalid")
-
-        if len(args) == 1:
-            show = self._get_show(trainer, args[0])
-            show.reload(graceful=graceful)
+    def execute(self, trainer, props):
+        if 'name' in props:
+            show = self._get_show(trainer, props['name'])
+            show.reload(graceful=props.get('graceful', True))
         else:
-            trainer.reload(graceful=graceful)
-        return "ok"
+            trainer.reload(graceful=props.get('graceful', True))

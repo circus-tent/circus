@@ -6,17 +6,15 @@ class Options(Command):
     """Get show options"""
 
     name = "options"
+    properties = ['name']
 
     def message(self, *args, **opts):
 
         if len(args) < 1:
             raise ArgumentError("number of arguments invalid")
 
-        return "OPTIONS %s" % args[0]
+        return self.make_message(name=args[0])
 
-    def execute(self, trainer, args):
-        if len(args) < 1:
-            raise ArgumentError("number of arguments invalid")
-
-        show = self._get_show(trainer, args[0])
-        return "\n".join(["%s:%s" % (k, v) for k, v in show.options()])
+    def execute(self, trainer, props):
+        show = self._get_show(trainer, props['name'])
+        return {"options": dict(show.options())}

@@ -5,8 +5,9 @@ import threading
 import time
 import sys
 
-from circus import get_trainer
+import zmq
 
+from circus import get_trainer
 
 def resolve_name(name):
     ret = None
@@ -76,8 +77,7 @@ class TestCircus(unittest.TestCase):
         os.close(fd)
         wdir = os.path.dirname(__file__)
         cmd = '%s generic.py %s %s' % (sys.executable, callable, testfile)
-        trainer = get_trainer(cmd, working_dir=wdir, numflies=1,
-                              name="test")
+        trainer = get_trainer(cmd, working_dir=wdir, numflies=1, name="test")
         runner = Runner(trainer, testfile)
         runner.start()
         self.runners.append(runner)

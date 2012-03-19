@@ -6,18 +6,16 @@ class DecrShow(Command):
     """Decrement the number of flies in a show"""
 
     name = "decr"
+    properties = ['name']
 
     def message(self, *args, **opts):
 
         if len(args) < 1:
             raise ArgumentError("number of arguments invalid")
 
-        return "DECR %s" % args[0]
+        return self.make_message(name=args[0])
 
-    def execute(self, trainer, args):
-        if len(args) < 1:
-            raise ArgumentError("number of arguments invalid")
-
-        show = self._get_show(trainer, args[0])
-        return str(show.decr())
+    def execute(self, trainer, props):
+        show = self._get_show(trainer, props.get('name'))
+        return {"numflies": show.decr()}
 

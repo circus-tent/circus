@@ -5,9 +5,10 @@ import uuid
 
 import zmq
 from zmq.eventloop import ioloop, zmqstream
+from zmq.utils.jsonapi import jsonmod as json
 
 from circus import logger
-
+from circus.client import make_message
 
 class Flapping(Thread):
 
@@ -29,7 +30,7 @@ class Flapping(Thread):
         self.client = self.context.socket(zmq.DEALER)
         self.client.setsockopt(zmq.IDENTITY, self._id)
         self.client.connect(self.endpoint)
-        self.client.setsockopt(zmq.LINGER, 0)
+        self.client.linger = 0
         self.sub_socket = self.context.socket(zmq.SUB)
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, b'show.')
         self.sub_socket.connect(self.pubsub_endpoint)
@@ -53,12 +54,13 @@ class Flapping(Thread):
             else:
                 break
 
+        self.client.close()
+        self.sub_socket.close()
+
     def stop(self):
         for _, timer in self.timers.items():
             timer.cancel()
         self.loop.stop()
-        self.client.close()
-        self.sub_socket.close()
         self.join()
 
     def handle_recv(self, data):
@@ -74,26 +76,14 @@ class Flapping(Thread):
             self.update_conf(topic_parts[1])
 
     def call(self, cmd):
-        self.client.send(cmd)
+        self.client.send(json.dumps(cmd))
         msg = self.client.recv()
-        return msg
+        return json.loads(msg)
 
     def update_conf(self, show_name):
-        options_str = self.call("options %s" % show_name)
+        msg = self.call(make_message("options", name=show_name))
         conf = self.configs.get(show_name, {})
-        for line in options_str.split("\n"):
-            k, v = line.split(":", 1)
-            k1 = k.strip()
-
-            if k1 == "times":
-                conf[k1] = int(v.strip())
-            elif k1 == "within":
-                conf[k1] = float(v.strip())
-            elif k1 == "retry_in":
-                conf[k1] = float(v.strip())
-            elif k1 == "max_retry":
-                conf[k1] = int(v.strip())
-
+        conf.update(msg.get('options'))
         self.configs[show_name] = conf
         return conf
 
@@ -120,13 +110,13 @@ class Flapping(Thread):
                     logger.info("%s: flapping detected: retry in %2ds" %
                             (show_name, conf['retry_in']))
 
-                    self.call("stop_show %s" % show_name)
+                    self.call(make_message("stop", name=show_name))
 
                     self.timelines[show_name] = []
                     self.tries[show_name] = tries + 1
 
                     def _start():
-                        self.call("start_show %s" % show_name)
+                        self.call(make_message("start", name=show_name))
 
                     timer = Timer(conf['retry_in'], _start)
                     timer.start()
@@ -136,7 +126,7 @@ class Flapping(Thread):
                             show_name)
                     self.timelines[show_name] = []
                     self.tries[show_name] = 0
-                    self.client.send("stop %s" % show_name)
+                    self.call(make_message("stop", name=show_name))
             else:
                 self.timelines[show_name] = []
                 self.tries[show_name] = 0

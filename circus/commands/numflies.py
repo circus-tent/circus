@@ -11,16 +11,16 @@ class NumFlies(Command):
             raise ArgumentError("message invalid")
 
         if len(args) == 1:
-            return "NUMFLIES %s" % args[0]
+            return self.make_message(name=args[0])
         else:
-            return "NUMFLIES"
+            return self.make_message()
 
-    def execute(self, trainer, args):
-        if len(args) > 1:
-            raise MessageError("message invalid")
-
-        if len(args) == 1:
-            show = self._get_show(trainer, args[0])
-            return str(show.numflies)
+    def execute(self, trainer, props):
+        if 'name' in props:
+            show = self._get_show(trainer, props['name'])
+            return {
+                "numflies": show.numflies,
+                "show_name": props['name']
+            }
         else:
-            return str(trainer.numflies())
+            return {"numflies": trainer.numflies()}

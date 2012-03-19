@@ -9,10 +9,7 @@ class NumShows(Command):
     def message(self, *args, **opts):
         if len(args) > 0:
             raise ArgumentError("invalid number of arguments")
+        return self.make_message()
 
-        return "NUMSHOWS"
-
-    def execute(self, trainer, args):
-        if len(args) > 0:
-            raise MessageError("message invalid")
-        return str(trainer.numshows())
+    def execute(self, trainer, props):
+        return {"numshows": trainer.numshows()}

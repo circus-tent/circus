@@ -105,7 +105,7 @@ class ControllerApp(object):
                 cmd = self.commands[name]
                 # Command name is max_len characters.
                 # Used by the %-*s formatting code
-                print("\t%-*s\t%s" % (max_len, name, cmd.desc))
+                print("\t%-*s\t%s" % (max_len, name, cmd.short))
 
         return 0
 
@@ -126,7 +126,11 @@ class ControllerApp(object):
     def handle_dealer(self, msg, endpoint, timeout):
         client = CircusClient(endpoint=endpoint, timeout=timeout)
         try:
-            print(client.call(msg))
+            if isinstance(msg, list):
+                for i, cmd in enumerate(msg):
+                    print("%s: %s" % (i, client.call(cmd)))
+            else:
+                print(client.call(msg))
         except CallError as e:
 
             sys.stderr.write(str(e))

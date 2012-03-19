@@ -3,7 +3,9 @@ import sys
 from tempfile import mkstemp
 import time
 
-from circus.client import CallError, CircusClient
+from zmq.utils.jsonapi import jsonmod as json
+
+from circus.client import CallError, CircusClient, make_message
 from circus.tests.support import TestCircus
 
 
@@ -55,24 +57,31 @@ class TestTrainer(TestCircus):
         super(TestTrainer, self).tearDown()
         self.cli.stop()
 
+
     def test_numshows(self):
-        resp = self.cli.call("numshows")
-        self.assertEqual(resp, "1")
+        msg = make_message("numshows")
+        resp = self.cli.call(msg)
+        self.assertEqual(resp.get("numshows"), 1)
 
     def test_numflies(self):
-        resp = self.cli.call("numflies")
-        self.assertEqual(resp, "1")
+        msg = make_message("numflies")
+        resp = self.cli.call(msg)
+        self.assertEqual(resp.get("numflies"), 1)
 
     def test_flies(self):
-        resp = self.cli.call("list test")
-        self.assertEqual(resp, "1")
-        self.cli.call("incr test")
-        resp = self.cli.call("list test")
-        self.assertEqual(resp, "1,2")
+        msg1 = make_message("list", name="test")
+        resp = self.cli.call(msg1)
+        self.assertEqual(resp.get('flies'), [1])
+
+        msg2 = make_message("incr", name="test")
+        self.cli.call(msg2)
+
+        resp = self.cli.call(msg1)
+        self.assertEqual(resp.get('flies'), [1, 2])
 
     def test_shows(self):
-        resp = self.cli.call("list")
-        self.assertEqual(resp, "test")
+        resp = self.cli.call(make_message("list"))
+        self.assertEqual(resp.get('shows'), ["test"])
 
     def _get_cmd(self):
         fd, testfile = mkstemp()
@@ -83,69 +92,85 @@ class TestTrainer(TestCircus):
         return cmd
 
     def test_add_show(self):
-        cmd = self._get_cmd()
-        resp = self.cli.call("add test1 %s" % cmd)
-        self.assertEqual(resp, "ok")
+        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        resp = self.cli.call(msg)
+        self.assertEqual(resp.get("status"), "ok")
 
     def test_add_show1(self):
-        cmd = self._get_cmd()
-        self.cli.call("add test1 %s" % cmd)
-        resp = self.cli.call("list")
-        self.assertTrue(resp.endswith("test1"))
+        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        self.cli.call(msg)
+        resp = self.cli.call(make_message("list"))
+        self.assertEqual(resp.get('shows'), ["test", "test1"])
 
     def test_add_show2(self):
-        cmd = self._get_cmd()
-        self.cli.call("add test1 %s" % cmd)
-        resp = self.cli.call("numshows")
-        self.assertEqual(resp, "2")
+        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        self.cli.call(msg)
+        resp = self.cli.call(make_message("numshows"))
+        self.assertEqual(resp.get("numshows"), 2)
 
     def test_add_show3(self):
-        cmd = self._get_cmd()
-        self.cli.call("add test1 %s" % cmd)
-        resp = self.cli.call("add test1 %s" % cmd)
-        self.assertTrue(resp.startswith("error:"))
+        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        self.cli.call(msg)
+        resp = self.cli.call(msg)
+        self.assertTrue(resp.get('status'), 'error')
 
     def test_rm_show(self):
-        cmd = self._get_cmd()
-        self.cli.call("add test1 %s" % cmd)
-        self.cli.call("rm test1")
-        resp = self.cli.call("numshows")
-        self.assertEqual(resp, "1")
+        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        self.cli.call(msg)
+        msg = make_message("rm", name="test1")
+        self.cli.call(msg)
+        resp = self.cli.call(make_message("numshows"))
+        self.assertEqual(resp.get("numshows"), 1)
 
     def test_stop(self):
-        resp = self.cli.call("quit")
-        self.assertEqual(resp, "ok")
-        self.assertRaises(CallError, self.cli.call, "list")
+        resp = self.cli.call(make_message("quit"))
+        self.assertEqual(resp.get("status"), "ok")
+        self.assertRaises(CallError, self.cli.call, make_message("list"))
 
     def test_reload(self):
-        resp = self.cli.call("reload")
-        self.assertEqual(resp, "ok")
+        resp = self.cli.call(make_message("reload"))
+        self.assertEqual(resp.get("status"), "ok")
 
     def test_reload1(self):
-        flies0 = self.cli.call("list test")
-        self.cli.call("reload")
+        msg1 = make_message("list", name="test")
+        resp = self.cli.call(msg1)
+        flies1 = resp.get('flies')
+
+        self.cli.call(make_message("reload"))
         time.sleep(0.5)
-        flies1 = self.cli.call("list test")
-        self.assertNotEqual(flies0, flies1)
+
+        msg2 = make_message("list", name="test")
+        resp = self.cli.call(msg2)
+        flies2 = resp.get('flies')
+
+        self.assertNotEqual(flies1, flies2)
 
     def test_reload2(self):
-        flies1 = self.cli.call("list test")
-        self.assertEqual(flies1, "1")
-        self.cli.call("reload")
+        msg1 = make_message("list", name="test")
+        resp = self.cli.call(msg1)
+        flies1 = resp.get('flies')
+        self.assertEqual(flies1, [1])
+
+        self.cli.call(make_message("reload"))
         time.sleep(0.5)
-        flies = self.cli.call("list test")
-        self.assertEqual(flies, "2")
+
+        msg2 = make_message("list", name="test")
+        resp = self.cli.call(msg1)
+
+        flies2 = resp.get('flies')
+        self.assertEqual(flies2, [2])
 
     def test_stop_shows(self):
-        resp = self.cli.call("stop")
-        self.assertEqual(resp, "ok")
+        resp = self.cli.call(make_message("stop"))
+        self.assertEqual(resp.get("status"), "ok")
 
     def test_stop_shows1(self):
-        self.cli.call("stop")
-        resp = self.cli.call("status test")
-        self.assertEqual(resp, "stopped")
+        self.cli.call(make_message("stop"))
+        resp = self.cli.call(make_message("status", name="test"))
+        self.assertEqual(resp.get("status"), "stopped")
 
     def test_stop_shows2(self):
-        self.cli.call("stop test")
-        resp = self.cli.call("status test")
-        self.assertEqual(resp, "stopped")
+        self.cli.call(make_message("stop", name="test"))
+        resp = self.cli.call(make_message("status", name="test"))
+        self.assertEqual(resp.get('status'), "stopped")
+

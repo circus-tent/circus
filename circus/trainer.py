@@ -170,9 +170,7 @@ class Trainer(object):
         return self._shows_names[name]
 
     def statuses(self):
-        statuses = ["%s: %s" % (show.name, show.status())
-                    for show in self.shows]
-        return "\n".join(statuses)
+        return dict([(show.name, show.status()) for show in self.shows])
 
     def add_show(self, name, cmd):
         """Adds a show.
@@ -184,6 +182,9 @@ class Trainer(object):
         """
         if name in self._shows_names:
             raise AlreadyExist("%r already exist" % name)
+
+        if not name:
+            return ValueError("command name shouldn't be empty")
 
         show = Show(name, cmd, stopped=True)
         show.initialize(self.evpub_socket)

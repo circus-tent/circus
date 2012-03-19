@@ -21,4 +21,4 @@ from circus.commands import (
     stop
 )
 
-from circus.commands.base import get_commands
+from circus.commands.base import get_commands, ok, error

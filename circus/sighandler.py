@@ -3,7 +3,7 @@ import traceback
 import sys
 
 from circus import logger
-
+from client import make_json
 
 class SysHandler(object):
 
@@ -43,16 +43,16 @@ class SysHandler(object):
                 sys.exit(1)
 
     def handle_int(self):
-        self.controller.add_job(None, "QUIT")
+        self.controller.add_job(None, make_json("quit"))
 
     def handle_term(self):
-        self.controller.add_job(None, "QUIT")
+        self.controller.add_job(None, make_json("quit"))
 
     def handle_quit(self):
-        self.controller.add_job(None, "QUIT graceful")
+        self.controller.add_job(None, make_json("quit", graceful=True))
 
     def handle_winch(self):
         pass
 
     def handle_hup(self):
-        self.controller.add_job(None, "RELOAD graceful")
+        self.controller.add_job(None, make_json("reload", graceful=True))

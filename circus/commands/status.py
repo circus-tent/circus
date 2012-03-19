@@ -11,16 +11,13 @@ class Status(Command):
             raise ArgumentError("message invalid")
 
         if len(args) == 1:
-            return "STATUS %s" % args[0]
+            return self.make_message(name=args[0])
         else:
-            return "STATUS"
+            return self.make_message()
 
-    def execute(self, trainer, args):
-        if len(args) > 1:
-            raise MessageError("message invalid")
-
-        if len(args) == 1:
-            show = self._get_show(trainer, args[0])
-            return show.status()
+    def execute(self, trainer, props):
+        if 'name' in props:
+            show = self._get_show(trainer, props['name'])
+            return {"status": show.status()}
         else:
-            return trainer.statuses()
+            return {"statuses": trainer.statuses()}

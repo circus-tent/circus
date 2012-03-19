@@ -6,13 +6,15 @@ import uuid
 import zmq
 
 from circus.exc import CallError
+from circus.py3compat import string_types
+from zmq.utils.jsonapi import jsonmod as json
 
 
 class CircusClient(object):
     def __init__(self, context=None, endpoint='tcp://127.0.0.1:5555',
             timeout=5.0):
 
-        self.context = context or zmq.Context()
+        self.context = context or zmq.Context.instance()
 
         self._id = uuid.uuid4().hex
         self.socket = self.context.socket(zmq.DEALER)
@@ -25,18 +27,15 @@ class CircusClient(object):
         self.timeout = timeout * 1000
 
     def stop(self):
-        if self.context.closed:
-            return
-
-        try:
-            self.context.destroy(0)
-        except zmq.ZMQError as e:
-            if e.errno == errno.EINTR:
-                pass
-            else:
-                raise
+        self.socket.close()
 
     def call(self, cmd):
+        if not isinstance(cmd, string_types):
+            try:
+                cmd = json.dumps(cmd)
+            except ValueError as e:
+                raise CallError(str(e))
+
         try:
             self.socket.send(cmd)
         except zmq.ZMQError, e:
@@ -58,4 +57,14 @@ class CircusClient(object):
 
         for socket in events:
             msg = socket.recv()
-            return msg
+            try:
+                return json.loads(msg)
+            except ValueError as e:
+                raise CallError(str(e))
+
+
+def make_message(command, **props):
+    return {"command": command, "properties": props or {}}
+
+def make_json(command, **props):
+    return json.dumps(make_message(command, **props))

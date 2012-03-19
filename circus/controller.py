@@ -8,10 +8,12 @@ except ImportError:
 
 import zmq
 from zmq.eventloop import ioloop, zmqstream
+from zmq.utils.jsonapi import jsonmod as json
 
-from circus.commands import get_commands
+from circus.commands import get_commands, ok, error
 from circus import logger
 from circus.exc import MessageError
+from circus.py3compat import string_types
 from circus.sighandler import SysHandler
 
 
@@ -35,7 +37,7 @@ class Controller(object):
         # initialize controller
         self.ctrl_socket = self.context.socket(zmq.ROUTER)
         self.ctrl_socket.bind(self.endpoint)
-        self.ctrl_socket.setsockopt(zmq.LINGER, 0)
+        self.ctrl_socket.linger = 0
 
         self.stream = zmqstream.ZMQStream(self.ctrl_socket, self.loop)
         self.stream.on_recv(self.handle_message)
@@ -77,50 +79,73 @@ class Controller(object):
 
     def dispatch(self, job):
         cid, msg = job
-        msg_parts = msg.split(" ")
-        resp = ""
 
-        cmd_name = msg_parts.pop(0)
+        try:
+            json_msg = json.loads(msg)
+        except ValueError:
+            return self.send_error(cid, msg, "json invalid")
+
+        cmd_name = json_msg.get('command')
+        properties =  json_msg.get('properties', {})
 
         try:
             cmd = self.commands[cmd_name.lower()]
         except KeyError:
-            error = "error: unknown command: %r" % cmd_name
-            return self.send_response(cid, msg, error)
+            error = "unknown command: %r" % cmd_name
+            return self.send_error(cid, msg, error)
 
         try:
-            resp = cmd.execute(self.trainer, msg_parts)
+            cmd.validate(properties)
+            resp = cmd.execute(self.trainer, properties)
         except MessageError as e:
-            resp = "error: %s" % str(e)
+            return self.send_error(cid, msg, str(e))
         except OSError as e:
-            resp = "error: %s" % e
-
+            return self.send_error(cid, msg, str(e))
         except:
             exctype, value = sys.exc_info()[:2]
             tb = traceback.format_exc()
-            resp = "error: command %r: %s" % (msg, value)
+            reason =  "command %r: %s" % (msg, value)
             logger.debug("error: command %r: %s\n\n%s" % (msg,
                 value, tb))
-            sys.exc_clear()
+            return self.send_error(cid, msg, reason, tb)
 
         if resp is None:
-            resp = "ok"
+            resp = ok()
 
-        if not isinstance(resp, (str, buffer,)):
-            msg = "msg %r tried to send a non-string: %s" % (msg,
+        if not isinstance(resp, (dict, list,)):
+            msg = "msg %r tried to send a non-dict: %s" % (msg,
                     str(resp))
-            raise ValueError(msg)
+            logger.error("msg %r tried to send a non-dict: %s" % (msg,
+                    str(resp)))
+            return self.send_error(cid, msg, "server error")
 
-        self.send_response(cid, msg, resp)
+        if isinstance(resp, list):
+            resp = {"results": resp}
+
+        self.send_ok(cid, msg, resp)
 
         if cmd_name.lower() == "quit":
             if cid is not None:
                 self.stream.flush()
             self.trainer.terminate()
 
+    def send_error(self, cid, msg, reason="unknown", tb=None):
+        resp = error(reason=reason, tb=tb)
+        self.send_response(cid, msg, resp)
+
+    def send_ok(self, cid, msg, props=None):
+        resp = ok(props)
+        self.send_response(cid, msg, resp)
+
     def send_response(self, cid,  msg, resp):
         if cid is None:
             return
+
+        if not isinstance(resp, string_types):
+            resp = json.dumps(resp)
+
+        if isinstance(resp, unicode):
+            resp = resp.encode('utf8')
 
         try:
             self.stream.send(cid, zmq.SNDMORE)

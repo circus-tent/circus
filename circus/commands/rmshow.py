@@ -6,18 +6,14 @@ class RmShow(Command):
 
     name = "rm"
     options = [('', 'terminate', False, "stop immediately")]
+    properties = ['name']
 
     def message(self, *args, **opts):
         if len(args) < 1 or len(args) > 1:
             raise ArgumentError("number of arguments invalid")
 
-        if not opts.get("terminate", False):
-            return "RM %s graceful" % args[0]
-        else:
-            return "RM %s" % args[0]
+        graceful = not opts.get("terminate", False)
+        return self.make_message(name=args[0], graceful=graceful)
 
     def execute(self, trainer, args):
-        if len(args) < 1 or len(args) > 1:
-            raise MessageError("message invalid")
-        trainer.rm_show(args[0])
-        return "ok"
+        trainer.rm_show(args['name'])
