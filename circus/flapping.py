@@ -46,7 +46,7 @@ class Flapping(Thread):
             try:
                 self.loop.start()
             except zmq.ZMQError as e:
-                if e.errno == errno.EINTR:
+                if e.errno in (errno.EINTR, zmq.ETERM):
                     continue
                 else:
                     raise
