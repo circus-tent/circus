@@ -111,11 +111,20 @@ def to_bool(s):
 
 def to_uid(name):
     """Return an uid, given a user name.
+    If the name is an integer, make sure it's an existing uid.
 
     If the user name is unknown, raises a ValueError.
     """
+    if isinstance(name, int):
+        try:
+            pwd.getpwuid(name)
+            return name
+        except KeyError:
+            raise ValueError("%r isn't a valid user id" % name)
+
     if not isinstance(name, str):
         raise TypeError(name)
+
     try:
         return pwd.getpwnam(name).pw_uid
     except KeyError:
@@ -127,6 +136,13 @@ def to_gid(name):
 
     If the group name is unknown, raises a ValueError.
     """
+    if isinstance(name, int):
+        try:
+            grp.getgrgid(name)
+            return name
+        except KeyError:
+            raise ValueError("No such group: %r" % name)
+
     if not isinstance(name, str):
         raise TypeError(name)
     try:

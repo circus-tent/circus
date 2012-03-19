@@ -41,5 +41,7 @@ class TestUtil(unittest.TestCase):
     def test_to_uidgid(self):
         self.assertRaises(ValueError, to_uid, 'xxxxxxx')
         self.assertRaises(ValueError, to_gid, 'xxxxxxx')
-        self.assertRaises(TypeError, to_uid, 12)
-        self.assertRaises(TypeError, to_gid, 12)
+        self.assertRaises(ValueError, to_uid, -12)
+        self.assertRaises(ValueError, to_gid, -12)
+        self.assertRaises(TypeError, to_uid, None)
+        self.assertRaises(TypeError, to_gid, None)
