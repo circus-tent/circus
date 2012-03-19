@@ -1,5 +1,6 @@
 import errno
 import zmq
+import json
 
 
 class CircusConsumer(object):

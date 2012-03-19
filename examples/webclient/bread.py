@@ -25,7 +25,6 @@ def index():
 @app.route('/api')
 def api():
     """WebSocket endpoint; Takes a 'topic' GET param."""
-    import pdb; pdb.set_trace()
     ws = request.environ.get('wsgi.websocket')
     topic = request.args.get('topic')
 
@@ -33,7 +32,7 @@ def api():
         return
 
     topic = topic.encode('ascii')
-    for message, message_topic in CircusConsumer(topic, ZMQ_ENDPOINT):
+    for message, message_topic in CircusConsumer(topic, endpoint=ZMQ_ENDPOINT):
         response = json.dumps(dict(message=message, topic=message_topic))
         ws.send(response)
 
