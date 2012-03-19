@@ -14,7 +14,6 @@ class Flapping(Thread):
     def __init__(self, context, endpoint, pubsub_endpoint, check_delay):
         super(Flapping, self).__init__()
         self.daemon = True
-
         self.context = context
         self.pubsub_endpoint = pubsub_endpoint
         self.endpoint = endpoint
@@ -26,17 +25,14 @@ class Flapping(Thread):
         self.configs = {}
         self.tries = {}
 
-
     def initialize(self):
         self.client = self.context.socket(zmq.DEALER)
         self.client.setsockopt(zmq.IDENTITY, self._id)
         self.client.connect(self.endpoint)
         self.client.setsockopt(zmq.LINGER, 0)
-
         self.sub_socket = self.context.socket(zmq.SUB)
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, b'show.')
         self.sub_socket.connect(self.pubsub_endpoint)
-
         self.substream = zmqstream.ZMQStream(self.sub_socket, self.loop)
         self.substream.on_recv(self.handle_recv)
 

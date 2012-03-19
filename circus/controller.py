@@ -40,7 +40,6 @@ class Controller(object):
         self.stream = zmqstream.ZMQStream(self.ctrl_socket, self.loop)
         self.stream.on_recv(self.handle_message)
 
-
     def start(self):
         self.initialize()
         self.caller = ioloop.PeriodicCallback(self.wakeup, self.check_delay,
@@ -129,5 +128,3 @@ class Controller(object):
         except zmq.ZMQError as e:
             logger.info("Received %r - Could not send back %r - %s" %
                                 (msg, resp, str(e)))
-
-

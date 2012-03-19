@@ -39,12 +39,10 @@ class Trainer(object):
         self.ctrl = Controller(endpoint, self.context, self.loop, self,
                 check_delay)
 
-
         self.pid = os.getpid()
         self._shows_names = {}
         self.alive = True
         self.busy = False
-
 
     def initialize(self):
         # event pub socket
@@ -115,7 +113,6 @@ class Trainer(object):
         # kill flies
         for show in self.shows:
             show.stop(graceful=graceful)
-
 
     def terminate(self, destroy_context=True):
         if self.alive:
