@@ -12,7 +12,7 @@ from circus.exc import CallError, ArgumentError
 
 
 globalopts = [
-    ('', 'endpoint', "tcp://127.0.0.1:5555", "connection endpointt"),
+    ('', 'endpoint', None, "connection endpointt"),
     ('', 'timeout', 5, "connection timeout"),
     ('', 'json', False, "output to JSON"),
     ('h', 'help', None, "display help and exit"),
@@ -72,11 +72,13 @@ class ControllerApp(object):
         else:
             cmd = self.commands[cmd]
 
-        if cmd.msg_type == "pub":
-            default_endpoint = "tcp://127.0.0.1:5556"
-        else:
-            default_endpoint = "tcp://127.0.0.1:5555"
-        endpoint = globalopts.get('endpoint', default_endpoint)
+        endpoint = globalopts.get('endpoint')
+        if not endpoint:
+            if cmd.msg_type == "sub":
+                endpoint = "tcp://127.0.0.1:5556"
+            else:
+                endpoint = "tcp://127.0.0.1:5555"
+
         timeout = globalopts.get("timeout", 5.0)
         msg = cmd.message(*args, **opts)
         return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts,
