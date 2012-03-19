@@ -89,11 +89,11 @@ class ControllerApp(object):
             print("help on %s [TODO]" % args[0])
             return 0
 
-        print "usage: circusctl [--version] [--endpoint=<endpoint>]"
-        print "                 [--timeout=<timeout>] [--help]"
-        print "                 <command> [<args>]"
-        print ""
-        print "Commands:"
+        print("usage: circusctl [--version] [--endpoint=<endpoint>]")
+        print("                 [--timeout=<timeout>] [--help]")
+        print("                 <command> [<args>]")
+        print("")
+        print("Commands:")
         commands = sorted([name for name in self.commands] + ["help"])
 
         max_len = len(max(commands, key=len))
@@ -105,16 +105,16 @@ class ControllerApp(object):
                 cmd = self.commands[name]
                 # Command name is max_len characters.
                 # Used by the %-*s formatting code
-                print ("\t%-*s\t%s" % (max_len, name, cmd.desc))
+                print("\t%-*s\t%s" % (max_len, name, cmd.desc))
 
         return 0
 
     def display_version(self, *args, **opts):
         from circus import __version__
 
-        print "Circus (version %s)" % __version__
-        print "Licensed under the Apache License, Version 2.0."
-        print ""
+        print("Circus (version %s)" % __version__)
+        print("Licensed under the Apache License, Version 2.0.")
+        print("")
         return 0
 
     def handle_sub(self, topics, endpoint, timeout):
