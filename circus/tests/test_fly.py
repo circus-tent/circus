@@ -1,4 +1,5 @@
 import unittest
+import os
 import sys
 from circus.fly import Fly
 
@@ -10,7 +11,7 @@ class TestFly(unittest.TestCase):
         fly = Fly('test', cmd % sys.executable, shell=True)
         try:
             info = fly.info()
-            self.assertEqual(info['cmdline'], 'python')
+            self.assertTrue('python' in info['cmdline'])
             age = fly.age()
             self.assertTrue(age > 0.)
             self.assertFalse(fly.is_child(0))
