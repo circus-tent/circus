@@ -43,10 +43,19 @@ Here are, in our opinion, the top 3 reasons to use Circus.
   *circusctl* and *circusd* commands, it's easy to reuse all or part of
   the system to build your own custom process watcher in Python.
 
+  Every layer of the system is isolated, so you can reuse independantly:
+
+  - the process wrapper (:class:`Fly`)
+  - the processes manager (:class:`Show`)
+  - the global manager that runs several processes managers (:class:`Trainer`)
+  - and so on...
+
+
 3. **Circus scales**
 
   One of the use case of Circus is to be able to manage thousands of
-  processes without slowing down -- we're dedicated to focus on this.
+  processes without having it slowing down -- we're dedicated to focus on 
+  this.
 
 
 Using as a Library
