@@ -101,6 +101,7 @@ class Fly(object):
     @debuglog
     def send_signal(self, sig):
         """Sends a signal **sig** to the process."""
+        print sig
         return self._worker.send_signal(sig)
 
     @debuglog
@@ -129,22 +130,19 @@ class Fly(object):
         - **cmdline**: the command line the process was run with.
         """
         try:
-            info = _INFOLINE % get_info(self._worker)
+            info = get_info(self._worker)
         except NoSuchProcess:
             return "No such process (stopped?)"
 
-        lines = ["%s: %s" % (self.wid, info)]
-
+        info["children"] = []
         for child in self._worker.get_children():
-            info = _INFOLINE % get_info(child)
-            lines.append("   %s" % info)
+            info["children"].append(get_info(child))
 
-        return "\n".join(lines)
+        return info
 
     def children(self):
         """Return a list of children pids."""
-        return ",".join(["%s" % child.pid
-                         for child in self._worker.get_children()])
+        return [child.pid for child in self._worker.get_children()]
 
     def is_child(self, pid):
         """Return True is the given *pid* is a child of that process."""

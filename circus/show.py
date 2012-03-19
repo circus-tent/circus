@@ -184,7 +184,7 @@ class Show(object):
         self.flies[wid].send_signal(signum)
 
     def send_signal_flies(self, signum):
-        for fly in self.flies:
+        for _, fly in self.flies.items():
             try:
                 fly.send_signal(signum)
             except OSError as e:

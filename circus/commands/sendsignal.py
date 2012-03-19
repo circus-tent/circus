@@ -29,7 +29,7 @@ class Signal(Command):
             return self.make_message(name=args[0], signum=signum)
 
     def execute(self, trainer, props):
-        show = self._get_show(trainer, props[name])
+        show = self._get_show(trainer, props['name'])
         signum = props.get('signum')
 
         if 'pid' in props:
