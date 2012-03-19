@@ -16,7 +16,6 @@ class AddShow(Command):
 
         msg = self.make_message(name=args[0], cmd=" ".join(args[1:]))
         if opts.get("start", False):
-            print opts.get('start')
             return [msg, self.make_message(command="start", name=args[0])]
         return msg
 

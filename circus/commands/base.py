@@ -84,7 +84,6 @@ class Command(object):
         if not self.properties:
             return
 
-        print props
         for propname in self.properties:
             if propname not in props:
                 raise MessageError("message invalid %r is missing" %
