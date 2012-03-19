@@ -25,6 +25,7 @@ def index():
 @app.route('/api')
 def api():
     """WebSocket endpoint; Takes a 'topic' GET param."""
+    import pdb; pdb.set_trace()
     ws = request.environ.get('wsgi.websocket')
     topic = request.args.get('topic')
 
@@ -42,7 +43,6 @@ def main():
     parser.add_argument('--host', default='127.0.0.1')
     parser.add_argument('--port', default=5000)
     args = parser.parse_args()
-
     server_loc = (args.host, args.port)
     print('HTTP Server running at http://%s:%s/...' % server_loc)
     http_server = WSGIServer(server_loc, app, handler_class=WebSocketHandler)

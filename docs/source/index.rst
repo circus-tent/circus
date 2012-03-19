@@ -21,23 +21,32 @@ Why should I use Circus instead of X ?
 
 Here are, in our opinion, the top 3 reasons to use Circus.
 
-1. **Circus provides notifications**
+1. **Circus provides notifications via ZeroMQ**
 
   Circus has a pub/sub channel you can subscribe into. This channel 
   receives all events happening in the system. For example, you can get 
   notified everytime a process is flapping, or build a client that 
   triggers a warning when some processes are eating all the CPU or RAM.
 
+  These events are sent via a ZeroMQ channel, which makes it different
+  from the stdin stream Supervisord uses:
+
+  - Circus sends event in a fire and forget fashion, so there's no
+    need to manually loop through *all* listeners and maintain their
+    states.
+  - Subscribers can be located on a remote host.
+
+
 2. **Circus is developer friendly**
 
-  While circus can be driven entirely by a config file and the 
-  *circusctl* and *circusd* commands, you can reuse all or part of 
-  the system to build your own custom process watcher in Python/
+  While Circus can be driven entirely by a config file and the 
+  *circusctl* and *circusd* commands, it's easy to reuse all or part of
+  the system to build your own custom process watcher in Python.
 
 3. **Circus scales**
 
   One of the use case of Circus is to be able to manage thousands of
-  processes without slowing down.
+  processes without slowing down -- we're dedicated to focus on this.
 
 
 Using as a Library
