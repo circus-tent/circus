@@ -14,6 +14,7 @@ from circus.exc import CallError, ArgumentError
 globalopts = [
     ('', 'endpoint', "tcp://127.0.0.1:5555", "connection endpointt"),
     ('', 'timeout', 5, "connection timeout"),
+    ('', 'json', False, "output to JSON"),
     ('h', 'help', None, "display help and exit"),
     ('v', 'version', None, "display version and exit")
 ]
@@ -78,8 +79,8 @@ class ControllerApp(object):
         endpoint = globalopts.get('endpoint', default_endpoint)
         timeout = globalopts.get("timeout", 5.0)
         msg = cmd.message(*args, **opts)
-        return getattr(self, "handle_%s" % cmd.msg_type)(msg, endpoint,
-                timeout)
+        return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts,
+                msg, endpoint, timeout)
 
     def display_help(self, *args, **opts):
         if opts.get('version', False):
@@ -117,20 +118,27 @@ class ControllerApp(object):
         print("")
         return 0
 
-    def handle_sub(self, topics, endpoint, timeout):
+    def handle_sub(self, cmd, opts, topics, endpoint, timeout):
         consumer = CircusConsumer(topics, endpoint=endpoint)
         for topic, msg in consumer:
             print("%s: %s" % (topic, msg))
         return 0
 
-    def handle_dealer(self, msg, endpoint, timeout):
+    def _console(self, client, cmd, opts, msg):
+        if opts['json']:
+            return client.call(msg)
+        else:
+            return cmd.console_msg(client.call(msg))
+
+    def handle_dealer(self, cmd, opts, msg, endpoint, timeout):
         client = CircusClient(endpoint=endpoint, timeout=timeout)
         try:
             if isinstance(msg, list):
                 for i, cmd in enumerate(msg):
-                    print("%s: %s" % (i, client.call(cmd)))
+                    clm = self._console(client, cmd, opts, msg)
+                    print("%s: %s" % (i, clm))
             else:
-                print(client.call(msg))
+                print(self._console(client, cmd, opts, msg))
         except CallError as e:
 
             sys.stderr.write(str(e))

@@ -19,3 +19,7 @@ class DecrShow(Command):
         show = self._get_show(trainer, props.get('name'))
         return {"numflies": show.decr()}
 
+    def console_msg(self, msg):
+        if msg.get("status") == "ok":
+            return str(msg.get("numflies"))
+        return self.console_error(msg)

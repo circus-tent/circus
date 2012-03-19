@@ -185,3 +185,15 @@ def debuglog(func):
             logger.debug("'%s.%s' ends" % (cls, func.func_name))
 
     return _log
+
+def convert_opt(key, val):
+    """ get opt
+    """
+    if key == "env":
+        val = env_to_str(val)
+    else:
+        if val is None:
+            val = ""
+        else:
+            val = str(val)
+    return val

@@ -13,3 +13,8 @@ class NumShows(Command):
 
     def execute(self, trainer, props):
         return {"numshows": trainer.numshows()}
+
+    def console_msg(self, msg):
+        if msg.get("status") == "ok":
+            return str(msg.get("numshows"))
+        return self.console_error(msg)

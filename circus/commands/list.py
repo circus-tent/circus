@@ -23,3 +23,10 @@ class List(Command):
         else:
             shows = sorted(trainer._shows_names)
             return {"shows": [name for name in shows]}
+
+    def console_msg(self, msg):
+        if "flies" in msg:
+            return ",".join([str(fly_id) for fly_id in msg.get('flies')])
+        elif 'shows' in msg:
+            return ",".join([show for show in msg.get('shows')])
+        return self.console_error(msg)

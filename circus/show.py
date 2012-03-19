@@ -368,19 +368,6 @@ class Show(object):
         else:
             self.reap_and_manage_flies()
 
-    def get_opt(self, name):
-        """ get opt
-        """
-        val = getattr(self, name)
-        if name == "env":
-            val = util.env_to_str(val)
-        else:
-            if val is None:
-                val = ""
-            else:
-                val = str(val)
-        return val
-
     @util.debuglog
     def options(self, *args):
         return [(name, getattr(self, name)) for name in sorted(self.optnames)]

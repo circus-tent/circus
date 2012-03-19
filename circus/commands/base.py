@@ -65,6 +65,14 @@ class Command(object):
     def execute(self, trainer, args):
         raise NotImplementedError("execute function not implemented")
 
+    def console_error(self, msg):
+        return "error: %s" % msg.get("reason")
+
+    def console_msg(self, msg):
+        if msg.get('status') == "ok":
+            return "ok"
+        return self.console_error(msg)
+
     def copy(self):
         return copy.copy(self)
 

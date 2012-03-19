@@ -24,3 +24,8 @@ class NumFlies(Command):
             }
         else:
             return {"numflies": trainer.numflies()}
+
+    def console_msg(self, msg):
+        if msg.get("status") == "ok":
+            return str(msg.get("numflies"))
+        return self.console_error(msg)

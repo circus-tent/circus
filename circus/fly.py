@@ -101,7 +101,6 @@ class Fly(object):
     @debuglog
     def send_signal(self, sig):
         """Sends a signal **sig** to the process."""
-        print sig
         return self._worker.send_signal(sig)
 
     @debuglog

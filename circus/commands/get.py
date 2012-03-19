@@ -1,5 +1,6 @@
 from circus.commands.base import Command, ok, error
 from circus.exc import ArgumentError, MessageError
+from circus.util import convert_opt
 
 class Get(Command):
     """Get the value of a show option"""
@@ -26,3 +27,11 @@ class Get(Command):
                 raise MessageError("%r option not found" % name)
 
         return {"options": options}
+
+    def console_msg(self, msg):
+        if msg['status'] == "ok":
+            ret = []
+            for k, v in msg.get('options', {}).items():
+                ret.append("%s: %s" % (k, convert_opt(k, v)))
+            return "\n".join(ret)
+        return self.console_msg(self, msg)

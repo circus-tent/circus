@@ -21,3 +21,13 @@ class Status(Command):
             return {"status": show.status()}
         else:
             return {"statuses": trainer.statuses()}
+
+    def console_msg(self, msg):
+        if "statuses" in msg:
+            statuses = msg.get("statuses")
+            shows = sorted(statuses)
+            return "\n".join(["%s: %s" % (show, statuses[show]) \
+                    for show in shows])
+        elif "status" in msg and status != "error":
+            return msg.get("status")
+        return self.console_error(msg)
