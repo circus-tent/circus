@@ -12,8 +12,7 @@ import os
 from subprocess import PIPE
 import time
 
-
-from psutil import Popen
+from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
 from circus.util import get_info, to_uid, to_gid, debuglog, get_working_dir
 
@@ -22,7 +21,38 @@ _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
              "%(mem_info2)s %(cpu)s %(mem)s %(ctime)s")
 
 
+RUNNING = 0
+DEAD_OR_ZOMBIE = 1
+OTHER = 2
+
+
 class Fly(object):
+    """Wraps a process.
+
+    Options:
+
+    - **wid**: the fly unique identifier. This value will be used to
+      replace the *$WID* string in the command line if present.
+
+    - **cmd**: the command to run. May contain *$WID*, which will be
+      replaced by **wid**.
+
+    - **working_dir**: the working directory to run the command in. If
+      not provided, will default to the current working directory.
+
+    - **shell**: if *True*, will run the command in the shell
+      environment. *False* by default. **warning: this is a
+      security hazard**.
+
+    - **uid**: if given, is the user id or name the command should run
+      with. The current uid is the default.
+
+    - **gid**: if given, is the group id or name the command should run
+      with. The current gid is the default.
+
+    - **env**: a mapping containing the environment variables the command
+      will run with. Optional.
+    """
     def __init__(self, wid, cmd, working_dir=None, shell=False, uid=None,
                  gid=None, env=None):
         self.wid = wid
@@ -70,19 +100,39 @@ class Fly(object):
 
     @debuglog
     def send_signal(self, sig):
+        """Sends a signal **sig** to the process."""
         return self._worker.send_signal(sig)
 
     @debuglog
     def stop(self):
+        """Terminate the process."""
         if self._worker.poll() is None:
             return self._worker.terminate()
 
     def age(self):
+        """Return the age of the process in seconds."""
         return time.time() - self.started
 
     def info(self):
-        """ return process info """
-        info = _INFOLINE % get_info(self._worker)
+        """Return process info.
+
+        The info returned is a mapping with these keys:
+
+        - **mem_info1**: Resident Set Size Memory in bytes (RSS)
+        - **mem_info2**: Virtual Memory Size in bytes (VMS).
+        - **cpu**: % of cpu usage.
+        - **mem**: % of memory usage.
+        - **ctime**: process CPU (user + system) time in seconds.
+        - **pid**: process id.
+        - **username**: user name that owns the process.
+        - **nice**: process niceness (between -20 and 20)
+        - **cmdline**: the command line the process was run with.
+        """
+        try:
+            info = _INFOLINE % get_info(self._worker)
+        except NoSuchProcess:
+            return "No such process (stopped?)"
+
         lines = ["%s: %s" % (self.wid, info)]
 
         for child in self._worker.get_children():
@@ -92,10 +142,12 @@ class Fly(object):
         return "\n".join(lines)
 
     def children(self):
+        """Return a list of children pids."""
         return ",".join(["%s" % child.pid
                          for child in self._worker.get_children()])
 
     def is_child(self, pid):
+        """Return True is the given *pid* is a child of that process."""
         pids = [child.pid for child in self._worker.get_children()]
         if pid in pids:
             return True
@@ -103,6 +155,7 @@ class Fly(object):
 
     @debuglog
     def send_signal_child(self, pid, signum):
+        """Send signal *signum* to child *pid*."""
         children = dict([(child.pid, child) \
                 for child in self._worker.get_children()])
 
@@ -110,6 +163,7 @@ class Fly(object):
 
     @debuglog
     def send_signal_children(self, signum):
+        """Send signal *signum* to all children."""
         for child in self._worker.get_children():
             try:
                 child.send_signal(signum)
@@ -118,13 +172,34 @@ class Fly(object):
                     raise
 
     @property
+    def status(self):
+        """Return the process status as a constant
+
+        - RUNNING
+        - DEAD_OR_ZOMBIE
+        - OTHER
+        """
+        try:
+            if self._worker.status in (STATUS_ZOMBIE, STATUS_DEAD):
+                return DEAD_OR_ZOMBIE
+        except NoSuchProcess:
+            return OTHER
+
+        if self._worker.is_running():
+            return RUNNING
+        return OTHER
+
+    @property
     def pid(self):
+        """Return the *pid*"""
         return self._worker.pid
 
     @property
     def stdout(self):
+        """Return the *stdout* stream"""
         return self._worker.stdout
 
     @property
     def stderr(self):
+        """Return the *stdout* stream"""
         return self._worker.stderr

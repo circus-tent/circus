@@ -3,7 +3,7 @@ import json
 import signal
 import time
 
-from circus.fly import Fly
+from circus.fly import Fly, DEAD_OR_ZOMBIE
 from circus import logger
 from circus import util
 
@@ -74,6 +74,9 @@ class Show(object):
 
         for wid, fly in self.flies.items():
             if fly.poll() is not None:
+                if fly.status == DEAD_OR_ZOMBIE:
+                    fly.stop()
+
                 self.send_msg("reap", {"fly_id": wid,
                                        "fly_pid": fly.pid,
                                        "time": time.time()})

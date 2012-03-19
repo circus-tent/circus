@@ -5,8 +5,7 @@ import pwd
 import fcntl
 from functools import wraps
 
-from psutil.error import AccessDenied
-
+from psutil.error import AccessDenied, NoSuchProcess
 from circus import logger
 
 
@@ -74,11 +73,22 @@ def get_info(process):
 
     info['ctime'] = ctime
 
-    for name in ('pid', 'username', 'nice'):
-        try:
-            info[name] = getattr(process, name)
-        except AccessDenied:
-            info[name] = 'N/A'
+    try:
+        info['pid'] = process.pid
+    except AccessDenied:
+        info['pid'] = 'N/A'
+
+    try:
+        info['username'] = process.username
+    except AccessDenied:
+        info['username'] = 'N/A'
+
+    try:
+        info['nice'] = process.nice
+    except AccessDenied:
+        info['nice'] = 'N/A'
+    except NoSuchProcess:
+        info['nice'] = 'Zombie'
 
     try:
         cmdline = os.path.basename(process.cmdline[0])
