@@ -36,6 +36,8 @@ Here are, in our opinion, the top 3 reasons to use Circus.
     states.
   - Subscribers can be located on a remote host.
 
+  See :ref:`examples`.
+
 
 2. **Circus is developer friendly**
 
@@ -122,6 +124,7 @@ More documentation
    cli
    library
    architecture
+   examples
 
 
 Contributions and Feedback
