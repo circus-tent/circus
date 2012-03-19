@@ -3,13 +3,14 @@
 Installing Circus
 -----------------
 
-Using EasyInstall::
-    
-    $ easy_install circus
-
-Or pip::
+Use pip::
 
     $ pip install circus
+
+Or download the archive on PyPI and install it manually with::
+
+    $ python setup.py install
+
 
 Trying out Circus
 -----------------

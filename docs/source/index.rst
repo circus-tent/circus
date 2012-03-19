@@ -9,9 +9,35 @@ Circus is a program that will let you run and watch multiple processes.
 Circus can be driven through a command-line interface, or programmatically
 through its APIs.
 
-It shares some of the goals Supervisord, BluePill and Daemontools.
+It shares some of the goals of `Supervisord <http://supervisord.org>`_, 
+`BluePill <https://github.com/arya/bluepill>`_ and 
+`Daemontools <http://cr.yp.to/daemontools.html>`_.
 
 To install it, check out :ref:`installation`
+
+
+Why should I use Circus instead of X ?
+--------------------------------------
+
+Here are, in our opinion, the top 3 reasons to use Circus.
+
+1. **Circus provides notifications**
+
+  Circus has a pub/sub channel you can subscribe into. This channel 
+  receives all events happening in the system. For example, you can get 
+  notified everytime a process is flapping, or build a client that 
+  triggers a warning when some processes are eating all the CPU or RAM.
+
+2. **Circus is developer friendly**
+
+  While circus can be driven entirely by a config file and the 
+  *circusctl* and *circusd* commands, you can reuse all or part of 
+  the system to build your own custom process watcher in Python/
+
+3. **Circus scales**
+
+  One of the use case of Circus is to be able to manage thousands of
+  processes without slowing down.
 
 
 Using as a Library
