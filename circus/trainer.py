@@ -3,7 +3,7 @@ import logging
 import os
 
 import zmq
-from zmq.eventloop import ioloop, zmqstream
+from zmq.eventloop import ioloop
 
 from circus.controller import Controller
 from circus.exc import AlreadyExist
@@ -32,31 +32,29 @@ class Trainer(object):
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
         self.pubsub_endpoint = pubsub_endpoint
+
+        # initialize zmq context
         self.context = context or zmq.Context.instance()
         self.loop = loop or ioloop.IOLoop()
+        self.ctrl = Controller(endpoint, self.context, self.loop, self,
+                check_delay)
+
 
         self.pid = os.getpid()
         self._shows_names = {}
         self.alive = True
-        self.initialize()
-
         self.busy = False
+
 
     def initialize(self):
         # event pub socket
         self.evpub_socket = self.context.socket(zmq.PUB)
         self.evpub_socket.bind(self.pubsub_endpoint)
-
-        # initialize controller
-        ctrl_socket = self.context.socket(zmq.ROUTER)
-        ctrl_socket.bind(self.endpoint)
-        ctrl_socket.setsockopt(zmq.LINGER, 0)
-        self.ctrl = Controller(zmqstream.ZMQStream(ctrl_socket, self.loop),
-                               self.loop, self, self.check_delay)
+        self.evpub_socket.linger = 0
 
         # initialize flapping
-        self.flapping = Flapping(self.endpoint, self.pubsub_endpoint,
-                self.check_delay)
+        self.flapping = Flapping(self.context, self.endpoint,
+                                 self.pubsub_endpoint, self.check_delay)
 
         # initialize shows
         for show in self.shows:
@@ -71,8 +69,9 @@ class Trainer(object):
         for any command from a client and that watches all the
         flies and restarts them if needed.
         """
-
         logger.info("Starting master on pid %s" % self.pid)
+
+        self.initialize()
 
         # start controller
         self.ctrl.start()
@@ -95,20 +94,9 @@ class Trainer(object):
             else:
                 break
 
-    def manage_shows(self):
-        if not self.busy and self.alive:
-            self.busy = True
-            # manage and reap flies
-            for show in self.shows:
-                show.reap_flies()
-                show.manage_flies()
-
-            if not self.flapping.is_alive():
-                self.flapping = Flapping(self.endpoint, self.pubsub_endpoint,
-                                         self.check_delay)
-                self.flapping.start()
-
-            self.busy = False
+        self.flapping.stop()
+        self.ctrl.stop()
+        self.evpub_socket.close()
 
     @debuglog
     def stop(self, graceful=True):
@@ -123,23 +111,31 @@ class Trainer(object):
             return
 
         self.alive = False
-        self.flapping.stop()
 
         # kill flies
         for show in self.shows:
             show.stop(graceful=graceful)
 
-        self.ctrl.stop()
-        self.loop.stop()
 
     def terminate(self, destroy_context=True):
         if self.alive:
             self.stop(graceful=False)
+        self.loop.stop()
 
-        if self.context is not None and destroy_context:
-            if not self.context.closed:
-                self.context.destroy()
-            self.context = None
+    def manage_shows(self):
+        if not self.busy and self.alive:
+            self.busy = True
+            # manage and reap flies
+            for show in self.shows:
+                show.reap_flies()
+                show.manage_flies()
+
+            if not self.flapping.is_alive():
+                self.flapping = Flapping(self.endpoint, self.pubsub_endpoint,
+                                         self.check_delay)
+                self.flapping.start()
+
+            self.busy = False
 
     @debuglog
     def reload(self, graceful=True):
