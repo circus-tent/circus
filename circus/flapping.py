@@ -51,6 +51,8 @@ class Flapping(Thread):
                 elif e.errno == zmq.ETERM:
                     break
                 else:
+                    logger.debug("got an unexpected error %s (%s)" %
+                            (str(e), e.errno))
                     raise
             else:
                 break
