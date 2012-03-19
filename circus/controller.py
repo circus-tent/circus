@@ -7,7 +7,7 @@ except ImportError:
 
 
 import zmq
-from zmq.eventloop import ioloop
+from zmq.eventloop import ioloop, zmqstream
 
 from circus.commands import get_commands
 from circus import logger
@@ -16,26 +16,40 @@ from circus.sighandler import SysHandler
 
 
 class Controller(object):
-    def __init__(self, stream, loop, trainer, endpoint, check_delay=1.0):
-        self.stream = stream
-        self.loop = loop
+    def __init__(self, endpoint, context, loop, trainer, check_delay=1.0):
         self.trainer = trainer
+        self.endpoint = endpoint
+        self.context = context
+        self.loop = loop
         self.check_delay = check_delay * 1000
+
         self.jobs = Queue()
 
         # initialize the sys handler
         self.sys_hdl = SysHandler(self)
 
-        # handle messages
-        self.stream.on_recv(self.handle_message)
-
         # get registered commands
         self.commands = get_commands()
 
+    def initialize(self):
+        # initialize controller
+        self.ctrl_socket = self.context.socket(zmq.ROUTER)
+        self.ctrl_socket.bind(self.endpoint)
+        self.ctrl_socket.setsockopt(zmq.LINGER, 0)
+
+        self.stream = zmqstream.ZMQStream(self.ctrl_socket, self.loop)
+        self.stream.on_recv(self.handle_message)
+
+
     def start(self):
+        self.initialize()
         self.caller = ioloop.PeriodicCallback(self.wakeup, self.check_delay,
                 self.loop)
         self.caller.start()
+
+    def stop(self):
+        self.caller.stop()
+        self.ctrl_socket.close()
 
     def wakeup(self):
         job = None
@@ -116,5 +130,4 @@ class Controller(object):
             logger.info("Received %r - Could not send back %r - %s" %
                                 (msg, resp, str(e)))
 
-    def stop(self):
-        self.caller.stop()
+
