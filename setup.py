@@ -13,6 +13,6 @@ setup(name='circus',
       test_suite = 'nose.collector',
       entry_points="""
       [console_scripts]
-      circusd = circus.server:main
-      circusctl = circus.controllerapp:main
+      circusd = circus.circusd:main
+      circusctl = circus.circusctl:main
       """)
