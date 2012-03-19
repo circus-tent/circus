@@ -11,12 +11,14 @@ from circus import logger
 
 class Flapping(Thread):
 
-    def __init__(self, endpoint, pubsub_endpoint, check_delay):
+    def __init__(self, context, endpoint, pubsub_endpoint, check_delay):
         super(Flapping, self).__init__()
         self.daemon = True
 
+        self.context = context
+        self.pubsub_endpoint = pubsub_endpoint
+        self.endpoint = endpoint
         self.check_delay = check_delay
-        self.context = zmq.Context()
         self.loop = ioloop.IOLoop()
         self._id = uuid.uuid4().hex
         self.timelines = {}
@@ -24,9 +26,6 @@ class Flapping(Thread):
         self.configs = {}
         self.tries = {}
 
-        self.pubsub_endpoint = pubsub_endpoint
-        self.endpoint = endpoint
-        self.initialize()
 
     def initialize(self):
         self.client = self.context.socket(zmq.DEALER)
@@ -42,16 +41,29 @@ class Flapping(Thread):
         self.substream.on_recv(self.handle_recv)
 
     def run(self):
+        self.initialize()
         while True:
             try:
                 self.loop.start()
             except zmq.ZMQError as e:
                 if e.errno == errno.EINTR:
                     continue
+                elif e.errno == zmq.ETERM:
+                    break
                 else:
+                    logger.debug("got an unexpected error %s (%s)" %
+                            (str(e), e.errno))
                     raise
             else:
                 break
+
+    def stop(self):
+        for _, timer in self.timers.items():
+            timer.cancel()
+        self.loop.stop()
+        self.client.close()
+        self.sub_socket.close()
+        self.join()
 
     def handle_recv(self, data):
         topic, msg = data
@@ -88,15 +100,6 @@ class Flapping(Thread):
 
         self.configs[show_name] = conf
         return conf
-
-    def stop(self):
-        self.alive = False
-        for _, timer in self.timers.items():
-            timer.cancel()
-        self.loop.stop()
-        time.sleep(0.1)
-        self.context.destroy()
-        self.join()
 
     def reset(self, show_name):
         self.timeline[show_name] = []

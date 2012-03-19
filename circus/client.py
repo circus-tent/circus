@@ -29,7 +29,7 @@ class CircusClient(object):
             return
 
         try:
-            self.context.destroy()
+            self.context.destroy(0)
         except zmq.ZMQError as e:
             if e.errno == errno.EINTR:
                 pass
