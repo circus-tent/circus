@@ -19,8 +19,9 @@ own zmq client.
 
 All messages are Json mappings.
 
-For each command below, we provide an usage example with
+For each command below, we provide a usage example with
 circusctl but also the input / output zmq messages.
+
 """
 
 
@@ -35,7 +36,7 @@ def generate_commands(app):
     with open(tocname, "w") as toc:
         toc.write(_HEADER)
         toc.write("Circus commands\n")
-        toc.write("===============\n\n")
+        toc.write("---------------\n\n")
 
         commands = get_commands()
         for name, cmd in commands.items():
