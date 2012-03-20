@@ -4,7 +4,7 @@ from circus.exc import ArgumentError, MessageError
 class Status(Command):
     """\
         Get the status of a watcher or all watchers
-        =====================================
+        ===========================================
 
         This command start get the status of a watcher or all watchers.
 

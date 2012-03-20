@@ -4,7 +4,7 @@ from circus.exc import ArgumentError
 class Start(Command):
     """\
         Start the arbiter or a watcher
-        ===========================
+        ==============================
 
         This command start all the process in a watcher or all watchers. T
         ZMQ Message

@@ -6,7 +6,7 @@ from circus.exc import ArgumentError, MessageError
 class AddWatcher(Command):
     """\
         Add a watcher
-        ==========
+        =============
 
         This command add a watcher dynamically to a arbiter.
 

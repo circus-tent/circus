@@ -6,7 +6,7 @@ from circus import util
 class Set(Command):
     """\
         Set a watcher option
-        =================
+        ====================
 
         ZMQ Message
         -----------

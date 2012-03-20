@@ -4,7 +4,7 @@ from circus.exc import ArgumentError, MessageError
 class Listen(Command):
     """\
         Suscribe to a watcher event
-        ========================
+        ===========================
 
         ZMQ
         ---
@@ -17,12 +17,12 @@ class Listen(Command):
 
         Events are pubsub topics:
 
-        - `watcher.<watchername>.reap': when a process is reaped
-        - `watcher.<watchername>.spawn': when a process is spawned
-        - `watcher.<watchername>.kill': when a process is killed
-        - `watcher.<watchername>.updated': when watcher configuration is updated
-        - `watcher.<watchername>.stop': when a watcher is stopped
-        - `watcher.<watchername>.start': when a watcher is started
+        - `watcher.<watchername>.reap`: when a process is reaped
+        - `watcher.<watchername>.spawn`: when a process is spawned
+        - `watcher.<watchername>.kill`: when a process is killed
+        - `watcher.<watchername>.updated`: when watcher configuration is updated
+        - `watcher.<watchername>.stop`: when a watcher is stopped
+        - `watcher.<watchername>.start`: when a watcher is started
 
         All events messages are in a json.
 

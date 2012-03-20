@@ -4,7 +4,7 @@ from circus.exc import ArgumentError, MessageError
 class IncrProc(Command):
     """\
         Increment the number of processes in a watcher
-        =======================================
+        ==============================================
 
         This comment increment the number of processes in a watcher by +1.
 

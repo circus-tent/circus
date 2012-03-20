@@ -4,7 +4,7 @@ from circus.exc import ArgumentError, MessageError
 class Restart(Command):
     """\
         Restart the arbiter or a watcher
-        =============================
+        ================================
 
         This command restart all the process in a watcher or all watchers. This
         funtion simply stop a watcher then restart it.

@@ -5,7 +5,7 @@ from circus.exc import ArgumentError, MessageError
 class DecrProcess(Command):
     """\
         Decrement the number of processes in a watcher
-        =======================================
+        ==============================================
 
         This comment decrement the number of processes in a watcher by -1.
 

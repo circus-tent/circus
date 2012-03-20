@@ -5,7 +5,11 @@ _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
              "%(mem_info2)s %(cpu)s %(mem)s %(ctime)s")
 
 class Stats(Command):
-    """Get process infos"""
+    """\
+        Get process infos
+        =================
+
+    """
 
     name = "stats"
 

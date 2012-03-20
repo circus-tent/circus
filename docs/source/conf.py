@@ -28,9 +28,10 @@ import sys, os
 
 CURDIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(CURDIR, '..', '..'))
+sys.path.append(os.path.join(CURDIR, '..'))
 
 import circus
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'circus_ext']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -46,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Circus'
-copyright = u'2012, Mozilla Foundation'
+copyright = u'2012, Mozilla Foundation - 2012, Benoit Chesneau'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -238,7 +239,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'circus', u'Circus Documentation',
-     [u'Mozilla Foundation'], 1)
+     [u'Mozilla Foundation', u'Benoit Chesneau'], 1)
 ]
 
 # If true, show URL addresses after external links.

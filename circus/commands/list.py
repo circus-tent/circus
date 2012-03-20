@@ -4,7 +4,7 @@ from circus.exc import ArgumentError, MessageError
 class List(Command):
     """\
         Get list of watchers or processes in a watcher
-        =====================================
+        ==============================================
 
         ZMQ Message
         -----------

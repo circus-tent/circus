@@ -7,7 +7,7 @@ from circus.py3compat import string_types
 class Signal(Command):
     """\
         Send a signal
-        ============
+        =============
 
         This command allows you to send the signal to all processes in a
         watcher, a specific process in a watcher or its children

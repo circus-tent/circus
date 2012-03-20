@@ -4,7 +4,7 @@ from circus.exc import ArgumentError, MessageError
 class Reload(Command):
     """\
         Reload the arbiter or a watcher
-        ============================
+        ===============================
 
         This command reload all the process in a watcher or all watchers. If a
         the option send_hup is set to true in a watcher then the HUP signal

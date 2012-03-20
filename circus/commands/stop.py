@@ -4,7 +4,7 @@ from circus.exc import ArgumentError, MessageError
 class Stop(Command):
     """\
         Stop the arbiter or a watcher
-        ============================
+        =============================
 
         This command stop all the process in a watcher or all watchers. The watchers
         can be stopped gracefully.

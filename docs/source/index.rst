@@ -9,8 +9,8 @@ Circus is a program that will let you run and watch multiple processes.
 Circus can be driven through a command-line interface, or programmatically
 through its APIs.
 
-It shares some of the goals of `Supervisord <http://supervisord.org>`_, 
-`BluePill <https://github.com/arya/bluepill>`_ and 
+It shares some of the goals of `Supervisord <http://supervisord.org>`_,
+`BluePill <https://github.com/arya/bluepill>`_ and
 `Daemontools <http://cr.yp.to/daemontools.html>`_.
 
 To install it, check out :ref:`installation`
@@ -76,9 +76,9 @@ Here are, in our opinion, the top 3 reasons to use Circus.
 
 1. **Circus provides pub/sub and poll notifications via ZeroMQ**
 
-  Circus has a pub/sub channel you can subscribe into. This channel 
-  receives all events happening in the system. For example, you can get 
-  notified everytime a process is flapping, or build a client that 
+  Circus has a pub/sub channel you can subscribe into. This channel
+  receives all events happening in the system. For example, you can get
+  notified everytime a process is flapping, or build a client that
   triggers a warning when some processes are eating all the CPU or RAM.
 
   These events are sent via a ZeroMQ channel, which makes it different
@@ -99,7 +99,7 @@ Here are, in our opinion, the top 3 reasons to use Circus.
 
 2. **Circus is developer friendly**
 
-  While Circus can be driven entirely by a config file and the 
+  While Circus can be driven entirely by a config file and the
   *circusctl* and *circusd* commands, it's easy to reuse all or part of
   the system to build your own custom process watcher in Python.
 
@@ -114,7 +114,7 @@ Here are, in our opinion, the top 3 reasons to use Circus.
 3. **Circus scales**
 
   One of the use case of Circus is to be able to manage thousands of
-  processes without having it slowing down -- we're dedicated to focus on 
+  processes without having it slowing down -- we're dedicated to focus on
   this.
 
 
@@ -127,11 +127,11 @@ More documentation
 
    installation
    configuration
+   commands
    cli
    library
    architecture
    examples
-
 
 Contributions and Feedback
 --------------------------
