@@ -34,7 +34,7 @@ class Stop(Command):
 
         ::
 
-            circusctl reload [<name>] [--terminate]
+            $ circusctl reload [<name>] [--terminate]
 
         Options
         +++++++

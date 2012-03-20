@@ -35,7 +35,7 @@ class List(Command):
 
         ::
 
-            circusctl list [<name>]
+            $ circusctl list [<name>]
     """
     name = "list"
 

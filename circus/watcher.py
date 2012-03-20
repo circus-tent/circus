@@ -11,7 +11,7 @@ from circus import util
 
 class Watcher(object):
 
-    def __init__(self, name, cmd, numprocs=1, warmup_delay=0.,
+    def __init__(self, name, cmd, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False, env=None, stopped=False,
                  times=2, within=1., retry_in=7., max_retry=5,
@@ -20,7 +20,7 @@ class Watcher(object):
         """
         self.name = name
         self.res_name = name.lower().replace(" ", "_")
-        self.numprocs = int(numprocs)
+        self.numprocesses = int(numprocesses)
         self.warmup_delay = warmup_delay
         self.cmd = cmd
         self._process_counter = 0
@@ -32,7 +32,7 @@ class Watcher(object):
         self.graceful_timeout = 30
         self.prereload_fn = prereload_fn
 
-        self.optnames = ("numprocs", "warmup_delay", "working_dir",
+        self.optnames = ("numprocesses", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env",
                          "cmd", "times", "within", "retry_in",
                          "max_retry", "graceful_timeout")
@@ -102,12 +102,12 @@ class Watcher(object):
         if self.stopped:
             return
 
-        if len(self.processes.keys()) < self.numprocs:
+        if len(self.processes.keys()) < self.numprocesses:
             self.spawn_processes()
 
         processes = self.processes.keys()
         processes.sort()
-        while len(processes) > self.numprocs:
+        while len(processes) > self.numprocesses:
             wid = processes.pop(0)
             process = self.processes.pop(wid)
             self.kill_process(process)
@@ -125,7 +125,7 @@ class Watcher(object):
     def spawn_processes(self):
         """Spawn processes.
         """
-        for i in range(self.numprocs - len(self.processes.keys())):
+        for i in range(self.numprocesses - len(self.processes.keys())):
             self.spawn_process()
             time.sleep(self.warmup_delay)
 
@@ -287,23 +287,23 @@ class Watcher(object):
                 logger.info("SEND HUP to %s [%s]" % (wid, process.pid))
                 process.send_signal(signal.SIGHUP)
         else:
-            for i in range(self.numprocs):
+            for i in range(self.numprocesses):
                 self.spawn_process()
             self.manage_processes()
         self.send_msg("reload", {"time": time.time()})
 
     @util.debuglog
     def incr(self):
-        self.numprocs += 1
+        self.numprocesses += 1
         self.manage_processes()
-        return self.numprocs
+        return self.numprocesses
 
     @util.debuglog
     def decr(self):
-        if self.numprocs > 0:
-            self.numprocs -= 1
+        if self.numprocesses > 0:
+            self.numprocesses -= 1
             self.manage_processes()
-        return self.numprocs
+        return self.numprocesses
 
     def get_process(self, wid):
         return self.processes[wid]
@@ -320,7 +320,7 @@ class Watcher(object):
 
         action = 0
         if key == "numprocesses":
-            self.numprocs = int(val)
+            self.numprocesses = int(val)
         elif key == "warmup_delay":
             self.warmup_delay = float(val)
         elif key == "working_dir":
@@ -364,7 +364,7 @@ class Watcher(object):
         # trigger needed action
         self.stopped = False
         if num == 1:
-            for i in range(self.numprocs):
+            for i in range(self.numprocesses):
                 self.spawn_process()
             self.manage_processes()
         else:

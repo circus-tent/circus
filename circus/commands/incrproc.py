@@ -30,7 +30,7 @@ class IncrProc(Command):
 
         ::
 
-            circusctl incr <name>
+            $ circusctl incr <name>
 
         Options
         +++++++

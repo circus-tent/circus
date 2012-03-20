@@ -1,9 +1,17 @@
 # -*- coding: utf-8 -
 
 import getopt
+import json
 import sys
 import traceback
 
+# import pygments if here
+try:
+    import pygments
+    from pygments.lexers import get_lexer_for_mimetype
+    from pygments.formatters import TerminalFormatter
+except ImportError:
+    pygments = False
 
 from circus.client import CircusClient
 from circus.consumer import CircusConsumer
@@ -15,9 +23,25 @@ globalopts = [
     ('', 'endpoint', None, "connection endpointt"),
     ('', 'timeout', 5, "connection timeout"),
     ('', 'json', False, "output to JSON"),
+    ('', 'prettify', False, "prettify output"),
     ('h', 'help', None, "display help and exit"),
     ('v', 'version', None, "display version and exit")
 ]
+
+def prettify(jsonobj, prettify=True):
+    """ prettiffy JSON output """
+    if not prettify:
+        return json.dumps(jsonobj)
+
+    json_str = json.dumps(jsonobj, indent=2, sort_keys=True)
+    if pygments:
+        try:
+            lexer = get_lexer_for_mimetype("application/json")
+            return pygments.highlight(json_str, lexer, TerminalFormatter())
+        except:
+            pass
+
+    return json_str
 
 
 def _get_switch_str(opt):
@@ -130,7 +154,7 @@ class ControllerApp(object):
 
     def _console(self, client, cmd, opts, msg):
         if opts['json']:
-            return client.call(msg)
+            return prettify(client.call(msg), prettify=opts['prettify'])
         else:
             return cmd.console_msg(client.call(msg))
 

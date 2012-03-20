@@ -29,7 +29,7 @@ class Quit(Command):
 
         ::
 
-            circusctl quit [--terminate]
+            $ circusctl quit [--terminate]
 
         Options
         +++++++

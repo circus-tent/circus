@@ -59,7 +59,7 @@ class Signal(Command):
 
         ::
 
-            circusctl signal <name> [<process>] [<pid>] [--children] <signum>
+            $ circusctl signal <name> [<process>] [<pid>] [--children] <signum>
 
         Options:
         ++++++++
