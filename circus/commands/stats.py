@@ -1,8 +1,9 @@
-from circus.exc import MessageError
+from circus.exc import MessageError, ArgumentError
 from circus.commands.base import Command
 
 _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
              "%(mem_info2)s %(cpu)s %(mem)s %(ctime)s")
+
 
 class Stats(Command):
     """\
@@ -95,8 +96,8 @@ class Stats(Command):
                         "info": watcher.process_info(props['process'])
                     }
                 except KeyError:
-                    raise MessageError("process %r not found in %r" % (props['process'],
-                        props['name']))
+                    raise MessageError("process %r not found in %r" % \
+                            (props['process'], props['name']))
             else:
                 return {"name": props['name'], "info": watcher.info()}
         else:
@@ -132,6 +133,3 @@ class Stats(Command):
                 return "%s: %s\n" % (msg['process'], self._to_str(msg['info']))
         else:
             return self.console_error(msg)
-
-
-

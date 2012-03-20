@@ -40,8 +40,6 @@ class TestClient(TestCircus):
         def set(name, **opts):
             return status("set", name=name, options=opts)
 
-
-
         self.assertEquals(set("test", numprocesses=10), 'ok')
         self.assertEquals(numprocesses("numprocesses"), 10)
         self.assertEquals(set("test", numprocesses=1), 'ok')
@@ -54,8 +52,8 @@ class TestClient(TestCircus):
         self.assertEquals(numprocesses("numprocesses"), 2)
         self.assertEquals(numprocesses("decr", name="test"), 1)
         self.assertEquals(numprocesses("numprocesses"), 1)
-        self.assertEquals(set("test", env={"test": 1, "test":2}), 'error')
-        self.assertEquals(set("test", env={"test": '1', "test":'2'}),
+        self.assertEquals(set("test", env={"test": 1, "test": 2}), 'error')
+        self.assertEquals(set("test", env={"test": '1', "test": '2'}),
                 'ok')
         resp = call('get', name='test', keys=['env'])
         options = resp.get('options', {})

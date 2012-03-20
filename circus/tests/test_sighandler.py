@@ -1,6 +1,7 @@
 from circus.tests.support import TestCircus
 import time
 
+
 class Process(object):
 
     def __init__(self, testfile):
@@ -43,7 +44,8 @@ def run_process(test_file):
 class TestSigHandler(TestCircus):
 
     def test_handler(self):
-        test_file = self._run_circus('circus.tests.test_sighandler.run_process')
+        test_file = \
+                self._run_circus('circus.tests.test_sighandler.run_process')
         time.sleep(.5)
 
         # stopping...

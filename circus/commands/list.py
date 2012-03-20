@@ -1,5 +1,6 @@
 from circus.commands.base import Command
-from circus.exc import ArgumentError, MessageError
+from circus.exc import ArgumentError
+
 
 class List(Command):
     """\
@@ -59,7 +60,8 @@ class List(Command):
 
     def console_msg(self, msg):
         if "processes" in msg:
-            return ",".join([str(process_id) for process_id in msg.get('processes')])
+            return ",".join([str(process_id)
+                             for process_id in msg.get('processes')])
         elif 'watchers' in msg:
             return ",".join([watcher for watcher in msg.get('watchers')])
         return self.console_error(msg)

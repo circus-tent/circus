@@ -4,6 +4,7 @@ from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
 from circus.py3compat import string_types
 
+
 class Signal(Command):
     """\
         Send a signal
@@ -138,10 +139,9 @@ class Signal(Command):
         elif isinstance(signum, string_types):
             if signum.lower() in ('quit', 'hup', 'kill', 'term', 'ttin',
                 'ttou', 'usr1', 'usr2'):
-                props['signum'] = getattr(signal, "SIG%s" % sig.upper())
+                props['signum'] = getattr(signal, "SIG%s" % signum.upper())
             else:
                 raise MessageError('signal invalid')
 
         else:
             raise MessageError('signal invalid')
-

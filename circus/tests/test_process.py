@@ -1,5 +1,4 @@
 import unittest
-import os
 import sys
 from circus.process import Process
 

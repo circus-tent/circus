@@ -3,7 +3,7 @@ import copy
 import textwrap
 import time
 
-from circus.exc import MessageError
+from circus.exc import MessageError, ArgumentError
 
 KNOWN_COMMANDS = []
 
@@ -15,11 +15,13 @@ def get_commands():
         commands[c.name] = cmd.copy()
     return commands
 
+
 def ok(props=None):
     resp = {"status": "ok", "time": time.time()}
     if props:
         resp.update(props)
     return resp
+
 
 def error(reason="unknown", tb=None):
     return {
@@ -28,6 +30,7 @@ def error(reason="unknown", tb=None):
         "tb": tb,
         "time": time.time()
     }
+
 
 class CommandMeta(type):
 
@@ -43,7 +46,7 @@ class CommandMeta(type):
         return new_class
 
     def fmt_desc(cls):
-        desc  = textwrap.dedent(cls.__doc__).strip()
+        desc = textwrap.dedent(cls.__doc__).strip()
         setattr(cls, "desc",  desc)
         setattr(cls, "short", desc.splitlines()[0])
 
@@ -89,7 +92,7 @@ class Command(object):
             return getattr(signal, "SIG%s" % sig.upper())
         elif sig.isdigit():
             return int(sig)
-        raise ArgumentError("signal %r not supported" % args[-1])
+        raise ArgumentError("signal %r not supported" % sig)
 
     def validate(self, props):
         if not self.properties:

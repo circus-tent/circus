@@ -163,7 +163,8 @@ class Arbiter(object):
         return self._watchers_names[name]
 
     def statuses(self):
-        return dict([(watcher.name, watcher.status()) for watcher in self.watchers])
+        return dict([(watcher.name, watcher.status())
+                      for watcher in self.watchers])
 
     def add_watcher(self, name, cmd):
         """Adds a watcher.

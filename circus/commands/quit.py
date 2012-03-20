@@ -1,5 +1,5 @@
 from circus.commands.base import Command
-from circus.exc import MessageError
+
 
 class Quit(Command):
     """\

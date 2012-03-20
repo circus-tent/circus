@@ -1,6 +1,7 @@
 from circus.commands.base import Command
 from circus.exc import ArgumentError
 
+
 class Start(Command):
     """\
         Start the arbiter or a watcher

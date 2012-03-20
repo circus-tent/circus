@@ -4,12 +4,14 @@ import signal
 from circus.client import CircusClient, make_message
 from circus.tests.support import TestCircus
 
+
 def run_process(test_file):
     try:
         while True:
             time.sleep(1)
     except:
         return 1
+
 
 class TestWatcher(TestCircus):
 
@@ -37,12 +39,14 @@ class TestWatcher(TestCircus):
 
     def testSignal(self):
         self.assertEquals(self.numprocesses("incr", name="test"), 2)
-        self.assertEquals(self.call("list", name="test").get('processes'), [1, 2])
+        self.assertEquals(self.call("list", name="test").get('processes'),
+                          [1, 2])
         self.assertEquals(self.status("signal", name="test", process=2,
             signum=signal.SIGKILL), "ok")
 
         time.sleep(1.0)
-        self.assertEquals(self.call("list", name="test").get('processes'), [1, 3])
+        self.assertEquals(self.call("list", name="test").get('processes'),
+                          [1, 3])
 
         processes = self.call("list", name="test").get('processes')
         self.assertEquals(self.status("signal", name="test",

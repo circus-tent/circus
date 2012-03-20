@@ -72,7 +72,6 @@ class Watcher(object):
 
         multipart_msg = ["show.%s.%s" % (name, topic), json.dumps(msg)]
 
-
         if not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)
 
@@ -144,7 +143,8 @@ class Watcher(object):
                           working_dir=self.working_dir, shell=self.shell,
                           uid=self.uid, gid=self.gid, env=self.env)
                 self.processes[self._process_counter] = process
-                logger.info('running %s process [pid %d]' % (self.name, process.pid))
+                logger.info('running %s process [pid %d]' % (self.name,
+                            process.pid))
             except OSError, e:
                 logger.warning('error in %r: %s' % (self.name, str(e)))
 

@@ -1,6 +1,7 @@
 from circus.commands.base import Command
-from circus.exc import ArgumentError, MessageError
+from circus.exc import ArgumentError
 from circus.util import convert_opt
+
 
 class Options(Command):
     """\

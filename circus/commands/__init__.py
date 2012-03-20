@@ -1,5 +1,5 @@
 
-from circus.commands import (
+from circus.commands import (   # NOQA
     addwatcher,
     decrproc,
     get,
@@ -21,4 +21,4 @@ from circus.commands import (
     stop
 )
 
-from circus.commands.base import get_commands, ok, error
+from circus.commands.base import get_commands, ok, error   # NOQA

@@ -1,13 +1,13 @@
 from circus.commands.base import Command
-from circus.exc import ArgumentError, MessageError
+
 
 class Stop(Command):
     """\
         Stop the arbiter or a watcher
         =============================
 
-        This command stop all the process in a watcher or all watchers. The watchers
-        can be stopped gracefully.
+        This command stop all the process in a watcher or all watchers.
+        The watchers can be stopped gracefully.
 
         ZMQ Message
         -----------
@@ -51,9 +51,8 @@ class Stop(Command):
         graceful = not opts.get("terminate", False)
         if len(args) == 1:
             return self.make_message(name=args[0], graceful=graceful)
-            msg = "STOP %s" % args[0]
-        else:
-            return self.make_message(graceful=graceful)
+
+        return self.make_message(graceful=graceful)
 
     def execute(self, arbiter, props):
         if 'name' in props:

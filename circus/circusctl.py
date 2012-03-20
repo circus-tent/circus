@@ -7,11 +7,11 @@ import traceback
 
 # import pygments if here
 try:
-    import pygments
+    import pygments     # NOQA
     from pygments.lexers import get_lexer_for_mimetype
     from pygments.formatters import TerminalFormatter
 except ImportError:
-    pygments = False
+    pygments = False    # NOQA
 
 from circus.client import CircusClient
 from circus.consumer import CircusConsumer
@@ -27,6 +27,7 @@ globalopts = [
     ('h', 'help', None, "display help and exit"),
     ('v', 'version', None, "display version and exit")
 ]
+
 
 def prettify(jsonobj, prettify=True):
     """ prettiffy JSON output """

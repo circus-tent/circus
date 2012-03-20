@@ -3,8 +3,6 @@ import sys
 from tempfile import mkstemp
 import time
 
-from zmq.utils.jsonapi import jsonmod as json
-
 from circus.client import CallError, CircusClient, make_message
 from circus.tests.support import TestCircus
 
@@ -56,7 +54,6 @@ class TestTrainer(TestCircus):
     def tearDown(self):
         super(TestTrainer, self).tearDown()
         self.cli.stop()
-
 
     def test_numwatchers(self):
         msg = make_message("numwatchers")
@@ -154,7 +151,7 @@ class TestTrainer(TestCircus):
         self.cli.call(make_message("reload"))
         time.sleep(0.5)
 
-        msg2 = make_message("list", name="test")
+        make_message("list", name="test")
         resp = self.cli.call(msg1)
 
         processes2 = resp.get('processes')
@@ -173,4 +170,3 @@ class TestTrainer(TestCircus):
         self.cli.call(make_message("stop", name="test"))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get('status'), "stopped")
-

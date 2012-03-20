@@ -1,7 +1,6 @@
-import time
+from circus.commands.base import Command
+from circus.exc import ArgumentError
 
-from circus.commands.base import Command, ok
-from circus.exc import ArgumentError, MessageError
 
 class AddWatcher(Command):
     """\

@@ -86,7 +86,7 @@ class Controller(object):
             return self.send_error(cid, msg, "json invalid")
 
         cmd_name = json_msg.get('command')
-        properties =  json_msg.get('properties', {})
+        properties = json_msg.get('properties', {})
 
         try:
             cmd = self.commands[cmd_name.lower()]
@@ -104,7 +104,7 @@ class Controller(object):
         except:
             exctype, value = sys.exc_info()[:2]
             tb = traceback.format_exc()
-            reason =  "command %r: %s" % (msg, value)
+            reason = "command %r: %s" % (msg, value)
             logger.debug("error: command %r: %s\n\n%s" % (msg,
                 value, tb))
             return self.send_error(cid, msg, reason, tb)

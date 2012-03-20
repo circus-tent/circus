@@ -1,5 +1,6 @@
 from circus.commands.base import Command
-from circus.exc import ArgumentError, MessageError
+from circus.exc import MessageError
+
 
 class Listen(Command):
     """\
@@ -20,7 +21,8 @@ class Listen(Command):
         - `watcher.<watchername>.reap`: when a process is reaped
         - `watcher.<watchername>.spawn`: when a process is spawned
         - `watcher.<watchername>.kill`: when a process is killed
-        - `watcher.<watchername>.updated`: when watcher configuration is updated
+        - `watcher.<watchername>.updated`: when watcher configuration
+          is updated
         - `watcher.<watchername>.stop`: when a watcher is stopped
         - `watcher.<watchername>.start`: when a watcher is started
 
@@ -40,9 +42,12 @@ class Listen(Command):
         ::
 
             $ circusctl listen tcp://127.0.0.1:5556
-            watcher.refuge.spawn: {u'process_id': 6, u'process_pid': 72976, u'time': 1331681080.985104}
-            watcher.refuge.spawn: {u'process_id': 7, u'process_pid': 72995, u'time': 1331681086.208542}
-            watcher.refuge.spawn: {u'process_id': 8, u'process_pid': 73014, u'time': 1331681091.427005}
+            watcher.refuge.spawn: {u'process_id': 6, u'process_pid': 72976,
+                                   u'time': 1331681080.985104}
+            watcher.refuge.spawn: {u'process_id': 7, u'process_pid': 72995,
+                                   u'time': 1331681086.208542}
+            watcher.refuge.spawn: {u'process_id': 8, u'process_pid': 73014,
+                                   u'time': 1331681091.427005}
     """
     name = "listen"
     msg_type = "sub"

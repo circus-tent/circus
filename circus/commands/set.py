@@ -1,7 +1,8 @@
 from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
-from circus.py3compat import string_types, integer_types
+from circus.py3compat import string_types
 from circus import util
+
 
 class Set(Command):
     """\
@@ -40,7 +41,6 @@ class Set(Command):
     properties = ['name', 'options']
 
     def _convert_opt(self, key, val):
-        action = 0
         if key == "numprocesses":
             return int(val)
         elif key == "warmup_delay":
@@ -85,7 +85,7 @@ class Set(Command):
             if not isinstance(val, (int, float,)):
                 raise MessageError("%r isn't a number" % key)
 
-        if key in ('uid','gid',):
+        if key in ('uid', 'gid',):
             if not isinstance(val, int) or not isinstance(val, string_types):
                 raise MessageError("%r isn't an integer or string" % key)
 
@@ -100,7 +100,6 @@ class Set(Command):
             for k, v in val.items():
                 if not isinstance(v, string_types):
                     raise MessageError("%r isn't a string" % k)
-
 
     def message(self, *args, **opts):
         if len(args) < 3:
@@ -134,4 +133,3 @@ class Set(Command):
         super(Set, self).validate(props)
         for key, val in props.get('options').items():
             self._validate_opt(key, val)
-

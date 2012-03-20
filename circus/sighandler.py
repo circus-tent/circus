@@ -5,6 +5,7 @@ import sys
 from circus import logger
 from client import make_json
 
+
 class SysHandler(object):
 
     SIGNALS = map(

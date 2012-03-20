@@ -4,10 +4,8 @@ import os
 import threading
 import time
 import sys
-
-import zmq
-
 from circus import get_arbiter
+
 
 def resolve_name(name):
     ret = None
@@ -76,7 +74,8 @@ class TestCircus(unittest.TestCase):
         os.close(fd)
         wdir = os.path.dirname(__file__)
         cmd = '%s generic.py %s %s' % (sys.executable, callable, testfile)
-        arbiter = get_arbiter(cmd, working_dir=wdir, numprocesses=1, name="test")
+        arbiter = get_arbiter(cmd, working_dir=wdir, numprocesses=1,
+                              name="test")
         runner = Runner(arbiter, testfile)
         runner.start()
         self.runners.append(runner)

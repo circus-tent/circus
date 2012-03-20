@@ -1,5 +1,6 @@
 from circus.commands.base import Command
-from circus.exc import ArgumentError, MessageError
+from circus.exc import ArgumentError
+
 
 class NumWatchers(Command):
     """\
