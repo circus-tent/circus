@@ -57,7 +57,7 @@ can write:
 
     from circus import get_arbiter
 
-    arbiter = get_arbiter("myprogram", 3)
+    arbiter = get_arbiter("myprogram", 4)
     try:
         arbiter.start()
     finally:
