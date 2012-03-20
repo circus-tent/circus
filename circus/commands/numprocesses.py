@@ -57,7 +57,7 @@ class NumProcesses(Command):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
             return {
-                "numprocesses": watcher.numprocesses,
+                "numprocesses": len(watcher),
                 "watcher_name": props['name']
             }
         else:
