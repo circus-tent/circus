@@ -4,7 +4,7 @@ from circus.exc import ArgumentError, MessageError
 class NumProcesses(Command):
     """\
         Get the number of processes
-        =======================
+        ===========================
 
         Get the number of processes in a watcher or in a arbiter
 

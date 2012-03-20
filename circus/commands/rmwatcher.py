@@ -4,7 +4,7 @@ from circus.exc import ArgumentError, MessageError
 class RmWatcher(Command):
     """\
         Remove a watcher
-        =============
+        ================
 
         This command remove a watcher dynamically from the arbiter. The
         watchers can be gracefully stopped.

@@ -128,7 +128,6 @@ More documentation
    installation
    configuration
    commands
-   cli
    library
    architecture
    examples

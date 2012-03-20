@@ -5,7 +5,7 @@ from circus.util import convert_opt
 class Options(Command):
     """\
         Get the value of a watcher option
-        ==============================
+        =================================
 
         This command return the watchers options values asked.
 

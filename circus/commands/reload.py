@@ -15,7 +15,7 @@ class Reload(Command):
         1. Send a SIGQUIT signal to a process
         2. Wait until graceful timeout
         3. Send a SIGKILL signal to the process to make sure it is finally
-        killed.
+           killed.
 
         ZMQ Message
         -----------

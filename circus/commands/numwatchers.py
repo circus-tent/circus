@@ -4,7 +4,7 @@ from circus.exc import ArgumentError, MessageError
 class NumWatchers(Command):
     """\
         Get the number of watchers
-        =======================
+        ==========================
 
         Get the number of watchers in a arbiter
 
