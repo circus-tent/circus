@@ -47,8 +47,9 @@ class Get(Command):
         Command line
         ------------
 
+        ::
 
-        circusctl get <name> <key> <value> <key1> <value1>
+            $ circusctl get <name> <key> <value> <key1> <value1>
 
     """
 

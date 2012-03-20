@@ -32,7 +32,7 @@ class Restart(Command):
 
         ::
 
-            circusctl restart [<name>] [--terminate]
+            $ circusctl restart [<name>] [--terminate]
 
         Options
         +++++++

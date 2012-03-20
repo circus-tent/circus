@@ -31,7 +31,7 @@ class DecrProcess(Command):
 
         ::
 
-            circusctl descr <name>
+            $ circusctl descr <name>
 
         Options
         +++++++

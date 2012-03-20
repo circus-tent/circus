@@ -126,7 +126,7 @@ def main():
     logger.addHandler(h)
 
     # Initialize shows to manage
-    shows = []
+    watchers = []
     for section in cfg.sections():
         if section.startswith("show:"):
             name = section.split("show:", 1)[1]
@@ -136,7 +136,7 @@ def main():
             if args:
                 cmd = "%s %s" % (cmd, args)
 
-            numflies = cfg.dget(section, 'numflies', 1, int)
+            numprocesses = cfg.dget(section, 'numprocesses', 1, int)
             warmup_delay = cfg.dget(section, 'warmup_delay', 0, int)
 
             working_dir = cfg.dget(section, 'working_dir')
@@ -150,13 +150,13 @@ def main():
             max_retry = cfg.dget(section, "max_retry", 5, int)
             graceful_timeout = cfg.dget(section, "graceful_timeout", 30, int)
 
-            show = Watcher(name, cmd, numflies=numflies,
+            watcher = Watcher(name, cmd, numprocesses=numprocesses,
                         warmup_delay=warmup_delay, working_dir=working_dir,
                         shell=shell, uid=uid, gid=gid, send_hup=send_hup,
                         times=times, within=within, retry_in=retry_in,
                         max_retry=max_retry, graceful_timeout=graceful_timeout)
 
-            shows.append(show)
+            watchers.append(watcher)
 
     # main circus options
     check = cfg.dget('circus', 'check_delay', 5, int)
@@ -164,11 +164,11 @@ def main():
     pubsub_endpoint = cfg.dget('circus', 'pubsub_endpoint',
             'tcp://127.0.0.1:5556')
 
-    trainer = Arbiter(shows, endpoint, pubsub_endpoint, check)
+    arbiter = Arbiter(watchers, endpoint, pubsub_endpoint, check)
     try:
-        trainer.start()
+        arbiter.start()
     finally:
-        trainer.terminate()
+        arbiter.stop()
         if pidfile is not None:
             pidfile.unlink()
 

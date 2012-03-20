@@ -32,8 +32,10 @@ class RmWatcher(Command):
         Command line
         ------------
 
+        ::
 
-        circusctl rm [--terminate] <name>
+            $ circusctl rm [--terminate] <name>
+
         Options
         +++++++
 

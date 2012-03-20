@@ -33,8 +33,9 @@ class AddWatcher(Command):
         Command line
         ------------
 
+        ::
 
-        circusctl add [--start] <name> <cmd>
+            $ circusctl add [--start] <name> <cmd>
 
         Options
         +++++++

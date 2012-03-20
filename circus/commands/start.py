@@ -30,7 +30,7 @@ class Start(Command):
 
         ::
 
-            circusctl start [<name>]
+            $ circusctl start [<name>]
 
         Options
         +++++++
