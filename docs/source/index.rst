@@ -82,17 +82,17 @@ Here are, in our opinion, the top 3 reasons to use Circus.
   triggers a warning when some processes are eating all the CPU or RAM.
 
   These events are sent via a ZeroMQ channel, which makes it different
-  from the stdin stream Supervisord uses:
+  from the stdin stream Supervisord uses for instance:
 
-  - Circus sends event in a fire and forget fashion, so there's no
+  - Circus sends events in a fire-and-forget fashion, so there's no
     need to manually loop through *all* listeners and maintain their
     states.
   - Subscribers can be located on a remote host.
 
   Circus also provides ways to get status updates via one time polls
   on a req/rep channel, so you can get your information without having
-  to subscribe to a stream. The **circusctl** command provided in Circus
-  is a client of that channel.
+  to subscribe to a stream. The :ref:`circusctl` command provided in 
+  Circus is a client of that channel.
 
   See :ref:`examples`.
 
