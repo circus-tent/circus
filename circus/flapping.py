@@ -9,6 +9,8 @@ from zmq.utils.jsonapi import jsonmod as json
 
 from circus import logger
 from circus.client import make_message
+from circus.util import debuglog
+
 
 class Flapping(Thread):
 
@@ -26,6 +28,7 @@ class Flapping(Thread):
         self.configs = {}
         self.tries = {}
 
+    @debuglog
     def initialize(self):
         self.client = self.context.socket(zmq.DEALER)
         self.client.setsockopt(zmq.IDENTITY, self._id)
@@ -37,12 +40,16 @@ class Flapping(Thread):
         self.substream = zmqstream.ZMQStream(self.sub_socket, self.loop)
         self.substream.on_recv(self.handle_recv)
 
+    @debuglog
     def run(self):
         self.initialize()
+        logger.debug('Flapping entering loop mode.')
         while True:
             try:
                 self.loop.start()
             except zmq.ZMQError as e:
+                logger.debug(str(e))
+
                 if e.errno == errno.EINTR:
                     continue
                 elif e.errno == zmq.ETERM:
@@ -57,6 +64,7 @@ class Flapping(Thread):
         self.client.close()
         self.sub_socket.close()
 
+    @debuglog
     def stop(self):
         for _, timer in self.timers.items():
             timer.cancel()
