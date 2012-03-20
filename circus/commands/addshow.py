@@ -28,7 +28,7 @@ class AddShow(Command):
         - cmd: Full command line to execute in a fly
         - name: name of show
 
-        The message return a status "ok".
+        The response return a status "ok".
 
         Command line
         ------------

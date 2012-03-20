@@ -22,12 +22,12 @@ class Get(Command):
                 }
             }
 
-        A message contains 2 properties:
+        A response contains 2 properties:
 
         - keys: list, The option keys for which you want to get the values
         - name: name of show
 
-        The message return an object with a property "options"
+        The response return an object with a property "options"
         containing the list of key/value returned by circus.
 
         eg::

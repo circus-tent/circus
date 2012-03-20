@@ -2,7 +2,53 @@ from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
 
 class Status(Command):
-    """Get the status of a show or all shows"""
+    """\
+        Get the status of a show or all shows
+        =====================================
+
+        This command start get the status of a show or all shows.
+
+        ZMQ Message
+        -----------
+
+        ::
+
+            {
+                "command": "status",
+                "propeties": {
+                    "name": '<name>",
+                }
+            }
+
+        The response return the status "active" ir "stopped" or the
+        status / shows.
+
+
+        Command line
+        ------------
+
+        ::
+
+            circusctl status [<name>]
+
+        Options
+        +++++++
+
+        - <name>: name of the show
+
+        Example
+        +++++++
+
+        ::
+
+            $ circusctl status dummy
+            active
+            $ circusctl status
+            dummy: active
+            dummy2: active
+            refuge: active
+
+    """
 
     name = "status"
 
@@ -28,6 +74,6 @@ class Status(Command):
             shows = sorted(statuses)
             return "\n".join(["%s: %s" % (show, statuses[show]) \
                     for show in shows])
-        elif "status" in msg and status != "error":
+        elif "status" in msg and "status" != "error":
             return msg.get("status")
         return self.console_error(msg)

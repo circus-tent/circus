@@ -2,8 +2,55 @@ from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
 
 class Reload(Command):
-    """Reload the trainer or a show """
+    """\
+        Reload the trainer or a show
+        ============================
 
+        This command reload all the fly in a show or all shows. If a
+        the option send_hup is set to true in a show then the HUP signal
+        will be sent to the fly.A graceful reload follow the following
+        process:
+
+
+        1. Send a SIGQUIT signal to a fly
+        2. Wait until graceful timeout
+        3. Send a SIGKILL signal to the fly to make sure it is finally
+        killed.
+
+        ZMQ Message
+        -----------
+
+        ::
+
+            {
+                "command": "reload",
+                "propeties": {
+                    "name": '<name>",
+                    "graceful": true
+                }
+            }
+
+        The response return the status "ok". If the property graceful is
+        set to true the flies will be exited gracefully.
+
+        If the property name is present, then the reload will be applied
+        to the show.
+
+
+        Command line
+        ------------
+
+        ::
+
+            circusctl reload [<name>] [--terminate]
+
+        Options
+        +++++++
+
+        - <name>: name of the show
+        - --terminate; quit the node immediately
+
+    """
     name = "reload"
     options = [('', 'terminate', False, "stop immediately")]
 

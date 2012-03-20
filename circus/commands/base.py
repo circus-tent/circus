@@ -84,8 +84,11 @@ class Command(object):
             raise MessageError("program %s not found" % show_name)
 
     def _get_signal(self, sig):
-        if sig.lower() in ('quit', 'hup', 'kill', 'term', 'ttin', 'ttou'):
+        if sig.lower() in ('quit', 'hup', 'kill', 'term', 'ttin',
+                'ttou', 'usr1', 'usr2'):
             return getattr(signal, "SIG%s" % sig.upper())
+        elif sig.isdigit():
+            return int(sig)
         raise ArgumentError("signal %r not supported" % args[-1])
 
     def validate(self, props):

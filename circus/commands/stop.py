@@ -3,7 +3,45 @@ from circus.exc import ArgumentError, MessageError
 
 class Stop(Command):
     """\
-        Stop a show or all shows gracefully or not
+        Stop the trainer or a show
+        ============================
+
+        This command stop all the fly in a show or all shows. The shows
+        can be stopped gracefully.
+
+        ZMQ Message
+        -----------
+
+        ::
+
+            {
+                "command": "stop",
+                "propeties": {
+                    "name": '<name>",
+                    "graceful": true
+                }
+            }
+
+        The response return the status "ok". If the property graceful is
+        set to true the flies will be exited gracefully.
+
+        If the property name is present, then the reload will be applied
+        to the show.
+
+
+        Command line
+        ------------
+
+        ::
+
+            circusctl reload [<name>] [--terminate]
+
+        Options
+        +++++++
+
+        - <name>: name of the show
+        - --terminate; quit the node immediately
+
     """
 
     name = "stop"

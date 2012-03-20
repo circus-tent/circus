@@ -4,31 +4,35 @@ from circus.py3compat import string_types, integer_types
 from circus import util
 
 class Set(Command):
-    """ Set a show option
+    """\
+        Set a show option
+        =================
 
-    Options (IN JSON):
+        ZMQ Message
+        -----------
 
-    - numflies: integer, number of flies
-    - warmup_delay: integer or number, delay to wait between fly spawning in
-      seconds
-    - working_dir: string, directory where the fly will be executed
-    - uid: string or integer, user ID used to launch the fly
-    - gid: string or integer, group ID used to launch the fly
-    - send_hup: boolean, if TRU the signal HUP will be used on reload
-    - shell: boolean, will run the command in the shell environment if
-      true
-    - cmd: string, The command line used to launch the fly
-    - env: object, define the environnement in which the fly will be
-      launch
-    - times: integer, number of times we try to relaunch a fly in the within time
-      before we stop the show during the retry_in time.
-    - within: integer or number, times in seconds in which we test the number
-      of fly restart.
-    - retry_in: integer or number, times we wait before we retry to launch the fly
-      if macium of times have been reach.
-    - max_retry: integer, The maximum of retries loops
-    - graceful_timeout: integer or number, time we wait before we
-      definitely kill a fly when using the graceful option.
+        ::
+
+            {
+                "command": "set",
+                "properties": {
+                    "name": "nameofshow",
+                    "key1": "val1",
+                    ..
+                }
+            }
+
+
+        The response return the status "ok". See the command Options for
+        a list of key to set.
+
+        Command line
+        ------------
+
+        ::
+
+            circusctl set <name> <key1> <value1> <key2> <value2>
+
 
     """
 

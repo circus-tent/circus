@@ -2,8 +2,46 @@ from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
 
 class NumFlies(Command):
-    """Get the number of flies"""
+    """\
+        Get the number of flies
+        =======================
 
+        Get the number of flies in a show or in a trainer
+
+        ZMQ Message
+        -----------
+
+        ::
+
+            {
+                "command": "numflies",
+                "propeties": {
+                    "name": "<showname>"
+                }
+
+            }
+
+        The response return the number of flies in the 'numflies`
+        property::
+
+            { "status": "ok", "numflies": <n>, "time", "timestamp" }
+
+        If the property name isn't specified, the sum of all flies
+        managed is returned.
+
+        Command line
+        ------------
+
+        ::
+
+            circusctl numflies [<name>]
+
+        Options
+        +++++++
+
+        - <name>: name of the show
+
+    """
     name = "numflies"
 
     def message(self, *args, **opts):

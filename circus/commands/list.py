@@ -2,8 +2,41 @@ from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
 
 class List(Command):
-    """ Get list of shows or flies in a show """
+    """\
+        Get list of shows or flies in a show
+        =====================================
 
+        ZMQ Message
+        -----------
+
+
+        To get the list of all the shows::
+
+            {
+                "command": "list",
+            }
+
+
+        To get the list of flies in a show::
+
+            {
+                "command": "list",
+                "properties": {
+                    "name": "nameofshow",
+                }
+            }
+
+
+        The response return the list asked. Flies returned are fly ID
+        that can be used in others commands.
+
+        Command line
+        ------------
+
+        ::
+
+            circusctl list [<name>]
+    """
     name = "list"
 
     def message(self, *args, **opts):

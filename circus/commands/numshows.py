@@ -2,8 +2,35 @@ from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
 
 class NumShows(Command):
-    """Get the number of shows"""
+    """\
+        Get the number of shows
+        =======================
 
+        Get the number of shows in a trainer
+
+        ZMQ Message
+        -----------
+
+        ::
+
+            {
+                "command": "numshows",
+            }
+
+        The response return the number of shows in the 'numshows`
+        property::
+
+            { "status": "ok", "numshows": <n>, "time", "timestamp" }
+
+
+        Command line
+        ------------
+
+        ::
+
+            circusctl numshows
+
+    """
     name = "numshows"
 
     def message(self, *args, **opts):

@@ -21,7 +21,7 @@ class DecrShow(Command):
                 }
             }
 
-        The message return the number of flies in the 'numberflies`
+        The response return the number of flies in the 'numflies`
         property::
 
             { "status": "ok", "numflies": <n>, "time", "timestamp" }

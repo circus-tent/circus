@@ -2,9 +2,86 @@ import signal
 
 from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
+from circus.py3compat import string_types
 
 class Signal(Command):
-    """Send a signal """
+    """\
+        Send a signal
+        ============
+
+        This command allows you to send the signal to all flies in a
+        show, a specific fly in a show or its children
+
+        ZMQ Message
+        -----------
+
+
+        To get the list of all fly in the show::
+
+            {
+                "command": "signal",
+                "property": {
+                    "name": <name>,
+                    "signum": <signum>
+            }
+
+        To send a signal to a fly::
+
+            {
+                "command": "signal",
+                "property": {
+                    "name": <name>,
+                    "fly": <flyid>,
+                    "signum": <signum>
+            }
+
+        An optionnal property "children" can be used to send the signal
+        to all the children rather than the fly itself.
+
+        To send a signal to a fly child:
+
+        To get the list of flies in a show::
+
+            {
+                "command": "signal",
+                "property": {
+                    "name": <name>,
+                    "fly": <flyid>,
+                    "signum": <signum>,
+                    "pid": <pid>
+            }
+
+
+        The response return the status "ok".
+
+        Command line
+        ------------
+
+        ::
+
+            circusctl signal <name> [<fly>] [<pid>] [--children] <signum>
+
+        Options:
+        ++++++++
+
+        - <name>: the name of the show
+        - <fly>: the fly id. You can get them using the command list
+        - <pid>: integer, the process id.
+        - <signum> : the signal number to send.
+
+        Allowed signals are:
+
+            - 3:    QUIT
+            - 15:   TERM
+            - 9:    KILL
+            - 1:    HUP
+            - 21:   TTIN
+            - 22:   TTOU
+            - 30:   USR1
+            - 31:   USR2
+
+
+    """
 
     name = "signal"
     options = [('', 'children', True, "Only signal children of the fly")]
@@ -52,9 +129,19 @@ class Signal(Command):
             raise MessageError('fly ID is missing')
 
         signum = props.get('signum')
-        if signum not in (signal.SIGQUIT, signal.SIGHUP, signal.SIGKILL,
-                signal.SIGTERM, signal.SIGTTIN, signal.SIGTTOU):
+
+        if isinstance(signum, int):
+            if signum not in (signal.SIGQUIT, signal.SIGHUP, signal.SIGKILL,
+                    signal.SIGTERM, signal.SIGTTIN, signal.SIGTTOU,
+                    signal.SIGUSR1, signal.SIGUSR2):
+                raise MessageError('signal invalid')
+        elif isinstance(signum, string_types):
+            if signum.lower() in ('quit', 'hup', 'kill', 'term', 'ttin',
+                'ttou', 'usr1', 'usr2'):
+                props['signum'] = getattr(signal, "SIG%s" % sig.upper())
+            else:
+                raise MessageError('signal invalid')
+
+        else:
             raise MessageError('signal invalid')
-
-
 
