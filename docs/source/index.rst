@@ -1,6 +1,13 @@
 Circus Process Watcher
 ======================
 
+.. note::
+    
+   Circus is in its early stages and is not production ready yet ! 
+   
+   We still might change the API. 
+
+
 .. image:: images/circus-medium.png
    :align: right
 
@@ -20,7 +27,7 @@ Using Circus through the command-line
 -------------------------------------
 
 Circus provides a command-line script that can be used to manage one or
-more programs, each running as one or more process instance.
+more programs. Each program can have one or more running processes.
 
 Circus's command-line tool is configurable using an ini-style
 configuration file. Here is a minimal example::
@@ -91,7 +98,7 @@ Here are, in our opinion, the top 3 reasons to use Circus.
 
   Circus also provides ways to get status updates via one time polls
   on a req/rep channel, so you can get your information without having
-  to subscribe to a stream. The :ref:`circusctl` command provided in 
+  to subscribe to a stream. The :ref:`cli` command provided in 
   Circus is a client of that channel.
 
   See :ref:`examples`.
@@ -114,7 +121,7 @@ Here are, in our opinion, the top 3 reasons to use Circus.
 3. **Circus scales**
 
   One of the use case of Circus is to be able to manage thousands of
-  processes without having it slowing down -- we're dedicated to focus on
+  processes without having it slowing down -- we're dedicated to focusing on
   this.
 
 

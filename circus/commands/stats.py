@@ -6,23 +6,23 @@ _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
 
 class Stats(Command):
     """\
-        Get process infos
-        =================
+       Get process infos
+       =================
 
-        You can get at any time some statistics about your processes
-        with teh stat command.
+       You can get at any time some statistics about your processes
+       with teh stat command.
 
-        ZMQ Message
-        -----------
+       ZMQ Message
+       -----------
 
-        To get stats for all watchers::
+       To get stats for all watchers::
 
             {
                 "command": "stats"
             }
 
 
-        To get stats for a watcher::
+       To get stats for a watcher::
 
             {
                 "command": "stats",
@@ -31,7 +31,7 @@ class Stats(Command):
                 }
             }
 
-        To get stats for a process::
+       To get stats for a process::
 
 
             {
@@ -42,8 +42,8 @@ class Stats(Command):
                 }
             }
 
-        The response retun an object per process with the property "infos"
-        containing some process informations::
+       The response retun an object per process with the property "infos"
+       containing some process informations::
 
             {
               "info": {
@@ -69,6 +69,7 @@ class Stats(Command):
        ::
 
             $ circusctl stats [<showname>] [<processid>]
+
         """
 
     name = "stats"
