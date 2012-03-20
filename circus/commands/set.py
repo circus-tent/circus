@@ -5,7 +5,7 @@ from circus import util
 
 class Set(Command):
     """\
-        Set a show option
+        Set a watcher option
         =================
 
         ZMQ Message
@@ -16,7 +16,7 @@ class Set(Command):
             {
                 "command": "set",
                 "properties": {
-                    "name": "nameofshow",
+                    "name": "nameofwatcher",
                     "key1": "val1",
                     ..
                 }
@@ -41,7 +41,7 @@ class Set(Command):
 
     def _convert_opt(self, key, val):
         action = 0
-        if key == "numflies":
+        if key == "numprocesses":
             return int(val)
         elif key == "warmup_delay":
             return float(val)
@@ -72,12 +72,12 @@ class Set(Command):
         raise ArgumentError("unkown key %r" % key)
 
     def _validate_opt(self, key, val):
-        if key not in ('numflies', 'warmup_delay', 'working_dir', 'uid',
+        if key not in ('numprocesses', 'warmup_delay', 'working_dir', 'uid',
                 'gid', 'send_hup', 'shell', 'env', 'cmd', 'times',
                 'within', 'retry_in', 'max_retry', 'graceful_timeout'):
             raise MessageError('unkown key %r' % key)
 
-        if key in ('numflies', 'times', 'max_retry',):
+        if key in ('numprocesses', 'times', 'max_retry',):
             if not isinstance(val, int):
                 raise MessageError("%r isn't an integer" % key)
 
@@ -107,7 +107,7 @@ class Set(Command):
             raise ArgumentError("number of arguments invalid")
 
         args = list(args)
-        show_name = args.pop(0)
+        watcher_name = args.pop(0)
         if len(args) % 2 != 0:
             raise ArgumentError("List of key/values is invalid")
 
@@ -117,18 +117,18 @@ class Set(Command):
             kvl = kv[0].lower()
             options[kvl] = self._convert_opt(kvl, kv[1])
 
-        return self.make_message(name=show_name, options=options)
+        return self.make_message(name=watcher_name, options=options)
 
-    def execute(self, trainer, props):
-        show = self._get_show(trainer, props.pop('name'))
+    def execute(self, arbiter, props):
+        watcher = self._get_watcher(arbiter, props.pop('name'))
         action = 0
         for key, val in props.get('options', {}).items():
-            new_action = show.set_opt(key, val)
+            new_action = watcher.set_opt(key, val)
             if new_action == 1:
                 action = 1
 
         # trigger needed action
-        show.do_action(action)
+        watcher.do_action(action)
 
     def validate(self, props):
         super(Set, self).validate(props)

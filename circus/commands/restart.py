@@ -3,11 +3,11 @@ from circus.exc import ArgumentError, MessageError
 
 class Restart(Command):
     """\
-        Restart the trainer or a show
+        Restart the arbiter or a watcher
         =============================
 
-        This command restart all the fly in a show or all shows. This
-        funtion simply stop a show then restart it.
+        This command restart all the process in a watcher or all watchers. This
+        funtion simply stop a watcher then restart it.
 
         ZMQ Message
         -----------
@@ -24,7 +24,7 @@ class Restart(Command):
         The response return the status "ok".
 
         If the property name is present, then the reload will be applied
-        to the show.
+        to the watcher.
 
 
         Command line
@@ -37,7 +37,7 @@ class Restart(Command):
         Options
         +++++++
 
-        - <name>: name of the show
+        - <name>: name of the watcher
         - --terminate; quit the node immediately
 
     """
@@ -52,9 +52,9 @@ class Restart(Command):
         else:
             return self.make_message()
 
-    def execute(self, trainer, props):
+    def execute(self, arbiter, props):
         if 'name' in props:
-            show = self._get_show(trainer, props['name'])
-            show.restart()
+            watcher = self._get_watcher(arbiter, props['name'])
+            watcher.restart()
         else:
-            trainer.restart()
+            arbiter.restart()

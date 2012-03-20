@@ -1,13 +1,13 @@
 from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
 
-class RmShow(Command):
+class RmWatcher(Command):
     """\
-        Remove a show
+        Remove a watcher
         =============
 
-        This command remove a show dynamically from the trainer. The
-        shows can be gracefully stopped.
+        This command remove a watcher dynamically from the arbiter. The
+        watchers can be gracefully stopped.
 
         ZMQ Message
         -----------
@@ -17,14 +17,14 @@ class RmShow(Command):
             {
                 "command": "rm",
                 "properties": {
-                    "name": "nameofshow",
+                    "name": "nameofwatcher",
                     "graceful": true
                 }
             }
 
         A message contains 2 properties:
 
-        - name: name of show
+        - name: name of watcher
         - graceful: graceful stop
 
         The response return a status "ok".
@@ -37,7 +37,7 @@ class RmShow(Command):
         Options
         +++++++
 
-        - <name>: name of the show to create
+        - <name>: name of the watcher to create
         - --terminate; quit the node immediately
 
     """
@@ -53,5 +53,5 @@ class RmShow(Command):
         graceful = not opts.get("terminate", False)
         return self.make_message(name=args[0], graceful=graceful)
 
-    def execute(self, trainer, args):
-        trainer.rm_show(args['name'])
+    def execute(self, arbiter, args):
+        arbiter.rm_watcher(args['name'])

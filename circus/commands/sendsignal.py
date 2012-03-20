@@ -9,14 +9,14 @@ class Signal(Command):
         Send a signal
         ============
 
-        This command allows you to send the signal to all flies in a
-        show, a specific fly in a show or its children
+        This command allows you to send the signal to all processes in a
+        watcher, a specific process in a watcher or its children
 
         ZMQ Message
         -----------
 
 
-        To get the list of all fly in the show::
+        To get the list of all process in the watcher::
 
             {
                 "command": "signal",
@@ -25,28 +25,28 @@ class Signal(Command):
                     "signum": <signum>
             }
 
-        To send a signal to a fly::
+        To send a signal to a process::
 
             {
                 "command": "signal",
                 "property": {
                     "name": <name>,
-                    "fly": <flyid>,
+                    "process": <processid>,
                     "signum": <signum>
             }
 
         An optionnal property "children" can be used to send the signal
-        to all the children rather than the fly itself.
+        to all the children rather than the process itself.
 
-        To send a signal to a fly child:
+        To send a signal to a process child:
 
-        To get the list of flies in a show::
+        To get the list of processes in a watcher::
 
             {
                 "command": "signal",
                 "property": {
                     "name": <name>,
-                    "fly": <flyid>,
+                    "process": <processid>,
                     "signum": <signum>,
                     "pid": <pid>
             }
@@ -59,13 +59,13 @@ class Signal(Command):
 
         ::
 
-            circusctl signal <name> [<fly>] [<pid>] [--children] <signum>
+            circusctl signal <name> [<process>] [<pid>] [--children] <signum>
 
         Options:
         ++++++++
 
-        - <name>: the name of the show
-        - <fly>: the fly id. You can get them using the command list
+        - <name>: the name of the watcher
+        - <process>: the process id. You can get them using the command list
         - <pid>: integer, the process id.
         - <signum> : the signal number to send.
 
@@ -84,7 +84,7 @@ class Signal(Command):
     """
 
     name = "signal"
-    options = [('', 'children', True, "Only signal children of the fly")]
+    options = [('', 'children', True, "Only signal children of the process")]
     properties = ['name', 'signum']
 
     def message(self, *args, **opts):
@@ -94,39 +94,39 @@ class Signal(Command):
 
         if len(args) == 4:
             signum = self._get_signal(args[3])
-            return self.make_message(name=args[0], fly=args[1],
+            return self.make_message(name=args[0], process=args[1],
                     pid=args[2], signum=signum)
         elif len(args) == 3:
             signum = self._get_signal(args[2])
             children = opts.get("children", False)
-            return self.make_message(name=args[0], fly=args[1],
+            return self.make_message(name=args[0], process=args[1],
                     signum=signum, children=children)
         else:
             signum = self._get_signal(args[1])
             return self.make_message(name=args[0], signum=signum)
 
-    def execute(self, trainer, props):
-        show = self._get_show(trainer, props['name'])
+    def execute(self, arbiter, props):
+        watcher = self._get_watcher(arbiter, props['name'])
         signum = props.get('signum')
 
         if 'pid' in props:
-            show.send_signal_child(args[1], args[2], signum)
-        elif 'fly' in props:
-            fly = props.get('fly')
+            watcher.send_signal_child(args[1], args[2], signum)
+        elif 'process' in props:
+            process = props.get('process')
             if props.get('children', False):
-                show.send_signal_children(fly, signum)
+                watcher.send_signal_children(process, signum)
             else:
-                show.send_signal(fly, signum)
+                watcher.send_signal(process, signum)
         else:
-            show.send_signal_flies(signum)
+            watcher.send_signal_processes(signum)
 
     def validate(self, props):
         super(Signal, self).validate(props)
-        if 'pid' in props and not 'fly' in props:
-            raise MessageError('fly ID is missing')
+        if 'pid' in props and not 'process' in props:
+            raise MessageError('process ID is missing')
 
-        if props.get('children', False) and not 'fly':
-            raise MessageError('fly ID is missing')
+        if props.get('children', False) and not 'process':
+            raise MessageError('process ID is missing')
 
         signum = props.get('signum')
 

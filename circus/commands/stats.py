@@ -14,30 +14,30 @@ class Stats(Command):
             raise ArgumentError("message invalid")
 
         if len(args) == 2:
-            return self.make_message(name=args[0], fly=int(args[1]))
+            return self.make_message(name=args[0], process=int(args[1]))
         elif len(args) == 1:
             return self.make_message(name=args[0])
         else:
             return self.make_message()
 
-    def execute(self, trainer, props):
+    def execute(self, arbiter, props):
         if 'name' in props:
-            show = self._get_show(trainer, props['name'])
-            if 'fly' in props:
+            watcher = self._get_watcher(arbiter, props['name'])
+            if 'process' in props:
                 try:
                     return {
-                        "fly": props['fly'],
-                        "info": show.fly_info(props['fly'])
+                        "process": props['process'],
+                        "info": watcher.process_info(props['process'])
                     }
                 except KeyError:
-                    raise MessageError("fly %r not found in %r" % (props['fly'],
+                    raise MessageError("process %r not found in %r" % (props['process'],
                         props['name']))
             else:
-                return {"name": props['name'], "info": show.info()}
+                return {"name": props['name'], "info": watcher.info()}
         else:
             infos = {}
-            for show in trainer.shows:
-                infos[show.name] = show.info()
+            for watcher in arbiter.watchers:
+                infos[watcher.name] = watcher.info()
             return {"infos": infos}
 
     def _to_str(self, info):
@@ -51,20 +51,20 @@ class Stats(Command):
         if msg['status'] == "ok":
             if "name" in msg:
                 ret = ["%s:" % msg.get('name')]
-                for fly, info in msg.get('info', {}).items():
-                    ret.append("%s: %s" % (fly, self._to_str(info)))
+                for process, info in msg.get('info', {}).items():
+                    ret.append("%s: %s" % (process, self._to_str(info)))
                 return "\n".join(ret)
             elif 'infos' in msg:
                 ret = []
-                for show, show_info in msg.get('infos', {}).items():
-                    ret.append("%s:" % show)
-                    show_info = show_info or {}
-                    for fly, info in show_info.items():
-                        ret.append("%s: %s" % (fly, self._to_str(info)))
+                for watcher, watcher_info in msg.get('infos', {}).items():
+                    ret.append("%s:" % watcher)
+                    watcher_info = watcher_info or {}
+                    for process, info in watcher_info.items():
+                        ret.append("%s: %s" % (process, self._to_str(info)))
 
                 return "\n".join(ret)
             else:
-                return "%s: %s\n" % (msg['fly'], self._to_str(msg['info']))
+                return "%s: %s\n" % (msg['process'], self._to_str(msg['info']))
         else:
             return self.console_error(msg)
 

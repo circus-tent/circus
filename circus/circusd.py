@@ -6,8 +6,8 @@ import logging
 import resource
 
 from circus import logger
-from circus.trainer import Trainer
-from circus.show import Show
+from circus.arbiter import Arbiter
+from circus.watcher import Watcher
 from circus.pidfile import Pidfile
 from circus import util
 
@@ -150,7 +150,7 @@ def main():
             max_retry = cfg.dget(section, "max_retry", 5, int)
             graceful_timeout = cfg.dget(section, "graceful_timeout", 30, int)
 
-            show = Show(name, cmd, numflies=numflies,
+            show = Watcher(name, cmd, numflies=numflies,
                         warmup_delay=warmup_delay, working_dir=working_dir,
                         shell=shell, uid=uid, gid=gid, send_hup=send_hup,
                         times=times, within=within, retry_in=retry_in,
@@ -164,7 +164,7 @@ def main():
     pubsub_endpoint = cfg.dget('circus', 'pubsub_endpoint',
             'tcp://127.0.0.1:5556')
 
-    trainer = Trainer(shows, endpoint, pubsub_endpoint, check)
+    trainer = Arbiter(shows, endpoint, pubsub_endpoint, check)
     try:
         trainer.start()
     finally:

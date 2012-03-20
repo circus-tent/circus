@@ -3,10 +3,10 @@ from circus.exc import ArgumentError
 
 class Start(Command):
     """\
-        Start the trainer or a show
+        Start the arbiter or a watcher
         ===========================
 
-        This command start all the fly in a show or all shows. T
+        This command start all the process in a watcher or all watchers. T
         ZMQ Message
         -----------
 
@@ -21,7 +21,7 @@ class Start(Command):
 
         The response return the status "ok".
 
-        If the property name is present, the show will be started.
+        If the property name is present, the watcher will be started.
 
         Command line
         ------------
@@ -32,7 +32,7 @@ class Start(Command):
         Options
         +++++++
 
-        - <name>: name of the show
+        - <name>: name of the watcher
 
     """
     name = "start"
@@ -46,9 +46,9 @@ class Start(Command):
         else:
             return self.make_message()
 
-    def execute(self, trainer, props):
+    def execute(self, arbiter, props):
         if 'name' in props:
-            show = self._get_show(trainer, props['name'])
-            show.start()
+            watcher = self._get_watcher(arbiter, props['name'])
+            watcher.start()
         else:
-            trainer.start_shows()
+            arbiter.start_watchers()

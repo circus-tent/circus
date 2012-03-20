@@ -3,10 +3,10 @@ from circus.exc import ArgumentError, MessageError
 
 class Status(Command):
     """\
-        Get the status of a show or all shows
+        Get the status of a watcher or all watchers
         =====================================
 
-        This command start get the status of a show or all shows.
+        This command start get the status of a watcher or all watchers.
 
         ZMQ Message
         -----------
@@ -21,7 +21,7 @@ class Status(Command):
             }
 
         The response return the status "active" ir "stopped" or the
-        status / shows.
+        status / watchers.
 
 
         Command line
@@ -34,7 +34,7 @@ class Status(Command):
         Options
         +++++++
 
-        - <name>: name of the show
+        - <name>: name of the watcher
 
         Example
         +++++++
@@ -61,19 +61,19 @@ class Status(Command):
         else:
             return self.make_message()
 
-    def execute(self, trainer, props):
+    def execute(self, arbiter, props):
         if 'name' in props:
-            show = self._get_show(trainer, props['name'])
-            return {"status": show.status()}
+            watcher = self._get_watcher(arbiter, props['name'])
+            return {"status": watcher.status()}
         else:
-            return {"statuses": trainer.statuses()}
+            return {"statuses": arbiter.statuses()}
 
     def console_msg(self, msg):
         if "statuses" in msg:
             statuses = msg.get("statuses")
-            shows = sorted(statuses)
-            return "\n".join(["%s: %s" % (show, statuses[show]) \
-                    for show in shows])
+            watchers = sorted(statuses)
+            return "\n".join(["%s: %s" % (watcher, statuses[watcher]) \
+                    for watcher in watchers])
         elif "status" in msg and "status" != "error":
             return msg.get("status")
         return self.console_error(msg)

@@ -1,12 +1,13 @@
 from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
 
-class IncrShow(Command):
+
+class DecrProcess(Command):
     """\
-        Increment the number of flies in a show
+        Decrement the number of processes in a watcher
         =======================================
 
-        This comment increment the number of flies in a show by +1.
+        This comment decrement the number of processes in a watcher by -1.
 
         ZMQ Message
         -----------
@@ -14,44 +15,46 @@ class IncrShow(Command):
         ::
 
             {
-                "command": "incr",
+                "command": "decr",
                 "propeties": {
-                    "name": "<showname>"
+                    "name": "<watchername>"
                 }
             }
 
-        The response return the number of flies in the 'numflies`
+        The response return the number of processes in the 'numprocesses`
         property::
 
-            { "status": "ok", "numflies": <n>, "time", "timestamp" }
+            { "status": "ok", "numprocesses": <n>, "time", "timestamp" }
 
         Command line
         ------------
 
         ::
 
-            circusctl incr <name>
+            circusctl descr <name>
 
         Options
         +++++++
 
-        - <name>: name of the show
+        - <name>: name of the watcher
 
     """
 
-    name = "incr"
+    name = "decr"
     properties = ['name']
 
     def message(self, *args, **opts):
+
         if len(args) < 1:
             raise ArgumentError("number of arguments invalid")
+
         return self.make_message(name=args[0])
 
-    def execute(self, trainer, props):
-        show = self._get_show(trainer, props.get('name'))
-        return {"numflies": show.incr()}
+    def execute(self, arbiter, props):
+        watcher = self._get_watcher(arbiter, props.get('name'))
+        return {"numprocesses": watcher.decr()}
 
     def console_msg(self, msg):
         if msg.get("status") == "ok":
-            return str(msg.get("numflies"))
+            return str(msg.get("numprocesses"))
         return self.console_error(msg)

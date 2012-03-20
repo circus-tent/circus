@@ -7,7 +7,7 @@ import sys
 
 import zmq
 
-from circus import get_trainer
+from circus import get_arbiter
 
 def resolve_name(name):
     ret = None
@@ -44,17 +44,17 @@ def resolve_name(name):
 
 
 class Runner(threading.Thread):
-    def __init__(self, trainer, test_file):
+    def __init__(self, arbiter, test_file):
         threading.Thread.__init__(self)
-        self.trainer = trainer
+        self.arbiter = arbiter
         self.test_file = test_file
 
     def run(self):
-        self.trainer.start()
+        self.arbiter.start()
 
     def stop(self):
         time.sleep(0.25)
-        self.trainer.terminate()
+        self.arbiter.terminate()
 
         self.join()
 
@@ -77,8 +77,8 @@ class TestCircus(unittest.TestCase):
         os.close(fd)
         wdir = os.path.dirname(__file__)
         cmd = '%s generic.py %s %s' % (sys.executable, callable, testfile)
-        trainer = get_trainer(cmd, working_dir=wdir, numflies=1, name="test")
-        runner = Runner(trainer, testfile)
+        arbiter = get_arbiter(cmd, working_dir=wdir, numprocesses=1, name="test")
+        runner = Runner(arbiter, testfile)
         runner.start()
         self.runners.append(runner)
         self.files.append(testfile)

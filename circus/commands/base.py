@@ -76,12 +76,12 @@ class Command(object):
     def copy(self):
         return copy.copy(self)
 
-    def _get_show(self, trainer, show_name):
-        """ get show from the trainer if any """
+    def _get_watcher(self, arbiter, watcher_name):
+        """Get watcher from the arbiter if any."""
         try:
-            return trainer.get_show(show_name.lower())
+            return arbiter.get_watcher(watcher_name.lower())
         except KeyError:
-            raise MessageError("program %s not found" % show_name)
+            raise MessageError("program %s not found" % watcher_name)
 
     def _get_signal(self, sig):
         if sig.lower() in ('quit', 'hup', 'kill', 'term', 'ttin',

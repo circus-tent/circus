@@ -4,14 +4,14 @@ import time
 
 from zmq.utils.jsonapi import jsonmod as json
 
-from circus.fly import Fly, DEAD_OR_ZOMBIE
+from circus.process import Process, DEAD_OR_ZOMBIE
 from circus import logger
 from circus import util
 
 
-class Show(object):
+class Watcher(object):
 
-    def __init__(self, name, cmd, numflies=1, warmup_delay=0.,
+    def __init__(self, name, cmd, numprocs=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False, env=None, stopped=False,
                  times=2, within=1., retry_in=7., max_retry=5,
@@ -19,12 +19,11 @@ class Show(object):
         """ init
         """
         self.name = name
-
         self.res_name = name.lower().replace(" ", "_")
-        self.numflies = int(numflies)
+        self.numprocs = int(numprocs)
         self.warmup_delay = warmup_delay
         self.cmd = cmd
-        self._fly_counter = 0
+        self._process_counter = 0
         self.stopped = stopped
         self.times = times
         self.within = within
@@ -33,7 +32,7 @@ class Show(object):
         self.graceful_timeout = 30
         self.prereload_fn = prereload_fn
 
-        self.optnames = ("numflies", "warmup_delay", "working_dir",
+        self.optnames = ("numprocs", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env",
                          "cmd", "times", "within", "retry_in",
                          "max_retry", "graceful_timeout")
@@ -44,7 +43,7 @@ class Show(object):
 
         self.working_dir = working_dir
 
-        self.flies = {}
+        self.processes = {}
         self.shell = shell
         self.uid = uid
         self.gid = gid
@@ -56,7 +55,7 @@ class Show(object):
         self.evpub_socket = evpub_socket
 
     def __len__(self):
-        return len(self.flies)
+        return len(self.processes)
 
     def send_msg(self, topic, msg):
         """send msg"""
@@ -77,137 +76,138 @@ class Show(object):
             self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
-    def reap_flies(self):
-        """ reap flies
+    def reap_processes(self):
+        """Reap processes.
         """
         if self.stopped:
             return
 
-        for wid, fly in self.flies.items():
-            if fly.poll() is not None:
-                if fly.status == DEAD_OR_ZOMBIE:
-                    fly.stop()
+        for wid, process in self.processes.items():
+            if process.poll() is not None:
+                if process.status == DEAD_OR_ZOMBIE:
+                    process.stop()
 
-                self.send_msg("reap", {"fly_id": wid,
-                                       "fly_pid": fly.pid,
+                self.send_msg("reap", {"process_id": wid,
+                                       "process_pid": process.pid,
                                        "time": time.time()})
                 if self.stopped:
                     break
-                self.flies.pop(wid)
+                self.processes.pop(wid)
 
     @util.debuglog
-    def manage_flies(self):
-        """ manage flies
+    def manage_processes(self):
+        """ manage processes
         """
         if self.stopped:
             return
 
-        if len(self.flies.keys()) < self.numflies:
-            self.spawn_flies()
+        if len(self.processes.keys()) < self.numprocs:
+            self.spawn_processes()
 
-        flies = self.flies.keys()
-        flies.sort()
-        while len(flies) > self.numflies:
-            wid = flies.pop(0)
-            fly = self.flies.pop(wid)
-            self.kill_fly(fly)
+        processes = self.processes.keys()
+        processes.sort()
+        while len(processes) > self.numprocs:
+            wid = processes.pop(0)
+            process = self.processes.pop(wid)
+            self.kill_process(process)
 
     @util.debuglog
-    def reap_and_manage_flies(self):
-        """ reap +manage flies
+    def reap_and_manage_processes(self):
+        """Reap & manage processes.
         """
         if self.stopped:
             return
-        self.reap_flies()
-        self.manage_flies()
+        self.reap_processes()
+        self.manage_processes()
 
     @util.debuglog
-    def spawn_flies(self):
-        """ spawn flies
+    def spawn_processes(self):
+        """Spawn processes.
         """
-        for i in range(self.numflies - len(self.flies.keys())):
-            self.spawn_fly()
+        for i in range(self.numprocs - len(self.processes.keys())):
+            self.spawn_process()
             time.sleep(self.warmup_delay)
 
-    def spawn_fly(self):
-        """ spawn fly
+    def spawn_process(self):
+        """Spawn process.
         """
         if self.stopped:
             return
 
-        self._fly_counter += 1
+        self._process_counter += 1
         nb_tries = 0
         while nb_tries < self.max_retry:
-            fly = None
+            process = None
             try:
-                fly = Fly(self._fly_counter, self.cmd,
+                process = Process(self._process_counter, self.cmd,
                           working_dir=self.working_dir, shell=self.shell,
                           uid=self.uid, gid=self.gid, env=self.env)
-                self.flies[self._fly_counter] = fly
-                logger.info('running %s fly [pid %d]' % (self.name, fly.pid))
+                self.processes[self._process_counter] = process
+                logger.info('running %s process [pid %d]' % (self.name, process.pid))
             except OSError, e:
                 logger.warning('error in %r: %s' % (self.name, str(e)))
 
-            if fly is None:
+            if process is None:
                 nb_tries += 1
                 continue
             else:
-                self.send_msg("spawn", {"fly_id": fly.wid,
-                                        "fly_pid": fly.pid,
+                self.send_msg("spawn", {"process_id": process.wid,
+                                        "process_pid": process.pid,
                                         "time": time.time()})
                 time.sleep(self.warmup_delay)
                 return
 
         self.stop()
 
-    def kill_fly(self, fly, sig=signal.SIGTERM):
-        """ kill fly
+    def kill_process(self, process, sig=signal.SIGTERM):
+        """Kill process.
         """
-        self.send_msg("kill", {"fly_id": fly.wid, "time": time.time()})
-        logger.info("%s: kill fly %s" % (self.name, fly.pid))
-        fly.send_signal(sig)
+        self.send_msg("kill", {"process_id": process.wid,
+                               "time": time.time()})
+        logger.info("%s: kill process %s" % (self.name, process.pid))
+        process.send_signal(sig)
 
     @util.debuglog
-    def kill_flies(self, sig):
-        """ kill flies
+    def kill_processes(self, sig):
+        """Kill processes.
         """
-        for wid in self.flies.keys():
+        for wid in self.processes.keys():
             try:
-                fly = self.flies.pop(wid)
-                self.kill_fly(fly, sig)
+                process = self.processes.pop(wid)
+                self.kill_process(process, sig)
             except OSError as e:
                 if e.errno != errno.ESRCH:
                     raise
 
     @util.debuglog
     def send_signal(self, wid, signum):
-        self.flies[wid].send_signal(signum)
+        self.processes[wid].send_signal(signum)
 
-    def send_signal_flies(self, signum):
-        for _, fly in self.flies.items():
+    def send_signal_processes(self, signum):
+        for _, process in self.processes.items():
             try:
-                fly.send_signal(signum)
+                process.send_signal(signum)
             except OSError as e:
                 if e.errno != errno.ESRCH:
                     raise
 
     @util.debuglog
     def send_signal_child(self, wid, pid, signum):
-        """ send signal child
+        """Send signal to a child.
         """
-        fly = self.flies[int(wid)]
+        process = self.processes[int(wid)]
         try:
-            fly.send_signal_child(int(pid), signum)
+            process.send_signal_child(int(pid), signum)
         except OSError as e:
             if e.errno != errno.ESRCH:
                 raise
 
     @util.debuglog
     def send_signal_children(self, wid, signum):
-        """ send signal children
+        """Send signal to all children.
         """
-        fly = self.flies[int(wid)]
-        fly.send_signal_children(signum)
+        process = self.processes[int(wid)]
+        process.send_signal_children(signum)
 
     @util.debuglog
     def status(self):
@@ -216,18 +216,18 @@ class Show(object):
         return "active"
 
     @util.debuglog
-    def fly_info(self, wid):
-        fly = self.flies[int(wid)]
-        return fly.info()
+    def process_info(self, wid):
+        process = self.processes[int(wid)]
+        return process.info()
 
     @util.debuglog
     def info(self):
-        return dict([(fid, fly.info()) for fid, fly in
-            self.flies.items()])
+        return dict([(fid, proc.info()) for fid, proc in
+                     self.processes.items()])
 
     @util.debuglog
     def stop(self, graceful=True):
-        """ stop
+        """Stop.
         """
         self.stopped = True
 
@@ -236,34 +236,35 @@ class Show(object):
             sig = signal.SIGTERM
 
         limit = time.time() + self.graceful_timeout
-        while self.flies and time.time() < limit:
-            self.kill_flies(sig)
+        while self.processes and time.time() < limit:
+            self.kill_processes(sig)
             time.sleep(0.1)
-            # reap flies
-            for wid, fly in self.flies.items():
-                if fly.poll() is not None:
-                    del self.flies[wid]
-        self.kill_flies(signal.SIGKILL)
 
+            # reap processes
+            for wid, process in self.processes.items():
+                if process.poll() is not None:
+                    del self.processes[wid]
+
+        self.kill_processes(signal.SIGKILL)
         self.send_msg("stop", {"time": time.time()})
         logger.info('%s stopped' % self.name)
 
     @util.debuglog
     def start(self):
-        """ start
+        """Start.
         """
         if not self.stopped:
             return
 
         self.stopped = False
-        self.reap_flies()
-        self.manage_flies()
+        self.reap_processes()
+        self.manage_processes()
         logger.info('%s started' % self.name)
         self.send_msg("start", {"time": time.time()})
 
     @util.debuglog
     def restart(self):
-        """ restart
+        """Restart.
         """
         self.send_msg("restart", {"time": time.time()})
         self.stop()
@@ -281,44 +282,44 @@ class Show(object):
             return self.restart()
 
         if self.send_hup:
-            for wid, fly in self.flies.items():
-                logger.info("SEND HUP to %s [%s]" % (wid, fly.pid))
-                fly.send_signal(signal.SIGHUP)
+            for wid, process in self.processes.items():
+                logger.info("SEND HUP to %s [%s]" % (wid, process.pid))
+                process.send_signal(signal.SIGHUP)
         else:
-            for i in range(self.numflies):
-                self.spawn_fly()
-            self.manage_flies()
+            for i in range(self.numprocs):
+                self.spawn_process()
+            self.manage_processes()
         self.send_msg("reload", {"time": time.time()})
 
     @util.debuglog
     def incr(self):
-        self.numflies += 1
-        self.manage_flies()
-        return self.numflies
+        self.numprocs += 1
+        self.manage_processes()
+        return self.numprocs
 
     @util.debuglog
     def decr(self):
-        if self.numflies > 0:
-            self.numflies -= 1
-            self.manage_flies()
-        return self.numflies
+        if self.numprocs > 0:
+            self.numprocs -= 1
+            self.manage_processes()
+        return self.numprocs
 
-    def get_fly(self, wid):
-        return self.flies[wid]
+    def get_process(self, wid):
+        return self.processes[wid]
 
     def set_opt(self, key, val):
-        """ set a show option
+        """Set a show option.
 
         This function set the show options. unknown keys are ignored.
         This function return an action number:
 
         - 0: trigger the process management
-        - 1: trigger a graceful reload of the flies;
+        - 1: trigger a graceful reload of the processes;
         """
 
         action = 0
-        if key == "numflies":
-            self.numflies = int(val)
+        if key == "numprocesses":
+            self.numprocs = int(val)
         elif key == "warmup_delay":
             self.warmup_delay = float(val)
         elif key == "working_dir":
@@ -362,11 +363,11 @@ class Show(object):
         # trigger needed action
         self.stopped = False
         if num == 1:
-            for i in range(self.numflies):
-                self.spawn_fly()
-            self.manage_flies()
+            for i in range(self.numprocs):
+                self.spawn_process()
+            self.manage_processes()
         else:
-            self.reap_and_manage_flies()
+            self.reap_and_manage_processes()
 
     @util.debuglog
     def options(self, *args):

@@ -14,14 +14,14 @@ Now try to run the :file:`circus.ini` config::
 
     $ circusd circus.ini
     2012-03-19 13:29:48 [7843] [INFO] Starting master on pid 7843
-    2012-03-19 13:29:48 [7843] [INFO] running dummy fly [pid 7844]
-    2012-03-19 13:29:48 [7843] [INFO] running dummy fly [pid 7845]
-    2012-03-19 13:29:48 [7843] [INFO] running dummy fly [pid 7846]
-    2012-03-19 13:29:48 [7843] [INFO] running dummy fly [pid 7847]
-    2012-03-19 13:29:48 [7843] [INFO] running dummy fly [pid 7848]
-    2012-03-19 13:29:48 [7843] [INFO] running dummy2 fly [pid 7849]
-    2012-03-19 13:29:48 [7843] [INFO] running dummy2 fly [pid 7850]
-    2012-03-19 13:29:48 [7843] [INFO] running dummy2 fly [pid 7851]
+    2012-03-19 13:29:48 [7843] [INFO] running dummy process [pid 7844]
+    2012-03-19 13:29:48 [7843] [INFO] running dummy process [pid 7845]
+    2012-03-19 13:29:48 [7843] [INFO] running dummy process [pid 7846]
+    2012-03-19 13:29:48 [7843] [INFO] running dummy process [pid 7847]
+    2012-03-19 13:29:48 [7843] [INFO] running dummy process [pid 7848]
+    2012-03-19 13:29:48 [7843] [INFO] running dummy2 process [pid 7849]
+    2012-03-19 13:29:48 [7843] [INFO] running dummy2 process [pid 7850]
+    2012-03-19 13:29:48 [7843] [INFO] running dummy2 process [pid 7851]
 
 Congrats, you have 8 workers running !
 

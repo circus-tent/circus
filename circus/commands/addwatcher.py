@@ -3,12 +3,12 @@ import time
 from circus.commands.base import Command, ok
 from circus.exc import ArgumentError, MessageError
 
-class AddShow(Command):
+class AddWatcher(Command):
     """\
-        Add a show
+        Add a watcher
         ==========
 
-        This command add a show dynamically to a trainer.
+        This command add a watcher dynamically to a arbiter.
 
         ZMQ Message
         -----------
@@ -19,14 +19,14 @@ class AddShow(Command):
                 "command": "add",
                 "properties": {
                     "cmd": "/path/to/commandline --option"
-                    "name": "nameofshow"
+                    "name": "nameofwatcher"
                 }
             }
 
         A message contains 2 properties:
 
-        - cmd: Full command line to execute in a fly
-        - name: name of show
+        - cmd: Full command line to execute in a process
+        - name: name of watcher
 
         The response return a status "ok".
 
@@ -39,14 +39,14 @@ class AddShow(Command):
         Options
         +++++++
 
-        - <name>: name of the show to create
-        - <cmd>: ull command line to execute in a fly
-        - --start: start the show immediately
+        - <name>: name of the watcher to create
+        - <cmd>: ull command line to execute in a process
+        - --start: start the watcher immediately
 
     """
 
     name = "add"
-    options = [('', 'start', False, "start immediately the show")]
+    options = [('', 'start', False, "start immediately the watcher")]
     properties = ['name', 'cmd']
 
     def message(self, *args, **opts):
@@ -58,5 +58,5 @@ class AddShow(Command):
             return [msg, self.make_message(command="start", name=args[0])]
         return msg
 
-    def execute(self, trainer, props):
-        trainer.add_show(props['name'], props['cmd'])
+    def execute(self, arbiter, props):
+        arbiter.add_watcher(props['name'], props['cmd'])

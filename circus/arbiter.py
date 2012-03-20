@@ -9,25 +9,25 @@ from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus.flapping import Flapping
 from circus import logger
-from circus.show import Show
+from circus.watcher import Watcher
 from circus.util import debuglog
 
 
-class Trainer(object):
-    """Class used to control a list of shows.
+class Arbiter(object):
+    """Class used to control a list of watchers.
 
     Options:
 
-    - **shows**: a list of Show objects
+    - **watchers**: a list of Watcher objects
     - **endpoint**: the controller ZMQ endpoint
     - **pubsub_endpoint**: the pubsub endpoint
     - **check_delay**: the delay between two controller points (default: 1 s)
     - **prereload_fn**: callable that will be executed on each reload
       (default: None)
     """
-    def __init__(self, shows, endpoint, pubsub_endpoint, check_delay=1.,
+    def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None):
-        self.shows = shows
+        self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
@@ -40,7 +40,7 @@ class Trainer(object):
                 check_delay)
 
         self.pid = os.getpid()
-        self._shows_names = {}
+        self._watchers_names = {}
         self.alive = True
         self.busy = False
 
@@ -54,18 +54,18 @@ class Trainer(object):
         self.flapping = Flapping(self.context, self.endpoint,
                                  self.pubsub_endpoint, self.check_delay)
 
-        # initialize shows
-        for show in self.shows:
-            self._shows_names[show.name.lower()] = show
-            show.initialize(self.evpub_socket)
+        # initialize watchers
+        for watcher in self.watchers:
+            self._watchers_names[watcher.name.lower()] = watcher
+            watcher.initialize(self.evpub_socket)
 
     @debuglog
     def start(self):
-        """Starts all the shows.
+        """Starts all the watchers.
 
         The start command is an infinite loop that waits
         for any command from a client and that watches all the
-        flies and restarts them if needed.
+        processes and restarts them if needed.
         """
         logger.info("Starting master on pid %s" % self.pid)
 
@@ -77,9 +77,9 @@ class Trainer(object):
         # start flapping
         self.flapping.start()
 
-        # initialize flies
-        for show in self.shows:
-            show.manage_flies()
+        # initialize processes
+        for watcher in self.watchers:
+            watcher.manage_processes()
 
         while True:
             try:
@@ -98,11 +98,11 @@ class Trainer(object):
 
     @debuglog
     def stop(self, graceful=True):
-        """Stops all shows and their flies.
+        """Stops all watchers and their processes.
 
         Options:
 
-        - **graceful**: sends a SIGTERM to every fly and waits a bit
+        - **graceful**: sends a SIGTERM to every process and waits a bit
           before killing it (default: True)
         """
         if not self.alive:
@@ -110,22 +110,22 @@ class Trainer(object):
 
         self.alive = False
 
-        # kill flies
-        for show in self.shows:
-            show.stop(graceful=graceful)
+        # kill processes
+        for watcher in self.watchers:
+            watcher.stop(graceful=graceful)
 
     def terminate(self, destroy_context=True):
         if self.alive:
             self.stop(graceful=False)
         self.loop.stop()
 
-    def manage_shows(self):
+    def manage_watchers(self):
         if not self.busy and self.alive:
             self.busy = True
-            # manage and reap flies
-            for show in self.shows:
-                show.reap_flies()
-                show.manage_flies()
+            # manage and reap processes
+            for watcher in self.watchers:
+                watcher.reap_processes()
+                watcher.manage_processes()
 
             if not self.flapping.is_alive():
                 self.flapping = Flapping(self.endpoint, self.pubsub_endpoint,
@@ -139,7 +139,7 @@ class Trainer(object):
         """Reloads everything.
 
         Run the :func:`prereload_fn` callable if any, then gracefuly
-        reload all shows.
+        reload all watchers.
         """
         if self.prereload_fn is not None:
             self.prereload_fn(self)
@@ -153,64 +153,64 @@ class Trainer(object):
                         handler.mode)
                 handler.release()
 
-        # gracefully reload shows
-        for show in self.shows:
-            show.reload(graceful=graceful)
+        # gracefully reload watchers
+        for watcher in self.watchers:
+            watcher.reload(graceful=graceful)
 
-    def numflies(self):
-        """Return the number of flies running across all shows."""
-        return sum([len(show) for show in self.shows])
+    def numprocesses(self):
+        """Return the number of processes running across all watchers."""
+        return sum([len(watcher) for watcher in self.watchers])
 
-    def numshows(self):
-        """Return the number of shows."""
-        return len(self.shows)
+    def numwatchers(self):
+        """Return the number of watchers."""
+        return len(self.watchers)
 
-    def get_show(self, name):
-        """Return the show *name*."""
-        return self._shows_names[name]
+    def get_watcher(self, name):
+        """Return the watcher *name*."""
+        return self._watchers_names[name]
 
     def statuses(self):
-        return dict([(show.name, show.status()) for show in self.shows])
+        return dict([(watcher.name, watcher.status()) for watcher in self.watchers])
 
-    def add_show(self, name, cmd):
-        """Adds a show.
+    def add_watcher(self, name, cmd):
+        """Adds a watcher.
 
         Options:
 
-        - **name**: name of the show to add
+        - **name**: name of the watcher to add
         - **cmd**: command to run.
         """
-        if name in self._shows_names:
+        if name in self._watchers_names:
             raise AlreadyExist("%r already exist" % name)
 
         if not name:
             return ValueError("command name shouldn't be empty")
 
-        show = Show(name, cmd, stopped=True)
-        show.initialize(self.evpub_socket)
-        self.shows.append(show)
-        self._shows_names[show.name.lower()] = show
+        watcher = Watcher(name, cmd, stopped=True)
+        watcher.initialize(self.evpub_socket)
+        self.watchers.append(watcher)
+        self._watchers_names[watcher.name.lower()] = watcher
 
-    def rm_show(self, name):
-        """Deletes a show.
+    def rm_watcher(self, name):
+        """Deletes a watcher.
 
         Options:
 
-        - **name**: name of the show to delete
+        - **name**: name of the watcher to delete
         """
-        logger.debug('Deleting %r show' % name)
+        logger.debug('Deleting %r watcher' % name)
 
-        # remove the show from the list
-        show = self._shows_names.pop(name)
-        del self.shows[self.shows.index(show)]
+        # remove the watcher from the list
+        watcher = self._watchers_names.pop(name)
+        del self.watchers[self.watchers.index(watcher)]
 
-        # stop the show
-        show.stop()
+        # stop the watcher
+        watcher.stop()
 
-    def start_shows(self):
-        for show in self.shows:
-            show.start()
+    def start_watchers(self):
+        for watcher in self.watchers:
+            watcher.start()
 
-    def stop_shows(self, graceful=True):
-        for show in self.shows:
-            show.stop(graceful=graceful)
+    def stop_watchers(self, graceful=True):
+        for watcher in self.watchers:
+            watcher.stop(graceful=graceful)

@@ -26,12 +26,12 @@ DEAD_OR_ZOMBIE = 1
 OTHER = 2
 
 
-class Fly(object):
+class Process(object):
     """Wraps a process.
 
     Options:
 
-    - **wid**: the fly unique identifier. This value will be used to
+    - **wid**: the process unique identifier. This value will be used to
       replace the *$WID* string in the command line if present.
 
     - **cmd**: the command to run. May contain *$WID*, which will be

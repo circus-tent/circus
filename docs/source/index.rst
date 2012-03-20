@@ -29,11 +29,11 @@ configuration file. Here is a minimal example::
     check_delay = 5
     endpoint = tcp://127.0.0.1:5555
 
-    [show:myprogram]
+    [watcher:myprogram]
     cmd = python
     args = -u myprogram.py $WID
     warmup_delay = 0
-    num_flies = 5
+    num_processes = 5
 
 The file is then run using *circusd*::
 
@@ -55,13 +55,13 @@ can write:
 
 .. code-block:: python
 
-    from circus import get_trainer
+    from circus import get_arbiter
 
-    trainer = get_trainer("myprogram", 3)
+    arbiter = get_arbiter("myprogram", 3)
     try:
-        trainer.start()
+        arbiter.start()
     finally:
-        trainer.stop()
+        arbiter.stop()
 
 This snippet will run instances of *myprogram* and watch them for you,
 restarting them if they die unexpectedly.
@@ -105,9 +105,9 @@ Here are, in our opinion, the top 3 reasons to use Circus.
 
   Every layer of the system is isolated, so you can reuse independantly:
 
-  - the process wrapper (:class:`Fly`)
-  - the processes manager (:class:`Show`)
-  - the global manager that runs several processes managers (:class:`Trainer`)
+  - the process wrapper (:class:`Process`)
+  - the processes manager (:class:`Watcher`)
+  - the global manager that runs several processes managers (:class:`Arbiter`)
   - and so on...
 
 

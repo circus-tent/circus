@@ -3,7 +3,7 @@ from circus.exc import ArgumentError, MessageError
 
 class Listen(Command):
     """\
-        Suscribe to a show event
+        Suscribe to a watcher event
         ========================
 
         ZMQ
@@ -17,12 +17,12 @@ class Listen(Command):
 
         Events are pubsub topics:
 
-        - `show.<showname>.reap': when a fly is reaped
-        - `show.<showname>.spawn': when a fly is spawned
-        - `show.<showname>.kill': when a fly is killed
-        - `show.<showname>.updated': when show configuration is updated
-        - `show.<showname>.stop': when a show is stopped
-        - `show.<showname>.start': when a show is started
+        - `watcher.<watchername>.reap': when a process is reaped
+        - `watcher.<watchername>.spawn': when a process is spawned
+        - `watcher.<watchername>.kill': when a process is killed
+        - `watcher.<watchername>.updated': when watcher configuration is updated
+        - `watcher.<watchername>.stop': when a watcher is stopped
+        - `watcher.<watchername>.start': when a watcher is started
 
         All events messages are in a json.
 
@@ -40,9 +40,9 @@ class Listen(Command):
         ::
 
             $ circusctl listen tcp://127.0.0.1:5556
-            show.refuge.spawn: {u'fly_id': 6, u'fly_pid': 72976, u'time': 1331681080.985104}
-            show.refuge.spawn: {u'fly_id': 7, u'fly_pid': 72995, u'time': 1331681086.208542}
-            show.refuge.spawn: {u'fly_id': 8, u'fly_pid': 73014, u'time': 1331681091.427005}
+            watcher.refuge.spawn: {u'process_id': 6, u'process_pid': 72976, u'time': 1331681080.985104}
+            watcher.refuge.spawn: {u'process_id': 7, u'process_pid': 72995, u'time': 1331681086.208542}
+            watcher.refuge.spawn: {u'process_id': 8, u'process_pid': 73014, u'time': 1331681091.427005}
     """
     name = "listen"
     msg_type = "sub"
@@ -52,5 +52,5 @@ class Listen(Command):
             return [""]
         return list(args)
 
-    def execute(self, trainer, args):
+    def execute(self, arbiter, args):
         raise MessageError("invalid message. use a pub/sub socket")

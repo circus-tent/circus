@@ -8,17 +8,17 @@ __version__ = ".".join(map(str, version_info))
 logger = logging.getLogger('circus')
 
 
-def get_trainer(cmd, numflies=1.,
+def get_arbiter(cmd, numprocesses=1.,
                 warmup_delay=0., controller='tcp://127.0.0.1:5555',
                 pubsub_endpoint='tcp://127.0.0.1:5556',
                 shell=False, working_dir=None, uid=None, gid=None,
                 env=None, name=None, context=None):
-    """Creates a Trainer and a single show in it.
+    """Creates a Arbiter and a single show in it.
 
     Options:
 
-    - cmd: the command line used to run the Show.
-    - numflies: the number of flies to spawn (default: 1).
+    - cmd: the command line used to run the Watcher.
+    - numprocesses: the number of flies to spawn (default: 1).
     - warmup_delay: the delay in seconds between two spawns (default: 0)
     - controller: the zmq entry point (default: 'tcp://127.0.0.1:5555')
     - pubsub_endpoint: the zmq entry point for the pubsub (default:
@@ -31,13 +31,13 @@ def get_trainer(cmd, numflies=1.,
     - name: the name of the show (default: None)
 
     """
-    from circus.show import Show
-    from circus.trainer import Trainer
+    from circus.watcher import Watcher
+    from circus.arbiter import Arbiter
 
     if not name:
         name = os.path.basename(cmd.split(None)[0])
 
-    show = Show(name, cmd, numflies, working_dir=working_dir,
+    show = Watcher(name, cmd, numprocesses, working_dir=working_dir,
                 warmup_delay=warmup_delay, shell=shell, uid=uid, gid=gid,
                 env=env)
-    return Trainer([show], controller, pubsub_endpoint, context=context)
+    return Arbiter([show], controller, pubsub_endpoint, context=context)

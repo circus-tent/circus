@@ -3,31 +3,31 @@ from circus.exc import ArgumentError, MessageError
 
 class List(Command):
     """\
-        Get list of shows or flies in a show
+        Get list of watchers or processes in a watcher
         =====================================
 
         ZMQ Message
         -----------
 
 
-        To get the list of all the shows::
+        To get the list of all the watchers::
 
             {
                 "command": "list",
             }
 
 
-        To get the list of flies in a show::
+        To get the list of processes in a watcher::
 
             {
                 "command": "list",
                 "properties": {
-                    "name": "nameofshow",
+                    "name": "nameofwatcher",
                 }
             }
 
 
-        The response return the list asked. Flies returned are fly ID
+        The response return the list asked. Flies returned are process ID
         that can be used in others commands.
 
         Command line
@@ -48,18 +48,18 @@ class List(Command):
         else:
             return self.make_message()
 
-    def execute(self, trainer, props):
+    def execute(self, arbiter, props):
         if 'name' in props:
-            show = self._get_show(trainer, props['name'])
-            flies = sorted(show.flies)
-            return {"flies": flies}
+            watcher = self._get_watcher(arbiter, props['name'])
+            processes = sorted(watcher.processes)
+            return {"processes": processes}
         else:
-            shows = sorted(trainer._shows_names)
-            return {"shows": [name for name in shows]}
+            watchers = sorted(arbiter._watchers_names)
+            return {"watchers": [name for name in watchers]}
 
     def console_msg(self, msg):
-        if "flies" in msg:
-            return ",".join([str(fly_id) for fly_id in msg.get('flies')])
-        elif 'shows' in msg:
-            return ",".join([show for show in msg.get('shows')])
+        if "processes" in msg:
+            return ",".join([str(process_id) for process_id in msg.get('processes')])
+        elif 'watchers' in msg:
+            return ",".join([watcher for watcher in msg.get('watchers')])
         return self.console_error(msg)

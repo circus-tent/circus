@@ -6,20 +6,20 @@ Architecture
 
 
 
-**Show**
-    A *show* is the program you tell Circus to run.  A single Circus
-    instance can run one or more shows.
-**Flies**
-    A *fly* is an independent OS process instance of your program.
-    A single show can run one or more flies.
-**Trainer**
-    The *trainer* is responsible for managing all the shows within circus,
+**Watcher**
+    A *watcher* is the program you tell Circus to run.  A single Circus
+    instance can run one or more watchers.
+**Processes**
+    A *process* is an independent OS process instance of your program.
+    A single watcher can run one or more flies.
+**Arbiter**
+    The *arbiter* is responsible for managing all the watchers within circus,
     ensuring all flies run correctly.
 **Controller**
     A *controller* contains the set of actions that con be performed on
-    the trainer.
+    the arbiter.
 **PubSub**
-    Circus has a *pubsub* that receives events from the shows and dispatches
+    Circus has a *pubsub* that receives events from the watchers and dispatches
     them to all subscribers.
 **Flapping detection**
     The *flapping detection* subscribes to events and detects when some

@@ -4,10 +4,10 @@ from circus.util import convert_opt
 
 class Get(Command):
     """\
-        Get the value of a show option
+        Get the value of a watcher option
         ==============================
 
-        This command return the shows options values asked.
+        This command return the watchers options values asked.
 
         ZMQ Message
         -----------
@@ -18,14 +18,14 @@ class Get(Command):
                 "command": "get",
                 "properties": {
                     "keys": ["key1, "key2"]
-                    "name": "nameofshow"
+                    "name": "nameofwatcher"
                 }
             }
 
         A response contains 2 properties:
 
         - keys: list, The option keys for which you want to get the values
-        - name: name of show
+        - name: name of watcher
 
         The response return an object with a property "options"
         containing the list of key/value returned by circus.
@@ -61,15 +61,15 @@ class Get(Command):
 
         return self.make_message(name=args[0], keys=args[1:])
 
-    def execute(self, trainer, props):
-        show = self._get_show(trainer, props.get('name'))
+    def execute(self, arbiter, props):
+        watcher = self._get_watcher(arbiter, props.get('name'))
 
         # get options values. It return an error if one of the asked
         # options isn't found
         options = {}
         for name in props.get('keys', []):
-            if name in show.optnames:
-                options[name] = getattr(show, name)
+            if name in watcher.optnames:
+                options[name] = getattr(watcher, name)
             else:
                 raise MessageError("%r option not found" % name)
 

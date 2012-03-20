@@ -4,10 +4,10 @@ from circus.util import convert_opt
 
 class Options(Command):
     """\
-        Get the value of a show option
+        Get the value of a watcher option
         ==============================
 
-        This command return the shows options values asked.
+        This command return the watchers options values asked.
 
         ZMQ Message
         -----------
@@ -17,7 +17,7 @@ class Options(Command):
             {
                 "command": "options",
                 "properties": {
-                    "name": "nameofshow",
+                    "name": "nameofwatcher",
                     "key1": "val1",
                     ..
                 }
@@ -26,7 +26,7 @@ class Options(Command):
         A message contains 2 properties:
 
         - keys: list, The option keys for which you want to get the values
-        - name: name of show
+        - name: name of watcher
 
         The response return an object with a property "options"
         containing the list of key/value returned by circus.
@@ -54,31 +54,31 @@ class Options(Command):
         Options
         -------
 
-        - <name>: name of the show
+        - <name>: name of the watcher
 
         Options Keys are:
 
-        - numflies: integer, number of flies
-        - warmup_delay: integer or number, delay to wait between fly
+        - numprocesses: integer, number of processes
+        - warmup_delay: integer or number, delay to wait between process
           spawning in seconds
-        - working_dir: string, directory where the fly will be executed
-        - uid: string or integer, user ID used to launch the fly
-        - gid: string or integer, group ID used to launch the fly
+        - working_dir: string, directory where the process will be executed
+        - uid: string or integer, user ID used to launch the process
+        - gid: string or integer, group ID used to launch the process
         - send_hup: boolean, if TRU the signal HUP will be used on reload
         - shell: boolean, will run the command in the shell environment if
           true
-        - cmd: string, The command line used to launch the fly
-        - env: object, define the environnement in which the fly will be
+        - cmd: string, The command line used to launch the process
+        - env: object, define the environnement in which the process will be
           launch
-        - times: integer, number of times we try to relaunch a fly in
-          the within time before we stop the show during the retry_in time.
+        - times: integer, number of times we try to relaunch a process in
+          the within time before we stop the watcher during the retry_in time.
         - within: integer or number, times in seconds in which we test
-          the number of fly restart.
+          the number of process restart.
         - retry_in: integer or number, times we wait before we retry to
-          launch the fly if macium of times have been reach.
+          launch the process if macium of times have been reach.
         - max_retry: integer, The maximum of retries loops
         - graceful_timeout: integer or number, time we wait before we
-          definitely kill a fly when using the graceful option.
+          definitely kill a process when using the graceful option.
 
     """
 
@@ -92,9 +92,9 @@ class Options(Command):
 
         return self.make_message(name=args[0])
 
-    def execute(self, trainer, props):
-        show = self._get_show(trainer, props['name'])
-        return {"options": dict(show.options())}
+    def execute(self, arbiter, props):
+        watcher = self._get_watcher(arbiter, props['name'])
+        return {"options": dict(watcher.options())}
 
     def console_msg(self, msg):
         if msg['status'] == "ok":

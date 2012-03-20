@@ -18,8 +18,8 @@ from circus.sighandler import SysHandler
 
 
 class Controller(object):
-    def __init__(self, endpoint, context, loop, trainer, check_delay=1.0):
-        self.trainer = trainer
+    def __init__(self, endpoint, context, loop, arbiter, check_delay=1.0):
+        self.arbiter = arbiter
         self.endpoint = endpoint
         self.context = context
         self.loop = loop
@@ -61,7 +61,7 @@ class Controller(object):
 
         if job is not None:
             self.dispatch(job)
-        self.trainer.manage_shows()
+        self.arbiter.manage_watchers()
 
     def add_job(self, cid, msg):
         self.jobs.put((cid, msg), False)
@@ -96,7 +96,7 @@ class Controller(object):
 
         try:
             cmd.validate(properties)
-            resp = cmd.execute(self.trainer, properties)
+            resp = cmd.execute(self.arbiter, properties)
         except MessageError as e:
             return self.send_error(cid, msg, str(e))
         except OSError as e:
@@ -127,7 +127,7 @@ class Controller(object):
         if cmd_name.lower() == "quit":
             if cid is not None:
                 self.stream.flush()
-            self.trainer.terminate()
+            self.arbiter.terminate()
 
     def send_error(self, cid, msg, reason="unknown", tb=None):
         resp = error(reason=reason, tb=tb)

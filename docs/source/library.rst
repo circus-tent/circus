@@ -3,7 +3,7 @@
 Circus Library
 --------------
 
-The Circus package is composed of a high-level :func:`get_trainer`
+The Circus package is composed of a high-level :func:`get_arbiter`
 function and many classes. In most cases, using the high-level function
 should be enough, as it creates everything that is needed for Circus to
 run.
@@ -13,27 +13,27 @@ configurability.
 
 
 
-The get_trainer function
+The get_arbiter function
 ========================
 
-:func:`get_trainer` is just a convenience on the top of the various
-circus classes. It creates a :class:`Trainer` instance with the provided
-options, that runs a single :class:`Show` with a single :class:`Fly`.
+:func:`get_arbiter` is just a convenience on the top of the various
+circus classes. It creates a :class:`Arbiter` instance with the provided
+options, that runs a single :class:`Watcher` with a single :class:`Process`.
 
 
-.. autofunction:: circus.get_trainer
+.. autofunction:: circus.get_arbiter
 
 Example:
 
 .. code-block:: python
 
-   from circus import get_trainer
+   from circus import get_arbiter
 
-   trainer = get_trainer("myprogram", numflies=3)
+   arbiter = get_arbiter("myprogram", numprocesses=3)
    try:
-       trainer.start()
+       arbiter.start()
    finally:
-       trainer.stop()
+       arbiter.stop()
 
 
 The classes collection
@@ -42,16 +42,16 @@ The classes collection
 Circus provides a series of classes you can use to implement your own Circus
 runner:
 
-- :class:`Fly`: wraps a running process and provides a few helpers on the
+- :class:`Process`: wraps a running process and provides a few helpers on the
   top of it.
 
-- :class:`Show`: run several instances of :class:`Fly` against the same
+- :class:`Watcher`: run several instances of :class:`Process` against the same
   command. Manage the death and life of processes.
 
-- :class:`Trainer`: run several instances of :class:`Show`.
+- :class:`Arbiter`: run several instances of :class:`Watcher`.
 
 
-.. autoclass:: circus.fly.Fly
+.. autoclass:: circus.process.Process
    :members: pid, stdout, stderr, send_signal, stop, age, info,
              children, is_child, send_signal_child, send_signal_children,
              status
@@ -59,27 +59,27 @@ runner:
 
 Example::
 
-    >>> from circus.fly import Fly
-    >>> fly = Fly('Top', 'top', shell=True)
-    >>> fly.age()
+    >>> from circus.process import Process
+    >>> process = Process('Top', 'top', shell=True)
+    >>> process.age()
     3.0107998847961426
-    >>> fly.info()
+    >>> process.info()
     'Top: 6812  N/A tarek Zombie N/A N/A N/A N/A N/A'
-    >>> fly.status
+    >>> process.status
     1
-    >>> fly.stop()
-    >>> fly.status
+    >>> process.stop()
+    >>> process.status
     2
-    >>> fly.info()
+    >>> process.info()
     'No such process (stopped?)'
 
 
-.. autoclass:: circus.show.Show
-   :members: send_msg, reap_flies, manage_flies, reap_and_manage_flies,
-             spawn_flies, spawn_fly, kill_fly,kill_flies, send_signal_child, stop,start,
+.. autoclass:: circus.watcher.Watcher
+   :members: send_msg, reap_processes, manage_processes, reap_and_manage_processes,
+             spawn_processes, spawn_process, kill_process,kill_processes, send_signal_child, stop,start,
              restart, reload, do_action, get_opt
 
 
-.. autoclass:: circus.trainer.Trainer
-   :members: start, stop, reload, numflies, numshows, get_show, add_show
+.. autoclass:: circus.arbiter.Arbiter
+   :members: start, stop, reload, numprocesses, numwatchers, get_watcher, add_watcher
 
