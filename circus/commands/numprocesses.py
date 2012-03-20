@@ -34,7 +34,7 @@ class NumProcesses(Command):
 
         ::
 
-            circusctl numprocesses [<name>]
+            $ circusctl numprocesses [<name>]
 
         Options
         +++++++

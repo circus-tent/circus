@@ -28,7 +28,7 @@ class NumWatchers(Command):
 
         ::
 
-            circusctl numwatchers
+            $ circusctl numwatchers
 
     """
     name = "numwatchers"

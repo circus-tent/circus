@@ -48,7 +48,9 @@ class Options(Command):
         Command line
         ------------
 
-        circusctl options <name>
+        ::
+
+            $ circusctl options <name>
 
 
         Options

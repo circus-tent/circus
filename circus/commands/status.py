@@ -29,7 +29,7 @@ class Status(Command):
 
         ::
 
-            circusctl status [<name>]
+            $ circusctl status [<name>]
 
         Options
         +++++++

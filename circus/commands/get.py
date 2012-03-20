@@ -49,7 +49,7 @@ class Get(Command):
 
         ::
 
-            circusctl get <name> <key> <value> <key1> <value1>
+            $ circusctl get <name> <key> <value> <key1> <value1>
 
     """
 
