@@ -26,7 +26,8 @@ class Arbiter(object):
       (default: None)
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
-                 prereload_fn=None, context=None, loop=None):
+                 prereload_fn=None, context=None, loop=None,
+                 check_flapping=True):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -43,6 +44,7 @@ class Arbiter(object):
         self._watchers_names = {}
         self.alive = True
         self.busy = False
+        self.check_flapping = check_flapping
 
     @debuglog
     def initialize(self):
@@ -52,8 +54,9 @@ class Arbiter(object):
         self.evpub_socket.linger = 0
 
         # initialize flapping
-        self.flapping = Flapping(self.context, self.endpoint,
-                                 self.pubsub_endpoint, self.check_delay)
+        if self.check_flapping:
+            self.flapping = Flapping(self.context, self.endpoint,
+                                     self.pubsub_endpoint, self.check_delay)
 
         # initialize watchers
         for watcher in self.watchers:
@@ -76,8 +79,9 @@ class Arbiter(object):
         self.ctrl.start()
 
         # start flapping
-        logger.debug('Starting flapping')
-        self.flapping.start()
+        if self.check_flapping:
+            logger.debug('Starting flapping')
+            self.flapping.start()
 
         # initialize processes
         logger.debug('Initializing watchers')
@@ -96,7 +100,9 @@ class Arbiter(object):
             else:
                 break
 
-        self.flapping.stop()
+        if self.check_flapping:
+            self.flapping.stop()
+
         self.ctrl.stop()
         self.evpub_socket.close()
 
@@ -131,7 +137,7 @@ class Arbiter(object):
                 watcher.reap_processes()
                 watcher.manage_processes()
 
-            if not self.flapping.is_alive():
+            if self.check_flapping and not self.flapping.is_alive():
                 self.flapping = Flapping(self.context, self.endpoint,
                                          self.pubsub_endpoint,
                                          self.check_delay)
