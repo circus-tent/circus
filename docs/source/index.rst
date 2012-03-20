@@ -97,7 +97,7 @@ Here are, in our opinion, the top 3 reasons to use Circus.
   See :ref:`examples`.
 
 
-2. **Circus is developer friendly**
+2. **Circus is (Python) developer friendly**
 
   While Circus can be driven entirely by a config file and the
   *circusctl* and *circusd* commands, it's easy to reuse all or part of
