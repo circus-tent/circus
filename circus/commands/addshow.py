@@ -4,7 +4,46 @@ from circus.commands.base import Command, ok
 from circus.exc import ArgumentError, MessageError
 
 class AddShow(Command):
-    """Add a show"""
+    """\
+        Add a show
+        ==========
+
+        This command add a show dynamically to a trainer.
+
+        ZMQ Message
+        -----------
+
+        ::
+
+            {
+                "command": "add",
+                "properties": {
+                    "cmd": "/path/to/commandline --option"
+                    "name": "nameofshow"
+                }
+            }
+
+        A message contains 2 properties:
+
+        - cmd: Full command line to execute in a fly
+        - name: name of show
+
+        The message return a status "ok".
+
+        Command line
+        ------------
+
+
+        circusctl add [--start] <name> <cmd>
+
+        Options
+        +++++++
+
+        - <name>: name of the show to create
+        - <cmd>: ull command line to execute in a fly
+        - --start: start the show immediately
+
+    """
 
     name = "add"
     options = [('', 'start', False, "start immediately the show")]

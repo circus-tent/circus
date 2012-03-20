@@ -3,7 +3,42 @@ from circus.exc import ArgumentError, MessageError
 
 
 class DecrShow(Command):
-    """Decrement the number of flies in a show"""
+    """\
+        Decrement the number of flies in a show
+        =======================================
+
+        This comment decrement the number of flies in a show by -1.
+
+        ZMQ Message
+        -----------
+
+        ::
+
+            {
+                "command": "decr",
+                "propeties": {
+                    "name": "<showname>"
+                }
+            }
+
+        The message return the number of flies in the 'numberflies`
+        property::
+
+            { "status": "ok", "numflies": <n>, "time", "timestamp" }
+
+        Command line
+        ------------
+
+        ::
+
+            circusctl descr <name>
+
+        Options
+        +++++++
+
+        - <name>: name of the show
+
+    """
 
     name = "decr"
     properties = ['name']

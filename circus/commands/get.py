@@ -3,7 +3,54 @@ from circus.exc import ArgumentError, MessageError
 from circus.util import convert_opt
 
 class Get(Command):
-    """Get the value of a show option"""
+    """\
+        Get the value of a show option
+        ==============================
+
+        This command return the shows options values asked.
+
+        ZMQ Message
+        -----------
+
+        ::
+
+            {
+                "command": "get",
+                "properties": {
+                    "keys": ["key1, "key2"]
+                    "name": "nameofshow"
+                }
+            }
+
+        A message contains 2 properties:
+
+        - keys: list, The option keys for which you want to get the values
+        - name: name of show
+
+        The message return an object with a property "options"
+        containing the list of key/value returned by circus.
+
+        eg::
+
+            {
+                "status": "ok",
+                "options": {
+                    "within": 1,
+                    "times": 2
+                },
+                time': 1332202594.754644
+            }
+
+        See Optios for for a description of options enabled?
+
+
+        Command line
+        ------------
+
+
+        circusctl get <name> <key> <value> <key1> <value1>
+
+    """
 
     name = "get"
     properties = ['name', 'keys']

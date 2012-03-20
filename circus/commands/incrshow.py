@@ -2,7 +2,42 @@ from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
 
 class IncrShow(Command):
-    """Increment the number of flies in a show"""
+    """\
+        Increment the number of flies in a show
+        =======================================
+
+        This comment increment the number of flies in a show by +1.
+
+        ZMQ Message
+        -----------
+
+        ::
+
+            {
+                "command": "incr",
+                "propeties": {
+                    "name": "<showname>"
+                }
+            }
+
+        The message return the number of flies in the 'numberflies`
+        property::
+
+            { "status": "ok", "numflies": <n>, "time", "timestamp" }
+
+        Command line
+        ------------
+
+        ::
+
+            circusctl incr <name>
+
+        Options
+        +++++++
+
+        - <name>: name of the show
+
+    """
 
     name = "incr"
     properties = ['name']
