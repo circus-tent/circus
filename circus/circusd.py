@@ -164,11 +164,11 @@ def main():
     pubsub_endpoint = cfg.dget('circus', 'pubsub_endpoint',
             'tcp://127.0.0.1:5556')
 
-    trainer = Arbiter(watchers, endpoint, pubsub_endpoint, check)
+    arbiter = Arbiter(watchers, endpoint, pubsub_endpoint, check)
     try:
-        trainer.start()
+        arbiter.start()
     finally:
-        trainer.terminate()
+        arbiter.stop()
         if pidfile is not None:
             pidfile.unlink()
 
