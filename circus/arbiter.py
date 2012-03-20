@@ -106,27 +106,9 @@ class Arbiter(object):
         self.ctrl.stop()
         self.evpub_socket.close()
 
-    @debuglog
-    def stop(self, graceful=True):
-        """Stops all watchers and their processes.
-
-        Options:
-
-        - **graceful**: sends a SIGTERM to every process and waits a bit
-          before killing it (default: True)
-        """
-        if not self.alive:
-            return
-
-        self.alive = False
-
-        # kill processes
-        for watcher in self.watchers:
-            watcher.stop(graceful=graceful)
-
-    def terminate(self, destroy_context=True):
+    def stop(self, graceful=False, destroy_context=True):
         if self.alive:
-            self.stop(graceful=False)
+            self.stop_watchers(graceful=graceful, stop_alive=True)
         self.loop.stop()
 
     def manage_watchers(self):
@@ -222,6 +204,12 @@ class Arbiter(object):
         for watcher in self.watchers:
             watcher.start()
 
-    def stop_watchers(self, graceful=True):
+    def stop_watchers(self, graceful=True, stop_alive=False):
+        if stop_alive:
+            if not self.alive:
+                return
+
+            self.alive = False
+
         for watcher in self.watchers:
             watcher.stop(graceful=graceful)

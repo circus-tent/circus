@@ -3,10 +3,10 @@ from circus.exc import MessageError
 
 class Quit(Command):
     """\
-        Quit the trainer immediately
+        Quit the arbiter immediately
         ============================
 
-        When the trainer receive this command, the trainer exit.
+        When the arbiter receive this command, the arbiter exit.
 
         ZMQ Message
         -----------
@@ -44,5 +44,6 @@ class Quit(Command):
         graceful = not opts.get("terminate")
         return self.make_message(graceful=graceful)
 
-    def execute(self, trainer, opts):
-        trainer.stop(graceful=opts.get('graceful', True))
+    def execute(self, arbiter, opts):
+        arbiter.stop_watchers(graceful=opts.get('graceful', True),
+                               stop_alive=True)

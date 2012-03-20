@@ -127,7 +127,8 @@ class Controller(object):
         if cmd_name.lower() == "quit":
             if cid is not None:
                 self.stream.flush()
-            self.arbiter.terminate()
+
+            self.arbiter.stop()
 
     def send_error(self, cid, msg, reason="unknown", tb=None):
         resp = error(reason=reason, tb=tb)

@@ -54,8 +54,7 @@ class Runner(threading.Thread):
 
     def stop(self):
         time.sleep(0.25)
-        self.arbiter.terminate()
-
+        self.arbiter.stop()
         self.join()
 
 
