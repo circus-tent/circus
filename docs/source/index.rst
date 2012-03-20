@@ -120,7 +120,7 @@ Here are, in our opinion, the top 3 reasons to use Circus.
 
 3. **Circus scales**
 
-  One of the use case of Circus is to be able to manage thousands of
+  One of the use cases of Circus is to be able to manage thousands of
   processes without having it slowing down -- we're dedicated to focusing on
   this.
 
