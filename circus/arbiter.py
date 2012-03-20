@@ -44,6 +44,7 @@ class Arbiter(object):
         self.alive = True
         self.busy = False
 
+    @debuglog
     def initialize(self):
         # event pub socket
         self.evpub_socket = self.context.socket(zmq.PUB)
@@ -75,12 +76,15 @@ class Arbiter(object):
         self.ctrl.start()
 
         # start flapping
+        logger.debug('Starting flapping')
         self.flapping.start()
 
         # initialize processes
+        logger.debug('Initializing watchers')
         for watcher in self.watchers:
             watcher.manage_processes()
 
+        logger.debug('Arbiter now waiting for commands')
         while True:
             try:
                 self.loop.start()
@@ -128,7 +132,8 @@ class Arbiter(object):
                 watcher.manage_processes()
 
             if not self.flapping.is_alive():
-                self.flapping = Flapping(self.endpoint, self.pubsub_endpoint,
+                self.flapping = Flapping(self.context, self.endpoint,
+                                         self.pubsub_endpoint,
                                          self.check_delay)
                 self.flapping.start()
 
