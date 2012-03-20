@@ -68,9 +68,8 @@ class Stats(Command):
 
        ::
 
-            $ circusctl stats [<showname>] [<processid>]
-
-    """
+            $ circusctl stats [<showname>] [<processid>]
+        """
 
     name = "stats"
 
