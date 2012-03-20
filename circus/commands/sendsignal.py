@@ -110,7 +110,7 @@ class Signal(Command):
         signum = props.get('signum')
 
         if 'pid' in props:
-            watcher.send_signal_child(args[1], args[2], signum)
+            watcher.send_signal_child(props[1], props[2], signum)
         elif 'process' in props:
             process = props.get('process')
             if props.get('children', False):

@@ -89,7 +89,9 @@ class ControllerApp(object):
             self.display_version(*args, **opts)
 
         if len(args) >= 1:
-            print("help on %s [TODO]" % args[0])
+            if args[0] in  self.commands:
+                cmd = self.commands[args[0]]
+                print(cmd.desc)
             return 0
 
         print("usage: circusctl [--version] [--endpoint=<endpoint>]")
