@@ -74,7 +74,7 @@ class Controller(object):
         if not msg:
             self.send_response(cid, msg, "error: empty command")
         else:
-            logger.debug("got message %s" % msg)
+            logger.debug("got message %s", msg)
             self.add_job(cid, msg)
 
     def dispatch(self, job):
@@ -105,8 +105,7 @@ class Controller(object):
             exctype, value = sys.exc_info()[:2]
             tb = traceback.format_exc()
             reason = "command %r: %s" % (msg, value)
-            logger.debug("error: command %r: %s\n\n%s" % (msg,
-                value, tb))
+            logger.debug("error: command %r: %s\n\n%s", msg, value, tb)
             return self.send_error(cid, msg, reason, tb)
 
         if resp is None:
@@ -115,8 +114,7 @@ class Controller(object):
         if not isinstance(resp, (dict, list,)):
             msg = "msg %r tried to send a non-dict: %s" % (msg,
                     str(resp))
-            logger.error("msg %r tried to send a non-dict: %s" % (msg,
-                    str(resp)))
+            logger.error("msg %r tried to send a non-dict: %s", msg, str(resp))
             return self.send_error(cid, msg, "server error")
 
         if isinstance(resp, list):
@@ -152,5 +150,5 @@ class Controller(object):
             self.stream.send(cid, zmq.SNDMORE)
             self.stream.send(resp)
         except zmq.ZMQError as e:
-            logger.info("Received %r - Could not send back %r - %s" %
-                                (msg, resp, str(e)))
+            logger.debug("Received %r - Could not send back %r - %s", msg,
+                         resp, str(e))
