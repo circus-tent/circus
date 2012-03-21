@@ -40,7 +40,7 @@ configuration file. Here is a minimal example::
     cmd = python
     args = -u myprogram.py $WID
     warmup_delay = 0
-    num_processes = 5
+    numprocesses = 5
 
 The file is then run using *circusd*::
 
