@@ -1,3 +1,4 @@
 include NOTICE
 include README.rst
 include LICENSE
+include CHANGES.rst
