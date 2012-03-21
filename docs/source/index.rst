@@ -42,6 +42,11 @@ configuration file. Here is a minimal example::
     warmup_delay = 0
     numprocesses = 5
 
+    [watcher:anotherprogram]
+    cmd = another_program
+    numprocesses = 2
+
+
 The file is then run using *circusd*::
 
     $ circusd example.ini
