@@ -55,8 +55,8 @@ class Flapping(Thread):
                 elif e.errno == zmq.ETERM:
                     break
                 else:
-                    logger.debug("got an unexpected error %s (%s)" %
-                            (str(e), e.errno))
+                    logger.debug("got an unexpected error %s (%s)", str(e),
+                                 e.errno)
                     raise
             else:
                 break
@@ -115,8 +115,8 @@ class Flapping(Thread):
             duration = timeline[-1] - timeline[0] - self.check_delay
             if duration <= conf['within']:
                 if tries < conf['max_retry']:
-                    logger.info("%s: flapping detected: retry in %2ds" %
-                            (show_name, conf['retry_in']))
+                    logger.info("%s: flapping detected: retry in %2ds",
+                            show_name, conf['retry_in'])
 
                     self.call(make_message("stop", name=show_name))
 
@@ -130,7 +130,7 @@ class Flapping(Thread):
                     timer.start()
                     self.timers[show_name] = timer
                 else:
-                    logger.info("%s: flapping detected: max retry limit" %
+                    logger.info("%s: flapping detected: max retry limit",
                             show_name)
                     self.timelines[show_name] = []
                     self.tries[show_name] = 0

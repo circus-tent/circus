@@ -143,10 +143,10 @@ class Watcher(object):
                           working_dir=self.working_dir, shell=self.shell,
                           uid=self.uid, gid=self.gid, env=self.env)
                 self.processes[self._process_counter] = process
-                logger.info('running %s process [pid %d]' % (self.name,
-                            process.pid))
+                logger.debug('running %s process [pid %d]', self.name,
+                            process.pid)
             except OSError, e:
-                logger.warning('error in %r: %s' % (self.name, str(e)))
+                logger.warning('error in %r: %s', self.name, str(e))
 
             if process is None:
                 nb_tries += 1
@@ -165,7 +165,7 @@ class Watcher(object):
         """
         self.send_msg("kill", {"process_id": process.wid,
                                "time": time.time()})
-        logger.info("%s: kill process %s" % (self.name, process.pid))
+        logger.debug("%s: kill process %s", self.name, process.pid)
         process.send_signal(sig)
 
     @util.debuglog
@@ -248,7 +248,7 @@ class Watcher(object):
 
         self.kill_processes(signal.SIGKILL)
         self.send_msg("stop", {"time": time.time()})
-        logger.info('%s stopped' % self.name)
+        logger.info('%s stopped', self.name)
 
     @util.debuglog
     def start(self):
@@ -270,7 +270,7 @@ class Watcher(object):
         self.send_msg("restart", {"time": time.time()})
         self.stop()
         self.start()
-        logger.info('%s restarted' % self.name)
+        logger.info('%s restarted', self.name)
 
     @util.debuglog
     def reload(self, graceful=True):
@@ -291,6 +291,7 @@ class Watcher(object):
                 self.spawn_process()
             self.manage_processes()
         self.send_msg("reload", {"time": time.time()})
+        logger.info('%s reloaded', self.name)
 
     @util.debuglog
     def incr(self):

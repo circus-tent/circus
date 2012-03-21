@@ -71,7 +71,7 @@ class Arbiter(object):
         for any command from a client and that watches all the
         processes and restarts them if needed.
         """
-        logger.info("Starting master on pid %s" % self.pid)
+        logger.info("Starting master on pid %s", self.pid)
 
         self.initialize()
 
@@ -88,7 +88,7 @@ class Arbiter(object):
         for watcher in self.watchers:
             watcher.manage_processes()
 
-        logger.debug('Arbiter now waiting for commands')
+        logger.info('Arbiter now waiting for commands')
         while True:
             try:
                 self.loop.start()
@@ -106,7 +106,7 @@ class Arbiter(object):
         self.ctrl.stop()
         self.evpub_socket.close()
 
-    def stop(self, graceful=False, destroy_context=True):
+    def stop(self, graceful=False):
         if self.alive:
             self.stop_watchers(graceful=graceful, stop_alive=True)
         self.loop.stop()
@@ -192,7 +192,7 @@ class Arbiter(object):
 
         - **name**: name of the watcher to delete
         """
-        logger.debug('Deleting %r watcher' % name)
+        logger.debug('Deleting %r watcher', name)
 
         # remove the watcher from the list
         watcher = self._watchers_names.pop(name)
@@ -207,6 +207,7 @@ class Arbiter(object):
 
     def stop_watchers(self, graceful=True, stop_alive=False):
         if stop_alive:
+            logger.info('Arbiter exiting')
             if not self.alive:
                 return
 
