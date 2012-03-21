@@ -13,7 +13,7 @@ class Watcher(object):
 
     def __init__(self, name, cmd, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
-                 gid=None, send_hup=False, env=None, stopped=False,
+                 gid=None, send_hup=False, env=None, stopped=True,
                  times=2, within=1., retry_in=7., max_retry=5,
                  graceful_timeout=30., prereload_fn=None):
         """ init

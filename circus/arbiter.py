@@ -86,7 +86,7 @@ class Arbiter(object):
         # initialize processes
         logger.debug('Initializing watchers')
         for watcher in self.watchers:
-            watcher.manage_processes()
+            watcher.start()
 
         logger.info('Arbiter now waiting for commands')
         while True:
