@@ -13,23 +13,25 @@ Example::
     cmd = python
     args = -u myprogram.py $WID
     warmup_delay = 0
-    num_flies = 5
+    numprocesses = 5
 
-circus
-~~~~~~
+circus (single section)
+~~~~~~~~~~~~~~~~~~~~~~~
     **endpoint**
         The endpoint to which the ZMQ socket will be bound.
     **check_delay**
         The polling interval for the ZMQ socket.
 
 
-watcher
-~~~~~~~
+watcher:NAME (as many sections as you want)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    **NAME**
+        The name of the watcher. This name is used for example in **circusctl**
     **cmd**
         The executable program to run.
     **args**
         Command-line arguments to pass to the program
     **warmup_delay**
-        The delay (in seconds) between running flies.
-    **num_flies**
-        The number of flies to run for this watcher.
+        The delay (in seconds) between running processes.
+    **numprocesses**
+        The number of processes to run for this watcher.
