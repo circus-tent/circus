@@ -128,8 +128,8 @@ def main():
     # Initialize shows to manage
     watchers = []
     for section in cfg.sections():
-        if section.startswith("show:"):
-            name = section.split("show:", 1)[1]
+        if section.startswith("watcher:"):
+            name = section.split("watcher:", 1)[1]
 
             cmd = cfg.get(section, 'cmd')
             args = cfg.dget(section, 'args', '')
