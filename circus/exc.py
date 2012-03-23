@@ -1,7 +1,7 @@
 
 
 class AlreadyExist(Exception):
-    """Raised when a show exists """
+    """Raised when a watcher exists """
     pass
 
 
