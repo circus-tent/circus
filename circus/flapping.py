@@ -88,53 +88,53 @@ class Flapping(Thread):
         msg = self.client.recv()
         return json.loads(msg)
 
-    def update_conf(self, show_name):
-        msg = self.call(make_message("options", name=show_name))
-        conf = self.configs.get(show_name, {})
+    def update_conf(self, watcher_name):
+        msg = self.call(make_message("options", name=watcher_name))
+        conf = self.configs.get(watcher_name, {})
         conf.update(msg.get('options'))
-        self.configs[show_name] = conf
+        self.configs[watcher_name] = conf
         return conf
 
-    def reset(self, show_name):
-        self.timeline[show_name] = []
-        self.tries[show_name] = 0
-        if show_name is self.timers:
-            timer = self.timers.pop(show_name)
+    def reset(self, watcher_name):
+        self.timeline[watcher_name] = []
+        self.tries[watcher_name] = 0
+        if watcher_name is self.timers:
+            timer = self.timers.pop(watcher_name)
             timer.cancel()
 
-    def check(self, show_name):
-        timeline = self.timelines[show_name]
-        if show_name in self.configs:
-            conf = self.configs[show_name]
+    def check(self, watcher_name):
+        timeline = self.timelines[watcher_name]
+        if watcher_name in self.configs:
+            conf = self.configs[watcher_name]
         else:
-            conf = self.update_conf(show_name)
+            conf = self.update_conf(watcher_name)
 
-        tries = self.tries.get(show_name, 0)
+        tries = self.tries.get(watcher_name, 0)
 
         if len(timeline) == conf['times']:
             duration = timeline[-1] - timeline[0] - self.check_delay
             if duration <= conf['within']:
                 if tries < conf['max_retry']:
                     logger.info("%s: flapping detected: retry in %2ds",
-                            show_name, conf['retry_in'])
+                            watcher_name, conf['retry_in'])
 
-                    self.call(make_message("stop", name=show_name))
+                    self.call(make_message("stop", name=watcher_name))
 
-                    self.timelines[show_name] = []
-                    self.tries[show_name] = tries + 1
+                    self.timelines[watcher_name] = []
+                    self.tries[watcher_name] = tries + 1
 
                     def _start():
-                        self.call(make_message("start", name=show_name))
+                        self.call(make_message("start", name=watcher_name))
 
                     timer = Timer(conf['retry_in'], _start)
                     timer.start()
-                    self.timers[show_name] = timer
+                    self.timers[watcher_name] = timer
                 else:
                     logger.info("%s: flapping detected: max retry limit",
-                            show_name)
-                    self.timelines[show_name] = []
-                    self.tries[show_name] = 0
-                    self.call(make_message("stop", name=show_name))
+                            watcher_name)
+                    self.timelines[watcher_name] = []
+                    self.tries[watcher_name] = 0
+                    self.call(make_message("stop", name=watcher_name))
             else:
-                self.timelines[show_name] = []
-                self.tries[show_name] = 0
+                self.timelines[watcher_name] = []
+                self.tries[watcher_name] = 0
