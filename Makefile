@@ -12,5 +12,5 @@ test:
 coverage:
 	bin/nosetests --with-coverage --cover-html --cover-html-dir=html --cover-package=circus
 
-docs: html
-	$(MAKE) -C docs $^
+docs: 
+	$(MAKE) -C docs html $^
