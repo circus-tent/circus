@@ -14,7 +14,7 @@ def get_arbiter(cmd, numprocesses=1.,
                 shell=False, working_dir=None, uid=None, gid=None,
                 env=None, name=None, context=None,
                 check_flapping=True):
-    """Creates a Arbiter and a single show in it.
+    """Creates a Arbiter and a single watcher in it.
 
     Options:
 
@@ -29,7 +29,7 @@ def get_arbiter(cmd, numprocesses=1.,
     - uid: the user id used to run the flies (default: None)
     - gid: the group id used to run the flies (default: None)
     - env: the environment passed to the flies (default: None)
-    - name: the name of the show (default: None)
+    - name: the name of the watcher (default: None)
     - context: the zmq context (default: None)
     - check_flapping: If True, the flapping detection is activated.
       (default:True)
@@ -40,8 +40,8 @@ def get_arbiter(cmd, numprocesses=1.,
     if not name:
         name = os.path.basename(cmd.split(None)[0])
 
-    show = Watcher(name, cmd, numprocesses, working_dir=working_dir,
+    watcher = Watcher(name, cmd, numprocesses, working_dir=working_dir,
                    warmup_delay=warmup_delay, shell=shell, uid=uid, gid=gid,
                    env=env)
-    return Arbiter([show], controller, pubsub_endpoint, context=context,
+    return Arbiter([watcher], controller, pubsub_endpoint, context=context,
                    check_flapping=check_flapping)

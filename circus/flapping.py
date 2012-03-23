@@ -35,7 +35,7 @@ class Flapping(Thread):
         self.client.connect(self.endpoint)
         self.client.linger = 0
         self.sub_socket = self.context.socket(zmq.SUB)
-        self.sub_socket.setsockopt(zmq.SUBSCRIBE, b'show.')
+        self.sub_socket.setsockopt(zmq.SUBSCRIBE, b'watcher.')
         self.sub_socket.connect(self.pubsub_endpoint)
         self.substream = zmqstream.ZMQStream(self.sub_socket, self.loop)
         self.substream.on_recv(self.handle_recv)
