@@ -69,7 +69,7 @@ class Stats(Command):
 
        ::
 
-            $ circusctl stats [<showname>] [<processid>]
+            $ circusctl stats [<watchername>] [<processid>]
 
         """
 

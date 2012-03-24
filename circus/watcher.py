@@ -70,7 +70,7 @@ class Watcher(object):
         else:
             name = self.res_name
 
-        multipart_msg = ["show.%s.%s" % (name, topic), json.dumps(msg)]
+        multipart_msg = ["watcher.%s.%s" % (name, topic), json.dumps(msg)]
 
         if not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)
@@ -310,9 +310,9 @@ class Watcher(object):
         return self.processes[wid]
 
     def set_opt(self, key, val):
-        """Set a show option.
+        """Set a watcher option.
 
-        This function set the show options. unknown keys are ignored.
+        This function set the watcher options. unknown keys are ignored.
         This function return an action number:
 
         - 0: trigger the process management
