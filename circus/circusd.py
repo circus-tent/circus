@@ -150,11 +150,18 @@ def main():
             max_retry = cfg.dget(section, "max_retry", 5, int)
             graceful_timeout = cfg.dget(section, "graceful_timeout", 30, int)
 
+            rlimits = {}
+            for cfg_name, cfg_value in cfg.items(section):
+                if cfg_name.startswith('rlimit_'):
+                    limit = cfg_name[7:]
+                    rlimits[limit] = int(cfg_value)
+
             watcher = Watcher(name, cmd, numprocesses=numprocesses,
                         warmup_delay=warmup_delay, working_dir=working_dir,
                         shell=shell, uid=uid, gid=gid, send_hup=send_hup,
                         times=times, within=within, retry_in=retry_in,
-                        max_retry=max_retry, graceful_timeout=graceful_timeout)
+                        max_retry=max_retry, graceful_timeout=graceful_timeout,
+                        rlimits=rlimits)
 
             watchers.append(watcher)
 
