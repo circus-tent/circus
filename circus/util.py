@@ -218,7 +218,8 @@ def convert_opt(key, val):
 
 def read_config(config_path):
     cfg = DefaultConfigParser()
-    cfg.readfp(open(config_path))
+    with open(config_path) as f:
+        cfg.readfp(f)
     cfg_files_read = [config_path]
 
     # load included config files
