@@ -35,3 +35,10 @@ watcher:NAME (as many sections as you want)
         The delay (in seconds) between running processes.
     **numprocesses**
         The number of processes to run for this watcher.
+    **rlimit_LIMIT**
+        Set resource limit LIMIT for the watched processes. The
+        config name should match the RLIMIT_* constants (not case
+        sensitive) listed in the `Python resource module reference
+        <http://docs.python.org/library/resource.html#resource-limits>`_.
+        For example, the config line 'rlimit_nofile = 500' sets the maximum
+        number of open files to 500.

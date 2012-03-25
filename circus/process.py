@@ -53,6 +53,9 @@ class Process(object):
 
     - **env**: a mapping containing the environment variables the command
       will run with. Optional.
+
+    - **rlimits**: a mapping containing rlimit names and values that will
+      be set before the command runs.
     """
     def __init__(self, wid, cmd, working_dir=None, shell=False, uid=None,
                  gid=None, env=None, rlimits=None):
