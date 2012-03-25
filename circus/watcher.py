@@ -15,7 +15,8 @@ class Watcher(object):
                  working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False, env=None, stopped=True,
                  times=2, within=1., retry_in=7., max_retry=5,
-                 graceful_timeout=30., prereload_fn=None):
+                 graceful_timeout=30., prereload_fn=None,
+                 rlimits=None):
         """ init
         """
         self.name = name
@@ -48,6 +49,7 @@ class Watcher(object):
         self.uid = uid
         self.gid = gid
         self.env = env
+        self.rlimits = rlimits
         self.send_hup = send_hup
         self.evpub_socket = None
 
@@ -141,7 +143,8 @@ class Watcher(object):
             try:
                 process = Process(self._process_counter, self.cmd,
                           working_dir=self.working_dir, shell=self.shell,
-                          uid=self.uid, gid=self.gid, env=self.env)
+                          uid=self.uid, gid=self.gid, env=self.env,
+                          rlimits=self.rlimits)
                 self.processes[self._process_counter] = process
                 logger.debug('running %s process [pid %d]', self.name,
                             process.pid)

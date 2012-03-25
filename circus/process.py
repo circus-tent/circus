@@ -9,6 +9,7 @@ except ImportError:
     ctypes = None       # NOQA
 import errno
 import os
+import resource
 from subprocess import PIPE
 import time
 
@@ -52,9 +53,12 @@ class Process(object):
 
     - **env**: a mapping containing the environment variables the command
       will run with. Optional.
+
+    - **rlimits**: a mapping containing rlimit names and values that will
+      be set before the command runs.
     """
     def __init__(self, wid, cmd, working_dir=None, shell=False, uid=None,
-                 gid=None, env=None):
+                 gid=None, env=None, rlimits=None):
         self.wid = wid
         if working_dir is None:
             self.working_dir = get_working_dir()
@@ -62,6 +66,12 @@ class Process(object):
             self.working_dir = working_dir
         self.shell = shell
         self.env = env
+
+        if rlimits is not None:
+            self.rlimits = rlimits
+        else:
+            self.rlimits = {}
+
         self.cmd = cmd.replace('$WID', str(self.wid))
         if uid is None:
             self.uid = None
@@ -75,6 +85,14 @@ class Process(object):
 
         def preexec_fn():
             os.setsid()
+
+            for limit, value in self.rlimits.items():
+                res = getattr(resource, 'RLIMIT_%s' % limit.upper(), None)
+                if res is None:
+                    raise ValueError('unknown rlimit "%s"' % limit)
+                # TODO(petef): support hard/soft limits
+                resource.setrlimit(res, (value, value))
+
             if self.gid:
                 try:
                     os.setgid(self.gid)
