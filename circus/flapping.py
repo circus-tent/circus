@@ -1,5 +1,5 @@
 import errno
-from threading import Thread, Timer
+from threading import Lock, Thread, Timer
 import time
 import uuid
 
@@ -27,6 +27,7 @@ class Flapping(Thread):
         self.timers = {}
         self.configs = {}
         self.tries = {}
+        self.zeromq_lock = Lock()
 
     @debuglog
     def initialize(self):
@@ -84,8 +85,10 @@ class Flapping(Thread):
             self.update_conf(topic_parts[1])
 
     def call(self, cmd):
+        self.zeromq_lock.acquire()
         self.client.send(json.dumps(cmd))
         msg = self.client.recv()
+        self.zeromq_lock.release()
         return json.loads(msg)
 
     def update_conf(self, watcher_name):
