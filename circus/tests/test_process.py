@@ -50,9 +50,13 @@ f.close
             output[limit] = value
         f.close()
 
+        def srt2ints(val):
+            return [int(key) for key in val[1:-1].split(',')]
+
+        wanted = [20, 20]
         try:
-            self.assertEqual(output['NOFILE'], '(20, 20)')
-            self.assertEqual(output['NPROC'], '(20, 20)')
+            self.assertEqual(srt2ints(output['NOFILE']), wanted)
+            self.assertEqual(srt2ints(output['NPROC']), wanted)
         finally:
             os.unlink(script_file)
             os.unlink(output_file)
