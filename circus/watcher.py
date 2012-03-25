@@ -250,7 +250,8 @@ class Watcher(object):
                     del self.processes[wid]
 
         self.kill_processes(signal.SIGKILL)
-        self.send_msg("stop", {"time": time.time()})
+        if self.evpub_socket is not None:
+            self.send_msg("stop", {"time": time.time()})
         logger.info('%s stopped', self.name)
 
     @util.debuglog
