@@ -4,6 +4,7 @@
 circus.egg-info
 bin
 lib
+lib64
 include
 .Python
 .coverage
