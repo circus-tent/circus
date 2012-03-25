@@ -85,10 +85,9 @@ class Flapping(Thread):
             self.update_conf(topic_parts[1])
 
     def call(self, cmd):
-        self.zeromq_lock.acquire()
-        self.client.send(json.dumps(cmd))
-        msg = self.client.recv()
-        self.zeromq_lock.release()
+        with self.zeromq_lock:
+            self.client.send(json.dumps(cmd))
+            msg = self.client.recv()
         return json.loads(msg)
 
     def update_conf(self, watcher_name):
