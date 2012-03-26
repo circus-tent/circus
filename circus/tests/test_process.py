@@ -51,9 +51,9 @@ f.close
         f.close()
 
         def srt2ints(val):
-            return [int(key) for key in val[1:-1].split(',')]
+            return [long(key) for key in val[1:-1].split(',')]
 
-        wanted = [20, 20]
+        wanted = [20L, 20L]
         try:
             self.assertEqual(srt2ints(output['NOFILE']), wanted)
             self.assertEqual(srt2ints(output['NPROC']), wanted)
