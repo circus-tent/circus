@@ -10,3 +10,4 @@ include
 html
 docs/source/commands*
 docs/build
+local

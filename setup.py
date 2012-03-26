@@ -22,7 +22,8 @@ setup(name='circus',
         "Programming Language :: Python",
         "License :: OSI Approved :: Apache Software License",
         "Development Status :: 3 - Alpha"],
-      install_requires=['pyzmq', 'psutil', 'nose'],
+      install_requires=['pyzmq', 'psutil'],
+      test_requires=['nose'],
       test_suite = 'nose.collector',
       entry_points="""
       [console_scripts]
