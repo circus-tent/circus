@@ -21,6 +21,11 @@ circus (single section)
         The endpoint to which the ZMQ socket will be bound.
     **check_delay**
         The polling interval for the ZMQ socket.
+    **include**
+        List of config files to include.
+    **include_dir**
+        List of config directories. All files matching `*.ini` under each
+        directory will be included.
 
 
 watcher:NAME (as many sections as you want)
