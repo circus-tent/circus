@@ -88,6 +88,9 @@ class Flapping(Thread):
         msg = self.client.recv()
         return json.loads(msg)
 
+    def cast(self, cmd):
+        self.client.send(json.dumps(cmd))
+
     def update_conf(self, watcher_name):
         msg = self.call(make_message("options", name=watcher_name))
         conf = self.configs.get(watcher_name, {})
@@ -118,13 +121,13 @@ class Flapping(Thread):
                     logger.info("%s: flapping detected: retry in %2ds",
                             watcher_name, conf['retry_in'])
 
-                    self.call(make_message("stop", name=watcher_name))
+                    self.cast(make_message("stop", name=watcher_name))
 
                     self.timelines[watcher_name] = []
                     self.tries[watcher_name] = tries + 1
 
                     def _start():
-                        self.call(make_message("start", name=watcher_name))
+                        self.cast(make_message("start", name=watcher_name))
 
                     timer = Timer(conf['retry_in'], _start)
                     timer.start()
@@ -134,7 +137,7 @@ class Flapping(Thread):
                             watcher_name)
                     self.timelines[watcher_name] = []
                     self.tries[watcher_name] = 0
-                    self.call(make_message("stop", name=watcher_name))
+                    self.cast(make_message("stop", name=watcher_name))
             else:
                 self.timelines[watcher_name] = []
                 self.tries[watcher_name] = 0
