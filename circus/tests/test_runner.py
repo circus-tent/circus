@@ -29,16 +29,17 @@ class TestRunner(TestCircus):
         self.assertTrue('.' in content)
 
     def test_issue53(self):
-        watcher = Watcher('test', 'bash -q', numprocesses=10,
-                          warmup_delay=0)
+        watcher = Watcher('test', 'bash -q', numprocesses=100,
+                          warmup_delay=0, max_retry=10, retry_in=0.1)
+
         endpoint = 'tcp://127.0.0.1:5555'
         pubsub_endpoint = 'tcp://127.0.0.1:5556'
-        arbiter = Arbiter([watcher], endpoint, pubsub_endpoint, check_delay=0.1)
+        arbiter = Arbiter([watcher], endpoint, pubsub_endpoint,
+                          check_delay=0.1)
 
         def handler(signum, frame):
             arbiter.stop()
 
         signal.signal(signal.SIGALRM, handler)
-        signal.alarm(10)
-
+        signal.alarm(5)
         arbiter.start()
