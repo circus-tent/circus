@@ -1,16 +1,29 @@
-.PHONY: docs
+.PHONY: docs build test coverage
+
+ifndef VTENV_OPTS
+VTENV_OPTS = "--no-site-packages"
+endif
 
 build:
-	virtualenv --no-site-packages .
+bin/python:
+	virtualenv $(VTENV_OPTS) .
 	bin/python setup.py develop
-	bin/pip install coverage
-	bin/pip install nose
 
-test:
+test: bin/nosetests
 	bin/nosetests -s circus
 
-coverage:
+coverage: bin/coverage
 	bin/nosetests --with-coverage --cover-html --cover-html-dir=html --cover-package=circus
 
-docs: html
-	$(MAKE) -C docs $^
+docs: bin/sphinx-build
+	SPHINXBUILD=../bin/sphinx-build $(MAKE) -C docs html $^
+
+bin/sphinx-build: bin/python
+	bin/pip install sphinx
+
+bin/nosetests: bin/python
+	bin/pip install nose
+
+bin/coverage: bin/python
+	bin/pip install coverage
+
