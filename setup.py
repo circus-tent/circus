@@ -1,5 +1,11 @@
 from setuptools import setup, find_packages
 
+install_requires=['pyzmq', 'psutil']
+
+try:
+    import argparse     # NOQA
+except ImportError:
+    install_requires.append('argparse')
 
 with open("README.rst") as f:
     README = f.read()
@@ -22,7 +28,7 @@ setup(name='circus',
         "Programming Language :: Python",
         "License :: OSI Approved :: Apache Software License",
         "Development Status :: 3 - Alpha"],
-      install_requires=['pyzmq', 'psutil'],
+      install_requires=install_requires,
       test_requires=['nose'],
       test_suite = 'nose.collector',
       entry_points="""
