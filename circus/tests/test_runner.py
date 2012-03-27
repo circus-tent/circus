@@ -5,9 +5,6 @@ import threading
 import signal
 
 from circus.tests.support import TestCircus
-from circus.watcher import Watcher
-from circus.arbiter import Arbiter
-from circus.circusd import main
 
 
 def Dummy(test_file):
@@ -27,19 +24,3 @@ class TestRunner(TestCircus):
             content = f.read()
 
         self.assertTrue('.' in content)
-
-    def test_issue53(self):
-        watcher = Watcher('test', 'bash -q', numprocesses=100,
-                          warmup_delay=0, max_retry=10, retry_in=0.1)
-
-        endpoint = 'tcp://127.0.0.1:5555'
-        pubsub_endpoint = 'tcp://127.0.0.1:5556'
-        arbiter = Arbiter([watcher], endpoint, pubsub_endpoint,
-                          check_delay=0.1)
-
-        def handler(signum, frame):
-            arbiter.stop()
-
-        signal.signal(signal.SIGALRM, handler)
-        signal.alarm(5)
-        arbiter.start()
