@@ -1,6 +1,5 @@
 import sys
 import argparse
-import ConfigParser
 import os
 import logging
 import resource
@@ -26,20 +25,6 @@ LOG_LEVELS = {
 
 LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
 LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
-
-
-class DefaultConfigParser(ConfigParser.ConfigParser):
-    def dget(self, section, option, default=None, type=str):
-        if not self.has_option(section, option):
-            return default
-        if type is str:
-            return self.get(section, option)
-        elif type is int:
-            return self.getint(section, option)
-        elif type is bool:
-            return self.getboolean(section, option)
-        else:
-            raise NotImplementedError()
 
 
 def get_maxfd():
@@ -97,8 +82,7 @@ def main():
     parser.add_argument('--pidfile', dest='pidfile')
 
     args = parser.parse_args()
-    cfg = DefaultConfigParser()
-    cfg.read(args.config)
+    (cfg, cfg_files_read) = util.read_config(args.config)
 
     if args.daemonize:
         daemonize()
@@ -124,6 +108,8 @@ def main():
     fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
     h.setFormatter(fmt)
     logger.addHandler(h)
+
+    logger.debug('Loaded config files %s' % str(cfg_files_read))
 
     # Initialize watchers to manage
     watchers = []
