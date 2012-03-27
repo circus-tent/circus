@@ -235,4 +235,4 @@ def read_config(config_path):
 
     cfg_files_read.extend(cfg.read(includes))
 
-    return (cfg, cfg_files_read)
+    return cfg, cfg_files_read

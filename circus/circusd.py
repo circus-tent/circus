@@ -82,7 +82,7 @@ def main():
     parser.add_argument('--pidfile', dest='pidfile')
 
     args = parser.parse_args()
-    (cfg, cfg_files_read) = util.read_config(args.config)
+    cfg, cfg_files_read = util.read_config(args.config)
 
     if args.daemonize:
         daemonize()
