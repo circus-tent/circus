@@ -3,7 +3,9 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = ../bin/sphinx-build
+ifndef SPHINXBUILD
+SPHINXBUILD   = sphinx-build
+endif
 PAPER         =
 BUILDDIR      = build
 
@@ -151,3 +153,8 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+# Need it to avoid error
+bin/sphinx-build:
+	@echo "Doc updated"
+
