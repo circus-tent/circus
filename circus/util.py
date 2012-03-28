@@ -135,7 +135,7 @@ def to_uid(name):
         try:
             pwd.getpwuid(name)
             return name
-        except KeyError:
+        except (KeyError, OverflowError):
             raise ValueError("%r isn't a valid user id" % name)
 
     if not isinstance(name, str):
@@ -156,7 +156,7 @@ def to_gid(name):
         try:
             grp.getgrgid(name)
             return name
-        except KeyError:
+        except (KeyError, OverflowError):
             raise ValueError("No such group: %r" % name)
 
     if not isinstance(name, str):
