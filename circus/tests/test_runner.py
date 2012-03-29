@@ -1,9 +1,4 @@
-import os
 import time
-import sys
-import threading
-import signal
-
 from circus.tests.support import TestCircus
 
 
