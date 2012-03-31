@@ -4,3 +4,5 @@ python:
 - "2.7"
 install: python setup.py develop
 script: python setup.py test
+notifications:
+  email: false
