@@ -69,7 +69,7 @@ def daemonize():
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Run some watcherss.')
+    parser = argparse.ArgumentParser(description='Run some watchers.')
     parser.add_argument('config', help='configuration file')
 
     # XXX we should be able to add all these options in the config file as well
