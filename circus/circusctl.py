@@ -95,6 +95,9 @@ class ControllerApp(object):
             return self.display_version()
 
         else:
+            if cmd not in self.commands:
+                raise ArgumentError('Unknown command %r' % cmd)
+
             cmd = self.commands[cmd]
 
         endpoint = globalopts.get('endpoint')
