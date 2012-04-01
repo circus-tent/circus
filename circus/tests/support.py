@@ -74,8 +74,8 @@ class TestCircus(unittest.TestCase):
         os.close(fd)
         wdir = os.path.dirname(__file__)
         cmd = '%s generic.py %s %s' % (sys.executable, callable, testfile)
-        arbiter = get_arbiter(cmd, working_dir=wdir, numprocesses=1,
-                              name="test")
+        worker = {'cmd': cmd, 'working_dir': wdir, 'name': 'test'}
+        arbiter = get_arbiter([worker])
         runner = Runner(arbiter, testfile)
         runner.start()
         self.runners.append(runner)
