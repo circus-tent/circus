@@ -1,5 +1,6 @@
 import grp
 import os
+import platform
 import pwd
 import unittest
 from psutil import Popen
@@ -50,9 +51,11 @@ class TestUtil(unittest.TestCase):
         self.assertRaises(TypeError, to_gid, None)
 
     def test_negative_uid_gid(self):
-        # OSX allows negative uid/gid and throws KeyError on a miss.
-        # On Linux, the range is (-1, 2^32-1), throwing OverflowError
-        # outside that range, and KeyError on a miss.
+        # OSX allows negative uid/gid and throws KeyError on a miss.  On
+        # x86_64 Linux, the range is (-1, 2^32-1), throwing OverflowError
+        # outside that range, and KeyError on a miss. On 32-bit Linux, all
+        # negative values throw KeyError as do requests for non-existent
+        # uid/gid.
         def int32(val):
             if (val & 0x80000000):
                 val = -0x100000000 + val
@@ -74,13 +77,13 @@ class TestUtil(unittest.TestCase):
         getpwuid = lambda pid: pwd.getpwuid(pid)
         getgrgid = lambda gid: grp.getgrgid(gid)
 
-        if os.uname()[0] == 'Darwin':
-            self.assertRaises(KeyError, getpwuid, uid_max + 1)
-            self.assertRaises(KeyError, getpwuid, uid_min - 1)
-            self.assertRaises(KeyError, getgrgid, gid_max + 1)
-            self.assertRaises(KeyError, getgrgid, gid_min - 1)
-        else:
+        if os.uname()[0] == 'Linux' and platform.machine() == 'x86_64':
             self.assertRaises(KeyError, getpwuid, uid_max + 1)
             self.assertRaises(OverflowError, getpwuid, uid_min - 1)
             self.assertRaises(KeyError, getgrgid, gid_max + 1)
             self.assertRaises(OverflowError, getgrgid, gid_min - 1)
+        else:
+            self.assertRaises(KeyError, getpwuid, uid_max + 1)
+            self.assertRaises(KeyError, getpwuid, uid_min - 1)
+            self.assertRaises(KeyError, getgrgid, gid_max + 1)
+            self.assertRaises(KeyError, getgrgid, gid_min - 1)
