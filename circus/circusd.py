@@ -123,7 +123,7 @@ def main():
             numprocesses = cfg.dget(section, 'numprocesses', 1, int)
             warmup_delay = cfg.dget(section, 'warmup_delay', 0, int)
 
-            executable = cfg.get(section, 'executable')
+            executable = cfg.dget(section, 'executable', None, str)
             working_dir = cfg.dget(section, 'working_dir')
             shell = cfg.dget(section, 'shell', False, bool)
             uid = cfg.dget(section, 'uid')
