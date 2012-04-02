@@ -144,7 +144,7 @@ class Watcher(object):
             process = None
             try:
                 process = Process(self._process_counter, self.cmd,
-                          args = self.args, working_dir=self.working_dir,
+                          args=self.args, working_dir=self.working_dir,
                           shell=self.shell, uid=self.uid, gid=self.gid,
                           env=self.env, rlimits=self.rlimits,
                           executable=self.executable)
