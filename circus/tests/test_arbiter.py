@@ -12,7 +12,6 @@ class DummyProcess(object):
     def __init__(self, testfile):
         self.alive = True
         self.testfile = testfile
-
         import signal
         signal.signal(signal.SIGQUIT, self.handle_quit)
         signal.signal(signal.SIGTERM, self.handle_quit)

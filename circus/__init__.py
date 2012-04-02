@@ -11,7 +11,7 @@ logger = logging.getLogger('circus')
 def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
                 pubsub_endpoint='tcp://127.0.0.1:5556',
                 env=None, name=None, context=None,
-                check_flapping=True):
+                check_flapping=True, background=False):
     """Creates a Arbiter and a single watcher in it.
 
     Options:
@@ -37,9 +37,14 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
     - **context** -- the zmq context (default: None)
     - **check_flapping** -- If True, the flapping detection is activated.
       (default:True)
+    - **background** -- If True, the arbiter is launched in a thread in the
+      background (default: False)
     """
     from circus.watcher import Watcher
-    from circus.arbiter import Arbiter
+    if background:
+        from circus.arbiter import ThreadedArbiter as Arbiter   # NOQA
+    else:
+        from circus.arbiter import Arbiter   # NOQA
 
     _watchers = []
 

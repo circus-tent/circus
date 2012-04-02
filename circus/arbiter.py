@@ -1,6 +1,7 @@
 import errno
 import logging
 import os
+from threading import Thread
 
 import zmq
 from zmq.eventloop import ioloop
@@ -215,3 +216,24 @@ class Arbiter(object):
 
         for watcher in self.watchers:
             watcher.stop(graceful=graceful)
+
+
+class ThreadedArbiter(Arbiter, Thread):
+
+    def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
+                 prereload_fn=None, context=None, loop=None,
+                 check_flapping=True):
+        Thread.__init__(self)
+        Arbiter.__init__(self, watchers, endpoint, pubsub_endpoint,
+                         check_delay, prereload_fn, context, loop,
+                         check_flapping)
+
+    def start(self):
+        return Thread.start(self)
+
+    def run(self):
+        return Arbiter.start(self)
+
+    def stop(self):
+        Arbiter.stop(self)
+        self.join()

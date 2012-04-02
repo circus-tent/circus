@@ -1,8 +1,6 @@
 import unittest
 from tempfile import mkstemp
 import os
-import threading
-import time
 import sys
 from circus import get_arbiter
 
@@ -41,25 +39,10 @@ def resolve_name(name):
     return ret
 
 
-class Runner(threading.Thread):
-    def __init__(self, arbiter, test_file):
-        threading.Thread.__init__(self)
-        self.arbiter = arbiter
-        self.test_file = test_file
-
-    def run(self):
-        self.arbiter.start()
-
-    def stop(self):
-        time.sleep(0.25)
-        self.arbiter.stop()
-        self.join()
-
-
 class TestCircus(unittest.TestCase):
 
     def setUp(self):
-        self.runners = []
+        self.arbiters = []
         self.files = []
 
     def tearDown(self):
@@ -75,14 +58,13 @@ class TestCircus(unittest.TestCase):
         wdir = os.path.dirname(__file__)
         cmd = '%s generic.py %s %s' % (sys.executable, callable, testfile)
         worker = {'cmd': cmd, 'working_dir': wdir, 'name': 'test'}
-        arbiter = get_arbiter([worker])
-        runner = Runner(arbiter, testfile)
-        runner.start()
-        self.runners.append(runner)
+        arbiter = get_arbiter([worker], background=True)
+        arbiter.start()
+        self.arbiters.append(arbiter)
         self.files.append(testfile)
         return testfile
 
     def _stop_runners(self):
-        for runner in self.runners:
-            runner.stop()
-        self.runners = []
+        for arbiter in self.arbiters:
+            arbiter.stop()
+        self.arbiters = []
