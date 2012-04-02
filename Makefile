@@ -28,4 +28,4 @@ bin/coverage: bin/python
 	bin/pip install coverage
 
 build_rpm:
-	bin/python setup.py bdist_rpm
+	bin/python setup.py bdist_rpm --requires "python26 python-setuptools pyzmq python26-psutil"
