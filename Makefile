@@ -1,4 +1,4 @@
-.PHONY: docs build test coverage
+.PHONY: docs build test coverage build_rpm
 
 ifndef VTENV_OPTS
 VTENV_OPTS = "--no-site-packages"
@@ -27,3 +27,5 @@ bin/nosetests: bin/python
 bin/coverage: bin/python
 	bin/pip install coverage
 
+build_rpm:
+	bin/python setup.py bdist_rpm
