@@ -11,12 +11,12 @@ from circus import util
 
 class Watcher(object):
 
-    def __init__(self, name, cmd, numprocesses=1, warmup_delay=0.,
+    def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False, env=None, stopped=True,
                  times=2, within=1., retry_in=7., max_retry=5,
                  graceful_timeout=30., prereload_fn=None,
-                 rlimits=None):
+                 rlimits=None, executable=None):
         """ init
         """
         self.name = name
@@ -24,6 +24,7 @@ class Watcher(object):
         self.numprocesses = int(numprocesses)
         self.warmup_delay = warmup_delay
         self.cmd = cmd
+        self.args = args
         self._process_counter = 0
         self.stopped = stopped
         self.times = times
@@ -32,11 +33,12 @@ class Watcher(object):
         self.max_retry = max_retry
         self.graceful_timeout = 30
         self.prereload_fn = prereload_fn
+        self.executable = None
 
         self.optnames = ("numprocesses", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env",
-                         "cmd", "times", "within", "retry_in",
-                         "max_retry", "graceful_timeout")
+                         "cmd", "times", "within", "retry_in", "args",
+                         "max_retry", "graceful_timeout", "executable")
 
         if not working_dir:
             # working dir hasn't been set
@@ -142,9 +144,11 @@ class Watcher(object):
             process = None
             try:
                 process = Process(self._process_counter, self.cmd,
-                          working_dir=self.working_dir, shell=self.shell,
-                          uid=self.uid, gid=self.gid, env=self.env,
-                          rlimits=self.rlimits)
+                          args = self.args, working_dir=self.working_dir,
+                          shell=self.shell, uid=self.uid, gid=self.gid,
+                          env=self.env, rlimits=self.rlimits,
+                          executable=self.executable)
+
                 self.processes[self._process_counter] = process
                 logger.debug('running %s process [pid %d]', self.name,
                             process.pid)

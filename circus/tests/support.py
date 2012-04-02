@@ -2,6 +2,8 @@ import unittest
 from tempfile import mkstemp
 import os
 import sys
+import time
+
 from circus import get_arbiter
 
 
@@ -39,6 +41,9 @@ def resolve_name(name):
     return ret
 
 
+_CMD = sys.executable
+
+
 class TestCircus(unittest.TestCase):
 
     def setUp(self):
@@ -56,10 +61,12 @@ class TestCircus(unittest.TestCase):
         fd, testfile = mkstemp()
         os.close(fd)
         wdir = os.path.dirname(__file__)
-        cmd = '%s generic.py %s %s' % (sys.executable, callable, testfile)
-        worker = {'cmd': cmd, 'working_dir': wdir, 'name': 'test'}
+        args = ['generic.py', callable, testfile]
+        worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
+                  'name': 'test'}
         arbiter = get_arbiter([worker], background=True)
         arbiter.start()
+        time.sleep(.3)
         self.arbiters.append(arbiter)
         self.files.append(testfile)
         return testfile

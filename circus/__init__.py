@@ -21,6 +21,12 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
 
         - **name** -- the name of the watcher (default: None)
         - **cmd** -- the command line used to run the Watcher.
+        - **args** -- the args for the command (list or string).
+        - **executable**: When executable is given, the first item in
+          the args sequence obtained from **cmd** is still treated by most
+          programs as the command name, which can then be different from the
+          actual executable name. It becomes the display name for the executing
+          program in utilities such as **ps**.
         - **numprocesses** -- the number of flies to spawn (default: 1).
         - **warmup_delay** -- the delay in seconds between two spawns
           (default: 0)
@@ -54,13 +60,15 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
 
         watcher = Watcher(name,
                           cmd,
-                          watcher.get('numprocesses', 1),
+                          args=watcher.get('args'),
+                          numprocesses=watcher.get('numprocesses', 1),
                           working_dir=watcher.get('working_dir'),
                           warmup_delay=float(watcher.get('warmup_delay', '0')),
                           shell=watcher.get('shell'),
                           uid=watcher.get('uid'),
                           gid=watcher.get('gid'),
-                          env=watcher.get('env'))
+                          env=watcher.get('env'),
+                          executable=watcher.get('executable'))
         _watchers.append(watcher)
 
     return Arbiter(_watchers, controller, pubsub_endpoint, context=context,

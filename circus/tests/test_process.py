@@ -9,8 +9,9 @@ from circus.process import Process, RUNNING
 class TestProcess(unittest.TestCase):
 
     def test_base(self):
-        cmd = "%s -c 'import time; time.sleep(2)'"
-        process = Process('test', cmd % sys.executable, shell=True)
+        cmd = sys.executable
+        args = "-c 'import time; time.sleep(2)'"
+        process = Process('test', cmd, args=args, shell=True)
         try:
             info = process.info()
             self.assertEqual(process.pid, info['pid'])
@@ -34,11 +35,12 @@ f.close
         f = open(script_file, 'w')
         f.write(script)
         f.close()
-        cmd = '%s %s %s' % (sys.executable, script_file, output_file)
+        cmd = sys.executable
+        args = [script_file, output_file]
         rlimits = {'nofile': 20,
                    'nproc': 20,
                   }
-        process = Process('test', cmd, rlimits=rlimits)
+        process = Process('test', cmd, args=args, rlimits=rlimits)
         # wait for the process to finish
         while process.status == RUNNING:
             time.sleep(1)

@@ -12,10 +12,12 @@ import os
 import resource
 from subprocess import PIPE
 import time
+import shlex
 
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
 from circus.util import get_info, to_uid, to_gid, debuglog, get_working_dir
+from circus import logger
 
 
 _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
@@ -38,6 +40,16 @@ class Process(object):
     - **cmd**: the command to run. May contain *$WID*, which will be
       replaced by **wid**.
 
+    - **args**: the arguments for the command to run. Can be a list or
+      a string. If **args** is  a string, it's splitted using
+      :func:`shlex.split`. Defaults to None.
+
+    - **executable**: When executable is given, the first item in
+      the args sequence obtained from **cmd** is still treated by most
+      programs as the command name, which can then be different from the
+      actual executable name. It becomes the display name for the executing
+      program in utilities such as **ps**.
+
     - **working_dir**: the working directory to run the command in. If
       not provided, will default to the current working directory.
 
@@ -57,8 +69,8 @@ class Process(object):
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
     """
-    def __init__(self, wid, cmd, working_dir=None, shell=False, uid=None,
-                 gid=None, env=None, rlimits=None):
+    def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
+                 uid=None, gid=None, env=None, rlimits=None, executable=None):
         self.wid = wid
         if working_dir is None:
             self.working_dir = get_working_dir()
@@ -106,10 +118,26 @@ class Process(object):
             if self.uid:
                 os.setuid(self.uid)
 
-        self._worker = Popen(self.cmd.split(), cwd=self.working_dir,
+        logger.debug('cmd: ' + cmd)
+        logger.debug('args: ' + str(args))
+
+        if args is not None:
+            if isinstance(args, str):
+                args_ = shlex.split(args)
+            else:
+                args_ = args[:]
+
+            args_.insert(0, cmd)
+        else:
+            args_ = [cmd]
+
+        logger.debug('Running %r' % ' '.join(args_))
+
+        self._worker = Popen(args_, cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
                              env=self.env, close_fds=True, stdout=PIPE,
-                             stderr=PIPE)
+                             stderr=PIPE, executable=executable)
+
         self.started = time.time()
 
     @debuglog

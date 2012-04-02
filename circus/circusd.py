@@ -119,12 +119,11 @@ def main():
 
             cmd = cfg.get(section, 'cmd')
             args = cfg.dget(section, 'args', '')
-            if args:
-                cmd = "%s %s" % (cmd, args)
 
             numprocesses = cfg.dget(section, 'numprocesses', 1, int)
             warmup_delay = cfg.dget(section, 'warmup_delay', 0, int)
 
+            executable = cfg.get(section, 'executable')
             working_dir = cfg.dget(section, 'working_dir')
             shell = cfg.dget(section, 'shell', False, bool)
             uid = cfg.dget(section, 'uid')
@@ -142,7 +141,8 @@ def main():
                     limit = cfg_name[7:]
                     rlimits[limit] = int(cfg_value)
 
-            watcher = Watcher(name, cmd, numprocesses=numprocesses,
+            watcher = Watcher(name, cmd, args=args, executable=executable,
+                        numprocesses=numprocesses,
                         warmup_delay=warmup_delay, working_dir=working_dir,
                         shell=shell, uid=uid, gid=gid, send_hup=send_hup,
                         times=times, within=within, retry_in=retry_in,
