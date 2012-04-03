@@ -152,8 +152,12 @@ class Process(object):
     @debuglog
     def stop(self):
         """Terminate the process."""
-        if self._worker.poll() is None:
-            return self._worker.terminate()
+        try:
+            if self._worker.poll() is None:
+                return self._worker.terminate()
+        finally:
+            self._worker.stderr.close()
+            self._worker.stdout.close()
 
     def age(self):
         """Return the age of the process in seconds."""

@@ -174,6 +174,7 @@ class Watcher(object):
                                "time": time.time()})
         logger.debug("%s: kill process %s", self.name, process.pid)
         process.send_signal(sig)
+        process.stop()
 
     @util.debuglog
     def kill_processes(self, sig):
