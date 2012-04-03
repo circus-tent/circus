@@ -4,8 +4,7 @@ ifndef VTENV_OPTS
 VTENV_OPTS = "--no-site-packages"
 endif
 
-build:
-bin/python:
+build:	
 	virtualenv $(VTENV_OPTS) .
 	bin/python setup.py develop
 
