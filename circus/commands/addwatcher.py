@@ -1,4 +1,5 @@
 from circus.commands.base import Command
+from circus.commands.start import Start
 from circus.exc import ArgumentError
 
 
@@ -55,7 +56,12 @@ class AddWatcher(Command):
 
         msg = self.make_message(name=args[0], cmd=" ".join(args[1:]))
         if opts.get("start", False):
-            return [msg, self.make_message(command="start", name=args[0])]
+            return [{'command': self,
+                     'msg': msg,
+                 },
+                    {'command': Start(),
+                     'msg': self.make_message(command="start", name=args[0])
+                 }]
         return msg
 
     def execute(self, arbiter, props):
