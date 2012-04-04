@@ -92,19 +92,19 @@ class TestTrainer(TestCircus):
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
-    def test_add_watcher1(self):
+    def test_add_watcher_and_verify_it_is_listed(self):
         msg = make_message("add", name="test1", cmd=self._get_cmd())
         self.cli.call(msg)
         resp = self.cli.call(make_message("list"))
         self.assertEqual(resp.get('watchers'), ["test", "test1"])
 
-    def test_add_watcher2(self):
+    def test_add_watcher_and_verify_number_of_watchers(self):
         msg = make_message("add", name="test1", cmd=self._get_cmd())
         self.cli.call(msg)
         resp = self.cli.call(make_message("numwatchers"))
         self.assertEqual(resp.get("numwatchers"), 2)
 
-    def test_add_watcher3(self):
+    def test_add_watcher_and_verify_you_can_not_add_duplicate(self):
         msg = make_message("add", name="test1", cmd=self._get_cmd())
         self.cli.call(msg)
         resp = self.cli.call(msg)

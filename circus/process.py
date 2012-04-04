@@ -124,6 +124,9 @@ class Process(object):
         if args is not None:
             if isinstance(args, str):
                 args_ = shlex.split(args)
+            elif isinstance(args, unicode):
+                args_ = args.encode('ascii')
+                args_ = shlex.split(args_)
             else:
                 args_ = args[:]
 

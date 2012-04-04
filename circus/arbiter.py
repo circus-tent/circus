@@ -167,7 +167,7 @@ class Arbiter(object):
         return dict([(watcher.name, watcher.status())
                       for watcher in self.watchers])
 
-    def add_watcher(self, name, cmd):
+    def add_watcher(self, name, cmd, args):
         """Adds a watcher.
 
         Options:
@@ -181,7 +181,7 @@ class Arbiter(object):
         if not name:
             return ValueError("command name shouldn't be empty")
 
-        watcher = Watcher(name, cmd, stopped=True)
+        watcher = Watcher(name, cmd, args, stopped=True)
         watcher.initialize(self.evpub_socket)
         self.watchers.append(watcher)
         self._watchers_names[watcher.name.lower()] = watcher
