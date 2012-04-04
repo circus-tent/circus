@@ -15,7 +15,7 @@ with open("CHANGES.rst") as f:
 
 
 setup(name='circus',
-      version='0.2',
+      version='0.3',
       packages=find_packages(),
       description=("Circus is a program that will let you run and watch "
                    " multiple processes."),
