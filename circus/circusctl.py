@@ -167,7 +167,8 @@ class ControllerApp(object):
         try:
             if isinstance(msg, list):
                 for i, command in enumerate(msg):
-                    clm = self._console(client, command['cmd'], opts, command['msg'])
+                    clm = self._console(client, command['cmd'], opts,
+                                        command['msg'])
                     print("%s: %s" % (i, clm))
             else:
                 print(self._console(client, cmd, opts, msg))

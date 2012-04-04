@@ -46,10 +46,9 @@ except ImportError:
                 pass
 
 
+# http://www.svbug.com/documentation/comp.unix.programmer-FAQ/faq_2.html#SEC16
 def daemonize():
-    """\
-    Standard daemonization of a process.
-    http://www.svbug.com/documentation/comp.unix.programmer-FAQ/faq_2.html#SEC16
+    """Standard daemonization of a process.
     """
     #if not 'CIRCUS_PID' in os.environ:
     if os.fork():
