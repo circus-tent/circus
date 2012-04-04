@@ -166,8 +166,8 @@ class ControllerApp(object):
         client = CircusClient(endpoint=endpoint, timeout=timeout)
         try:
             if isinstance(msg, list):
-                for i, cmd in enumerate(msg):
-                    clm = self._console(client, cmd, opts, msg)
+                for i, command in enumerate(msg):
+                    clm = self._console(client, command['cmd'], opts, command['msg'])
                     print("%s: %s" % (i, clm))
             else:
                 print(self._console(client, cmd, opts, msg))
