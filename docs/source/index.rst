@@ -2,10 +2,10 @@ Circus Process Watcher
 ======================
 
 .. note::
-    
-   Circus is in its early stages and is not production ready yet ! 
-   
-   We still might change the API. 
+
+   Circus is in its early stages and is not production ready yet !
+
+   We still might change the API.
 
 
 .. image:: images/circus-medium.png
@@ -103,7 +103,7 @@ Here are, in our opinion, the top 3 reasons to use Circus.
 
   Circus also provides ways to get status updates via one time polls
   on a req/rep channel, so you can get your information without having
-  to subscribe to a stream. The :ref:`cli` command provided in 
+  to subscribe to a stream. The :ref:`cli` command provided in
   Circus is a client of that channel.
 
   See :ref:`examples`.
@@ -142,6 +142,7 @@ More documentation
    commands
    library
    architecture
+   deployment
    examples
 
 Contributions and Feedback
