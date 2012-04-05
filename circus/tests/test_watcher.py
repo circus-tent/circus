@@ -1,5 +1,7 @@
 import time
 import signal
+import sys
+import os
 
 from circus.client import CircusClient, make_message
 from circus.tests.support import TestCircus
@@ -60,4 +62,5 @@ class TestWatcher(TestCircus):
         resp = self.call("stats").get('infos')
         self.assertTrue("test" in resp)
 
-        self.assertEqual(resp['test']['1']['cmdline'], 'python')
+        self.assertEqual(resp['test']['1']['cmdline'],
+                         sys.executable.split(os.sep)[-1])
