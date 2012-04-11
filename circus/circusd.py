@@ -137,14 +137,25 @@ def main():
             stdout = cfg.dget(section, 'stdout_file', None, str)
             stderr_stream = stdout_stream = None
 
+
+            class FileStream(object):
+                def __init__(self, filename):
+                    # how to close that cursor ?
+                    self._file = open(filename, 'a+')
+                    self._buffer = []
+
+                def __call__(self, data):
+                    self._file.write(data['data'])
+                    self._file.flush()
+
             if stderr is not None:
-                stderr_stream = open(stderr, 'a+')
+                stderr_stream = FileStream(stderr)
 
             if stdout is not None:
                 if stdout == stderr:
                     stdout_stream = stderr_stream
                 else:
-                    stdout_stream = open(stdout, 'a+')
+                    stdout_stream = FileStream(stdout)
 
             rlimits = {}
             for cfg_name, cfg_value in cfg.items(section):

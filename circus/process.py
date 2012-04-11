@@ -72,11 +72,25 @@ class Process(object):
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
 
-    - **stdout_stream**: a file-like object that will receive the stream of
-      the process stdout. Defaults to None.
+    - **stdout_stream**: a callable that will receive the stream of
+      the process stdout.
 
-    - **stderr_stream**: a file-like object that will receive the stream of
-      the process stderr. Defaults to None.
+      Each entry is a mapping containing:
+      - **pid** - the process pid
+      - **name** - the stream name (*stderr* or *stdout*)
+      - **data** - the data
+
+      Defaults to None.
+
+    - **stderr_stream**: a callable that will receive the stream of
+      the process stderr.
+
+      Each entry is a mapping containing:
+      - **pid** - the process pid
+      - **name** - the stream name (*stderr* or *stdout*)
+      - **data** - the data
+
+      Defaults to None.
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
                  uid=None, gid=None, env=None, rlimits=None, executable=None,
@@ -165,17 +179,17 @@ class Process(object):
         except ImportError:
             raise ImportError('You need to install gevent')
 
-        def _stream(output, stream):
+        def _stream(output, stream, stream_name):
             fcntl.fcntl(output, fcntl.F_SETFL, os.O_NONBLOCK)
             fileno = output.fileno()
+            pid = self._worker.pid
 
             while True:
                 try:
                     data = output.read(1024)
                     if not data:
                         break
-                    stream.write(data)
-                    stream.flush()
+                    stream({'data': data, 'name': stream_name, 'pid': pid})
                 except IOError, ex:
                     if ex[0] != errno.EAGAIN:
                         raise
@@ -184,12 +198,12 @@ class Process(object):
 
         if self.stdout_stream is not None:
             self._stdout = Greenlet(_stream, self._worker.stdout,
-                                    self.stdout_stream)
+                                    self.stdout_stream, 'stdout')
             self._stdout.start()
 
         if self.stderr_stream is not None:
             self._stderr = Greenlet(_stream, self._worker.stderr,
-                                    self.stderr_stream)
+                                    self.stderr_stream, 'stderr')
             self._stderr.start()
 
     def _stop_streams(self):
