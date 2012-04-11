@@ -50,7 +50,6 @@ def get_pipe_redirector(pipe, redirect, extra_info=None, buffer=1024):
     except ImportError:
         raise ImportError('You need to install gevent')
 
-
     def _stream(pipe, redirect, extra_info, buffer=1024):
         fcntl.fcntl(pipe, fcntl.F_SETFL, os.O_NONBLOCK)
         fileno = pipe.fileno()

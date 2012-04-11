@@ -139,7 +139,6 @@ def main():
             stdout = cfg.dget(section, 'stdout_file', None, str)
             stderr_stream = stdout_stream = None
 
-
             if stderr is not None:
                 stderr_stream = FileStream(stderr)
 

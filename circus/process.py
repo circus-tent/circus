@@ -10,12 +10,9 @@ except ImportError:
 import errno
 import os
 import resource
-import fcntl
-import sys
 from subprocess import PIPE
 import time
 import shlex
-import sys
 
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
@@ -77,6 +74,7 @@ class Process(object):
       the process stdout.
 
       Each entry is a mapping containing:
+
       - **pid** - the process pid
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
@@ -87,6 +85,7 @@ class Process(object):
       the process stderr.
 
       Each entry is a mapping containing:
+
       - **pid** - the process pid
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
@@ -176,26 +175,10 @@ class Process(object):
             return
 
         try:
-            from gevent import Greenlet, socket
+            import gevent   # NOQA
         except ImportError:
-            raise ImportError('You need to install gevent')
-
-        def _stream(output, stream, stream_name):
-            fcntl.fcntl(output, fcntl.F_SETFL, os.O_NONBLOCK)
-            fileno = output.fileno()
-            pid = self._worker.pid
-
-            while True:
-                try:
-                    data = output.read(1024)
-                    if not data:
-                        break
-                    stream({'data': data, 'name': stream_name, 'pid': pid})
-                except IOError, ex:
-                    if ex[0] != errno.EAGAIN:
-                        raise
-                    sys.exc_clear()
-                socket.wait_read(fileno)
+            raise ImportError('You need to install gevent and gevent_zmq to '
+                              'use this option')
 
         if self.stdout_stream is not None:
             extra = {'pid': self._worker.pid, 'name': 'stdout'}
