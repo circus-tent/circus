@@ -15,7 +15,6 @@ class QueueStream(Queue):
 
 class FileStream(object):
     def __init__(self, filename):
-        # how to close that cursor ?
         self._file = open(filename, 'a+')
         self._buffer = []
 
@@ -27,28 +26,47 @@ class FileStream(object):
         self._file.close()
 
 
-def get_stream_redirector(pid, output, stream, stream_name):
+def get_pipe_redirector(pipe, redirect, extra_info=None, buffer=1024):
+    """Redirects data received in pipe to the redirect callable.
+
+    This function creates a Greenlet that continuously reads data
+    in the provided pipe and sends it to a callable.
+
+    The data is a mapping with a **data** key containing the data
+    received from the pipe, extended with all values passed in
+    **extra_info**
+
+    Options:
+    - **stream**: the stream to read from
+    - **redirect**: the callable to send data to
+    - **extra_info**: a mapping of values to add to each call
+    - **buffer**: the size of the buffer when reading data
+    """
+    if extra_info is None:
+        extra_info = {}
+
     try:
         from gevent import Greenlet, socket
     except ImportError:
         raise ImportError('You need to install gevent')
 
 
-    def _stream(pid, output, stream, stream_name):
-        fcntl.fcntl(output, fcntl.F_SETFL, os.O_NONBLOCK)
-        fileno = output.fileno()
+    def _stream(pipe, redirect, extra_info, buffer=1024):
+        fcntl.fcntl(pipe, fcntl.F_SETFL, os.O_NONBLOCK)
+        fileno = pipe.fileno()
 
         while True:
             try:
-                data = output.read(1024)
+                data = pipe.read(buffer)
                 if not data:
                     break
-                stream({'data': data, 'name': stream_name, 'pid': pid})
+                datamap = {'data': data}
+                datamap.update(extra_info)
+                redirect(datamap)
             except IOError, ex:
                 if ex[0] != errno.EAGAIN:
                     raise
                 sys.exc_clear()
             socket.wait_read(fileno)
 
-    return Greenlet(_stream, pid, output, stream, stream_name)
-
+    return Greenlet(_stream, pipe, redirect, extra_info, buffer)
