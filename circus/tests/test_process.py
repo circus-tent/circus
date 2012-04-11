@@ -3,7 +3,6 @@ import os
 import sys
 import tempfile
 import time
-import StringIO
 
 from circus.process import Process, RUNNING
 
@@ -98,7 +97,7 @@ class TestProcess(unittest.TestCase):
 
     def test_streams(self):
         try:
-            import gevent
+            import gevent       # NOQA
         except ImportError:
             return
 

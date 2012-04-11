@@ -16,7 +16,8 @@ class Watcher(object):
                  gid=None, send_hup=False, env=None, stopped=True,
                  times=2, within=1., retry_in=7., max_retry=5,
                  graceful_timeout=30., prereload_fn=None,
-                 rlimits=None, executable=None):
+                 rlimits=None, executable=None, stdout_stream=None,
+                 stderr_stream=None):
         """ init
         """
         self.name = name
@@ -34,6 +35,8 @@ class Watcher(object):
         self.graceful_timeout = 30
         self.prereload_fn = prereload_fn
         self.executable = None
+        self.stdout_stream = stdout_stream
+        self.stderr_stream = stderr_stream
 
         self.optnames = ("numprocesses", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env",
@@ -147,7 +150,9 @@ class Watcher(object):
                           args=self.args, working_dir=self.working_dir,
                           shell=self.shell, uid=self.uid, gid=self.gid,
                           env=self.env, rlimits=self.rlimits,
-                          executable=self.executable)
+                          executable=self.executable,
+                          stderr_stream=self.stderr_stream,
+                          stdout_stream=self.stdout_stream)
 
                 self.processes[self._process_counter] = process
                 logger.debug('running %s process [pid %d]', self.name,
