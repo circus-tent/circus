@@ -21,6 +21,7 @@ from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
 from circus.util import get_info, to_uid, to_gid, debuglog, get_working_dir
 from circus import logger
+from circus.stream import get_stream_redirector
 
 
 _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
@@ -197,21 +198,26 @@ class Process(object):
                 socket.wait_read(fileno)
 
         if self.stdout_stream is not None:
-            self._stdout = Greenlet(_stream, self._worker.stdout,
-                                    self.stdout_stream, 'stdout')
+            self._stdout = get_stream_redirector(self._worker.pid,
+                                                 self._worker.stdout,
+                                                 self.stdout_stream, 'stdout')
             self._stdout.start()
 
         if self.stderr_stream is not None:
-            self._stderr = Greenlet(_stream, self._worker.stderr,
-                                    self.stderr_stream, 'stderr')
+            self._stderr = get_stream_redirector(self._worker.pid,
+                                                 self._worker.stderr,
+                                                 self.stderr_stream, 'stderr')
             self._stderr.start()
 
     def _stop_streams(self):
         if self._stderr is not None:
             self._stderr.kill()
+            self.stderr_stream.close()
 
         if self._stdout is not None:
             self._stdout.kill()
+            if self.stderr_stream is not self.stdout_stream:
+                self.stdout_stream.close()
 
     @debuglog
     def poll(self):
