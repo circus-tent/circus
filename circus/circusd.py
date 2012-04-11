@@ -9,6 +9,8 @@ from circus.arbiter import Arbiter
 from circus.watcher import Watcher
 from circus.pidfile import Pidfile
 from circus import util
+from circus.stream import FileStream
+
 
 MAXFD = 1024
 if hasattr(os, "devnull"):
@@ -137,16 +139,6 @@ def main():
             stdout = cfg.dget(section, 'stdout_file', None, str)
             stderr_stream = stdout_stream = None
 
-
-            class FileStream(object):
-                def __init__(self, filename):
-                    # how to close that cursor ?
-                    self._file = open(filename, 'a+')
-                    self._buffer = []
-
-                def __call__(self, data):
-                    self._file.write(data['data'])
-                    self._file.flush()
 
             if stderr is not None:
                 stderr_stream = FileStream(stderr)
