@@ -2,6 +2,15 @@ import fcntl
 import errno
 import os
 import sys
+from Queue import Queue
+
+
+class QueueStream(Queue):
+    def __call__(self, data):
+        self.put(data)
+
+    def close(self):
+        pass
 
 
 class FileStream(object):
