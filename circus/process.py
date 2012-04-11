@@ -12,20 +12,10 @@ import os
 import resource
 import fcntl
 import sys
-
-try:
-    from gevent import socket
-    from gevent import monkey
-    from gevent_zeromq import monkey_patch
-
-    monkey.patch_all()
-    monkey_patch()
-except ImportError:
-    pass
-
 from subprocess import PIPE
 import time
 import shlex
+import sys
 
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
@@ -81,6 +71,12 @@ class Process(object):
 
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
+
+    - **stdout_stream**: a file-like object that will receive the stream of
+      the process stdout. Defaults to None.
+
+    - **stderr_stream**: a file-like object that will receive the stream of
+      the process stderr. Defaults to None.
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
                  uid=None, gid=None, env=None, rlimits=None, executable=None,
@@ -155,6 +151,7 @@ class Process(object):
                              shell=self.shell, preexec_fn=preexec_fn,
                              env=self.env, close_fds=True, stdout=PIPE,
                              stderr=PIPE, executable=executable)
+                             #bufsize=1)
 
         self._set_streams()
         self.started = time.time()
@@ -164,30 +161,33 @@ class Process(object):
             return
 
         try:
-            from gevent import Greenlet
+            from gevent import Greenlet, socket
         except ImportError:
             raise ImportError('You need to install gevent')
 
         def _stream(output, stream):
+            fcntl.fcntl(output, fcntl.F_SETFL, os.O_NONBLOCK)
+            fileno = output.fileno()
+
             while True:
                 try:
-                    for line in output.readline():
-                        stream.write(line)
+                    data = output.read(1024)
+                    if not data:
+                        break
+                    stream.write(data)
+                    stream.flush()
                 except IOError, ex:
                     if ex[0] != errno.EAGAIN:
                         raise
                     sys.exc_clear()
-                socket.wait_read(output.fileno())
-
-        fcntl.fcntl(self._worker.stderr, fcntl.F_SETFL, os.O_NONBLOCK)
-        fcntl.fcntl(self._worker.stdout, fcntl.F_SETFL, os.O_NONBLOCK)
+                socket.wait_read(fileno)
 
         if self.stdout_stream is not None:
             self._stdout = Greenlet(_stream, self._worker.stdout,
                                     self.stdout_stream)
             self._stdout.start()
 
-        if self.stderr_stream is not None :
+        if self.stderr_stream is not None:
             self._stderr = Greenlet(_stream, self._worker.stderr,
                                     self.stderr_stream)
             self._stderr.start()

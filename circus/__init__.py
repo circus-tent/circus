@@ -1,6 +1,15 @@
 import logging
 import os
 
+try:
+    from gevent import monkey
+    from gevent_zeromq import monkey_patch
+    monkey.patch_all()
+    monkey_patch()
+except ImportError:
+    pass
+
+
 version_info = (0, 1, 0)
 __version__ = ".".join(map(str, version_info))
 

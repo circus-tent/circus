@@ -133,6 +133,18 @@ def main():
             retry_in = cfg.dget(section, "retry_in", 7, int)
             max_retry = cfg.dget(section, "max_retry", 5, int)
             graceful_timeout = cfg.dget(section, "graceful_timeout", 30, int)
+            stderr = cfg.dget(section, 'stderr_file', None, str)
+            stdout = cfg.dget(section, 'stdout_file', None, str)
+            stderr_stream = stdout_stream = None
+
+            if stderr is not None:
+                stderr_stream = open(stderr, 'a+')
+
+            if stdout is not None:
+                if stdout == stderr:
+                    stdout_stream = stderr_stream
+                else:
+                    stdout_stream = open(stdout, 'a+')
 
             rlimits = {}
             for cfg_name, cfg_value in cfg.items(section):
@@ -146,7 +158,8 @@ def main():
                         shell=shell, uid=uid, gid=gid, send_hup=send_hup,
                         times=times, within=within, retry_in=retry_in,
                         max_retry=max_retry, graceful_timeout=graceful_timeout,
-                        rlimits=rlimits)
+                        rlimits=rlimits, stderr_stream=stderr_stream,
+                        stdout_stream=stdout_stream)
 
             watchers.append(watcher)
 
@@ -159,6 +172,8 @@ def main():
     arbiter = Arbiter(watchers, endpoint, pubsub_endpoint, check)
     try:
         arbiter.start()
+    except KeyboardInterrupt:
+        pass
     finally:
         arbiter.stop()
         if pidfile is not None:
