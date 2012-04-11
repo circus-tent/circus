@@ -10,6 +10,19 @@ except ImportError:
 import errno
 import os
 import resource
+import fcntl
+import sys
+
+try:
+    from gevent import socket
+    from gevent import monkey
+    from gevent_zeromq import monkey_patch
+
+    monkey.patch_all()
+    monkey_patch()
+except ImportError:
+    pass
+
 from subprocess import PIPE
 import time
 import shlex
@@ -70,7 +83,8 @@ class Process(object):
       be set before the command runs.
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
-                 uid=None, gid=None, env=None, rlimits=None, executable=None):
+                 uid=None, gid=None, env=None, rlimits=None, executable=None,
+                 stdout_stream=None, stderr_stream=None):
         self.wid = wid
         if working_dir is None:
             self.working_dir = get_working_dir()
@@ -131,6 +145,10 @@ class Process(object):
         else:
             args_ = [cmd]
 
+        self.stdout_stream = stdout_stream
+        self.stderr_stream = stderr_stream
+        self._stderr = self._stdout = None
+
         logger.debug('Running %r' % ' '.join(args_))
 
         self._worker = Popen(args_, cwd=self.working_dir,
@@ -138,7 +156,48 @@ class Process(object):
                              env=self.env, close_fds=True, stdout=PIPE,
                              stderr=PIPE, executable=executable)
 
+        self._set_streams()
         self.started = time.time()
+
+    def _set_streams(self):
+        if self.stdout_stream is None and self.stdout_stream is None:
+            return
+
+        try:
+            from gevent import Greenlet
+        except ImportError:
+            raise ImportError('You need to install gevent')
+
+        def _stream(output, stream):
+            while True:
+                try:
+                    for line in output.readline():
+                        stream.write(line)
+                except IOError, ex:
+                    if ex[0] != errno.EAGAIN:
+                        raise
+                    sys.exc_clear()
+                socket.wait_read(output.fileno())
+
+        fcntl.fcntl(self._worker.stderr, fcntl.F_SETFL, os.O_NONBLOCK)
+        fcntl.fcntl(self._worker.stdout, fcntl.F_SETFL, os.O_NONBLOCK)
+
+        if self.stdout_stream is not None:
+            self._stdout = Greenlet(_stream, self._worker.stdout,
+                                    self.stdout_stream)
+            self._stdout.start()
+
+        if self.stderr_stream is not None :
+            self._stderr = Greenlet(_stream, self._worker.stderr,
+                                    self.stderr_stream)
+            self._stderr.start()
+
+    def _stop_streams(self):
+        if self._stderr is not None:
+            self._stderr.kill()
+
+        if self._stdout is not None:
+            self._stdout.kill()
 
     @debuglog
     def poll(self):
@@ -156,6 +215,7 @@ class Process(object):
             if self._worker.poll() is None:
                 return self._worker.terminate()
         finally:
+            self._stop_streams()
             self._worker.stderr.close()
             self._worker.stdout.close()
 
