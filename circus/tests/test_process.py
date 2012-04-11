@@ -5,6 +5,7 @@ import tempfile
 import time
 
 from circus.process import Process, RUNNING
+from circus.stream import QueueStream
 
 
 RLIMIT = '''\
@@ -101,19 +102,10 @@ class TestProcess(unittest.TestCase):
         except ImportError:
             return
 
-        from gevent.queue import Queue
-
         script_file = self.get_tmpfile(STREAM)
-
-        class StreamQueue(Queue):
-            def write(self, data):
-                self.put(data)
-
-        stream = StreamQueue()
-
+        stream = QueueStream()
         cmd = sys.executable
         args = [script_file]
-
         process = Process('test', cmd, args=args, stdout_stream=stream,
                           stderr_stream=stream)
 
