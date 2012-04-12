@@ -173,7 +173,8 @@ class Arbiter(object):
         Options:
 
         - **name**: name of the watcher to add
-        - **cmd**: command to run.
+        - **cmd**: command to run
+        - **args**: arguments for the command
         """
         if name in self._watchers_names:
             raise AlreadyExist("%r already exist" % name)
