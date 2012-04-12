@@ -17,6 +17,7 @@ import shlex
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
 from circus.util import get_info, to_uid, to_gid, debuglog, get_working_dir
+from circus.py3compat import string_types, text_type
 from circus import logger
 
 
@@ -122,7 +123,7 @@ class Process(object):
         logger.debug('args: ' + str(args))
 
         if args is not None:
-            if isinstance(args, str):
+            if isinstance(args, string_types) or isinstance(args, text_type):
                 args_ = shlex.split(args)
             elif isinstance(args, unicode):
                 args_ = args.encode('ascii')
