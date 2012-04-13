@@ -31,7 +31,7 @@ class FileStream(object):
 # if gevent and gevent_zmq are available, let's use a Greenlet
 # o/wise fallback to a Thread + a select
 try:
-    import gevent_zeromq    # just to make sure zmq will not block
+    import gevent_zeromq    # just to make sure zmq will not block  # NOQA
     from gevent import Greenlet, socket
 
     class GreenRedirector(Greenlet):

@@ -148,16 +148,15 @@ def main():
                 raise ValueError('"stdout_stream" and "stdout_file" are '
                                  'mutually exclusive')
 
-
             if stderr_file is not None:
                 stderr_stream = FileStream(stderr_file)
             elif stderr_stream is not None:
-                stderr_stream = resolve_name(stderr_stream)
+                stderr_stream = util.resolve_name(stderr_stream)
 
             if stdout_file is not None:
                 stdout_stream = FileStream(stdout_file)
             elif stdout_stream is not None:
-                stdout_stream = resolve_name(stdout_stream)
+                stdout_stream = util.resolve_name(stdout_stream)
 
             rlimits = {}
             for cfg_name, cfg_value in cfg.items(section):
