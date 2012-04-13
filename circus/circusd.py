@@ -135,18 +135,32 @@ def main():
             retry_in = cfg.dget(section, "retry_in", 7, int)
             max_retry = cfg.dget(section, "max_retry", 5, int)
             graceful_timeout = cfg.dget(section, "graceful_timeout", 30, int)
-            stderr = cfg.dget(section, 'stderr_file', None, str)
-            stdout = cfg.dget(section, 'stdout_file', None, str)
-            stderr_stream = stdout_stream = None
+            stderr_file = cfg.dget(section, 'stderr_file', None, str)
+            stdout_file = cfg.dget(section, 'stdout_file', None, str)
+            stderr_stream = cfg.dget(section, 'stderr_stream', None, str)
+            stdout_stream = cfg.dget(section, 'stdout_stream', None, str)
 
-            if stderr is not None:
-                stderr_stream = FileStream(stderr)
+            if stderr_stream is not None and stderr_file is not None:
+                raise ValueError('"stderr_stream" and "stderr_file" are '
+                                 'mutually exclusive')
 
-            if stdout is not None:
-                if stdout == stderr:
+            if stdout_stream is not None and stdout_file is not None:
+                raise ValueError('"stdout_stream" and "stdout_file" are '
+                                 'mutually exclusive')
+
+
+            if stderr_file is not None:
+                stderr_stream = FileStream(stderr_file)
+            elif stderr_stream is not None:
+                stderr_stream = resolve_name(stderr_stream)
+
+            if stdout_file is not None:
+                if stdout_file == stderr_file:
                     stdout_stream = stderr_stream
                 else:
-                    stdout_stream = FileStream(stdout)
+                    stdout_stream = FileStream(stdout_file)
+            elif stdout_stream is not None:
+                stdout_stream = resolve_name(stdout_stream)
 
             rlimits = {}
             for cfg_name, cfg_value in cfg.items(section):

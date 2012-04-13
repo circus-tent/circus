@@ -8,6 +8,8 @@ Example::
     [circus]
     check_delay = 5
     endpoint = tcp://127.0.0.1:5555
+    pubsub_endpoint = tcp://127.0.0.1:5556
+
 
     [watcher:myprogram]
     cmd = python
@@ -15,17 +17,22 @@ Example::
     warmup_delay = 0
     numprocesses = 5
 
+
 circus (single section)
 ~~~~~~~~~~~~~~~~~~~~~~~
     **endpoint**
-        The endpoint to which the ZMQ socket will be bound.
+        The ZMQ socket used to manage Circus via **circusctl**.
+        (default: *tcp://127.0.0.1:5555*)
+    **pubsub_endpoint**
+        The ZMQ PUB/SUB socket receiving publications of events.
+        (default: *tcp://127.0.0.1:5556*)
     **check_delay**
-        The polling interval for the ZMQ socket.
+        The polling interval in seconds for the ZMQ socket. (default: 5)
     **include**
-        List of config files to include.
+        List of config files to include. (defaults: None)
     **include_dir**
         List of config directories. All files matching `*.ini` under each
-        directory will be included.
+        directory will be included. (defaults: None)
 
 
 watcher:NAME (as many sections as you want)
@@ -57,3 +64,15 @@ watcher:NAME (as many sections as you want)
         <http://docs.python.org/library/resource.html#resource-limits>`_.
         For example, the config line 'rlimit_nofile = 500' sets the maximum
         number of open files to 500.
+    **stderr_file**
+        A file that will receive the **stderr** stream of all workers.
+        (default: none)
+    **stdout_file**
+        A file that will receive the **stdout** stream of all workers.
+        (default: none)
+    **stderr_stream**
+        A fully qualified Python callable thet will receive the **stderr**
+        stream of all workers. (default: none, incompatible with *stderr_file*.)
+    **stdout_stream**
+        A fully qualified Python callable thet will receive the **stdout**
+        stream of all workers. (default: none,  incompatible with *stdout_file*.)
