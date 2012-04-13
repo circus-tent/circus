@@ -1,6 +1,15 @@
 import logging
 import os
 
+try:
+    from gevent import monkey
+    from gevent_zeromq import monkey_patch
+    monkey.patch_all()
+    monkey_patch()
+except ImportError:
+    pass
+
+
 version_info = (0, 1, 0)
 __version__ = ".".join(map(str, version_info))
 
@@ -11,7 +20,8 @@ logger = logging.getLogger('circus')
 def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
                 pubsub_endpoint='tcp://127.0.0.1:5556',
                 env=None, name=None, context=None,
-                check_flapping=True, background=False):
+                check_flapping=True, background=False, stdout_stream=None,
+                stderr_stream=None):
     """Creates a Arbiter and a single watcher in it.
 
     Options:
@@ -36,6 +46,10 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
         - **uid** -- the user id used to run the flies (default: None)
         - **gid** -- the group id used to run the flies (default: None)
         - **env** -- the environment passed to the flies (default: None)
+        - **stdout_stream**: a callable that will receive the stream of
+          the process stdout.
+        - **stderr_stream**: a callable that will receive the stream of
+          the process stderr.
 
     - **controller** -- the zmq entry point (default: 'tcp://127.0.0.1:5555')
     - **pubsub_endpoint** -- the zmq entry point for the pubsub
@@ -45,6 +59,8 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
       (default:True)
     - **background** -- If True, the arbiter is launched in a thread in the
       background (default: False)
+
+
     """
     from circus.watcher import Watcher
     if background:
@@ -68,7 +84,10 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
                           uid=watcher.get('uid'),
                           gid=watcher.get('gid'),
                           env=watcher.get('env'),
-                          executable=watcher.get('executable'))
+                          executable=watcher.get('executable'),
+                          stdout_stream=watcher.get('stdout_stream'),
+                          stderr_stream=watcher.get('stderr_stream'))
+
         _watchers.append(watcher)
 
     return Arbiter(_watchers, controller, pubsub_endpoint, context=context,

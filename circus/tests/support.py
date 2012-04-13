@@ -49,14 +49,24 @@ class TestCircus(unittest.TestCase):
     def setUp(self):
         self.arbiters = []
         self.files = []
+        self.tmpfiles = []
 
     def tearDown(self):
         self._stop_runners()
-        for file in self.files:
+        for file in self.files + self.tmpfiles:
             if os.path.exists(file):
                 os.remove(file)
 
-    def _run_circus(self, callable):
+    def get_tmpfile(self, content=None):
+        fd, file = mkstemp()
+        os.close(fd)
+        self.tmpfiles.append(file)
+        if content is not None:
+            with open(file, 'w') as f:
+                f.write(content)
+        return file
+
+    def _run_circus(self, callable, **kw):
         resolve_name(callable)   # used to check the callable
         fd, testfile = mkstemp()
         os.close(fd)
@@ -64,6 +74,7 @@ class TestCircus(unittest.TestCase):
         args = ['generic.py', callable, testfile]
         worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
                   'name': 'test'}
+        worker.update(kw)
         arbiter = get_arbiter([worker], background=True)
         arbiter.start()
         time.sleep(.3)

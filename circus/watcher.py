@@ -7,6 +7,7 @@ from zmq.utils.jsonapi import jsonmod as json
 from circus.process import Process, DEAD_OR_ZOMBIE
 from circus import logger
 from circus import util
+from circus.stream import get_pipe_redirector
 
 
 class Watcher(object):
@@ -16,8 +17,34 @@ class Watcher(object):
                  gid=None, send_hup=False, env=None, stopped=True,
                  times=2, within=1., retry_in=7., max_retry=5,
                  graceful_timeout=30., prereload_fn=None,
-                 rlimits=None, executable=None):
-        """ init
+                 rlimits=None, executable=None, stdout_stream=None,
+                 stderr_stream=None):
+        """
+
+        Options:
+        - XXX to complete
+
+        - **stdout_stream**: a callable that will receive the stream of
+        the process stdout.
+
+        Each entry is a mapping containing:
+
+        - **pid** - the process pid
+        - **name** - the stream name (*stderr* or *stdout*)
+        - **data** - the data
+
+        Defaults to None.
+
+        - **stderr_stream**: a callable that will receive the stream of
+        the process stderr.
+
+        Each entry is a mapping containing:
+
+        - **pid** - the process pid
+        - **name** - the stream name (*stderr* or *stdout*)
+        - **data** - the data
+
+        Defaults to None.
         """
         self.name = name
         self.res_name = name.lower().replace(" ", "_")
@@ -34,6 +61,17 @@ class Watcher(object):
         self.graceful_timeout = 30
         self.prereload_fn = prereload_fn
         self.executable = None
+        self.stdout_stream = stdout_stream
+        if stdout_stream is not None:
+            self.stdout_redirector = get_pipe_redirector(stdout_stream)
+        else:
+            self.stdout_redirector = None
+
+        self.stderr_stream = stderr_stream
+        if stderr_stream is not None:
+            self.stderr_redirector = get_pipe_redirector(stderr_stream)
+        else:
+            self.stderr_redirector = None
 
         self.optnames = ("numprocesses", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env",
@@ -45,7 +83,6 @@ class Watcher(object):
             working_dir = util.get_working_dir()
 
         self.working_dir = working_dir
-
         self.processes = {}
         self.shell = shell
         self.uid = uid
@@ -149,6 +186,17 @@ class Watcher(object):
                           env=self.env, rlimits=self.rlimits,
                           executable=self.executable)
 
+                # stream stderr/stdout if configured
+                if self.stdout_redirector is not None:
+                    self.stdout_redirector.add_redirection('stdout',
+                                                           process,
+                                                           process.stdout)
+
+                if self.stderr_redirector is not None:
+                    self.stderr_redirector.add_redirection('stderr',
+                                                           process,
+                                                           process.stderr)
+
                 self.processes[self._process_counter] = process
                 logger.debug('running %s process [pid %d]', self.name,
                             process.pid)
@@ -170,6 +218,13 @@ class Watcher(object):
     def kill_process(self, process, sig=signal.SIGTERM):
         """Kill process.
         """
+        # remove redirections
+        if self.stdout_redirector is not None:
+            self.stdout_redirector.remove_redirection('stdout', process)
+
+        if self.stderr_redirector is not None:
+            self.stderr_redirector.remove_redirection('stderr', process)
+
         self.send_msg("kill", {"process_id": process.wid,
                                "time": time.time()})
         logger.debug("%s: kill process %s", self.name, process.pid)
@@ -239,6 +294,12 @@ class Watcher(object):
         """Stop.
         """
         self.stopped = True
+        # stop redirectors
+        if self.stdout_redirector is not None:
+            self.stdout_redirector.kill()
+
+        if self.stderr_redirector is not None:
+            self.stderr_redirector.kill()
 
         sig = signal.SIGQUIT
         if not graceful:
@@ -257,6 +318,7 @@ class Watcher(object):
         self.kill_processes(signal.SIGKILL)
         if self.evpub_socket is not None:
             self.send_msg("stop", {"time": time.time()})
+
         logger.info('%s stopped', self.name)
 
     @util.debuglog
@@ -269,6 +331,12 @@ class Watcher(object):
         self.stopped = False
         self.reap_processes()
         self.manage_processes()
+        if self.stdout_redirector is not None:
+            self.stdout_redirector.start()
+
+        if self.stderr_redirector is not None:
+            self.stderr_redirector.start()
+
         logger.info('%s started' % self.name)
         self.send_msg("start", {"time": time.time()})
 

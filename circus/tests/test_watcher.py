@@ -5,11 +5,15 @@ import os
 
 from circus.client import CircusClient, make_message
 from circus.tests.support import TestCircus
+from circus.stream import QueueStream
 
 
 def run_process(test_file):
     try:
+        i = 0
         while True:
+            sys.stdout.write('%d-%s\\n' % (os.getpid(), i))
+            sys.stdout.flush()
             time.sleep(1)
     except:
         return 1
@@ -19,8 +23,10 @@ class TestWatcher(TestCircus):
 
     def setUp(self):
         super(TestWatcher, self).setUp()
+        self.stream = QueueStream()
         dummy_process = 'circus.tests.test_watcher.run_process'
-        self.test_file = self._run_circus(dummy_process)
+        self.test_file = self._run_circus(dummy_process,
+                                          stdout_stream=self.stream)
         self.cli = CircusClient()
 
     def call(self, cmd, **props):
@@ -64,3 +70,8 @@ class TestWatcher(TestCircus):
 
         self.assertEqual(resp['test']['1']['cmdline'],
                          sys.executable.split(os.sep)[-1])
+
+    def test_streams(self):
+        time.sleep(2.)
+        # let's see what we got
+        self.assertTrue(self.stream.qsize() > 1)
