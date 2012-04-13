@@ -155,10 +155,7 @@ def main():
                 stderr_stream = resolve_name(stderr_stream)
 
             if stdout_file is not None:
-                if stdout_file == stderr_file:
-                    stdout_stream = stderr_stream
-                else:
-                    stdout_stream = FileStream(stdout_file)
+                stdout_stream = FileStream(stdout_file)
             elif stdout_stream is not None:
                 stdout_stream = resolve_name(stdout_stream)
 

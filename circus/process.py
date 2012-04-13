@@ -197,8 +197,7 @@ class Process(object):
 
         if self._stdout is not None:
             self._stdout.kill()
-            if self.stderr_stream is not self.stdout_stream:
-                self.stdout_stream.close()
+            self.stdout_stream.close()
 
     @debuglog
     def poll(self):
