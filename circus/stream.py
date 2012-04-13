@@ -68,6 +68,7 @@ except ImportError:
 
     class ThreadedRedirector(Thread):
         def __init__(self, pipe, redirect, extra_info=None, buffer=1024):
+            Thread.__init__(self)
             fcntl.fcntl(pipe, fcntl.F_SETFL, os.O_NONBLOCK)
             self.pipe = pipe
             self.redirect = redirect
