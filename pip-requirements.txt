@@ -1,2 +1,4 @@
 psutil==0.4.1
 pyzmq==2.1.11
+coverage
+nose

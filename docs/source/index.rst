@@ -144,6 +144,8 @@ More documentation
    architecture
    deployment
    examples
+   coverage
+
 
 Contributions and Feedback
 --------------------------
