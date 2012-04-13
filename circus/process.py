@@ -174,12 +174,6 @@ class Process(object):
         if self.stdout_stream is None and self.stdout_stream is None:
             return
 
-        try:
-            import gevent   # NOQA
-        except ImportError:
-            raise ImportError('You need to install gevent and gevent_zmq to '
-                              'use this option')
-
         if self.stdout_stream is not None:
             extra = {'pid': self._worker.pid, 'name': 'stdout'}
 
