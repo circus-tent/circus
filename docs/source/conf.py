@@ -13,6 +13,8 @@
 
 import sys, os
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -31,7 +33,10 @@ sys.path.append(os.path.join(CURDIR, '..', '..'))
 sys.path.append(os.path.join(CURDIR, '..'))
 
 import circus
-extensions = ['sphinx.ext.autodoc', 'circus_ext', 'coverage_ext']
+extensions = ['sphinx.ext.autodoc', 'circus_ext']
+
+if not on_rtd:
+    extensions.append('coverage_ext')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -100,7 +105,6 @@ pygments_style = 'sphinx'
 sys.path.append(os.path.abspath('_themes'))
 html_theme_path = ['_themes']
 html_short_title = "Circus"
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     html_theme = 'default'
 else:
