@@ -18,7 +18,6 @@ from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
 from circus.util import get_info, to_uid, to_gid, debuglog, get_working_dir
 from circus import logger
-from circus.stream import get_pipe_redirector
 
 
 _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
@@ -69,32 +68,9 @@ class Process(object):
 
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
-
-    - **stdout_stream**: a callable that will receive the stream of
-      the process stdout.
-
-      Each entry is a mapping containing:
-
-      - **pid** - the process pid
-      - **name** - the stream name (*stderr* or *stdout*)
-      - **data** - the data
-
-      Defaults to None.
-
-    - **stderr_stream**: a callable that will receive the stream of
-      the process stderr.
-
-      Each entry is a mapping containing:
-
-      - **pid** - the process pid
-      - **name** - the stream name (*stderr* or *stdout*)
-      - **data** - the data
-
-      Defaults to None.
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
-                 uid=None, gid=None, env=None, rlimits=None, executable=None,
-                 stdout_stream=None, stderr_stream=None):
+                 uid=None, gid=None, env=None, rlimits=None, executable=None):
         self.wid = wid
         if working_dir is None:
             self.working_dir = get_working_dir()
@@ -155,10 +131,6 @@ class Process(object):
         else:
             args_ = [cmd]
 
-        self.stdout_stream = stdout_stream
-        self.stderr_stream = stderr_stream
-        self._stderr = self._stdout = None
-
         logger.debug('Running %r' % ' '.join(args_))
 
         self._worker = Popen(args_, cwd=self.working_dir,
@@ -167,37 +139,7 @@ class Process(object):
                              stderr=PIPE, executable=executable)
                              #bufsize=1)
 
-        self._set_streams()
         self.started = time.time()
-
-    def _set_streams(self):
-        if self.stdout_stream is None and self.stdout_stream is None:
-            return
-
-        if self.stdout_stream is not None:
-            extra = {'pid': self._worker.pid, 'name': 'stdout'}
-
-            self._stdout = get_pipe_redirector(self._worker.stdout,
-                                               self.stdout_stream,
-                                               extra)
-            self._stdout.start()
-
-        if self.stderr_stream is not None:
-            extra = {'pid': self._worker.pid, 'name': 'stderr'}
-
-            self._stderr = get_pipe_redirector(self._worker.stderr,
-                                               self.stderr_stream,
-                                               extra)
-            self._stderr.start()
-
-    def _stop_streams(self):
-        if self._stderr is not None:
-            self._stderr.kill()
-            self.stderr_stream.close()
-
-        if self._stdout is not None:
-            self._stdout.kill()
-            self.stdout_stream.close()
 
     @debuglog
     def poll(self):
@@ -215,7 +157,6 @@ class Process(object):
             if self._worker.poll() is None:
                 return self._worker.terminate()
         finally:
-            self._stop_streams()
             self._worker.stderr.close()
             self._worker.stdout.close()
 

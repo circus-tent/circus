@@ -1,11 +1,8 @@
-import unittest
-import os
 import sys
-import tempfile
 import time
 
 from circus.process import Process, RUNNING
-from circus.stream import QueueStream
+from circus.tests.support import TestCircus
 
 
 RLIMIT = '''\
@@ -19,40 +16,8 @@ for limit in ('NOFILE', 'NPROC'):
 f.close
 '''
 
-STREAM = """\
-import time
-import os
-import sys
 
-i = 0
-
-while True:
-    sys.stdout.write('%d-%s\\n' % (os.getpid(), i))
-    sys.stdout.flush()
-    i += 1
-    time.sleep(0.1)
-
-"""
-
-
-class TestProcess(unittest.TestCase):
-
-    def setUp(self):
-        self.files = []
-
-    def tearDown(self):
-        for file in self.files:
-            if os.path.exists(file):
-                os.remove(file)
-
-    def get_tmpfile(self, content=None):
-        fd, file = tempfile.mkstemp()
-        os.close(fd)
-        self.files.append(file)
-        if content is not None:
-            with open(file, 'w') as f:
-                f.write(content)
-        return file
+class TestProcess(TestCircus):
 
     def test_base(self):
         cmd = sys.executable
@@ -95,24 +60,3 @@ class TestProcess(unittest.TestCase):
 
         self.assertEqual(srt2ints(output['NOFILE']), wanted)
         self.assertEqual(srt2ints(output['NPROC']), wanted)
-
-    def test_streams(self):
-        try:
-            import gevent       # NOQA
-        except ImportError:
-            return
-
-        script_file = self.get_tmpfile(STREAM)
-        stream = QueueStream()
-        cmd = sys.executable
-        args = [script_file]
-        process = Process('test', cmd, args=args, stdout_stream=stream,
-                          stderr_stream=stream)
-
-        time.sleep(2.)
-
-        # stop it
-        process.stop()
-
-        # let's see what we got
-        self.assertTrue(stream.qsize() > 10)
