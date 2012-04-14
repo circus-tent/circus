@@ -11,7 +11,58 @@ from circus.stream import get_pipe_redirector
 
 
 class Watcher(object):
+    """
+    Class managing a list of processes for a given command.
 
+    Options:
+    - **name**: name given to the watcher. Used to uniquely identify it.
+
+    - **cmd**: the command to run. May contain *$WID*, which will be
+      replaced by **wid**.
+
+    - **args**: the arguments for the command to run. Can be a list or
+      a string. If **args** is  a string, it's splitted using
+      :func:`shlex.split`. Defaults to None.
+
+    - **numprocesses**: Number of processes to run.
+
+    - **working_dir**: the working directory to run the command in. If
+      not provided, will default to the current working directory.
+
+    - **shell**: if *True*, will run the command in the shell
+      environment. *False* by default. **warning: this is a
+      security hazard**.
+
+    - **uid**: if given, is the user id or name the command should run
+      with. The current uid is the default.
+
+    - **gid**: if given, is the group id or name the command should run
+      with. The current gid is the default.
+
+    - **env**: a mapping containing the environment variables the command
+      will run with. Optional.
+
+    - **rlimits**: a mapping containing rlimit names and values that will
+      be set before the command runs.
+
+    - **stdout_stream**: a callable that will receive the stream of
+      the process stdout. Defaults to None.
+
+        Each entry is a mapping containing:
+
+        - **pid** - the process pid
+        - **name** - the stream name (*stderr* or *stdout*)
+        - **data** - the data
+
+    - **stderr_stream**: a callable that will receive the stream of
+      the process stderr. Defaults to None.
+
+        Each entry is a mapping containing:
+
+        - **pid** - the process pid
+        - **name** - the stream name (*stderr* or *stdout*)
+        - **data** - the data
+    """
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False, env=None, stopped=True,
@@ -19,33 +70,6 @@ class Watcher(object):
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None):
-        """
-
-        Options:
-        - XXX to complete
-
-        - **stdout_stream**: a callable that will receive the stream of
-        the process stdout.
-
-        Each entry is a mapping containing:
-
-        - **pid** - the process pid
-        - **name** - the stream name (*stderr* or *stdout*)
-        - **data** - the data
-
-        Defaults to None.
-
-        - **stderr_stream**: a callable that will receive the stream of
-        the process stderr.
-
-        Each entry is a mapping containing:
-
-        - **pid** - the process pid
-        - **name** - the stream name (*stderr* or *stdout*)
-        - **data** - the data
-
-        Defaults to None.
-        """
         self.name = name
         self.res_name = name.lower().replace(" ", "_")
         self.numprocesses = int(numprocesses)
