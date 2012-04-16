@@ -72,6 +72,8 @@ def get_config(config_file):
                                                int)
 
             # loading the streams
+            watcher['stream_backend'] = dget(section, "stream_backend",
+                                             "thread", str)
             stderr_file = dget(section, 'stderr_file', None, str)
             stdout_file = dget(section, 'stdout_file', None, str)
             stderr_stream = dget(section, 'stderr_stream', None, str)
