@@ -52,7 +52,9 @@ class Arbiter(object):
     def load_from_config(cls, config_file):
         cfg = get_config(config_file)
 
-        # creating watchers.
+        # hack reload ioloop to use the monkey patched version
+        reload(ioloop)
+
         watchers = []
         for watcher in cfg.get('watchers', []):
             watcher['stream_backend'] = cfg['stream_backend']
