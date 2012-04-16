@@ -6,10 +6,8 @@ import resource
 
 from circus import logger
 from circus.arbiter import Arbiter
-from circus.watcher import Watcher
 from circus.pidfile import Pidfile
 from circus import util
-from circus.stream import FileStream
 
 
 MAXFD = 1024
@@ -83,7 +81,6 @@ def main():
     parser.add_argument('--pidfile', dest='pidfile')
 
     args = parser.parse_args()
-    cfg, cfg_files_read = util.read_config(args.config)
 
     if args.daemonize:
         daemonize()
@@ -110,78 +107,8 @@ def main():
     h.setFormatter(fmt)
     logger.addHandler(h)
 
-    logger.debug('Loaded config files %s' % str(cfg_files_read))
-
-    # Initialize watchers to manage
-    watchers = []
-    for section in cfg.sections():
-        if section.startswith("watcher:"):
-            name = section.split("watcher:", 1)[1]
-
-            cmd = cfg.get(section, 'cmd')
-            args = cfg.dget(section, 'args', '')
-
-            numprocesses = cfg.dget(section, 'numprocesses', 1, int)
-            warmup_delay = cfg.dget(section, 'warmup_delay', 0, int)
-
-            executable = cfg.dget(section, 'executable', None, str)
-            working_dir = cfg.dget(section, 'working_dir')
-            shell = cfg.dget(section, 'shell', False, bool)
-            uid = cfg.dget(section, 'uid')
-            gid = cfg.dget(section, 'gid')
-            send_hup = cfg.dget(section, 'send_hup', False, bool)
-            times = cfg.dget(section, "times", 2, int)
-            within = cfg.dget(section, "within", 1, int)
-            retry_in = cfg.dget(section, "retry_in", 7, int)
-            max_retry = cfg.dget(section, "max_retry", 5, int)
-            graceful_timeout = cfg.dget(section, "graceful_timeout", 30, int)
-            stderr_file = cfg.dget(section, 'stderr_file', None, str)
-            stdout_file = cfg.dget(section, 'stdout_file', None, str)
-            stderr_stream = cfg.dget(section, 'stderr_stream', None, str)
-            stdout_stream = cfg.dget(section, 'stdout_stream', None, str)
-
-            if stderr_stream is not None and stderr_file is not None:
-                raise ValueError('"stderr_stream" and "stderr_file" are '
-                                 'mutually exclusive')
-
-            if stdout_stream is not None and stdout_file is not None:
-                raise ValueError('"stdout_stream" and "stdout_file" are '
-                                 'mutually exclusive')
-
-            if stderr_file is not None:
-                stderr_stream = FileStream(stderr_file)
-            elif stderr_stream is not None:
-                stderr_stream = util.resolve_name(stderr_stream)
-
-            if stdout_file is not None:
-                stdout_stream = FileStream(stdout_file)
-            elif stdout_stream is not None:
-                stdout_stream = util.resolve_name(stdout_stream)
-
-            rlimits = {}
-            for cfg_name, cfg_value in cfg.items(section):
-                if cfg_name.startswith('rlimit_'):
-                    limit = cfg_name[7:]
-                    rlimits[limit] = int(cfg_value)
-
-            watcher = Watcher(name, cmd, args=args, executable=executable,
-                        numprocesses=numprocesses,
-                        warmup_delay=warmup_delay, working_dir=working_dir,
-                        shell=shell, uid=uid, gid=gid, send_hup=send_hup,
-                        times=times, within=within, retry_in=retry_in,
-                        max_retry=max_retry, graceful_timeout=graceful_timeout,
-                        rlimits=rlimits, stderr_stream=stderr_stream,
-                        stdout_stream=stdout_stream)
-
-            watchers.append(watcher)
-
-    # main circus options
-    check = cfg.dget('circus', 'check_delay', 5, int)
-    endpoint = cfg.dget('circus', 'endpoint', 'tcp://127.0.0.1:5555')
-    pubsub_endpoint = cfg.dget('circus', 'pubsub_endpoint',
-            'tcp://127.0.0.1:5556')
-
-    arbiter = Arbiter(watchers, endpoint, pubsub_endpoint, check)
+    # load the arbiter from config
+    arbiter = Arbiter.load_from_config(args.config)
     try:
         arbiter.start()
     except KeyboardInterrupt:
