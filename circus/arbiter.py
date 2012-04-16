@@ -12,6 +12,7 @@ from circus.flapping import Flapping
 from circus import logger
 from circus.watcher import Watcher
 from circus.util import debuglog, _setproctitle
+from circus.config import get_config
 
 
 class Arbiter(object):
@@ -46,6 +47,24 @@ class Arbiter(object):
         self.alive = True
         self.busy = False
         self.check_flapping = check_flapping
+
+    @classmethod
+    def load_from_config(cls, config_file):
+        cfg = get_config(config_file)
+
+        # creating watchers.
+        watchers = []
+        for watcher in cfg.get('watchers', []):
+            watchers.append(Watcher.load_from_config(watcher))
+
+        # creating arbiter
+        arbiter = cls(watchers=watchers,
+                      endpoint=cfg['endpoint'],
+                      pubsub_endpoint=cfg['pubsub_endpoint'],
+                      check_delay=cfg.get('check_delay', 1.),
+                      prereload_fn=cfg.get('prereload_fn'))
+
+        return arbiter
 
     @debuglog
     def initialize(self):

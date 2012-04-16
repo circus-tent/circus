@@ -72,24 +72,8 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
 
     for watcher in watchers:
         cmd = watcher['cmd']
-        name = watcher.get('name', os.path.basename(cmd.split()[0]))
-
-        watcher = Watcher(name,
-                          cmd,
-                          args=watcher.get('args'),
-                          numprocesses=watcher.get('numprocesses', 1),
-                          working_dir=watcher.get('working_dir'),
-                          warmup_delay=float(watcher.get('warmup_delay', '0')),
-                          shell=watcher.get('shell'),
-                          uid=watcher.get('uid'),
-                          gid=watcher.get('gid'),
-                          env=watcher.get('env'),
-                          executable=watcher.get('executable'),
-                          stdout_stream=watcher.get('stdout_stream'),
-                          stderr_stream=watcher.get('stderr_stream'),
-                          stream_backend=stream_backend)
-
-        _watchers.append(watcher)
+        watcher['name'] = watcher.get('name', os.path.basename(cmd.split()[0]))
+        _watchers.append(Watcher.load_from_config(watcher))
 
     return Arbiter(_watchers, controller, pubsub_endpoint, context=context,
                    check_flapping=check_flapping)
