@@ -20,7 +20,7 @@ from circus.exc import CallError, ArgumentError
 
 
 globalopts = [
-    ('', 'endpoint', None, "connection endpointt"),
+    ('', 'endpoint', "", "connection endpointt"),
     ('', 'timeout', 5, "connection timeout"),
     ('', 'json', False, "output to JSON"),
     ('', 'prettify', False, "prettify output"),
