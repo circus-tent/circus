@@ -9,6 +9,15 @@ from functools import wraps
 import sys
 
 from psutil.error import AccessDenied, NoSuchProcess
+
+try:
+    from setproctitle import setproctitle
+    def _setproctitle(title):
+        setproctitle(title)
+except ImportError:
+    def _setproctitle(title):
+        return
+
 from circus import logger
 
 

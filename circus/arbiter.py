@@ -11,7 +11,7 @@ from circus.exc import AlreadyExist
 from circus.flapping import Flapping
 from circus import logger
 from circus.watcher import Watcher
-from circus.util import debuglog
+from circus.util import debuglog, _setproctitle
 
 
 class Arbiter(object):
@@ -49,6 +49,9 @@ class Arbiter(object):
 
     @debuglog
     def initialize(self):
+        # set process title
+        _setproctitle("circusd")
+
         # event pub socket
         self.evpub_socket = self.context.socket(zmq.PUB)
         self.evpub_socket.bind(self.pubsub_endpoint)
