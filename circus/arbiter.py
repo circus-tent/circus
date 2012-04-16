@@ -12,7 +12,7 @@ from circus.flapping import Flapping
 from circus import logger
 from circus.watcher import Watcher
 from circus.util import debuglog
-from circus.config import read_config
+from circus.config import get_config
 
 
 class Arbiter(object):
@@ -50,18 +50,20 @@ class Arbiter(object):
 
     @classmethod
     def load_from_config(cls, config_file):
-        cfg, cfg_files_read = read_config(config_file)
+        cfg = get_config(config_file)
 
         # creating watchers.
         watchers = []
-        for watcher in cfg['watchers']:
+        for watcher in cfg.get('watchers', []):
             watchers.append(Watcher.load_from_config(watcher))
 
         # creating arbiter
-        arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
-                      cfg['check_delay'], cfg.get('prereload_fn'))
+        arbiter = cls(watchers=watchers,
+                      endpoint=cfg['endpoint'],
+                      pubsub_endpoint=cfg['pubsub_endpoint'],
+                      check_delay=cfg.get('check_delay', 1.),
+                      prereload_fn=cfg.get('prereload_fn'))
 
-        logger.debug('Loaded config files %s' % str(cfg_files_read))
         return arbiter
 
     @debuglog

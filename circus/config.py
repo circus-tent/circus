@@ -46,8 +46,8 @@ def get_config(config_file):
     cfg, cfg_files_read = read_config(config_file)
     dget = cfg.dget
     get = cfg.get
-
     config = {}
+
     # Initialize watchers to manage
     watchers = []
     for section in cfg.sections():
