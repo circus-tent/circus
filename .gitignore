@@ -12,3 +12,4 @@ html
 docs/source/commands*
 docs/build
 local
+examples/test.log

@@ -19,8 +19,10 @@ class Process(object):
             f.write(msg)
 
     def handle_quit(self, *args):
-        self._write('QUIT')
+        if not self.alive:
+            return
         self.alive = False
+        self._write('QUIT')
         import sys
         sys.exit(0)
 

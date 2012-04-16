@@ -137,7 +137,6 @@ class Process(object):
                              shell=self.shell, preexec_fn=preexec_fn,
                              env=self.env, close_fds=True, stdout=PIPE,
                              stderr=PIPE, executable=executable)
-                             #bufsize=1)
 
         self.started = time.time()
 

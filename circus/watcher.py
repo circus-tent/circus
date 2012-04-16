@@ -69,7 +69,7 @@ class Watcher(object):
                  times=2, within=1., retry_in=7., max_retry=5,
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
-                 stderr_stream=None):
+                 stderr_stream=None, stream_backend='thread'):
         self.name = name
         self.res_name = name.lower().replace(" ", "_")
         self.numprocesses = int(numprocesses)
@@ -85,15 +85,19 @@ class Watcher(object):
         self.graceful_timeout = 30
         self.prereload_fn = prereload_fn
         self.executable = None
+        self.stream_backend = stream_backend
+
         self.stdout_stream = stdout_stream
         if stdout_stream is not None:
-            self.stdout_redirector = get_pipe_redirector(stdout_stream)
+            self.stdout_redirector = get_pipe_redirector(stdout_stream,
+                    backend=stream_backend)
         else:
             self.stdout_redirector = None
 
         self.stderr_stream = stderr_stream
         if stderr_stream is not None:
-            self.stderr_redirector = get_pipe_redirector(stderr_stream)
+            self.stderr_redirector = get_pipe_redirector(stderr_stream,
+                    backend=stream_backend)
         else:
             self.stderr_redirector = None
 
@@ -314,7 +318,7 @@ class Watcher(object):
                      self.processes.items()])
 
     @util.debuglog
-    def stop(self, graceful=True):
+    def stop(self):
         """Stop.
         """
         self.stopped = True
@@ -325,19 +329,11 @@ class Watcher(object):
         if self.stderr_redirector is not None:
             self.stderr_redirector.kill()
 
-        sig = signal.SIGQUIT
-        if not graceful:
-            sig = signal.SIGTERM
-
         limit = time.time() + self.graceful_timeout
         while self.processes and time.time() < limit:
-            self.kill_processes(sig)
+            self.kill_processes(signal.SIGTERM)
             time.sleep(0.1)
-
-            # reap processes
-            for wid, process in self.processes.items():
-                if process.poll() is not None:
-                    del self.processes[wid]
+            self.reap_processes()
 
         self.kill_processes(signal.SIGKILL)
         if self.evpub_socket is not None:
