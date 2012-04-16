@@ -16,7 +16,7 @@ class Status(Command):
 
             {
                 "command": "status",
-                "propeties": {
+                "properties": {
                     "name": '<name>",
                 }
             }
