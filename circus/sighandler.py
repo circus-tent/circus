@@ -50,7 +50,7 @@ class SysHandler(object):
         self.controller.add_job(None, make_json("quit"))
 
     def handle_quit(self):
-        self.controller.add_job(None, make_json("quit", graceful=True))
+        self.controller.add_job(None, make_json("quit"))
 
     def handle_winch(self):
         pass

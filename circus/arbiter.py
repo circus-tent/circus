@@ -110,9 +110,9 @@ class Arbiter(object):
         self.ctrl.stop()
         self.evpub_socket.close()
 
-    def stop(self, graceful=False):
+    def stop(self):
         if self.alive:
-            self.stop_watchers(graceful=graceful, stop_alive=True)
+            self.stop_watchers(stop_alive=True)
         self.loop.stop()
 
     def manage_watchers(self):
@@ -209,16 +209,16 @@ class Arbiter(object):
         for watcher in self.watchers:
             watcher.start()
 
-    def stop_watchers(self, graceful=True, stop_alive=False):
+    def stop_watchers(self, stop_alive=False):
+        if not self.alive:
+            return
+
         if stop_alive:
             logger.info('Arbiter exiting')
-            if not self.alive:
-                return
-
             self.alive = False
 
         for watcher in self.watchers:
-            watcher.stop(graceful=graceful)
+            watcher.stop()
 
 
 class ThreadedArbiter(Arbiter, Thread):

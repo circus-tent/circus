@@ -112,6 +112,23 @@ def main():
 
     logger.debug('Loaded config files %s' % str(cfg_files_read))
 
+    # main circus options
+    check = cfg.dget('circus', 'check_delay', 5, int)
+    endpoint = cfg.dget('circus', 'endpoint', 'tcp://127.0.0.1:5555')
+    pubsub_endpoint = cfg.dget('circus', 'pubsub_endpoint',
+            'tcp://127.0.0.1:5556')
+
+    stream_backend = cfg.dget('circus', 'stream_backend', 'thread')
+    if stream_backend == 'gevent':
+        try:
+            import gevent #NOQA
+            import gevent_zeromq #NOQA
+        except ImportError:
+            sys.stderr.write("stream_backend set to gevent, " +
+                             "but gevent or gevent_zeromq isn't installed\n")
+            sys.stderr.write("Exiting...")
+            sys.exit(1)
+
     # Initialize watchers to manage
     watchers = []
     for section in cfg.sections():
@@ -171,15 +188,10 @@ def main():
                         times=times, within=within, retry_in=retry_in,
                         max_retry=max_retry, graceful_timeout=graceful_timeout,
                         rlimits=rlimits, stderr_stream=stderr_stream,
-                        stdout_stream=stdout_stream)
+                        stdout_stream=stdout_stream,
+                        stream_backend=stream_backend)
 
             watchers.append(watcher)
-
-    # main circus options
-    check = cfg.dget('circus', 'check_delay', 5, int)
-    endpoint = cfg.dget('circus', 'endpoint', 'tcp://127.0.0.1:5555')
-    pubsub_endpoint = cfg.dget('circus', 'pubsub_endpoint',
-            'tcp://127.0.0.1:5556')
 
     arbiter = Arbiter(watchers, endpoint, pubsub_endpoint, check)
     try:
