@@ -1,4 +1,4 @@
-from gevent import Greenlet
+from gevent import Greenlet, sleep
 from gevent.select import select
 
 from circus.stream.base import BaseRedirector
@@ -12,3 +12,4 @@ class Redirector(BaseRedirector, Greenlet):
     def _run(self, *args, **kwargs):
         while True:
             self._select()
+            sleep(0.3)

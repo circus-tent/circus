@@ -1,5 +1,6 @@
 from threading import Thread
 import select
+import time
 
 from circus.stream.base import BaseRedirector
 
@@ -13,6 +14,7 @@ class Redirector(BaseRedirector, Thread):
         self.running = True
         while self.running:
             self._select()
+            time.sleep(0.3)
 
     def kill(self):
         if not self.running:
