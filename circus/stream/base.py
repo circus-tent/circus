@@ -55,7 +55,7 @@ class BaseRedirector(object):
 
         try:
             try:
-                rlist, __, __ = self.selector(self.pipes, [], [])
+                rlist, __, __ = self.selector(self.pipes, [], [], 1.0)
             except select.error:     # need a non specific error
                 return
 

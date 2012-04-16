@@ -1,15 +1,6 @@
 import logging
 import os
 
-try:
-    from gevent import monkey
-    from gevent_zeromq import monkey_patch
-    monkey.patch_all()
-    monkey_patch()
-except ImportError:
-    pass
-
-
 version_info = (0, 1, 0)
 __version__ = ".".join(map(str, version_info))
 
@@ -62,6 +53,22 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
 
 
     """
+    if stream_backend == 'gevent':
+        try:
+            import gevent
+            import gevent_zeromq
+        except ImportError:
+            sys.stderr.write("stream_backend set to gevent, " +
+                             "but gevent or gevent_zeromq isn't installed\n")
+            sys.stderr.write("Exiting...")
+            sys.exit(1)
+
+        from gevent import monkey
+        from gevent_zeromq import monkey_patch
+        monkey.patch_all()
+        monkey_patch()
+
+
     from circus.watcher import Watcher
     if background:
         from circus.arbiter import ThreadedArbiter as Arbiter   # NOQA
@@ -73,6 +80,7 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
     for watcher in watchers:
         cmd = watcher['cmd']
         watcher['name'] = watcher.get('name', os.path.basename(cmd.split()[0]))
+        watcher['stream_backend'] = stream_backend
         _watchers.append(Watcher.load_from_config(watcher))
 
     return Arbiter(_watchers, controller, pubsub_endpoint, context=context,

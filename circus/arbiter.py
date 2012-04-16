@@ -52,15 +52,16 @@ class Arbiter(object):
     def load_from_config(cls, config_file):
         cfg = get_config(config_file)
 
-        # creating watchers.
+        # hack reload ioloop to use the monkey patched version
+        reload(ioloop)
+
         watchers = []
         for watcher in cfg.get('watchers', []):
+            watcher['stream_backend'] = cfg['stream_backend']
             watchers.append(Watcher.load_from_config(watcher))
 
         # creating arbiter
-        arbiter = cls(watchers=watchers,
-                      endpoint=cfg['endpoint'],
-                      pubsub_endpoint=cfg['pubsub_endpoint'],
+        arbiter = cls(watchers, cfg['endpoint'] ,cfg['pubsub_endpoint'],
                       check_delay=cfg.get('check_delay', 1.),
                       prereload_fn=cfg.get('prereload_fn'))
 
