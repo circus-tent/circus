@@ -55,12 +55,11 @@ class Arbiter(object):
         # creating watchers.
         watchers = []
         for watcher in cfg.get('watchers', []):
+            watcher['stream_backend'] = cfg['stream_backend']
             watchers.append(Watcher.load_from_config(watcher))
 
         # creating arbiter
-        arbiter = cls(watchers=watchers,
-                      endpoint=cfg['endpoint'],
-                      pubsub_endpoint=cfg['pubsub_endpoint'],
+        arbiter = cls(watchers, cfg['endpoint'] ,cfg['pubsub_endpoint'],
                       check_delay=cfg.get('check_delay', 1.),
                       prereload_fn=cfg.get('prereload_fn'))
 

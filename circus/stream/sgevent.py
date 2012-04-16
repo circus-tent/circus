@@ -1,4 +1,3 @@
-import gevent_zeromq    # just to make sure zmq will not block  # NOQA
 from gevent import Greenlet
 from gevent.select import select
 
