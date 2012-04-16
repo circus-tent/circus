@@ -207,11 +207,11 @@ class Arbiter(object):
             watcher.start()
 
     def stop_watchers(self, graceful=True, stop_alive=False):
+        if not self.alive:
+            return
+
         if stop_alive:
             logger.info('Arbiter exiting')
-            if not self.alive:
-                return
-
             self.alive = False
 
         for watcher in self.watchers:
