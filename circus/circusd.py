@@ -121,10 +121,11 @@ def main():
     stream_backend = cfg.dget('circus', 'stream_backend', 'thread')
     if stream_backend == 'gevent':
         try:
-            import gevent
+            import gevent #NOQA
+            import gevent_zeromq #NOQA
         except ImportError:
             sys.stderr.write("stream_backend set to gevent, " +
-                             "but gevent isn't installed\n")
+                             "but gevent or gevent_zeromq isn't installed\n")
             sys.stderr.write("Exiting...")
             sys.exit(1)
 
