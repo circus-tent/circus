@@ -81,7 +81,7 @@ class Options(Command):
           launch the process if macium of times have been reach.
         - max_retry: integer, The maximum of retries loops
         - graceful_timeout: integer or number, time we wait before we
-          definitely kill a process when using the graceful option.
+          definitely kill a process.
 
     """
 

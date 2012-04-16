@@ -8,7 +8,7 @@ class RmWatcher(Command):
         ================
 
         This command remove a watcher dynamically from the arbiter. The
-        watchers can be gracefully stopped.
+        watchers are gracefully stopped.
 
         ZMQ Message
         -----------
@@ -19,14 +19,12 @@ class RmWatcher(Command):
                 "command": "rm",
                 "properties": {
                     "name": "nameofwatcher",
-                    "graceful": true
                 }
             }
 
-        A message contains 2 properties:
+        A message contains 1 property:
 
         - name: name of watcher
-        - graceful: graceful stop
 
         The response return a status "ok".
 
@@ -35,26 +33,23 @@ class RmWatcher(Command):
 
         ::
 
-            $ circusctl rm [--terminate] <name>
+            $ circusctl rm <name>
 
         Options
         +++++++
 
         - <name>: name of the watcher to create
-        - --terminate; quit the node immediately
 
     """
 
     name = "rm"
-    options = [('', 'terminate', False, "stop immediately")]
     properties = ['name']
 
     def message(self, *args, **opts):
         if len(args) < 1 or len(args) > 1:
             raise ArgumentError("number of arguments invalid")
 
-        graceful = not opts.get("terminate", False)
-        return self.make_message(name=args[0], graceful=graceful)
+        return self.make_message(name=args[0])
 
     def execute(self, arbiter, args):
         arbiter.rm_watcher(args['name'])

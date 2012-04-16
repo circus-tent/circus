@@ -318,7 +318,7 @@ class Watcher(object):
                      self.processes.items()])
 
     @util.debuglog
-    def stop(self, graceful=True):
+    def stop(self):
         """Stop.
         """
         self.stopped = True
@@ -329,19 +329,11 @@ class Watcher(object):
         if self.stderr_redirector is not None:
             self.stderr_redirector.kill()
 
-        sig = signal.SIGQUIT
-        if not graceful:
-            sig = signal.SIGTERM
-
         limit = time.time() + self.graceful_timeout
         while self.processes and time.time() < limit:
-            self.kill_processes(sig)
+            self.kill_processes(signal.SIGTERM)
             time.sleep(0.1)
-
-            # reap processes
-            for wid, process in self.processes.items():
-                if process.poll() is not None:
-                    del self.processes[wid]
+            self.reap_processes()
 
         self.kill_processes(signal.SIGKILL)
         if self.evpub_socket is not None:
