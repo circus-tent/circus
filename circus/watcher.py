@@ -120,6 +120,31 @@ class Watcher(object):
         self.send_hup = send_hup
         self.evpub_socket = None
 
+    @classmethod
+    def load_from_config(cls, config):
+        return cls(name=config['name'],
+                   cmd=config['cmd'],
+                   args=config.get('args'),
+                   numprocesses=config.get('numprocesses', 1),
+                   warmup_delay=config.get('warmup_delay', 0),
+                   working_dir=config.get('working_dir'),
+                   shell=config.get('shell', False),
+                   uid=config.get('uid'),
+                   gid=config.get('gid'),
+                   send_hup=config.get('send_hup', False),
+                   env=config.get('env'),
+                   stopped=config.get('stopped', True),
+                   times=config.get('times', 2),
+                   within=config.get('within', 1),
+                   retry_in=config.get('retry_in', 7),
+                   max_retry=config.get('max_retry', 5),
+                   graceful_timeout=config.get('graceful_timeout', 30),
+                   prereload_fn=config.get('prereload_fn'),
+                   rlimits=config.get('rlimits'),
+                   executable=config.get('executable'),
+                   stdout_stream=config.get('stdout_stream'),
+                   stderr_stream=config.get('stderr_stream'))
+
     @util.debuglog
     def initialize(self, evpub_socket):
         self.evpub_socket = evpub_socket

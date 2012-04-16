@@ -1,10 +1,8 @@
-import ConfigParser
 from datetime import timedelta
 import grp
 import os
 import pwd
 import fcntl
-import fnmatch
 from functools import wraps
 import sys
 
@@ -56,20 +54,6 @@ from circus import logger
 
 
 _SYMBOLS = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
-
-
-class DefaultConfigParser(ConfigParser.ConfigParser):
-    def dget(self, section, option, default=None, type=str):
-        if not self.has_option(section, option):
-            return default
-        if type is str:
-            return self.get(section, option)
-        elif type is int:
-            return self.getint(section, option)
-        elif type is bool:
-            return self.getboolean(section, option)
-        else:
-            raise NotImplementedError()
 
 
 def get_working_dir():
@@ -258,28 +242,6 @@ def convert_opt(key, val):
         else:
             val = str(val)
     return val
-
-
-def read_config(config_path):
-    cfg = DefaultConfigParser()
-    with open(config_path) as f:
-        cfg.readfp(f)
-    cfg_files_read = [config_path]
-
-    # load included config files
-    includes = []
-    for include_file in cfg.dget('circus', 'include', '').split():
-        includes.append(include_file)
-
-    for include_dir in cfg.dget('circus', 'include_dir', '').split():
-        for root, dirnames, filenames in os.walk(include_dir):
-            for filename in fnmatch.filter(filenames, '*.ini'):
-                cfg_file = os.path.join(root, filename)
-                includes.append(cfg_file)
-
-    cfg_files_read.extend(cfg.read(includes))
-
-    return cfg, cfg_files_read
 
 
 # taken from distutils2
