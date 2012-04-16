@@ -21,7 +21,7 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
                 pubsub_endpoint='tcp://127.0.0.1:5556',
                 env=None, name=None, context=None,
                 check_flapping=True, background=False, stdout_stream=None,
-                stderr_stream=None):
+                stderr_stream=None, stream_backend="thread"):
     """Creates a Arbiter and a single watcher in it.
 
     Options:
@@ -86,7 +86,8 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
                           env=watcher.get('env'),
                           executable=watcher.get('executable'),
                           stdout_stream=watcher.get('stdout_stream'),
-                          stderr_stream=watcher.get('stderr_stream'))
+                          stderr_stream=watcher.get('stderr_stream'),
+                          stream_backend=stream_backend)
 
         _watchers.append(watcher)
 
