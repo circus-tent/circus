@@ -5,6 +5,7 @@ import pwd
 import fcntl
 from functools import wraps
 import sys
+import shlex
 
 try:
     from importlib import import_module
@@ -135,7 +136,7 @@ def get_info(process):
         info['nice'] = 'Zombie'
 
     try:
-        cmdline = os.path.basename(process.cmdline[0])
+        cmdline = os.path.basename(shlex.split(process.cmdline[0])[0])
     except (AccessDenied, IndexError):
         cmdline = "N/A"
 
