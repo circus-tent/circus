@@ -24,7 +24,8 @@ class NamedPipe(object):
 
 
 class BaseRedirector(object):
-    def __init__(self, redirect, extra_info=None, buffer=1024, selector=None):
+    def __init__(self, redirect, refresh_time=0.3, extra_info=None,
+            buffer=1024, selector=None):
         self.pipes = []
         self._names = {}
         self.redirect = redirect
@@ -37,6 +38,7 @@ class BaseRedirector(object):
         if selector is None:
             selector = select.select
         self.selector = selector
+        self.refresh_time = refresh_time
 
     def add_redirection(self, name, process, pipe):
         npipe = NamedPipe(pipe, process, name)
