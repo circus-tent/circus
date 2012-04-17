@@ -75,8 +75,10 @@ watcher:NAME (as many sections as you want)
         :func:`__call__` method.
 
         Circus provides two classes you can use without prefix:
+
         - :class:`FileStream`: writes in a file
         - :class:`QueueStream`: write in a memory Queue
+
     **stderr_stream.***
         All options starting with *stderr_stream.* other than *class* will
         be passed the constructor when creating an instance of the
@@ -86,8 +88,10 @@ watcher:NAME (as many sections as you want)
         will receive the **stdout** stream of all workers in its
         :func:`__call__` method.
         Circus provides two classes you can use without prefix:
+
         - :class:`FileStream`: writes in a file
         - :class:`QueueStream`: write in a memory Queue
+
     **stdout_stream.***
         All options starting with *stdout_stream.* other than *class* will
         be passed the constructor when creating an instance of the
