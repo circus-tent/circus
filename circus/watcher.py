@@ -88,14 +88,14 @@ class Watcher(object):
         self.stream_backend = stream_backend
 
         self.stdout_stream = stdout_stream
-        if stdout_stream is not None:
+        if stdout_stream:
             self.stdout_redirector = get_pipe_redirector(stdout_stream,
                     backend=stream_backend)
         else:
             self.stdout_redirector = None
 
         self.stderr_stream = stderr_stream
-        if stderr_stream is not None:
+        if stderr_stream:
             self.stderr_redirector = get_pipe_redirector(stderr_stream,
                     backend=stream_backend)
         else:

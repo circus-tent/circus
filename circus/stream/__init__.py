@@ -3,6 +3,10 @@ from Queue import Queue
 from circus.util import import_module
 
 class QueueStream(Queue):
+
+    def __init__(self, **kwargs):
+        Queue.__init__(self, **kwargs)
+
     def __call__(self, data):
         self.put(data)
 
@@ -11,8 +15,8 @@ class QueueStream(Queue):
 
 
 class FileStream(object):
-    def __init__(self, filename):
-        self._file = open(filename, 'a+')
+    def __init__(self, file=None, **kwargs):
+        self._file = open(file, 'a+')
         self._buffer = []
 
     def __call__(self, data):
@@ -45,6 +49,15 @@ def get_pipe_redirector(redirect, backend='thread', extra_info=None,
     - **buffer**: the size of the buffer when reading data
     """
 
+    # get stream infos
+    if 'stream' not in redirect:
+        return
+    stream = redirect.get('stream')
+    refresh_time = redirect.get('refresh_time', 0.3)
+
+    # get backend class
     backend_mod = import_module("circus.stream.s%s" % backend)
     backend_class = getattr(backend_mod, "Redirector")
-    return backend_class(redirect, extra_info, buffer)
+
+    # finally setup the redirection
+    return backend_class(stream, refresh_time, extra_info, buffer)

@@ -7,6 +7,28 @@ from circus.stream import FileStream
 from circus import util
 
 
+WATCHER_DEFAULTS = {
+        'name': '',
+        'cmd': '',
+        'args': '',
+        'numprocesses': 1,
+        'warmup_delay': 0,
+        'executable': None,
+        'working_dir': None,
+        'shell': False,
+        'uid': None,
+        'gid': None,
+        'send_hup': False,
+        'times': 2,
+        'within': 1,
+        'retry_in': 7,
+        'max_retry': 5,
+        'graceful_timeout': 30,
+        'rlimits': {},
+        'stderr_stream': {},
+        'stdout_stream': {},
+        'stream_backend': 'thread'}
+
 class DefaultConfigParser(ConfigParser.ConfigParser):
     def dget(self, section, option, default=None, type=str):
         if not self.has_option(section, option):
@@ -43,6 +65,36 @@ def read_config(config_path):
     return cfg, cfg_files_read
 
 
+def stream_config(watcher_name, stream_conf):
+    if not stream_conf:
+        return stream_conf
+
+    if not 'class' in stream_conf:
+        # we can handle othe class there
+        if 'file' in stream_conf:
+            obj = FileStream
+        else:
+            raise ValueError("stream configuration invalid in %r" %
+                    watcher_name)
+
+    else:
+        class_name = stream_conf.pop('class')
+        if not "." in class_name:
+            class_name = "circus.stream.%s" % class_name
+
+        obj = util.resolve_name(class_name)
+
+    # default refres_time
+    if not 'refresh_time' in stream_conf:
+        refresh_time = 0.3
+    else:
+        refresh_time = float(stream_conf.pop('refresh_time'))
+
+    # initialize stream instance
+    inst = obj(**stream_conf)
+
+    return {'stream': inst, 'refresh_time': refresh_time}
+
 def get_config(config_file):
     cfg, cfg_files_read = read_config(config_file)
     dget = cfg.dget
@@ -77,60 +129,67 @@ def get_config(config_file):
     watchers = []
     for section in cfg.sections():
         if section.startswith("watcher:"):
-            watcher = {}
+            watcher = WATCHER_DEFAULTS
             watcher['name'] = section.split("watcher:", 1)[1]
-            watcher['cmd'] = get(section, 'cmd')
-            watcher['args'] = dget(section, 'args', '')
-            watcher['numprocesses'] = dget(section, 'numprocesses', 1, int)
-            watcher['warmup_delay'] = dget(section, 'warmup_delay', 0, int)
-            watcher['executable'] = dget(section, 'executable', None, str)
-            watcher['working_dir'] = dget(section, 'working_dir')
-            watcher['shell'] = dget(section, 'shell', False, bool)
-            watcher['uid '] = dget(section, 'uid')
-            watcher['gid'] = dget(section, 'gid')
-            watcher['send_hup'] = dget(section, 'send_hup', False, bool)
-            watcher['times'] = dget(section, "times", 2, int)
-            watcher['within'] = dget(section, "within", 1, int)
-            watcher['retry_in'] = dget(section, "retry_in", 7, int)
-            watcher['max_retry'] = dget(section, "max_retry", 5, int)
-            watcher['graceful_timeout'] = dget(section, "graceful_timeout", 30,
-                                               int)
 
-            # loading the streams
-            stderr_file = dget(section, 'stderr_file', None, str)
-            stdout_file = dget(section, 'stdout_file', None, str)
-            stderr_stream = dget(section, 'stderr_stream', None, str)
-            stdout_stream = dget(section, 'stdout_stream', None, str)
+            # create watcher options
+            for opt, val in cfg.items(section):
+                if opt == 'cmd':
+                    watcher['cmd'] = val
+                elif opt == 'args':
+                    watcher['args'] = val
+                elif opt == 'numprocesses':
+                    watcher['numprocesses'] = dget(section, 'numprocesses', 1,
+                            int)
+                elif opt == 'warmup_delay':
+                    watcher['warmup_delay'] = dget(section, 'warmup_delay', 0,
+                            int)
+                elif opt == 'executable':
+                    watcher['executable'] = dget(section, 'executable', None,
+                            str)
+                elif opt == 'working_dir':
+                    watcher['working_dir'] = val
+                elif opt == 'shell':
+                    watcher['shell'] = dget(section, 'shell', False, bool)
+                elif opt == 'uid':
+                    watcher['uid '] = val
+                elif opt == 'gid':
+                    watcher['gid'] = val
+                elif opt == 'send_hup':
+                    watcher['send_hup'] = dget(section, 'send_hup', False,
+                            bool)
+                elif opt == 'times':
+                    watcher['times'] = dget(section, "times", 2, int)
+                elif opt == 'within':
+                    watcher['within'] = dget(section, "within", 1, int)
+                elif opt == 'retry_ind':
+                    watcher['retry_in'] = dget(section, "retry_in", 7, int)
+                elif opt == 'max_retry':
+                    watcher['max_retry'] = dget(section, "max_retry", 5, int)
+                elif opt == 'graceful_timout':
+                    watcher['graceful_timeout'] = dget(section,
+                            "graceful_timeout", 30, int)
+                elif opt.startswith('stderr_stream') or \
+                        opt.startswith('stdout_stream'):
+                    stream_name, stream_opt = opt.split(".", 1)
+                    watcher[stream_name][stream_opt] = val
+                elif opt.startswith('rlimit_'):
+                    limit = opt[7:]
+                    rlimits[limit] = int(val)
 
-            if stderr_stream is not None and stderr_file is not None:
-                raise ValueError('"stderr_stream" and "stderr_file" are '
-                                 'mutually exclusive')
+            # second pass, parse stream conf
+            stdout_conf = watcher.get('stdout_stream', {})
+            watcher['stdout_stream'] = stream_config(watcher['name'],
+                stdout_conf)
 
-            if stdout_stream is not None and stdout_file is not None:
-                raise ValueError('"stdout_stream" and "stdout_file" are '
-                                 'mutually exclusive')
+            stderr_conf = watcher.get('stderr_stream', {})
+            watcher['stderr_stream'] = stream_config(watcher['name'],
+                stderr_conf)
 
-            if stderr_file is not None:
-                watcher['stderr_stream'] = FileStream(stderr_file)
-            elif stderr_stream is not None:
-                watcher['stderr_stream '] = util.resolve_name(stderr_stream)
-
-            if stdout_file is not None:
-                watcher['stdout_stream'] = FileStream(stdout_file)
-            elif stdout_stream is not None:
-                watcher['stdout_stream'] = util.resolve_name(stdout_stream)
-
-            rlimits = {}
-            for cfg_name, cfg_value in cfg.items(section):
-                if cfg_name.startswith('rlimit_'):
-                    limit = cfg_name[7:]
-                    rlimits[limit] = int(cfg_value)
-
-            watcher['rlimits'] = rlimits
+            # set the stream backend
+            watcher['stream_backend'] = stream_backend
 
             watchers.append(watcher)
 
     config['watchers'] = watchers
-
-
     return config

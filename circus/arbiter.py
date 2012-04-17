@@ -57,7 +57,6 @@ class Arbiter(object):
 
         watchers = []
         for watcher in cfg.get('watchers', []):
-            watcher['stream_backend'] = cfg['stream_backend']
             watchers.append(Watcher.load_from_config(watcher))
 
         # creating arbiter
