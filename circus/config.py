@@ -1,6 +1,7 @@
 import ConfigParser
 import os
 import fnmatch
+import sys
 
 from circus.stream import FileStream
 from circus import util
@@ -48,6 +49,30 @@ def get_config(config_file):
     get = cfg.get
     config = {}
 
+    # main circus options
+    config['check'] = dget('circus', 'check_delay', 5, int)
+    config['endpoint'] = dget('circus', 'endpoint', 'tcp://127.0.0.1:5555')
+    config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
+                                     'tcp://127.0.0.1:5556')
+
+    stream_backend = dget('circus', 'stream_backend', 'thread')
+    if stream_backend == 'gevent':
+        try:
+            import gevent
+            import gevent_zeromq
+        except ImportError:
+            sys.stderr.write("stream_backend set to gevent, " +
+                             "but gevent or gevent_zeromq isn't installed\n")
+            sys.stderr.write("Exiting...")
+            sys.exit(1)
+
+        from gevent import monkey
+        from gevent_zeromq import monkey_patch
+        monkey.patch_all()
+        monkey_patch()
+
+    config['stream_backend'] = stream_backend
+
     # Initialize watchers to manage
     watchers = []
     for section in cfg.sections():
@@ -72,8 +97,6 @@ def get_config(config_file):
                                                int)
 
             # loading the streams
-            watcher['stream_backend'] = dget(section, "stream_backend",
-                                             "thread", str)
             stderr_file = dget(section, 'stderr_file', None, str)
             stdout_file = dget(section, 'stdout_file', None, str)
             stderr_stream = dget(section, 'stderr_stream', None, str)
@@ -109,10 +132,5 @@ def get_config(config_file):
 
     config['watchers'] = watchers
 
-    # main circus options
-    config['check'] = dget('circus', 'check_delay', 5, int)
-    config['endpoint'] = dget('circus', 'endpoint', 'tcp://127.0.0.1:5555')
-    config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
-                                     'tcp://127.0.0.1:5556')
 
     return config

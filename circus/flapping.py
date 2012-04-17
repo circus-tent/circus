@@ -60,7 +60,6 @@ class Flapping(Thread):
                     raise
             else:
                 break
-
         self.client.close()
         self.sub_socket.close()
 
