@@ -12,9 +12,8 @@ logger = logging.getLogger('circus')
 
 def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
                 pubsub_endpoint='tcp://127.0.0.1:5556',
-                env=None, name=None, context=None,
-                check_flapping=True, background=False, stdout_stream=None,
-                stderr_stream=None, stream_backend="thread"):
+                env=None, name=None, context=None, check_flapping=True,
+                background=False, stream_backend="thread"):
     """Creates a Arbiter and a single watcher in it.
 
     Options:
@@ -39,10 +38,20 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
         - **uid** -- the user id used to run the flies (default: None)
         - **gid** -- the group id used to run the flies (default: None)
         - **env** -- the environment passed to the flies (default: None)
-        - **stdout_stream**: a callable that will receive the stream of
-          the process stdout.
-        - **stderr_stream**: a callable that will receive the stream of
-          the process stderr.
+        - **stdout_stream**: a mapping containing the options for configuring
+          the stdout stream. Default to None. When provided, may contain:
+            - **class**: the fully qualified name of the class to use for
+              streaming. Defaults to circus.stream.FileStream
+            - **refresh_time**: the delay between two stream checks. Defaults to
+              0.3 seconds.
+            - any other key will be passed the class constructor.
+        - **stderr_stream**: a mapping containing the options for configuring
+          the stderr stream. Default to None. When provided, may contain:
+            - **class**: the fully qualified name of the class to use for
+              streaming. Defaults to circus.stream.FileStream
+            - **refresh_time**: the delay between two stream checks. Defaults to
+              0.3 seconds.
+            - any other key will be passed the class constructor.
 
     - **controller** -- the zmq entry point (default: 'tcp://127.0.0.1:5555')
     - **pubsub_endpoint** -- the zmq entry point for the pubsub
@@ -52,8 +61,9 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
       (default:True)
     - **background** -- If True, the arbiter is launched in a thread in the
       background (default: False)
-
-
+    - **stream_backend** -- the backend that will be used for the streaming
+      process. Can be *thread* or *gevent*. When set to *gevent* you need
+      to have *gevent* and *gevent_zmq* installed. (default: thread)
     """
     if stream_backend == 'gevent':
         try:
