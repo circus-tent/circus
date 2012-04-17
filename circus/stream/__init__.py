@@ -5,7 +5,7 @@ from circus.util import import_module
 class QueueStream(Queue):
 
     def __init__(self, **kwargs):
-        Queue.__init__(self, **kwargs)
+        Queue.__init__(self)
 
     def __call__(self, data):
         self.put(data)
