@@ -26,7 +26,7 @@ class TestWatcher(TestCircus):
         self.stream = QueueStream()
         dummy_process = 'circus.tests.test_watcher.run_process'
         self.test_file = self._run_circus(dummy_process,
-                                          stdout_stream=self.stream)
+                stdout_stream={'stream': self.stream})
         self.cli = CircusClient()
 
     def call(self, cmd, **props):
