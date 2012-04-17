@@ -20,12 +20,19 @@ class Arbiter(object):
 
     Options:
 
-    - **watchers**: a list of Watcher objects
-    - **endpoint**: the controller ZMQ endpoint
-    - **pubsub_endpoint**: the pubsub endpoint
-    - **check_delay**: the delay between two controller points (default: 1 s)
-    - **prereload_fn**: callable that will be executed on each reload
+    - **watchers** -- a list of Watcher objects
+    - **endpoint** -- the controller ZMQ endpoint
+    - **pubsub_endpoint** -- the pubsub endpoint
+    - **check_delay** -- the delay between two controller points
+      (default: 1 s)
+    - **prereload_fn** -- callable that will be executed on each reload
       (default: None)
+    - **context** -- if provided, the zmq context to reuse.
+      (default: None)
+    - **loop**: if provided, a :class:`zmq.eventloop.ioloop.IOLoop` instance
+       to reuse. (default: None)
+    - **check_flapping** -- when True, Circus will check for flapping
+      processes and automatically restart them. (default: True)
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,

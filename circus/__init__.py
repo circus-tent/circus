@@ -24,7 +24,7 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
         - **name** -- the name of the watcher (default: None)
         - **cmd** -- the command line used to run the Watcher.
         - **args** -- the args for the command (list or string).
-        - **executable**: When executable is given, the first item in
+        - **executable** -- When executable is given, the first item in
           the args sequence obtained from **cmd** is still treated by most
           programs as the command name, which can then be different from the
           actual executable name. It becomes the display name for the executing

@@ -15,6 +15,7 @@ class Watcher(object):
     Class managing a list of processes for a given command.
 
     Options:
+
     - **name**: name given to the watcher. Used to uniquely identify it.
 
     - **cmd**: the command to run. May contain *$WID*, which will be
@@ -48,20 +49,41 @@ class Watcher(object):
     - **stdout_stream**: a callable that will receive the stream of
       the process stdout. Defaults to None.
 
-        Each entry is a mapping containing:
+      When provided, *stdout_stream* is a mapping containing two keys:
 
-        - **pid** - the process pid
-        - **name** - the stream name (*stderr* or *stdout*)
-        - **data** - the data
+      - **stream**: the callable that will receive the updates
+        streaming. Defaults to :class:`circus.stream.FileStream`
+
+      - **refresh_time**: the delay between two stream checks. Defaults
+        to 0.3 seconds.
+
+      Each entry received by the callable is a mapping containing:
+
+      - **pid** - the process pid
+      - **name** - the stream name (*stderr* or *stdout*)
+      - **data** - the data
 
     - **stderr_stream**: a callable that will receive the stream of
       the process stderr. Defaults to None.
 
-        Each entry is a mapping containing:
+      When provided, *stdout_stream* is a mapping containing two keys:
 
-        - **pid** - the process pid
-        - **name** - the stream name (*stderr* or *stdout*)
-        - **data** - the data
+      - **stream**: the callable that will receive the updates
+        streaming. Defaults to :class:`circus.stream.FileStream`
+
+      - **refresh_time**: the delay between two stream checks. Defaults
+        to 0.3 seconds.
+
+      Each entry received by the callable is a mapping containing:
+
+      - **pid** - the process pid
+      - **name** - the stream name (*stderr* or *stdout*)
+      - **data** - the data
+
+    - **stream_backend** -- the backend that will be used for the streaming
+      process. Can be *thread* or *gevent*. When set to *gevent* you need
+      to have *gevent* and *gevent_zmq* installed. (default: thread)
+
     """
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
