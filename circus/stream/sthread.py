@@ -4,6 +4,7 @@ import time
 
 from circus.stream.base import BaseRedirector
 
+
 class Redirector(BaseRedirector, Thread):
     def __init__(self, redirect, refresh_time=0.3, extra_info=None,
             buffer=1024):

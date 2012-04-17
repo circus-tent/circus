@@ -60,7 +60,7 @@ class Arbiter(object):
             watchers.append(Watcher.load_from_config(watcher))
 
         # creating arbiter
-        arbiter = cls(watchers, cfg['endpoint'] ,cfg['pubsub_endpoint'],
+        arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
                       check_delay=cfg.get('check_delay', 1.),
                       prereload_fn=cfg.get('prereload_fn'))
 

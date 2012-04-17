@@ -7,8 +7,12 @@ from functools import wraps
 import sys
 import shlex
 
+from psutil.error import AccessDenied, NoSuchProcess
+from circus import logger
+
+
 try:
-    from importlib import import_module
+    from importlib import import_module         # NOQA
 except ImportError:
     def _resolve_name(name, package, level):
         """Returns the absolute name of the module to be imported. """
@@ -24,14 +28,15 @@ except ImportError:
         return "%s.%s" % (package[:dot], name)
 
 
-    def import_module(name, package=None):
+    def import_module(name, package=None):      # NOQA
         """Import a module.
         The 'package' argument is required when performing a relative import.
         It specifies the package to use as the anchor point from which to
         resolve the relative import to an absolute import."""
         if name.startswith('.'):
             if not package:
-                raise TypeError("relative imports require the 'package' argument")
+                raise TypeError("relative imports require the 'package' "
+                                "argument")
             level = 0
             for character in name:
                 if character != '.':
@@ -41,17 +46,13 @@ except ImportError:
         __import__(name)
         return sys.modules[name]
 
-from psutil.error import AccessDenied, NoSuchProcess
-
 try:
     from setproctitle import setproctitle
-    def _setproctitle(title):
+    def _setproctitle(title):       # NOQA
         setproctitle(title)
 except ImportError:
-    def _setproctitle(title):
+    def _setproctitle(title):       # NOQA
         return
-
-from circus import logger
 
 
 _SYMBOLS = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')

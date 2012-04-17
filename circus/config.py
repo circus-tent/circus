@@ -29,6 +29,7 @@ WATCHER_DEFAULTS = {
         'stdout_stream': {},
         'stream_backend': 'thread'}
 
+
 class DefaultConfigParser(ConfigParser.ConfigParser):
     def dget(self, section, option, default=None, type=str):
         if not self.has_option(section, option):
@@ -95,10 +96,10 @@ def stream_config(watcher_name, stream_conf):
 
     return {'stream': inst, 'refresh_time': refresh_time}
 
+
 def get_config(config_file):
     cfg, cfg_files_read = read_config(config_file)
     dget = cfg.dget
-    get = cfg.get
     config = {}
 
     # main circus options
@@ -110,8 +111,8 @@ def get_config(config_file):
     stream_backend = dget('circus', 'stream_backend', 'thread')
     if stream_backend == 'gevent':
         try:
-            import gevent
-            import gevent_zeromq
+            import gevent           # NOQA
+            import gevent_zeromq    # NOQA
         except ImportError:
             sys.stderr.write("stream_backend set to gevent, " +
                              "but gevent or gevent_zeromq isn't installed\n")
@@ -131,6 +132,7 @@ def get_config(config_file):
         if section.startswith("watcher:"):
             watcher = WATCHER_DEFAULTS
             watcher['name'] = section.split("watcher:", 1)[1]
+            watcher['rlimits'] = {}
 
             # create watcher options
             for opt, val in cfg.items(section):
@@ -175,7 +177,7 @@ def get_config(config_file):
                     watcher[stream_name][stream_opt] = val
                 elif opt.startswith('rlimit_'):
                     limit = opt[7:]
-                    rlimits[limit] = int(val)
+                    watcher['rlimits'][limit] = int(val)
 
             # second pass, parse stream conf
             stdout_conf = watcher.get('stdout_stream', {})

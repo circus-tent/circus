@@ -1,5 +1,7 @@
 import logging
 import os
+import sys
+
 
 version_info = (0, 1, 0)
 __version__ = ".".join(map(str, version_info))
@@ -55,8 +57,8 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
     """
     if stream_backend == 'gevent':
         try:
-            import gevent
-            import gevent_zeromq
+            import gevent           # NOQA
+            import gevent_zeromq    # NOQA
         except ImportError:
             sys.stderr.write("stream_backend set to gevent, " +
                              "but gevent or gevent_zeromq isn't installed\n")
@@ -67,7 +69,6 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
         from gevent_zeromq import monkey_patch
         monkey.patch_all()
         monkey_patch()
-
 
     from circus.watcher import Watcher
     if background:

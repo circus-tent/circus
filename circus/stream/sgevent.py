@@ -3,6 +3,7 @@ from gevent.select import select
 
 from circus.stream.base import BaseRedirector
 
+
 class Redirector(BaseRedirector, Greenlet):
     def __init__(self, redirect, refresh_time=0.3, extra_info=None,
             buffer=1024):

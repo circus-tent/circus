@@ -2,6 +2,7 @@ from Queue import Queue
 
 from circus.util import import_module
 
+
 class QueueStream(Queue):
 
     def __init__(self, **kwargs):
