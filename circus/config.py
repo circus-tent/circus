@@ -132,7 +132,6 @@ def get_config(config_file):
         if section.startswith("watcher:"):
             watcher = WATCHER_DEFAULTS
             watcher['name'] = section.split("watcher:", 1)[1]
-            watcher['rlimits'] = {}
 
             # create watcher options
             for opt, val in cfg.items(section):
