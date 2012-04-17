@@ -17,6 +17,11 @@ Example::
     warmup_delay = 0
     numprocesses = 5
 
+    # will push in test.log the stream every 300 ms
+    stdout_stream.class = FileStream
+    stdout_stream.filename = test.log
+    stdout_stream.refresh_time = 0.3
+
 
 circus (single section)
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,15 +69,26 @@ watcher:NAME (as many sections as you want)
         <http://docs.python.org/library/resource.html#resource-limits>`_.
         For example, the config line 'rlimit_nofile = 500' sets the maximum
         number of open files to 500.
-    **stderr_file**
-        A file that will receive the **stderr** stream of all workers.
-        (default: none)
-    **stdout_file**
-        A file that will receive the **stdout** stream of all workers.
-        (default: none)
-    **stderr_stream**
-        A fully qualified Python callable thet will receive the **stderr**
-        stream of all workers. (default: none, incompatible with *stderr_file*.)
-    **stdout_stream**
-        A fully qualified Python callable thet will receive the **stdout**
-        stream of all workers. (default: none,  incompatible with *stdout_file*.)
+    **stderr_stream.class**
+        A fully qualified Python class name that will be instanciated, and
+        will receive the **stderr** stream of all workers in its
+        :func:`__call__` method.
+
+        Circus provides two classes you can use without prefix:
+        - :class:`FileStream`: writes in a file
+        - :class:`QueueStream`: write in a memory Queue
+    **stderr_stream.***
+        All options starting with *stderr_stream.* other than *class* will
+        be passed the constructor when creating an instance of the
+        class defined in **stderr_stream.class**.
+    **stdout_stream.class**
+        A fully qualified Python class name that will be instanciated, and
+        will receive the **stdout** stream of all workers in its
+        :func:`__call__` method.
+        Circus provides two classes you can use without prefix:
+        - :class:`FileStream`: writes in a file
+        - :class:`QueueStream`: write in a memory Queue
+    **stdout_stream.***
+        All options starting with *stdout_stream.* other than *class* will
+        be passed the constructor when creating an instance of the
+        class defined in **stdout_stream.class**.

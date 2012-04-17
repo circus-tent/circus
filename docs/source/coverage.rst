@@ -9,7 +9,7 @@ Code coverage
     -----------------------------------------------------------------------------------------------
     /Users/tarek/Dev/github.com/circus/circus/__init__                   30     19    37%   1-13, 69-81, 87
     /Users/tarek/Dev/github.com/circus/circus/arbiter                   139     24    83%   60-74, 125-129, 153-156, 168, 172-177, 196, 211, 235-236, 240
-    /Users/tarek/Dev/github.com/circus/circus/client                     49     11    78%   36-37, 41-42, 47-51, 62-63, 71
+    /Users/tarek/Dev/github.com/circus/circus/client                     49      8    84%   36-37, 41-42, 51, 62-63, 71
     /Users/tarek/Dev/github.com/circus/circus/commands/addwatcher        16     15     6%   1-65
     /Users/tarek/Dev/github.com/circus/circus/commands/base              72     55    24%   1-11, 19, 26, 35-79, 82, 86-97, 103-106
     /Users/tarek/Dev/github.com/circus/circus/commands/decrproc          16     14    13%   1-53, 57-60
@@ -47,6 +47,6 @@ Code coverage
     /Users/tarek/Dev/github.com/circus/circus/util                      193    110    43%   1-54, 58-61, 67-69, 75, 89-92, 96-97, 113-114, 124-125, 129-130, 134-137, 141-142, 149, 158, 167, 180, 188, 200, 208, 210, 214-220, 226-231, 236-289
     /Users/tarek/Dev/github.com/circus/circus/watcher                   269     68    75%   121, 183, 205, 211, 236, 252, 272, 279-280, 283-284, 292, 302, 318-320, 330-332, 338-343, 349-350, 356, 360-361, 378, 397, 406, 415-418, 425, 428, 431-433, 455, 471, 473-474, 476-477, 479-480, 482, 484-485, 489-503
     -----------------------------------------------------------------------------------------------
-    TOTAL                                                              2202    888    60%   
+    TOTAL                                                              2202    885    60%   
 
 
