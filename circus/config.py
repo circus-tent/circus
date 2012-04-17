@@ -71,7 +71,7 @@ def stream_config(watcher_name, stream_conf):
 
     if not 'class' in stream_conf:
         # we can handle othe class there
-        if 'file' in stream_conf:
+        if 'filename' in stream_conf:
             obj = FileStream
         else:
             raise ValueError("stream configuration invalid in %r" %

@@ -15,8 +15,8 @@ class QueueStream(Queue):
 
 
 class FileStream(object):
-    def __init__(self, file=None, **kwargs):
-        self._file = open(file, 'a+')
+    def __init__(self, filename=None, **kwargs):
+        self._file = open(filename, 'a+')
         self._buffer = []
 
     def __call__(self, data):
