@@ -34,7 +34,7 @@ class StdoutStream(object):
         pass
 
     def __call__(self, data):
-        sys.stdout.write(data)
+        sys.stdout.write(data['data'])
         sys.stdout.flush()
 
     def close(self):
