@@ -124,7 +124,7 @@ class Process(object):
 
         if args is not None:
             if isinstance(args, str):
-                args_ = shlex.split(args)
+                args_ = shlex.split(bytestring(args))
             else:
                 args_ = args[:]
 
