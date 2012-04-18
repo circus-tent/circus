@@ -34,10 +34,21 @@ circus (single section)
     **check_delay**
         The polling interval in seconds for the ZMQ socket. (default: 5)
     **include**
-        List of config files to include. (defaults: None)
+        List of config files to include. (default: None)
     **include_dir**
         List of config directories. All files matching `*.ini` under each
-        directory will be included. (defaults: None)
+        directory will be included. (default: None)
+    **stream_backend**
+        Defines the type of backend to use for the streaming. Possible
+        values are **thread** or **gevent**. (default: thread)
+
+
+.. note::
+
+   If you use the gevent backend for **stream_backend**, you need to install the
+   forked version of gevent_zmq that's located at
+   https://github.com/tarekziade/gevent-zeromq because it contains a fix that has
+   not made it upstream yet.
 
 
 watcher:NAME (as many sections as you want)

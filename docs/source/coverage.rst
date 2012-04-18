@@ -27,12 +27,12 @@ Code coverage
     /Users/tarek/Dev/github.com/circus/circus/commands/stats             49     44    10%   1-89, 91-102, 109-135
     /Users/tarek/Dev/github.com/circus/circus/commands/status            23     20    13%   1-65, 70-80
     /Users/tarek/Dev/github.com/circus/circus/commands/stop              10      6    40%   1-48
-    /Users/tarek/Dev/github.com/circus/circus/config                    120    108    10%   35-44, 48-66, 70-97, 101-196
+    /Users/tarek/Dev/github.com/circus/circus/config                    121    109    10%   10, 35-44, 48-66, 70-97, 101-196
     /Users/tarek/Dev/github.com/circus/circus/controller                113     15    87%   75, 85-86, 93-95, 103, 115-118, 121, 141, 147, 152-153
     /Users/tarek/Dev/github.com/circus/circus/flapping                  109     20    82%   50-60, 101-105, 129, 135-142
     /Users/tarek/Dev/github.com/circus/circus/process                   117     37    68%   3-9, 91, 96, 99-119, 132, 183-184, 188, 194, 200, 206-209, 214-219, 237, 252
-    /Users/tarek/Dev/github.com/circus/circus/sighandler                 36     16    56%   34-44, 47, 50, 53, 56, 59
-    /Users/tarek/Dev/github.com/circus/circus/stream/__init__            26      7    73%   15, 20-21, 24-25, 28, 55
+    /Users/tarek/Dev/github.com/circus/circus/sighandler                 36     10    72%   39-44, 47, 50, 53, 59
+    /Users/tarek/Dev/github.com/circus/circus/stream/__init__            35     11    69%   16, 21-22, 25-26, 29, 34, 37-38, 41, 68
     /Users/tarek/Dev/github.com/circus/circus/stream/base                61     10    84%   22, 39, 55-56, 61-62, 71-74
     /Users/tarek/Dev/github.com/circus/circus/stream/sthread             19      0   100%   
     /Users/tarek/Dev/github.com/circus/circus/tests/__init__              0      0   100%   
@@ -47,6 +47,6 @@ Code coverage
     /Users/tarek/Dev/github.com/circus/circus/util                      193    110    43%   1-54, 58-61, 67-69, 75, 89-92, 96-97, 113-114, 124-125, 129-130, 134-137, 141-142, 149, 158, 167, 180, 188, 200, 208, 210, 214-220, 226-231, 236-289
     /Users/tarek/Dev/github.com/circus/circus/watcher                   269     68    75%   121, 183, 205, 211, 236, 252, 272, 279-280, 283-284, 292, 302, 318-320, 330-332, 338-343, 349-350, 356, 360-361, 378, 397, 406, 415-418, 425, 428, 431-433, 455, 471, 473-474, 476-477, 479-480, 482, 484-485, 489-503
     -----------------------------------------------------------------------------------------------
-    TOTAL                                                              2202    894    59%   
+    TOTAL                                                              2212    893    60%   
 
 
