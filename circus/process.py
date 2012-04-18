@@ -128,11 +128,9 @@ class Process(object):
             else:
                 args_ = args[:]
 
-            args_.insert(0, bytestring(cmd))
+            args_ = shlex.split(bytestring(cmd)) + args_
         else:
-            args_ = [bytestring(cmd)]
-
-        print args_
+            args_ = shlex.split(bytestring(cmd))
 
         logger.debug('Running %r' % ' '.join(args_))
 
