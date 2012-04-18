@@ -5,6 +5,7 @@ CHANGES
 ------------------
 
 - fix: make sure watcher' defaults aren't overrided
+- added a StdoutStream class.
 
 0.3 - 2012-04-18
 ----------------

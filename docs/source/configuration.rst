@@ -78,6 +78,7 @@ watcher:NAME (as many sections as you want)
 
         - :class:`FileStream`: writes in a file
         - :class:`QueueStream`: write in a memory Queue
+        - :class:`StdoutStream`: writes in the stdout
 
     **stderr_stream.***
         All options starting with *stderr_stream.* other than *class* will
@@ -91,6 +92,7 @@ watcher:NAME (as many sections as you want)
 
         - :class:`FileStream`: writes in a file
         - :class:`QueueStream`: write in a memory Queue
+        - :class:`StdoutStream`: writes in the stdout
 
     **stdout_stream.***
         All options starting with *stdout_stream.* other than *class* will
