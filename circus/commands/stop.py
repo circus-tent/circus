@@ -43,6 +43,8 @@ class Stop(Command):
     name = "stop"
 
     def message(self, *args, **opts):
+        if len(args) >= 1:
+            return self.make_message(name=args[0])
         return self.make_message()
 
     def execute(self, arbiter, props):

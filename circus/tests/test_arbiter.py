@@ -133,6 +133,7 @@ class TestTrainer(TestCircus):
         self.assertEqual(resp.get("status"), "ok")
         resp = self.cli.call(make_message("start", name="test1"))
         self.assertEqual(resp.get("status"), "ok")
+
         resp = self.cli.call(make_message("status", name="test1"))
         self.assertEqual(resp.get("status"), "active")
 
@@ -195,3 +196,18 @@ class TestTrainer(TestCircus):
         self.cli.call(make_message("stop", name="test"))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get('status'), "stopped")
+
+    def test_stop_watchers3(self):
+        cmd, args = self._get_cmd_args()
+        msg = make_message("add", name="test1", cmd=cmd, args=args)
+        resp = self.cli.call(msg)
+        self.assertEqual(resp.get("status"), "ok")
+        resp = self.cli.call(make_message("start", name="test1"))
+        self.assertEqual(resp.get("status"), "ok")
+
+        self.cli.call(make_message("stop", name="test1"))
+        resp = self.cli.call(make_message("status", name="test1"))
+        self.assertEqual(resp.get('status'), "stopped")
+
+        resp = self.cli.call(make_message("status", name="test"))
+        self.assertEqual(resp.get('status'), "active")
