@@ -16,6 +16,7 @@ import shlex
 
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
+from circus.py3compat import bytestring
 from circus.util import get_info, to_uid, to_gid, debuglog, get_working_dir
 from circus import logger
 
@@ -127,9 +128,11 @@ class Process(object):
             else:
                 args_ = args[:]
 
-            args_.insert(0, cmd)
+            args_.insert(0, bytestring(cmd))
         else:
-            args_ = [cmd]
+            args_ = [bytestring(cmd)]
+
+        print args_
 
         logger.debug('Running %r' % ' '.join(args_))
 
