@@ -3,16 +3,16 @@
 Examples
 --------
 
-The **examples** directory in the Circus repository contains a 
+The **examples** directory in the Circus repository contains a
 few examples to get you started.
 
 Open a shell and cd into it::
 
-    $ cd examples 
-    
-Now try to run the :file:`circus.ini` config::
+    $ cd examples
 
-    $ circusd circus.ini
+Now try to run the :file:`example1.ini` config::
+
+    $ circusd example1.ini
     2012-03-19 13:29:48 [7843] [INFO] Starting master on pid 7843
     2012-03-19 13:29:48 [7843] [INFO] running dummy process [pid 7844]
     2012-03-19 13:29:48 [7843] [INFO] running dummy process [pid 7845]
