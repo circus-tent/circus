@@ -20,12 +20,14 @@ class AddWatcher(Command):
                 "properties": {
                     "cmd": "/path/to/commandline --option"
                     "name": "nameofwatcher"
+                    "args": []
                 }
             }
 
         A message contains 2 properties:
 
         - cmd: Full command line to execute in a process
+        - args: array, arguments passed to the command (optionnal)
         - name: name of watcher
 
         The response return a status "ok".
@@ -63,4 +65,5 @@ class AddWatcher(Command):
         return msg
 
     def execute(self, arbiter, props):
-        arbiter.add_watcher(props['name'], props['cmd'])
+        arbiter.add_watcher(props['name'], props['cmd'],
+                            args=props.get('args', None))
