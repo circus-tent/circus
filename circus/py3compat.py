@@ -13,7 +13,7 @@ if PY3:
     def s2b(s):     # NOQA
         return s.encode('latin1')
 
-    def bytestring(s):
+    def bytestring(s): # NOQA
         return s
 
     import io
@@ -35,7 +35,7 @@ else:
     def s2b(s):     # NOQA
         return s
 
-    def bytestring(s):
+    def bytestring(s): # NOQA
         if isinstance(s, unicode):
             return s.encode('utf-8')
         return s
