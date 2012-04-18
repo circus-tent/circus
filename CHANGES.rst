@@ -1,10 +1,15 @@
 CHANGES
 =======
 
-0.3 - 2012-????
----------------
+0.3 - 2012-04-18
+----------------
 
-- ?
+- added the streaming feature
+- now displaying coverage in the Sphinx doc
+- fixed the way the processes are killed (no more SIGQUIT)
+- the configuration has been factored out
+- setproctitle support
+
 
 0.2 - 2012-04-04
 ----------------
