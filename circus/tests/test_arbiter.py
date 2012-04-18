@@ -87,6 +87,16 @@ class TestTrainer(TestCircus):
 
         return cmd
 
+
+    def _get_cmd_args(self):
+        fd, testfile = mkstemp()
+        os.close(fd)
+        cmd = sys.executable
+        args = ['generic.py', 'circus.tests.test_arbiter.run_dummy',
+                testfile]
+        return cmd, args
+
+
     def test_add_watcher(self):
         msg = make_message("add", name="test1", cmd=self._get_cmd())
         resp = self.cli.call(msg)
@@ -109,6 +119,23 @@ class TestTrainer(TestCircus):
         self.cli.call(msg)
         resp = self.cli.call(msg)
         self.assertTrue(resp.get('status'), 'error')
+
+    def test_add_watcher4(self):
+        cmd, args = self._get_cmd_args()
+        msg = make_message("add", name="test1", cmd=cmd, args=args)
+        resp = self.cli.call(msg)
+        self.assertEqual(resp.get("status"), "ok")
+
+    def test_add_watcher5(self):
+        cmd, args = self._get_cmd_args()
+        msg = make_message("add", name="test1", cmd=cmd, args=args)
+        resp = self.cli.call(msg)
+        self.assertEqual(resp.get("status"), "ok")
+        resp = self.cli.call(make_message("start", name="test1"))
+        self.assertEqual(resp.get("status"), "ok")
+
+        resp = self.cli.call(make_message("status", name="test1"))
+        self.assertEqual(resp.get("status"), "active")
 
     def test_rm_watcher(self):
         msg = make_message("add", name="test1", cmd=self._get_cmd())
@@ -169,3 +196,18 @@ class TestTrainer(TestCircus):
         self.cli.call(make_message("stop", name="test"))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get('status'), "stopped")
+
+    def test_stop_watchers3(self):
+        cmd, args = self._get_cmd_args()
+        msg = make_message("add", name="test1", cmd=cmd, args=args)
+        resp = self.cli.call(msg)
+        self.assertEqual(resp.get("status"), "ok")
+        resp = self.cli.call(make_message("start", name="test1"))
+        self.assertEqual(resp.get("status"), "ok")
+
+        self.cli.call(make_message("stop", name="test1"))
+        resp = self.cli.call(make_message("status", name="test1"))
+        self.assertEqual(resp.get('status'), "stopped")
+
+        resp = self.cli.call(make_message("status", name="test"))
+        self.assertEqual(resp.get('status'), "active")
