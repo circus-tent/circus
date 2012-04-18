@@ -79,39 +79,44 @@ class TestTrainer(TestCircus):
         resp = self.cli.call(make_message("list"))
         self.assertEqual(resp.get('watchers'), ["test"])
 
-    def _get_cmd(self):
+    def _get_args(self):
         fd, testfile = mkstemp()
         os.close(fd)
-        cmd = '%s generic.py %s %s' % (sys.executable,
-                        'circus.tests.test_arbiter.run_dummy', testfile)
+        cmd = 'generic.py %s %s' % ('circus.tests.test_arbiter.run_dummy',
+                                    testfile)
 
         return cmd
 
     def test_add_watcher(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        msg = make_message("add", name="test1",
+                           cmd=sys.executable, args=self._get_args())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
-    def test_add_watcher1(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd())
+    def test_add_watcher_and_verify_it_is_listed(self):
+        msg = make_message("add", name="test1",
+                           cmd=sys.executable, args=self._get_args())
         self.cli.call(msg)
         resp = self.cli.call(make_message("list"))
         self.assertEqual(resp.get('watchers'), ["test", "test1"])
 
-    def test_add_watcher2(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd())
+    def test_add_watcher_and_verify_number_of_watchers(self):
+        msg = make_message("add", name="test1",
+                           cmd=sys.executable, args=self._get_args())
         self.cli.call(msg)
         resp = self.cli.call(make_message("numwatchers"))
         self.assertEqual(resp.get("numwatchers"), 2)
 
-    def test_add_watcher3(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd())
+    def test_add_watcher_and_verify_you_can_not_add_duplicate(self):
+        msg = make_message("add", name="test1",
+                           cmd=sys.executable, args=self._get_args())
         self.cli.call(msg)
         resp = self.cli.call(msg)
         self.assertTrue(resp.get('status'), 'error')
 
     def test_rm_watcher(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        msg = make_message("add", name="test1",
+                           cmd=sys.executable, args=self._get_args())
         self.cli.call(msg)
         msg = make_message("rm", name="test1")
         self.cli.call(msg)

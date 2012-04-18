@@ -196,13 +196,14 @@ class Arbiter(object):
         return dict([(watcher.name, watcher.status())
                       for watcher in self.watchers])
 
-    def add_watcher(self, name, cmd):
+    def add_watcher(self, name, cmd, args):
         """Adds a watcher.
 
         Options:
 
         - **name**: name of the watcher to add
-        - **cmd**: command to run.
+        - **cmd**: command to run
+        - **args**: arguments for the command
         """
         if name in self._watchers_names:
             raise AlreadyExist("%r already exist" % name)
@@ -210,7 +211,7 @@ class Arbiter(object):
         if not name:
             return ValueError("command name shouldn't be empty")
 
-        watcher = Watcher(name, cmd, stopped=True)
+        watcher = Watcher(name, cmd, args, stopped=True)
         watcher.initialize(self.evpub_socket)
         self.watchers.append(watcher)
         self._watchers_names[watcher.name.lower()] = watcher
