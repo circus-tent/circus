@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+from circus import __version__
 
 install_requires=['pyzmq', 'psutil']
 
@@ -15,7 +16,7 @@ with open("CHANGES.rst") as f:
 
 
 setup(name='circus',
-      version='0.3.1',
+      version=__version__,
       packages=find_packages(),
       description=("Circus is a program that will let you run and watch "
                    " multiple processes."),
