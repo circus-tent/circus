@@ -123,7 +123,8 @@ class ControllerApp(object):
             return 0
 
         print("usage: circusctl [--version] [--endpoint=<endpoint>]")
-        print("                 [--timeout=<timeout>] [--help]")
+        print("                 [--timeout=<timeout>] [--json]")
+        print("                 [--prettify] [--help]")
         print("                 <command> [<args>]")
         print("")
         print("Commands:")
