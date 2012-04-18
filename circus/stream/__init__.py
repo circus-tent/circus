@@ -1,3 +1,4 @@
+import sys
 from Queue import Queue
 
 from circus.util import import_module
@@ -26,6 +27,18 @@ class FileStream(object):
 
     def close(self):
         self._file.close()
+
+
+class StdoutStream(object):
+    def __init__(self, **kwargs):
+        pass
+
+    def __call__(self, data):
+        sys.stdout.write(data)
+        sys.stdout.flush()
+
+    def close(self):
+        pass
 
 
 def get_pipe_redirector(redirect, backend='thread', extra_info=None,
