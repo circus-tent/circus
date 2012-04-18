@@ -6,8 +6,8 @@ import sys
 from circus.stream import FileStream
 from circus import util
 
-
-WATCHER_DEFAULTS = {
+def watcher_defaults():
+ return {
         'name': '',
         'cmd': '',
         'args': '',
@@ -24,9 +24,9 @@ WATCHER_DEFAULTS = {
         'retry_in': 7,
         'max_retry': 5,
         'graceful_timeout': 30,
-        'rlimits': {},
-        'stderr_stream': {},
-        'stdout_stream': {},
+        'rlimits': dict(),
+        'stderr_stream': dict(),
+        'stdout_stream': dict(),
         'stream_backend': 'thread'}
 
 
@@ -130,7 +130,7 @@ def get_config(config_file):
     watchers = []
     for section in cfg.sections():
         if section.startswith("watcher:"):
-            watcher = WATCHER_DEFAULTS
+            watcher = watcher_defaults()
             watcher['name'] = section.split("watcher:", 1)[1]
 
             # create watcher options
