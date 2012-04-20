@@ -3,9 +3,8 @@ import cgi
 from collections import defaultdict
 
 try:
-    from bottle import route, run, static_file, redirect, request, response
+    from bottle import route, run, static_file, redirect, request
     from mako.lookup import TemplateLookup
-    from mako.template import Template
 except ImportError:
     raise ImportError('You need to install Bottle and Mako')
 
@@ -115,7 +114,7 @@ def index():
 
 
 @route('/watchers/<name>/stats', method='GET')
-def incr_proc(name):
+def stats(name):
     client.collectstats(name)
     redirect('/watchers/%s' % name)
 
@@ -133,7 +132,7 @@ def get_stat(name, field):
 
 
 @route('/watchers/<name>/process/decr', method='GET')
-def incr_proc(name):
+def decr_proc(name):
     client.decrproc(name)
     redirect('/watchers/%s' % name)
 
