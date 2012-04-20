@@ -1,5 +1,6 @@
 import os
 import cgi
+from collections import defaultdict
 
 from bottle import route, run, static_file, redirect, request
 
@@ -22,7 +23,7 @@ class LiveClient(object):
         self.client = CircusClient(endpoint=self.endpoint)
         self.connected = False
         self.watchers = []
-        self.stats = {}
+        self.stats = defaultdict(list)
 
     def verify(self):
         self.watchers = []
@@ -35,6 +36,7 @@ class LiveClient(object):
                 msg = cmds['options'].make_message(name=watcher)
                 options = self.client.call(msg)
                 self.watchers.append((watcher, options['options']))
+                self.collectstats(watcher)
             self.watchers.sort()
         except CallError:
             self.connected = False
@@ -62,11 +64,16 @@ class LiveClient(object):
     def collectstats(self, name):
         msg = cmds['stats'].make_message(name=name)
         res = self.client.call(msg)
-        self.stats[name] = res['info']
+        self.stats[name].append(res['info'])
 
     def get_stats(self, name):
         self.collectstats(name)
-        return self.stats[name]
+        return self.stats[name][:10]   # last ten
+
+    def get_series(self, name, pid, field):
+        self.collectstats(name)
+        stats = self.get_stats(name)
+        return [stat[pid][field] for stat in stats]
 
 
 def static(filename):
