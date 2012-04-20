@@ -48,13 +48,13 @@ function updateGraphs() {
     $.getJSON('/watchers/${name}/stats/cpu', function(data) {
             $.each(data, function(key, val) {
                 var id = '#' + key + '_cpu';
-                $(id).sparkline(val);
+                $(id).sparkline(val, {width: '75%'});
                 });
             });
     $.getJSON('/watchers/${name}/stats/mem', function(data) {
             $.each(data, function(key, val) {
                 var id = '#' + key + '_mem';
-                $(id).sparkline(val);
+                $(id).sparkline(val, {width: '75%'});
                 });
             });
 
