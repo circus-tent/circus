@@ -1,0 +1,20 @@
+<%inherit file="base.html"/>
+
+% if not client:
+Not connected. Go <a href="/">back</a> to connect.
+% endif
+
+% if client:
+<div><a href="/">Back</a></div>
+
+<p><strong>${name}</strong> runs <strong>${client.get_option(name, 'numprocesses')}</strong> processes.</p>
+
+ <p>Options :</p>
+ <ul>
+  %for name_, value in client.get_options(name):
+   <li>${name_}: ${value}</li>
+  %endfor
+  </ul>
+
+% endif
+
