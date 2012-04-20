@@ -1,5 +1,14 @@
 <%inherit file="base.html"/>
 
+<%block name="title">
+%if client:
+Connected to ${client.endpoint}
+%else:
+Disconnected
+%endif
+</%block>
+
+
 <script type="text/javascript" src="/media/jquery.min.js"></script>
 <script type="text/javascript" src="/media/jquery.sparkline.min.js"></script>
 % if not client:
@@ -7,7 +16,6 @@ Not connected. Go <a href="/">back</a> to connect.
 % endif
 
 % if client:
-<div><a href="/">Back</a></div>
 
 <p><strong>${name}</strong> runs <strong>${client.get_option(name, 'numprocesses')}</strong> processes.</p>
 
