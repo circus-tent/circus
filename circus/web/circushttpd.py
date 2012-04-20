@@ -22,8 +22,10 @@ class LiveClient(object):
         self.client = CircusClient(endpoint=self.endpoint)
         self.connected = False
         self.watchers = []
+        self.stats = {}
 
     def verify(self):
+        self.watchers = []
         # trying to list the watchers
         msg = cmds['list'].make_message()
         try:
@@ -45,6 +47,27 @@ class LiveClient(object):
         watchers = dict(self.watchers)
         return watchers[name].items()
 
+    def incrproc(self, name):
+        msg = cmds['incr'].make_message(name=name)
+        res = self.client.call(msg)
+        self.verify()  # will do better later
+        return res['numprocesses']
+
+    def decrproc(self, name):
+        msg = cmds['decr'].make_message(name=name)
+        res = self.client.call(msg)
+        self.verify()  # will do better later
+        return res['numprocesses']
+
+    def collectstats(self, name):
+        msg = cmds['stats'].make_message(name=name)
+        res = self.client.call(msg)
+        self.stats[name] = res['info']
+
+    def get_stats(self, name):
+        self.collectstats(name)
+        return self.stats[name]
+
 
 def static(filename):
     return static_file(filename, root=_DIR)
@@ -62,6 +85,24 @@ def index():
         msg = cgi.escape(msg)
     tmpl = TMPLS.get_template('index.html')
     return tmpl.render(client=client, msg=msg)
+
+
+@route('/watchers/<name>/stats', method='GET')
+def incr_proc(name):
+    client.collectstats(name)
+    redirect('/watchers/%s' % name)
+
+
+@route('/watchers/<name>/process/decr', method='GET')
+def incr_proc(name):
+    client.decrproc(name)
+    redirect('/watchers/%s' % name)
+
+
+@route('/watchers/<name>/process/incr', method='GET')
+def incr_proc(name):
+    client.incrproc(name)
+    redirect('/watchers/%s' % name)
 
 
 @route('/watchers/<name>', method='GET')

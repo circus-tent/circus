@@ -1136,7 +1136,26 @@ div.message {
     border-radius: 0.5em;
 }
 
+div.stat {
+    padding: 0.2em 0.2em 0.2em 0.2em;
+    margin: 0.5em;
+    border-radius: 0.5em;
+    background-color: rgb(232, 236, 239);
+    float: left;
+    padding: 0.7em;
+}
+
+
 div.watcher {
+    padding: 0.2em 0.2em 0.2em 0.2em;
+    margin: 0.5em;
+    border-radius: 0.5em;
+    background-color: rgb(232, 236, 239);
+    float: left;
+    padding: 0.7em;
+}
+
+a.action {
     padding: 0.2em 0.2em 0.2em 0.2em;
     margin: 0.5em;
     border-radius: 0.5em;
