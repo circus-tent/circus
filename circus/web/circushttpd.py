@@ -2,7 +2,7 @@ import os
 import cgi
 from collections import defaultdict
 
-from bottle import route, run, static_file, redirect, request
+from bottle import route, run, static_file, redirect, request, response
 
 from mako.lookup import TemplateLookup
 from mako.template import Template
@@ -15,6 +15,7 @@ _DIR = os.path.dirname(__file__)
 TMPLS = TemplateLookup(directories=[_DIR])
 client = None
 cmds = get_commands()
+MAX_STATS = 100
 
 
 class LiveClient(object):
@@ -64,16 +65,29 @@ class LiveClient(object):
     def collectstats(self, name):
         msg = cmds['stats'].make_message(name=name)
         res = self.client.call(msg)
-        self.stats[name].append(res['info'])
+        self.stats[name].insert(0, res['info'])
+        if len(self.stats[name]) > MAX_STATS:
+            self.stats[name][:] = self.stats[name][:MAX_STATS]
 
     def get_stats(self, name):
         self.collectstats(name)
-        return self.stats[name][:10]   # last ten
+        return self.stats[name]
+
+    def get_pids(self, name):
+        msg = cmds['list'].make_message(name=name)
+        res = self.client.call(msg)
+        return res['processes']
 
     def get_series(self, name, pid, field):
         self.collectstats(name)
         stats = self.get_stats(name)
-        return [stat[pid][field] for stat in stats]
+        res = []
+        pid = str(pid)
+        for stat in stats:
+            if pid not in stat:
+                continue
+            res.append(stat[pid][field])
+        return res
 
 
 def static(filename):
@@ -98,6 +112,18 @@ def index():
 def incr_proc(name):
     client.collectstats(name)
     redirect('/watchers/%s' % name)
+
+
+@route('/watchers/<name>/stats/<field>', method='GET')
+def get_stat(name, field):
+    if client is None:
+        return {}
+    client.collectstats(name)
+    pids = [str(pid) for pid in client.get_pids(name)]
+    res = {}
+    for pid in pids:
+        res[pid] = [str(v) for v in client.get_series(name, pid, field)]
+    return res
 
 
 @route('/watchers/<name>/process/decr', method='GET')
