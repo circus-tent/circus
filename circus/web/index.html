@@ -1,0 +1,23 @@
+<%inherit file="base.html"/>
+
+% if not client:
+  <p>Connect to a Circus system</p>
+  <form action="/connect" method="POST">
+    <input type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
+    <input type="submit"/>
+  </form>
+% endif
+
+% if client:
+  <strong>Connected to ${client.endpoint}</strong>
+
+  <div>
+   <h4>List of watchers</h4>
+     <ul>
+     % for watcher in client.watchers:
+       <li>${watcher}</li>
+     %endfor
+     </ul>
+  </div>
+% endif
+

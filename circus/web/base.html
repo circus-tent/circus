@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Circus Control Panel</title>
+        <link rel="stylesheet" href="/media/circus.css" type="text/css" />
+        <link rel="shortcut icon" href="/media/favicon.ico"/>
+        <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <meta name="description" content="Control panel for the Circus Process Watcher" />
+    </head>
+    <body>
+        <div class="document">
+            <div class="documentwrapper">
+                <div class="bodywrapper">
+                    <div class="body">
+                        <div class="header">
+                            Circus Control Panel
+                        </div>
+                        % if msg:
+                        <div class="message">
+                            ${msg}
+                        </div>
+                        %endif
+                        ${self.body()}
+                        <div class="footer">
+                            &copy; Copyright 2012, Circus Team
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

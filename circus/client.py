@@ -15,7 +15,7 @@ class CircusClient(object):
             timeout=5.0):
 
         self.context = context or zmq.Context.instance()
-
+        self.endpoint = endpoint
         self._id = uuid.uuid4().hex
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
