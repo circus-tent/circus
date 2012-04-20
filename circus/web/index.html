@@ -12,12 +12,12 @@
   <strong>Connected to ${client.endpoint}</strong>
 
   <div>
-   <h4>List of watchers</h4>
-     <ul>
-     % for watcher in client.watchers:
-       <li>${watcher}</li>
+     % for watcher, options in client.watchers:
+     <div class="watcher">
+      <a href="/watchers/${watcher}">${watcher} (${options['numprocesses']})</a>
+     </div>
      %endfor
-     </ul>
+     <div style="clear: both"/>
   </div>
 % endif
 

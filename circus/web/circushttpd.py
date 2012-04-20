@@ -29,10 +29,13 @@ class LiveClient(object):
         try:
             res = self.client.call(msg)
             self.connected = True
-            self.watchers = res['watchers']
+            for watcher in res['watchers']:
+                msg = cmds['options'].make_message(name=watcher)
+                options = self.client.call(msg)
+                self.watchers.append((watcher, options['options']))
+            self.watchers.sort()
         except CallError:
             self.connected = False
-
 
 
 
