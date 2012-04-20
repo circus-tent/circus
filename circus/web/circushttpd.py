@@ -37,6 +37,13 @@ class LiveClient(object):
         except CallError:
             self.connected = False
 
+    def get_option(self, name, option):
+        watchers = dict(self.watchers)
+        return watchers[name][option]
+
+    def get_options(self, name):
+        watchers = dict(self.watchers)
+        return watchers[name].items()
 
 
 def static(filename):
@@ -55,6 +62,15 @@ def index():
         msg = cgi.escape(msg)
     tmpl = TMPLS.get_template('index.html')
     return tmpl.render(client=client, msg=msg)
+
+
+@route('/watchers/<name>', method='GET')
+def watcher(name):
+    msg = request.query.get('msg')
+    if msg:
+        msg = cgi.escape(msg)
+    tmpl = TMPLS.get_template('watcher.html')
+    return tmpl.render(client=client, msg=msg, name=name)
 
 
 @route('/connect', method='POST')
