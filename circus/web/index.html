@@ -1,4 +1,12 @@
 <%inherit file="base.html"/>
+ <%block name="title">
+%if client:
+Connected to ${client.endpoint}
+%else:
+Disconnected
+%endif
+</%block>
+
 
 % if not client:
   <p>Connect to a Circus system</p>
@@ -9,15 +17,22 @@
 % endif
 
 % if client:
-  <strong>Connected to ${client.endpoint}</strong>
+
 
   <div>
      % for watcher, options in client.watchers:
      <div class="watcher">
-      <a href="/watchers/${watcher}">${watcher} (${options['numprocesses']})</a>
+         <a href="/watchers/${watcher}">${watcher} (${options['numprocesses']})</a>
+         <img class="status" src="/media/${client.get_status(watcher)}.png" width="20" height="20"/>
      </div>
      %endfor
      <div style="clear: both"/>
   </div>
+
+  <p>Add a new watcher</p>
+  <form>
+
+  </form>
+
 % endif
 

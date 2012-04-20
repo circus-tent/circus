@@ -16,13 +16,17 @@
                 <div class="bodywrapper">
                     <div class="body">
                         <div class="header">
-                            Circus Control Panel
-                        </div>
+                            <a href="/" class="home"><img src="/media/home.png"/></a>
+
+                            Circus Control Panel - <%block name="title"/>
                         % if msg:
                         <div class="message">
                             ${msg}
                         </div>
                         %endif
+
+
+                        </div>
                         ${self.body()}
                         <div class="footer">
                             &copy; Copyright 2012, Circus Team

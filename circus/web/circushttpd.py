@@ -89,6 +89,10 @@ class LiveClient(object):
             res.append(stat[pid][field])
         return res
 
+    def get_status(self, name):
+        # XXX will return a general status -- 'green' or 'red'
+        return 'green'
+
 
 def static(filename):
     return static_file(filename, root=_DIR)

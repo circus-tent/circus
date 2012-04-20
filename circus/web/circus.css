@@ -1132,8 +1132,17 @@ div.message {
     background-color: #FF7F24;
     color: white;
     font-size: bold;
-    padding: 0.5em;
+    padding: 0.1em 0.5em 0.1em 0.5em;
     border-radius: 0.5em;
+}
+
+a.home {
+    float: left;
+}
+
+img.status {
+    vertical-align: middle;
+    height: 100%;
 }
 
 div.stat {
