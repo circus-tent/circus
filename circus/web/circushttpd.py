@@ -2,10 +2,12 @@ import os
 import cgi
 from collections import defaultdict
 
-from bottle import route, run, static_file, redirect, request, response
-
-from mako.lookup import TemplateLookup
-from mako.template import Template
+try:
+    from bottle import route, run, static_file, redirect, request, response
+    from mako.lookup import TemplateLookup
+    from mako.template import Template
+except ImportError:
+    raise ImportError('You need to install Bottle and Mako')
 
 from circus.commands import get_commands
 from circus.client import CircusClient, CallError
