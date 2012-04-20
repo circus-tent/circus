@@ -1146,6 +1146,9 @@ div.stat {
     width: 300px;
 }
 
+span.sparklines {
+    width: 100%;
+}
 
 div.watcher {
     padding: 0.2em 0.2em 0.2em 0.2em;
