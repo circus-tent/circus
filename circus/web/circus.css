@@ -1149,7 +1149,9 @@ div.stat {
     padding: 0.2em 0.2em 0.2em 0.2em;
     margin: 0.5em;
     border-radius: 0.5em;
-    background-color: rgb(232, 236, 239);
+    background-color: #FCFCFC;
+    border-bottom: 1px solid rgb(204, 204, 204);
+    border-right: 1px solid rgb(204, 204, 204);
     float: left;
     padding: 0.7em;
     width: 300px;
@@ -1163,7 +1165,9 @@ div.watcher {
     padding: 0.2em 0.2em 0.2em 0.2em;
     margin: 0.5em;
     border-radius: 0.5em;
-    background-color: rgb(232, 236, 239);
+    background-color: #FCFCFC;
+    border-bottom: 1px solid rgb(204, 204, 204);
+    border-right: 1px solid rgb(204, 204, 204);
     float: left;
     padding: 0.7em;
 }
@@ -1196,6 +1200,45 @@ p {
     margin: 0;
 }
 
+span.orangelabel {
+    padding: 1px 4px 2px;
+    font-size: 10.9 px;
+    font-weight: bold;
+    line-height: 13px;
+    color: rgb(255, 255, 255);
+    vertical-align: middle;
+    white-space: nowrap;
+    text-shadow: 0pt -1px 0pt rgba(0, 0, 0, 0.25);
+    border-radius: 3px 3px 3px 3px;
+    background-color: #FF7F24;
+}
+
+span.redlabel {
+    padding: 2px 4px 3px;
+    font-size: 10.9 px;
+    font-weight: bold;
+    line-height: 13px;
+    color: rgb(255, 255, 255);
+    vertical-align: middle;
+    white-space: nowrap;
+    text-shadow: 0pt -1px 0pt rgba(0, 0, 0, 0.25);
+    border-radius: 3px 3px 3px 3px;
+    background-color: rgb(185, 74, 72);
+}
+
+
+span.label {
+    padding: 1px 4px 2px;
+    font-size: 10.9 px;
+    font-weight: bold;
+    line-height: 13px;
+    color: rgb(255, 255, 255);
+    vertical-align: middle;
+    white-space: nowrap;
+    text-shadow: 0pt -1px 0pt rgba(0, 0, 0, 0.25);
+    border-radius: 3px 3px 3px 3px;
+    background-color: rgb(153, 153, 153);
+}
 
 .section p img {
     margin: 1em 2em;
