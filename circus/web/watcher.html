@@ -33,9 +33,22 @@ Not connected. Go <a href="/">back</a> to connect.
     <p>Watcher <strong>${name}</strong> runs <strong>${client.get_option(name, 'numprocesses')}</strong> processes.</p>
     %for pid in client.get_pids(name):
     <div class="stat" id="pid_${pid}">
-     Process #${pid}
-     <div>CPU : <span id="${pid}_cpu" class="sparklines"></span></div>
-     <div>Mem : <span id="${pid}_mem" class="sparklines"></span></div>
+     <div style="margin-bottom: 10px">
+         <span class="orangelabel">Process #${pid}</span>
+         <a href="/watchers/${name}/process/kill/${pid}">
+             <span class="redlabel" style="float: right">kill</span>
+         </a>    
+     </div>
+     <div style="margin-bottom: 4px">
+         <span class="label">CPU</span>
+         <span id="${pid}_cpu" class="sparklines"></span>
+         <span class="label" id="${pid}_last_cpu" style="margin-left: 4px">0.0 %</span>
+     </div>
+     <div>
+         <span class="label">Mem</span> 
+         <span id="${pid}_mem" class="sparklines"></span>
+         <span class="label" style="margin-left: 4px" id="${pid}_last_mem">0.0 %</span>
+     </div>
     </div>
     %endfor
     <div style="clear: both"></div>
@@ -65,20 +78,24 @@ function updateGraphs() {
     $.getJSON('/watchers/${name}/stats/cpu', function(data) {
             $.each(data, function(key, val) {
                 var id = '#' + key + '_cpu';
-                $(id).sparkline(val, {width: '75%'});
+                var lastid = '#' + key + '_last_cpu';
+                $(lastid).text(val[0] + " %");
+                $(id).sparkline(val, {width: '60%'});
                 });
             });
     $.getJSON('/watchers/${name}/stats/mem', function(data) {
             $.each(data, function(key, val) {
                 var id = '#' + key + '_mem';
-                $(id).sparkline(val, {width: '75%'});
+                var lastid = '#' + key + '_last_mem';
+                $(lastid).text(val[0] + " %");
+                $(id).sparkline(val, {width: '60%'});
                 });
             });
 
 }
 
 // see if we want to provide this as a glider
-setInterval("updateGraphs()", 2000);
+setInterval("updateGraphs()", 1000);
 
 </script>
 

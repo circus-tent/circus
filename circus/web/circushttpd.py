@@ -1,6 +1,8 @@
 import os
 import cgi
 from collections import defaultdict
+from threading import Thread
+import time
 
 try:
     from bottle import route, run, static_file, redirect, request
@@ -19,6 +21,29 @@ cmds = get_commands()
 MAX_STATS = 100
 
 
+class Refresher(Thread):
+    def __init__(self, client):
+        Thread.__init__(self)
+        self.client = client
+        self.daemon = True
+        self.running = False
+        self.cclient = CircusClient(endpoint=client.endpoint)
+
+    def run(self):
+        stats = self.client.stats
+        call = self.cclient.call
+        self.running = True
+        while self.running:
+            for name, __ in self.client.watchers:
+                msg = cmds['stats'].make_message(name=name)
+                res = call(msg)
+                stats[name].insert(0, res['info'])
+                if len(stats[name]) > MAX_STATS:
+                    stats[name][:] = stats[name][:MAX_STATS]
+
+            time.sleep(.2)
+
+
 class LiveClient(object):
     def __init__(self, endpoint):
         self.endpoint = str(endpoint)
@@ -26,6 +51,7 @@ class LiveClient(object):
         self.connected = False
         self.watchers = []
         self.stats = defaultdict(list)
+        self.refresher = Refresher(self)
 
     def verify(self):
         self.watchers = []
@@ -38,10 +64,17 @@ class LiveClient(object):
                 msg = cmds['options'].make_message(name=watcher)
                 options = self.client.call(msg)
                 self.watchers.append((watcher, options['options']))
-                self.collectstats(watcher)
             self.watchers.sort()
+            if not self.refresher.running:
+                self.refresher.start()
         except CallError:
             self.connected = False
+
+    def killproc(self, name, pid):
+        msg = cmds['killproc'].make_message(name=name, pid=pid)
+        res = self.client.call(msg)
+        self.verify()  # will do better later
+        return res['numprocesses']
 
     def get_option(self, name, option):
         watchers = dict(self.watchers)
@@ -63,15 +96,7 @@ class LiveClient(object):
         self.verify()  # will do better later
         return res['numprocesses']
 
-    def collectstats(self, name):
-        msg = cmds['stats'].make_message(name=name)
-        res = self.client.call(msg)
-        self.stats[name].insert(0, res['info'])
-        if len(self.stats[name]) > MAX_STATS:
-            self.stats[name][:] = self.stats[name][:MAX_STATS]
-
     def get_stats(self, name):
-        self.collectstats(name)
         return self.stats[name]
 
     def get_pids(self, name):
@@ -80,7 +105,6 @@ class LiveClient(object):
         return res['processes']
 
     def get_series(self, name, pid, field):
-        self.collectstats(name)
         stats = self.get_stats(name)
         res = []
         pid = str(pid)
@@ -99,6 +123,12 @@ def static(filename):
     return static_file(filename, root=_DIR)
 
 
+@route('/watchers/<name>/process/kill/<pid>')
+def kill_process(name, pid):
+    client.killproc(name, pid)
+    redirect('/watchers/%s' % name)
+
+
 @route('/media/<filename:path>')
 def get_media(filename):
     return static_file(filename, root=_DIR)
@@ -113,17 +143,11 @@ def index():
     return tmpl.render(client=client, msg=msg)
 
 
-@route('/watchers/<name>/stats', method='GET')
-def stats(name):
-    client.collectstats(name)
-    redirect('/watchers/%s' % name)
-
 
 @route('/watchers/<name>/stats/<field>', method='GET')
 def get_stat(name, field):
     if client is None:
         return {}
-    client.collectstats(name)
     pids = [str(pid) for pid in client.get_pids(name)]
     res = {}
     for pid in pids:
