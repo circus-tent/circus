@@ -29,9 +29,26 @@ Disconnected
      <div style="clear: both"/>
   </div>
 
-  <p>Add a new watcher</p>
-  <form>
+  <form action="add_watcher" method="POST">
+   <fieldset>
+     <legend>Add a new watcher</legend>
 
+      <p>
+          <label for="name">Name</label>
+          <input type="text" name="name"></input>
+      </p>
+      <p>
+          <label for="cmd">Command</label>
+          <input type="text" name="cmd"></input>
+      </p>
+      <p>
+          <label for="args">Arguments</label>
+          <input type="text" name="args"></input>
+      </p>
+      <p>
+          <input type="submit"></input>
+    </p>
+   </fieldset>
   </form>
 
 % endif

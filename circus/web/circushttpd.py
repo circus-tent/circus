@@ -118,6 +118,13 @@ class LiveClient(object):
         # XXX will return a general status -- 'green' or 'red'
         return 'green'
 
+    def add_watcher(self, name, cmd, args):
+        import pdb; pdb.set_trace()
+        msg = cmds['add'].make_message(name=name, cmd=cmd, args=args)
+        res = self.client.call(msg)
+        self.verify()  # will do better later
+        return res['numprocesses']
+
 
 def static(filename):
     return static_file(filename, root=_DIR)
@@ -167,6 +174,11 @@ def incr_proc(name):
     url = request.query.get('redirect', '/watchers/%s' % name)
     client.incrproc(name)
     redirect(url)
+
+
+@route('/add_watcher', method='POST')
+def add_watcher():
+    client.add_watcher(**request.POST)
 
 
 @route('/watchers/<name>', method='GET')

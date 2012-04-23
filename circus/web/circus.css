@@ -861,7 +861,6 @@ div.sphinxsidebar p.topless:hover {
 input,
 div.sphinxsidebar input {
     border: 1px solid #999;
-    float: left;
 }
 
 /* Search textbox */
@@ -891,6 +890,7 @@ input[type="submit"] {
     -moz-border-radius-bottomright: 3px;
     -webkit-border-top-right-radius: 3px;
     -webkit-border-bottom-right-radius: 3px;
+    margin-top: 5px;
 }
 input[type="submit"]:hover {
     color: #ffffff;
@@ -1136,6 +1136,7 @@ div.message {
     border-radius: 0.5em;
 }
 
+
 a.home {
     float: left;
 }
@@ -1240,11 +1241,25 @@ span.label {
     background-color: rgb(153, 153, 153);
 }
 
+label
+{
+width: 8em;
+float: left;
+text-align: right;
+margin-right: 0.5em;
+display: block
+}
+
+.submit input
+{
+margin-left: 4.5em;
+} 
+
 .section p img {
     margin: 1em 2em;
 }
 
-.ui-tabs { position: relative; padding: .2em; zoom: 1; } /* position: relative prevents IE scroll bug (element with position: relative inside container with overflow: auto appear as "fixed") */
+.ui-tabs { position: relative; padding: .2em; zoom: 1; } 
 .ui-tabs .ui-tabs-nav { margin: 0; padding: .2em .2em 0; }
 .ui-tabs .ui-tabs-nav li { list-style: none; float: left; position: relative; top: 1px; margin: 0 .2em 1px 0; border-bottom: 0 !important; padding: 0; white-space: nowrap; }
 .ui-tabs .ui-tabs-nav li a { float: left; padding: .5em 1em; text-decoration: none; }
