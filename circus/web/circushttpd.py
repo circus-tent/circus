@@ -53,6 +53,11 @@ class LiveClient(object):
         self.stats = defaultdict(list)
         self.refresher = Refresher(self)
 
+    def stop(self):
+        self.client.stop()
+        self.refresher.running = False
+        self.refresher.join()
+
     def verify(self):
         self.watchers = []
         # trying to list the watchers
@@ -119,7 +124,6 @@ class LiveClient(object):
         return 'green'
 
     def add_watcher(self, name, cmd, args):
-        import pdb; pdb.set_trace()
         msg = cmds['add'].make_message(name=name, cmd=cmd, args=args)
         res = self.client.call(msg)
         self.verify()  # will do better later
@@ -132,8 +136,13 @@ def static(filename):
 
 @route('/watchers/<name>/process/kill/<pid>')
 def kill_process(name, pid):
-    client.killproc(name, pid)
-    redirect('/watchers/%s' % name)
+    try:
+        client.killproc(name, pid)
+        msg = 'success'
+    except CallError, e:
+        msg = str(e)
+
+    redirect('/watchers/%s?msg=%s' % (name, msg))
 
 
 @route('/media/<filename:path>')
@@ -155,30 +164,47 @@ def index():
 def get_stat(name, field):
     if client is None:
         return {}
-    pids = [str(pid) for pid in client.get_pids(name)]
     res = {}
-    for pid in pids:
-        res[pid] = [str(v) for v in client.get_series(name, pid, field)]
+    try:
+        pids = [str(pid) for pid in client.get_pids(name)]
+        for pid in pids:
+            res[pid] = [str(v) for v in client.get_series(name, pid, field)]
+    except CallError:
+        pass
+
     return res
 
 
 @route('/watchers/<name>/process/decr', method='GET')
 def decr_proc(name):
     url = request.query.get('redirect', '/watchers/%s' % name)
-    client.decrproc(name)
-    redirect(url)
-
+    try:
+        client.decrproc(name)
+        msg = 'success'
+    except CallError, e:
+        msg = str(e)
+    redirect(url + '?msg=' + msg)
 
 @route('/watchers/<name>/process/incr', method='GET')
 def incr_proc(name):
     url = request.query.get('redirect', '/watchers/%s' % name)
-    client.incrproc(name)
-    redirect(url)
+    try:
+        client.incrproc(name)
+        msg = 'success'
+    except CallError, e:
+        msg = str(e)
+    redirect(url + '?msg=' + msg)
 
 
 @route('/add_watcher', method='POST')
 def add_watcher():
-    client.add_watcher(**request.POST)
+    try:
+        if client.add_watcher(**request.POST):
+            redirect('/watcher/%(name)s' % request.POST)
+        else:
+            redirect('/?msg=Failed')
+    except CallError, e:
+        redirect('/?msg=Failed')
 
 
 @route('/watchers/<name>', method='GET')
@@ -201,6 +227,16 @@ def connect():
         redirect('/?msg=Connected')
     else:
         redirect('/?msg=Failed to connect')
+
+
+@route('/disconnect')
+def disconnect():
+    global client
+
+    if client is not None:
+        client.stop()
+        client = None
+        redirect('/?msg=disconnected')
 
 
 def main():

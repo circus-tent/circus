@@ -17,16 +17,19 @@
                     <div class="body">
                         <div class="header">
                             <a href="/" class="home"><img src="/media/home.png"/></a>
+                            
+                            <span class="title">Circus Control Panel - <%block name="title"/></span>
+                            % if client:
+                            <a href="/disconnect" class="disconnect"><img
+                                src="/media/disconnect.png"/></a>
+                            % endif
 
-                            Circus Control Panel - <%block name="title"/>
                         % if msg:
                         <div class="message">
                             ${msg}
                         </div>
                         %endif
-
-
-                        </div>
+                          </div>
                         ${self.body()}
                         <div class="footer">
                             &copy; Copyright 2012, Circus Team
