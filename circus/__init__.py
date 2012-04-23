@@ -29,15 +29,15 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
           programs as the command name, which can then be different from the
           actual executable name. It becomes the display name for the executing
           program in utilities such as **ps**.
-        - **numprocesses** -- the number of flies to spawn (default: 1).
+        - **numprocesses** -- the number of processes to spawn (default: 1).
         - **warmup_delay** -- the delay in seconds between two spawns
           (default: 0)
-        - **shell** -- if True, the flies are run in the shell
+        - **shell** -- if True, the processes are run in the shell
           (default: False)
         - **working_dir** - the working dir for the processes (default: None)
-        - **uid** -- the user id used to run the flies (default: None)
-        - **gid** -- the group id used to run the flies (default: None)
-        - **env** -- the environment passed to the flies (default: None)
+        - **uid** -- the user id used to run the processes (default: None)
+        - **gid** -- the group id used to run the processes (default: None)
+        - **env** -- the environment passed to the processes (default: None)
         - **stdout_stream**: a mapping containing the options for configuring
           the stdout stream. Default to None. When provided, may contain:
             - **class**: the fully qualified name of the class to use for

@@ -60,7 +60,7 @@ watcher:NAME (as many sections as you want)
     **args**
         Command-line arguments to pass to the program
     **shell**
-        If True, the flies are run in the shell (default: False)
+        If True, the processes are run in the shell (default: False)
     **working_dir**
         The working dir for the processes (default: None)
     **uid**
@@ -70,7 +70,7 @@ watcher:NAME (as many sections as you want)
         The group id or name the command should run
         with. (The current gid is the default).
     **env**
-        The environment passed to the flies (default: None)
+        The environment passed to the processes (default: None)
     **warmup_delay**
         The delay (in seconds) between running processes.
     **numprocesses**
