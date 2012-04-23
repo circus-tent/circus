@@ -30,7 +30,10 @@ Not connected. Go <a href="/">back</a> to connect.
  <div style="clear: both"></div>
  <div id="tabs-1" class="ui-tabs-panel">
    <div class="panel">
-    <p>Watcher <strong>${name}</strong> runs <strong>${client.get_option(name, 'numprocesses')}</strong> processes.</p>
+       <p>Watcher <strong>${name}</strong> runs <strong>${client.get_option(name, 'numprocesses')}</strong> processes.
+          <a href="/watchers/${name}/process/incr?redirect=/watchers/${name}#tabs-1"><span class="orangelabel">+</span></a>
+          <a href="/watchers/${name}/process/decr?redirect=/watchers/${name}#tabs-1"><span class="orangelabel">-</span></a>
+       </p>
     %for pid in client.get_pids(name):
     <div class="stat" id="pid_${pid}">
      <div style="margin-bottom: 10px">
@@ -52,9 +55,6 @@ Not connected. Go <a href="/">back</a> to connect.
     </div>
     %endfor
     <div style="clear: both"></div>
-  <a class="action" href="/watchers/${name}/process/incr">Add a process</a>
-  <a class="action" href="/watchers/${name}/process/decr">Remove a process</a>
-  <div style="clear: both"></div>
   </div>
  </div>
  <div id="tabs-2" class="ui-tabs-panel">
