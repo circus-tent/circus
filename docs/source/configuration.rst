@@ -64,9 +64,11 @@ watcher:NAME (as many sections as you want)
     **working_dir**
         The working dir for the processes (default: None)
     **uid**
-        The user id used to run the flies (default: None)
+        The user id or name the command should run with.
+        (The current uid is the default).
     **gid**
-        The group id used to run the flies (default: None)
+        The group id or name the command should run
+        with. (The current gid is the default).
     **env**
         The environment passed to the flies (default: None)
     **warmup_delay**
