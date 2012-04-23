@@ -11,10 +11,10 @@ Architecture
     instance can run one or more watchers.
 **Processes**
     A *process* is an independent OS process instance of your program.
-    A single watcher can run one or more flies.
+    A single watcher can run one or more processes.
 **Arbiter**
     The *arbiter* is responsible for managing all the watchers within circus,
-    ensuring all flies run correctly.
+    ensuring all processes run correctly.
 **Controller**
     A *controller* contains the set of actions that con be performed on
     the arbiter.
@@ -23,7 +23,7 @@ Architecture
     them to all subscribers.
 **Flapping detection**
     The *flapping detection* subscribes to events and detects when some
-    flies are constantly restarting.
+    processes are constantly restarting.
 **Remote controller**
     The *remote controller* allows you to communicate with the controller 
     via ZMQ to control Circus.
