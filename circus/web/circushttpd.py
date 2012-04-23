@@ -42,13 +42,17 @@ def index():
 
 @route('/watchers/<name>/stats/<field>', method='GET')
 def get_stat(name, field):
+    position = int(request.query.get('position', '0'))
+    size = int(request.query.get('size', '-1'))
+
     if client is None:
         return {}
     res = {}
     try:
         pids = [str(pid) for pid in client.get_pids(name)]
         for pid in pids:
-            res[pid] = [str(v) for v in client.get_series(name, pid, field)]
+            res[pid] = [str(v) for v in client.get_series(name, pid, field,
+                        position, size)]
     except CallError:
         pass
 

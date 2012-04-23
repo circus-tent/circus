@@ -28,9 +28,10 @@ class Refresher(Thread):
             for name, __ in self.client.watchers:
                 msg = cmds['stats'].make_message(name=name)
                 res = call(msg)
-                stats[name].insert(0, res['info'])
+                stats[name].append(res['info'])
                 if len(stats[name]) > MAX_STATS:
-                    stats[name][:] = stats[name][:MAX_STATS]
+                    start = len(stats[name]) - MAX_STATS
+                    stats[name][:] = stats[name][start:]
 
             time.sleep(.2)
 
@@ -92,16 +93,16 @@ class LiveClient(object):
         self.verify()  # will do better later
         return res['numprocesses']
 
-    def get_stats(self, name):
-        return self.stats[name]
+    def get_stats(self, name, position=0, size=-1):
+        return self.stats[name][position:size]
 
     def get_pids(self, name):
         msg = cmds['list'].make_message(name=name)
         res = self.client.call(msg)
         return res['processes']
 
-    def get_series(self, name, pid, field):
-        stats = self.get_stats(name)
+    def get_series(self, name, pid, field, position=0, size=-1):
+        stats = self.get_stats(name, position, size)
         res = []
         pid = str(pid)
         for stat in stats:
