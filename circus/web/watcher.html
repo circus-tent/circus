@@ -45,12 +45,13 @@ Not connected. Go <a href="/">back</a> to connect.
      <div style="margin-bottom: 4px">
          <span class="label">CPU</span>
          <span id="${pid}_cpu" class="sparklines"></span>
-         <span class="label" id="${pid}_last_cpu" style="margin-left: 4px">0.0 %</span>
+         <span class="label" id="${pid}_last_cpu" style="margin-left: 4px;
+             float: right">0.0 %</span>
      </div>
      <div>
          <span class="label">Mem</span>
          <span id="${pid}_mem" class="sparklines"></span>
-         <span class="label" style="margin-left: 4px" id="${pid}_last_mem">0.0 %</span>
+         <span class="label" style="margin-left: 4px; float: right" id="${pid}_last_mem">0.0 %</span>
      </div>
     </div>
     %endfor
