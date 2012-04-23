@@ -157,14 +157,16 @@ def get_stat(name, field):
 
 @route('/watchers/<name>/process/decr', method='GET')
 def decr_proc(name):
+    url = request.query.get('redirect', '/watchers/%s' % name)
     client.decrproc(name)
-    redirect('/watchers/%s' % name)
+    redirect(url)
 
 
 @route('/watchers/<name>/process/incr', method='GET')
 def incr_proc(name):
+    url = request.query.get('redirect', '/watchers/%s' % name)
     client.incrproc(name)
-    redirect('/watchers/%s' % name)
+    redirect(url)
 
 
 @route('/watchers/<name>', method='GET')
