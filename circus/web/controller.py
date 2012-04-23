@@ -93,16 +93,16 @@ class LiveClient(object):
         self.verify()  # will do better later
         return res['numprocesses']
 
-    def get_stats(self, name, position=0, size=-1):
-        return self.stats[name][position:size]
+    def get_stats(self, name, start=0, end=-1):
+        return self.stats[name][start:end]
 
     def get_pids(self, name):
         msg = cmds['list'].make_message(name=name)
         res = self.client.call(msg)
         return res['processes']
 
-    def get_series(self, name, pid, field, position=0, size=-1):
-        stats = self.get_stats(name, position, size)
+    def get_series(self, name, pid, field, start=0, end=-1):
+        stats = self.get_stats(name, start, end)
         res = []
         pid = str(pid)
         for stat in stats:

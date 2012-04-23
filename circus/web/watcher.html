@@ -166,19 +166,54 @@ Not connected. Go <a href="/">back</a> to connect.
 
 <script type="text/javascript">
 $(function() {
-    $("#tabs").tabs();
-                });
+        $("#tabs").tabs();
+        updateGraphs();
+});
 
+
+var cpu_data;
+var mem_data;
+
+// first run: getting all the data
+$.getJSON('/watchers/${name}/stats/cpu', function(data) {
+    cpu_data = data;
+});
+
+$.getJSON('/watchers/${name}/stats/mem', function(data) {
+    mem_data = data;
+});
+
+// then updating the graphs
 function updateGraphs() {
 
-    $.getJSON('/watchers/${name}/stats/cpu', function(data) {
-            $.each(data, function(key, val) {
-                var id = '#' + key + '_cpu';
-                var lastid = '#' + key + '_last_cpu';
-                $(lastid).text(val[0] + " %");
-                $(id).sparkline(val, {width: '55%'});
-                });
-            });
+$.each(cpu_data, function(key, val) {
+  var id = '#' + key + '_cpu';
+  var lastid = '#' + key + '_last_cpu';
+  var last = val.length - 1;
+  $(lastid).text(val[last] + " %");
+  $(id).sparkline(val, {width: '55%'});
+});
+
+$.each(mem_data, function(key, val) {
+    var id = '#' + key + '_mem';
+    var lastid = '#' + key + '_last_mem';
+    var last = val.length - 1;
+    $(lastid).text(val[last] + " %");
+    $(id).sparkline(val, {width: '55%'});
+});
+}
+
+function refreshData() {
+
+    $.getJSON('/watchers/${name}/stats/cpu?start=-3&end=-1', function(data) {
+       $.each(data, function(key, values) {
+          for (i=0;i<values.length;i++) {
+            cpu_data[key].push(values[i]);
+          }
+        });
+     });
+
+   /*
     $.getJSON('/watchers/${name}/stats/mem', function(data) {
             $.each(data, function(key, val) {
                 var id = '#' + key + '_mem';
@@ -187,11 +222,13 @@ function updateGraphs() {
                 $(id).sparkline(val, {width: '55%'});
                 });
             });
+    */
+  updateGraphs();
 
 }
 
 // see if we want to provide this as a glider
-setInterval("updateGraphs()", 1000);
+setInterval("refreshData()", 1000);
 
 </script>
 
