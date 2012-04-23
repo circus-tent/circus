@@ -19,14 +19,21 @@ Disconnected
 % if client:
 
 
-  <div>
+<div>
+    <fieldset>
+    <legend>Watchers</legend>
+
      % for watcher, options in client.watchers:
      <div class="watcher">
          <a href="/watchers/${watcher}">${watcher} (${options['numprocesses']})</a>
-         <img class="status" src="/media/${client.get_status(watcher)}.png" width="20" height="20"/>
+         <a href="/watchers/${watcher}/switch_status">
+             <img title="${client.get_status(watcher)}" class="status" 
+             src="/media/${client.get_status(watcher)}.png" width="20" height="20"/>
+         </a>
      </div>
      %endfor
      <div style="clear: both"/>
+         </fieldset>   
   </div>
 
   <form action="add_watcher" method="POST">
