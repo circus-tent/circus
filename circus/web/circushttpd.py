@@ -120,14 +120,27 @@ class LiveClient(object):
         return res
 
     def get_status(self, name):
-        # XXX will return a general status -- 'green' or 'red'
-        return 'green'
+        msg = cmds['status'].make_message(name=name)
+        res = self.client.call(msg)
+        return res['status']
+
+    def switch_status(self, name):
+        msg = cmds['status'].make_message(name=name)
+        res = self.client.call(msg)
+        status = res['status']
+        if status == 'active':
+            # stopping the watcher
+            msg = cmds['stop'].make_message(name=name)
+        else:
+            msg = cmds['start'].make_message(name=name)
+        res = self.client.call(msg)
+        return res
 
     def add_watcher(self, name, cmd, args):
         msg = cmds['add'].make_message(name=name, cmd=cmd, args=args)
         res = self.client.call(msg)
         self.verify()  # will do better later
-        return res['numprocesses']
+        return res['status'] == 'ok'
 
 
 def static(filename):
@@ -196,11 +209,20 @@ def incr_proc(name):
     redirect(url + '?msg=' + msg)
 
 
+@route('/watchers/<name>/switch_status', method='GET')
+def switch(name):
+    try:
+        client.switch_status(name)
+        redirect('/')
+    except CallError, e:
+        redirect('/?msg='+ str(e))
+
+
 @route('/add_watcher', method='POST')
 def add_watcher():
     try:
         if client.add_watcher(**request.POST):
-            redirect('/watcher/%(name)s' % request.POST)
+            redirect('/watchers/%(name)s' % request.POST)
         else:
             redirect('/?msg=Failed')
     except CallError, e:
