@@ -111,3 +111,7 @@ watcher:NAME (as many sections as you want)
         All options starting with *stdout_stream.* other than *class* will
         be passed the constructor when creating an instance of the
         class defined in **stdout_stream.class**.
+
+    **send_hup**
+        if True, a process reload will be done by sending the SIGHUP signal.
+        Defaults to False.

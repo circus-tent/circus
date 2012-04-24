@@ -40,6 +40,9 @@ class Watcher(object):
     - **gid**: if given, is the group id or name the command should run
       with. The current gid is the default.
 
+    - **send_hup**: if True, a process reload will be done by sending
+      the SIGHUP signal. Defaults to False.
+
     - **env**: a mapping containing the environment variables the command
       will run with. Optional.
 
