@@ -5,16 +5,14 @@ from circus.process import Process, RUNNING
 from circus.tests.support import TestCircus
 
 
-RLIMIT = '''\
+RLIMIT = """
 import resource, sys
 
-f = open(sys.argv[1], 'w')
-for limit in ('NOFILE', 'NPROC'):
-    res = getattr(resource, 'RLIMIT_%s' % limit)
-    f.write('%s=%s\\n' % (limit, resource.getrlimit(res)))
-
-f.close
-'''
+with open(sys.argv[1], 'w') as f:
+    for limit in ('NOFILE', 'NPROC'):
+        res = getattr(resource, 'RLIMIT_%s' % limit)
+        f.write('%s=%s\\n' % (limit, resource.getrlimit(res)))
+"""
 
 
 class TestProcess(TestCircus):
