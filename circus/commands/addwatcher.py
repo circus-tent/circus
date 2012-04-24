@@ -43,7 +43,7 @@ class AddWatcher(Command):
         +++++++
 
         - <name>: name of the watcher to create
-        - <cmd>: ull command line to execute in a process
+        - <cmd>: full command line to execute in a process
         - --start: start the watcher immediately
 
     """

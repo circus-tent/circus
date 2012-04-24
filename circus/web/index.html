@@ -1,0 +1,62 @@
+<%inherit file="base.html"/>
+ <%block name="title">
+%if client:
+Connected to ${client.endpoint}
+%else:
+Disconnected
+%endif
+</%block>
+
+
+% if not client:
+  <p>Connect to a Circus system</p>
+  <form action="/connect" method="POST">
+    <input type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
+    <input type="submit"/>
+  </form>
+% endif
+
+% if client:
+
+
+<div>
+    <fieldset>
+    <legend>Watchers</legend>
+
+     % for watcher, options in client.watchers:
+     <div class="watcher">
+         <a href="/watchers/${watcher}">${watcher} (${options['numprocesses']})</a>
+         <a href="/watchers/${watcher}/switch_status">
+             <img title="${client.get_status(watcher)}" class="status" 
+             src="/media/${client.get_status(watcher)}.png" width="20" height="20"/>
+         </a>
+     </div>
+     %endfor
+     <div style="clear: both"/>
+         </fieldset>   
+  </div>
+
+  <form action="add_watcher" method="POST">
+   <fieldset>
+     <legend>Add a new watcher</legend>
+
+      <p>
+          <label for="name">Name</label>
+          <input type="text" name="name"></input>
+      </p>
+      <p>
+          <label for="cmd">Command</label>
+          <input type="text" name="cmd"></input>
+      </p>
+      <p>
+          <label for="args">Arguments</label>
+          <input type="text" name="args"></input>
+      </p>
+      <p>
+          <input type="submit"></input>
+    </p>
+   </fieldset>
+  </form>
+
+% endif
+
