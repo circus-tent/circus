@@ -3,10 +3,7 @@ Circus Process Watcher
 
 .. note::
 
-   Circus is in its early stages and is not production ready yet !
-
-   We still might change the API.
-
+   Before running Circus, make sure you read the :ref:`Security` page.
 
 .. image:: images/circus-medium.png
    :align: right
@@ -143,6 +140,7 @@ More documentation
    library
    architecture
    deployment
+   security
    examples
    coverage
 
