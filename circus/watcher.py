@@ -87,7 +87,7 @@ class Watcher(object):
       process. Can be *thread* or *gevent*. When set to *gevent* you need
       to have *gevent* and *gevent_zmq* installed. (default: thread)
 
-    - **times** -- number of times a process can restart before we start to
+    - **flapping_attempts** -- number of times a process can restart before we start to
       detect the flapping (default: 2)
     - **flapping_window** -- the time window in seconds to test for flapping.
       If the process restarts more than **times** times, we consider it a
@@ -100,7 +100,7 @@ class Watcher(object):
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False, env=None, stopped=True,
-                 times=2, flapping_window=1., retry_in=7., max_retry=5,
+                 flapping_attempts=2, flapping_window=1., retry_in=7., max_retry=5,
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, stream_backend='thread'):
@@ -112,7 +112,7 @@ class Watcher(object):
         self.args = args
         self._process_counter = 0
         self.stopped = stopped
-        self.times = times
+        self.flapping_attempts = flapping_attempts
         self.flapping_window = flapping_window
         self.retry_in = retry_in
         self.max_retry = max_retry
@@ -137,8 +137,8 @@ class Watcher(object):
 
         self.optnames = ("numprocesses", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env",
-                         "cmd", "times", "flapping_window", "retry_in",
-                         "args",
+                         "cmd", "flapping_attempts", "flapping_window",
+                         "retry_in", "args",
                          "max_retry", "graceful_timeout", "executable")
 
         if not working_dir:
@@ -169,7 +169,7 @@ class Watcher(object):
                    send_hup=config.get('send_hup', False),
                    env=config.get('env'),
                    stopped=config.get('stopped', True),
-                   times=config.get('times', 2),
+                   flapping_attempts=config.get('flapping_attempts', 2),
                    flapping_window=config.get('flapping_window', 1),
                    retry_in=config.get('retry_in', 7),
                    max_retry=config.get('max_retry', 5),
@@ -502,8 +502,8 @@ class Watcher(object):
         elif key == "cmd":
             self.cmd = val
             action = 1
-        elif key == "times":
-            self.times = int(val)
+        elif key == "flapping_attempts":
+            self.flapping_attempts = int(val)
             action = -1
         elif key == "flapping_window":
             self.flapping_window = float(val)

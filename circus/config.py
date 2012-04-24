@@ -19,7 +19,7 @@ def watcher_defaults():
         'uid': None,
         'gid': None,
         'send_hup': False,
-        'times': 2,
+        'flapping_attempts': 2,
         'flapping_window': 1,
         'retry_in': 7,
         'max_retry': 5,
@@ -159,8 +159,10 @@ def get_config(config_file):
                 elif opt == 'send_hup':
                     watcher['send_hup'] = dget(section, 'send_hup', False,
                             bool)
-                elif opt == 'times':
-                    watcher['times'] = dget(section, "times", 2, int)
+                elif opt == 'flapping_attempts':
+                    watcher['flapping_attempts'] = dget(section,
+                                                        "flapping_attempts", 2,
+                                                        int)
                 elif opt == 'flapping_window':
                     watcher['flapping_window'] = dget(section,
                                                       "flapping_window", 1,

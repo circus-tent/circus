@@ -59,7 +59,7 @@ class Set(Command):
             return util.parse_env(val)
         elif key == "cmd":
             return  val
-        elif key == "times":
+        elif key == "flapping_attempts":
             return int(val)
         elif key == "flapping_window":
             return float(val)
@@ -73,12 +73,12 @@ class Set(Command):
 
     def _validate_opt(self, key, val):
         if key not in ('numprocesses', 'warmup_delay', 'working_dir', 'uid',
-                'gid', 'send_hup', 'shell', 'env', 'cmd', 'times',
+                'gid', 'send_hup', 'shell', 'env', 'cmd', 'flapping_attempts',
                 'flapping_window', 'retry_in', 'max_retry',
                 'graceful_timeout'):
             raise MessageError('unkown key %r' % key)
 
-        if key in ('numprocesses', 'times', 'max_retry',):
+        if key in ('numprocesses', 'flapping_attempts', 'max_retry',):
             if not isinstance(val, int):
                 raise MessageError("%r isn't an integer" % key)
 

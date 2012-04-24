@@ -113,7 +113,7 @@ class Flapping(Thread):
 
         tries = self.tries.get(watcher_name, 0)
 
-        if len(timeline) == conf['times']:
+        if len(timeline) == conf['flapping_attempts']:
             duration = timeline[-1] - timeline[0] - self.check_delay
             if duration <= conf['flapping_window']:
                 if tries < conf['max_retry']:
