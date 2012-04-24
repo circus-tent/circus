@@ -35,18 +35,22 @@ uid and gid
 -----------
 
 By default, all processes started with Circus will be running with the
-same user than **circusd**. Depending on the system access of the user,
-you may not have access to all the features Circus provides. For instance,
-some statistics features on the running processes require privileges.
+same user and group than **circusd**. Depending on the privilege the user
+has on the system, you may not have access to all the features Circus provides.
 
-You may run **circusd** as root, and set the **uid** and **gid** values
-for each watcher to get all features.
+For instance, some statistics features on the running processes require
+privileges. Typically if you all the CPU usage numbers you can get using
+the **stats** command are *0*, it means your user can't access the proc
+files.
 
-In any case, beware that depending on the application you run with Circus,
-even if the processes are executed under a unprivileged user, if the
-**circusd** process is run as root, it's not impossible that a bug
-introduces a privilege escalation issue.
+You may run **circusd** as root, to fix this, and set the **uid** and **gid**
+values for each watcher to get all features.
+
+But beware that running **circusd** as root exposes you to potential
+privilege escalation bugs. While we're doing our best to avoid any bug,
+running as root and facing a bug that performs unwanted actions on your
+system may be an issue.
 
 The best way to prevent this issue is to make sure that the system where
-you run Circus is isolated -- like a VM.
-
+you run Circus is isolated -- like a VM **or** to run the whole system under
+a controlled user.
