@@ -9,7 +9,6 @@ from circus.commands import (   # NOQA
     numprocesses,
     numwatchers,
     options,
-    killproc,
     quit,
     reload,
     restart,

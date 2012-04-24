@@ -1140,6 +1140,9 @@ a.disconnect {
     float: right;
 }
 
+.ui-slider-handle {
+    background: url('/media/ui-bg_glass_75_dadada_1x400.png');
+}
 
 a.home {
     float: left;

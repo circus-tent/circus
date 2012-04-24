@@ -34,7 +34,13 @@ Not connected. Go <a href="/">back</a> to connect.
        <p>Watcher <strong>${name}</strong> runs <strong>${client.get_option(name, 'numprocesses')}</strong> processes.
           <a href="/watchers/${name}/process/incr?redirect=/watchers/${name}#tabs-1"><span class="orangelabel">+</span></a>
           <a href="/watchers/${name}/process/decr?redirect=/watchers/${name}#tabs-1"><span class="orangelabel">-</span></a>
-       </p>
+          </p>
+      
+     <div id="slider" class="ui-slider ui-slider-horizontal ui-widget ui-widget-content ui-corner-all">
+         <a style="left: 0%;" class="ui-slider-handle ui-state-default ui-corner-all" href="#">[X]</a>
+     </div>      
+
+
     %for pid in client.get_pids(name):
     <div class="stat" id="pid_${pid}">
      <div style="margin-bottom: 10px">
@@ -168,11 +174,12 @@ Not connected. Go <a href="/">back</a> to connect.
  <script type="text/javascript">
   $(function() {
         $("#tabs").tabs();
+        $("#slider").slider();
         initializeGraphs('${name}');
     });
 
   setInterval("refreshData('${name}')", 1000);
 
-</script>
+ </script>
 
 % endif

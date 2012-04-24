@@ -68,10 +68,10 @@ class LiveClient(object):
             self.connected = False
 
     def killproc(self, name, pid):
-        msg = cmds['killproc'].make_message(name=name, pid=pid)
+        msg = cmds['signal'].make_message(name=name, process=int(pid), signum=9)
         res = self.client.call(msg)
         self.verify()  # will do better later
-        return res['numprocesses']
+        return res['status'] == 'ok'
 
     def get_option(self, name, option):
         watchers = dict(self.watchers)
