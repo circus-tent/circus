@@ -5,51 +5,41 @@ Code coverage
 
 ::
 
-    Name                                                              Stmts   Miss  Cover   Missing
-    -----------------------------------------------------------------------------------------------
-    /Users/tarek/Dev/github.com/circus/circus/__init__                   30     19    37%   1-13, 69-81, 87
-    /Users/tarek/Dev/github.com/circus/circus/arbiter                   139     24    83%   60-74, 125-129, 153-156, 168, 172-177, 196, 212, 236-237, 241
-    /Users/tarek/Dev/github.com/circus/circus/client                     49     11    78%   36-37, 41-42, 47-51, 62-63, 71
-    /Users/tarek/Dev/github.com/circus/circus/commands/addwatcher        16     15     6%   1-67
-    /Users/tarek/Dev/github.com/circus/circus/commands/base              72     55    24%   1-11, 19, 26, 35-79, 82, 86-97, 103-106
-    /Users/tarek/Dev/github.com/circus/circus/commands/decrproc          16     14    13%   1-53, 57-60
-    /Users/tarek/Dev/github.com/circus/circus/commands/get               25     19    24%   1-66, 76, 80-86
-    /Users/tarek/Dev/github.com/circus/circus/commands/incrproc          16     14    13%   1-51, 55-58
-    /Users/tarek/Dev/github.com/circus/circus/commands/list              23     17    26%   1-52, 61-67
-    /Users/tarek/Dev/github.com/circus/circus/commands/numprocesses      19     17    11%   1-57, 59-60, 67-70
-    /Users/tarek/Dev/github.com/circus/circus/commands/numwatchers       14     13     7%   1-42, 45-48
-    /Users/tarek/Dev/github.com/circus/circus/commands/options           20     18    10%   1-98, 102-108
-    /Users/tarek/Dev/github.com/circus/circus/commands/quit               7      6    14%   1-36
-    /Users/tarek/Dev/github.com/circus/circus/commands/reload            17     15    12%   1-68, 70-71
-    /Users/tarek/Dev/github.com/circus/circus/commands/rmwatcher         11     10     9%   1-54
-    /Users/tarek/Dev/github.com/circus/circus/commands/sendsignal        47     33    30%   1-109, 114, 118, 124, 127, 130, 138-147
-    /Users/tarek/Dev/github.com/circus/circus/commands/set               83     62    25%   1-74, 78, 82, 85-86, 89-90, 93-94, 98, 104-121, 132
-    /Users/tarek/Dev/github.com/circus/circus/commands/start             15     12    20%   1-53, 58
-    /Users/tarek/Dev/github.com/circus/circus/commands/stats             49     44    10%   1-89, 91-102, 109-135
-    /Users/tarek/Dev/github.com/circus/circus/commands/status            23     20    13%   1-65, 70-80
-    /Users/tarek/Dev/github.com/circus/circus/commands/stop              12      8    33%   1-50
-    /Users/tarek/Dev/github.com/circus/circus/config                    121    109    10%   10, 35-44, 48-66, 70-97, 101-196
-    /Users/tarek/Dev/github.com/circus/circus/controller                113     15    87%   75, 85-86, 93-95, 103, 115-118, 121, 141, 147, 152-153
-    /Users/tarek/Dev/github.com/circus/circus/flapping                  109     20    82%   50-60, 101-105, 129, 135-142
-    /Users/tarek/Dev/github.com/circus/circus/process                   118     37    69%   3-9, 92, 97, 100-120, 133, 184-185, 189, 195, 201, 207-210, 215-220, 238, 253
-    /Users/tarek/Dev/github.com/circus/circus/py3compat                  47     44     6%   1-38, 43-67
-    /Users/tarek/Dev/github.com/circus/circus/sighandler                 36     16    56%   34-44, 47, 50, 53, 56, 59
-    /Users/tarek/Dev/github.com/circus/circus/stream/__init__            35     11    69%   16, 21-22, 25-26, 29, 34, 37-38, 41, 68
-    /Users/tarek/Dev/github.com/circus/circus/stream/base                61     10    84%   22, 39, 55-56, 61-62, 71-74
-    /Users/tarek/Dev/github.com/circus/circus/stream/sthread             19      0   100%   
-    /Users/tarek/Dev/github.com/circus/circus/tests/__init__              0      0   100%   
-    /Users/tarek/Dev/github.com/circus/circus/tests/support              71      8    89%   24, 31-34, 37-39
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_arbiter        162     19    88%   13-19, 22-23, 26-27, 30, 33-36, 40-42
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_client          45      5    89%   8-12
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_process         37      0   100%   
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_runner          13      3    77%   6-8
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_sighandler      42     24    43%   8-15, 18-19, 22-27, 30-31, 34-37, 41-43
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_util            63      4    94%   81-84
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_watcher         52      8    85%   12-19
-    /Users/tarek/Dev/github.com/circus/circus/util                      193    110    43%   1-54, 58-61, 67-69, 75, 89-92, 96-97, 113-114, 124-125, 129-130, 134-137, 141-142, 149, 158, 167, 180, 188, 200, 208, 210, 214-220, 226-231, 236-289
-    /Users/tarek/Dev/github.com/circus/circus/watcher                   269     67    75%   121, 183, 205, 211, 236, 252, 272, 279-280, 283-284, 292, 302, 318-320, 330-332, 338-343, 349-350, 360-361, 378, 397, 406, 415-418, 425, 428, 431-433, 455, 471, 473-474, 476-477, 479-480, 482, 484-485, 489-503
-    __init__   NoSource: No source for code: '/Users/tarek/Dev/github.com/circus/docs/__init__.py'
-    -----------------------------------------------------------------------------------------------
-    TOTAL                                                              2309    956    59%   
+    Name                           Stmts   Miss  Cover   Missing
+    ------------------------------------------------------------
+    circus/__init__                   30     19    37%   1-13, 69-81, 87
+    circus/arbiter                   139     24    83%   60-74, 125-129, 153-156, 168, 172-177, 196, 212, 236-237, 241
+    circus/client                     49     11    78%   36-37, 41-42, 47-51, 62-63, 71
+    circus/commands/addwatcher        16     15     6%   1-67
+    circus/commands/base              72     55    24%   1-11, 19, 26, 35-79, 82, 86-97, 103-106
+    circus/commands/decrproc          16     14    13%   1-53, 57-60
+    circus/commands/get               25     19    24%   1-66, 76, 80-86
+    circus/commands/incrproc          16     14    13%   1-51, 55-58
+    circus/commands/list              23     17    26%   1-52, 61-67
+    circus/commands/numprocesses      19     17    11%   1-57, 59-60, 67-70
+    circus/commands/numwatchers       14     13     7%   1-42, 45-48
+    circus/commands/options           20     18    10%   1-98, 102-108
+    circus/commands/quit               7      6    14%   1-36
+    circus/commands/reload            17     15    12%   1-68, 70-71
+    circus/commands/rmwatcher         11     10     9%   1-54
+    circus/commands/sendsignal        47     33    30%   1-109, 114, 118, 124, 127, 130, 138-147
+    circus/commands/set               83     62    25%   1-74, 78, 82, 85-86, 89-90, 93-94, 98, 104-121, 132
+    circus/commands/start             15     12    20%   1-53, 58
+    circus/commands/stats             49     44    10%   1-89, 91-102, 109-135
+    circus/commands/status            23     20    13%   1-65, 70-80
+    circus/commands/stop              12      8    33%   1-50
+    circus/config                    121    109    10%   10, 35-44, 48-66, 70-97, 101-196
+    circus/controller                113     15    87%   75, 85-86, 93-95, 103, 115-118, 121, 141, 147, 152-153
+    circus/flapping                  109     20    82%   50-60, 101-105, 129, 135-142
+    circus/process                   118     37    69%   3-9, 92, 97, 100-120, 133, 184-185, 189, 195, 201, 207-210, 215-220, 238, 253
+    circus/py3compat                  47     44     6%   1-38, 43-67
+    circus/sighandler                 36     16    56%   34-44, 47, 50, 53, 56, 59
+    circus/stream/__init__            35     11    69%   16, 21-22, 25-26, 29, 34, 37-38, 41, 68
+    circus/stream/base                61     10    84%   22, 39, 55-56, 61-62, 71-74
+    circus/stream/sthread             19      0   100%   
+    circus/util                      193    110    43%   1-54, 58-61, 67-69, 75, 89-92, 96-97, 113-114, 124-125, 129-130, 134-137, 141-142, 149, 158, 167, 180, 188, 200, 208, 210, 214-220, 226-231, 236-289
+    circus/watcher                   269     67    75%   121, 183, 205, 211, 236, 252, 272, 279-280, 283-284, 292, 302, 318-320, 330-332, 338-343, 349-350, 360-361, 378, 397, 406, 415-418, 425, 428, 431-433, 455, 471, 473-474, 476-477, 479-480, 482, 484-485, 489-503
+    ------------------------------------------------------------
+    TOTAL                           1824    885    51%   
 
 
