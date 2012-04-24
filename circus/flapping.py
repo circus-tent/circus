@@ -115,7 +115,7 @@ class Flapping(Thread):
 
         if len(timeline) == conf['times']:
             duration = timeline[-1] - timeline[0] - self.check_delay
-            if duration <= conf['within']:
+            if duration <= conf['flapping_window']:
                 if tries < conf['max_retry']:
                     logger.info("%s: flapping detected: retry in %2ds",
                             watcher_name, conf['retry_in'])

@@ -20,7 +20,7 @@ def watcher_defaults():
         'gid': None,
         'send_hup': False,
         'times': 2,
-        'within': 1,
+        'flapping_window': 1,
         'retry_in': 7,
         'max_retry': 5,
         'graceful_timeout': 30,
@@ -161,8 +161,10 @@ def get_config(config_file):
                             bool)
                 elif opt == 'times':
                     watcher['times'] = dget(section, "times", 2, int)
-                elif opt == 'within':
-                    watcher['within'] = dget(section, "within", 1, int)
+                elif opt == 'flapping_window':
+                    watcher['flapping_window'] = dget(section,
+                                                      "flapping_window", 1,
+                                                      int)
                 elif opt == 'retry_in':
                     watcher['retry_in'] = dget(section, "retry_in", 7, int)
                 elif opt == 'max_retry':

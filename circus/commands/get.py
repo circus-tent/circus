@@ -36,7 +36,7 @@ class Get(Command):
             {
                 "status": "ok",
                 "options": {
-                    "within": 1,
+                    "flapping_window": 1,
                     "times": 2
                 },
                 time': 1332202594.754644

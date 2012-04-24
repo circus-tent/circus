@@ -61,7 +61,7 @@ class Set(Command):
             return  val
         elif key == "times":
             return int(val)
-        elif key == "within":
+        elif key == "flapping_window":
             return float(val)
         elif key == "retry_in":
             return float(val)
@@ -74,14 +74,16 @@ class Set(Command):
     def _validate_opt(self, key, val):
         if key not in ('numprocesses', 'warmup_delay', 'working_dir', 'uid',
                 'gid', 'send_hup', 'shell', 'env', 'cmd', 'times',
-                'within', 'retry_in', 'max_retry', 'graceful_timeout'):
+                'flapping_window', 'retry_in', 'max_retry',
+                'graceful_timeout'):
             raise MessageError('unkown key %r' % key)
 
         if key in ('numprocesses', 'times', 'max_retry',):
             if not isinstance(val, int):
                 raise MessageError("%r isn't an integer" % key)
 
-        if key in ('warmup_delay', 'within', 'retry_in', 'graceful_timeout',):
+        if key in ('warmup_delay', 'flapping_window', 'retry_in',
+                   'graceful_timeout',):
             if not isinstance(val, (int, float,)):
                 raise MessageError("%r isn't a number" % key)
 

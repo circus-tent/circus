@@ -37,7 +37,7 @@ class Options(Command):
             {
                 "status": "ok",
                 "options": {
-                    "within": 1,
+                    "flapping_window": 1,
                     "times": 2,
                     ...
                 },
@@ -74,8 +74,9 @@ class Options(Command):
         - env: object, define the environnement in which the process will be
           launch
         - times: integer, number of times we try to relaunch a process in
-          the within time before we stop the watcher during the retry_in time.
-        - within: integer or number, times in seconds in which we test
+          the flapping_window time before we stop the watcher during the
+          retry_in time.
+        - flapping_window: integer or number, times in seconds in which we test
           the number of process restart.
         - retry_in: integer or number, times we wait before we retry to
           launch the process if macium of times have been reach.
