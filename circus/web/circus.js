@@ -1,9 +1,12 @@
 
 var cpu_data;
 var mem_data;
+var MAX_SIZE = 25;
+
 
 // then updating the graphs
 function updateGraphs() {
+
 
 $.each(cpu_data, function(key, val) {
   var id = '#' + key + '_cpu';
@@ -14,11 +17,11 @@ $.each(cpu_data, function(key, val) {
 });
 
 $.each(mem_data, function(key, val) {
-    var id = '#' + key + '_mem';
-    var lastid = '#' + key + '_last_mem';
-    var last = val.length - 1;
-    $(lastid).text(val[last] + " %");
-    $(id).sparkline(val, {width: '55%'});
+  var id = '#' + key + '_mem';
+  var lastid = '#' + key + '_last_mem';
+  var last = val.length - 1;
+  $(lastid).text(val[last] + " %");
+  $(id).sparkline(val, {width: '55%'});
 });
 }
 
@@ -40,7 +43,11 @@ function refreshData(name) {
        $.each(data, function(key, values) {
           for (i=0;i<values.length;i++) {
             cpu_data[key].push(values[i]);
-          }
+        }
+        if (cpu_data[key].length > MAX_SIZE) {
+              start = cpu_data[key].length - MAX_SIZE;
+              cpu_data[key] = cpu_data[key].slice(start);
+           }
         });
      });
 
@@ -49,6 +56,11 @@ function refreshData(name) {
           for (i=0;i<values.length;i++) {
             mem_data[key].push(values[i]);
           }
+        if (mem_data[key].length > MAX_SIZE) {
+           start = mem_data[key].length - MAX_SIZE;
+           mem_data[key] = mem_data[key].slice(start);
+        }
+
         });
     });
 

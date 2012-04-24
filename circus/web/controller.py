@@ -9,7 +9,7 @@ from circus.client import CircusClient, CallError
 _DIR = os.path.dirname(__file__)
 client = None
 cmds = get_commands()
-MAX_STATS = 100
+MAX_STATS = 25
 
 
 class Refresher(Thread):
