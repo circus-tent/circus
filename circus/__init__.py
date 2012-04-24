@@ -38,6 +38,8 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
         - **uid** -- the user id used to run the processes (default: None)
         - **gid** -- the group id used to run the processes (default: None)
         - **env** -- the environment passed to the processes (default: None)
+        - **send_hup**: if True, a process reload will be done by sending
+          the SIGHUP signal. (default: False)
         - **stdout_stream**: a mapping containing the options for configuring
           the stdout stream. Default to None. When provided, may contain:
             - **class**: the fully qualified name of the class to use for
@@ -52,6 +54,15 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
             - **refresh_time**: the delay between two stream checks. Defaults to
               0.3 seconds.
             - any other key will be passed the class constructor.
+         - **flapping_attempts**: number of times a process can restart
+           before we start to detect the flapping (default: 2)
+        - **flapping_window**: the time window in seconds to test for flapping.
+          If the process restarts more than **times** times, we consider it a
+          flapping process. (default: 1)
+        - **retry_in**: time in seconds to wait until we try to start a process
+          that has been flapping. (default: 7)
+        - **max_retry**: the number of times we attempt to start a process, before
+          we abandon and stop the whole watcher. (default: 5)
 
     - **controller** -- the zmq entry point (default: 'tcp://127.0.0.1:5555')
     - **pubsub_endpoint** -- the zmq entry point for the pubsub

@@ -7,7 +7,7 @@ Code coverage
 
     Name                           Stmts   Miss  Cover   Missing
     ------------------------------------------------------------
-    circus/__init__                   30     19    37%   1-13, 69-81, 87
+    circus/__init__                   30     19    37%   1-13, 80-92, 98
     circus/arbiter                   139     24    83%   60-74, 125-129, 153-156, 168, 172-177, 196, 212, 236-237, 241
     circus/client                     50     11    78%   34-35, 39-40, 45-49, 60-61, 69
     circus/commands/addwatcher        16     15     6%   1-67
@@ -18,7 +18,7 @@ Code coverage
     circus/commands/list              23     17    26%   1-52, 61-67
     circus/commands/numprocesses      19     17    11%   1-57, 59-60, 67-70
     circus/commands/numwatchers       14     13     7%   1-42, 45-48
-    circus/commands/options           20     18    10%   1-99, 103-109
+    circus/commands/options           20     18    10%   1-100, 104-110
     circus/commands/quit               7      6    14%   1-36
     circus/commands/reload            17     15    12%   1-68, 70-71
     circus/commands/rmwatcher         11     10     9%   1-54
@@ -28,7 +28,7 @@ Code coverage
     circus/commands/stats             49     44    10%   1-89, 91-102, 109-135
     circus/commands/status            23     20    13%   1-65, 70-80
     circus/commands/stop              12      8    33%   1-50
-    circus/config                    121    109    10%   10, 35-44, 48-66, 70-97, 101-198
+    circus/config                    121    109    10%   10, 35-44, 48-66, 70-97, 101-200
     circus/controller                113     15    87%   75, 85-86, 93-95, 103, 115-118, 121, 141, 147, 152-153
     circus/flapping                  109     20    82%   50-60, 101-105, 129, 135-142
     circus/process                   118     37    69%   3-9, 92, 97, 100-120, 133, 184-185, 189, 195, 201, 207-210, 215-220, 238, 253
