@@ -28,7 +28,7 @@ These ports allow client apps to interact with your Circus system, and
 depending on how your infrastructure is organized, you may want to protect
 these ports via firewalls **or** to configure Circus to run using **IPC**
 ports. When Configured using IPC, the commands must be run from the same
-box.
+box, but no one can access them from outside unlike TCP.
 
 
 uid and gid
