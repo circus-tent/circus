@@ -19,8 +19,8 @@ def watcher_defaults():
         'uid': None,
         'gid': None,
         'send_hup': False,
-        'times': 2,
-        'within': 1,
+        'flapping_attempts': 2,
+        'flapping_window': 1,
         'retry_in': 7,
         'max_retry': 5,
         'graceful_timeout': 30,
@@ -159,11 +159,15 @@ def get_config(config_file):
                 elif opt == 'send_hup':
                     watcher['send_hup'] = dget(section, 'send_hup', False,
                             bool)
-                elif opt == 'times':
-                    watcher['times'] = dget(section, "times", 2, int)
-                elif opt == 'within':
-                    watcher['within'] = dget(section, "within", 1, int)
-                elif opt == 'retry_ind':
+                elif opt == 'flapping_attempts':
+                    watcher['flapping_attempts'] = dget(section,
+                                                        "flapping_attempts", 2,
+                                                        int)
+                elif opt == 'flapping_window':
+                    watcher['flapping_window'] = dget(section,
+                                                      "flapping_window", 1,
+                                                      int)
+                elif opt == 'retry_in':
                     watcher['retry_in'] = dget(section, "retry_in", 7, int)
                 elif opt == 'max_retry':
                     watcher['max_retry'] = dget(section, "max_retry", 5, int)

@@ -111,3 +111,24 @@ watcher:NAME (as many sections as you want)
         All options starting with *stdout_stream.* other than *class* will
         be passed the constructor when creating an instance of the
         class defined in **stdout_stream.class**.
+
+    **send_hup**
+        if True, a process reload will be done by sending the SIGHUP signal.
+        Defaults to False.
+
+    **flapping_attempts**
+        Number of times a process can restart before we start to
+        detect the flapping. Defaults to 2.
+
+    **within**
+        The time window in seconds to test for flapping. If the
+        process restarts more than **flapping_attempts**
+        times, we consider it a flapping process. Defaults to 1.
+
+    **retry_in**
+        The time in seconds to wait until we try to start a process
+        that has been flapping. Defaults to 7.
+
+    **max_retry**
+        The number of times we attempt to start a process, before
+        we abandon and stop the whole watcher. Defaults to 5.
