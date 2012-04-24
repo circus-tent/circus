@@ -163,7 +163,7 @@ def get_config(config_file):
                     watcher['times'] = dget(section, "times", 2, int)
                 elif opt == 'within':
                     watcher['within'] = dget(section, "within", 1, int)
-                elif opt == 'retry_ind':
+                elif opt == 'retry_in':
                     watcher['retry_in'] = dget(section, "retry_in", 7, int)
                 elif opt == 'max_retry':
                     watcher['max_retry'] = dget(section, "max_retry", 5, int)
