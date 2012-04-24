@@ -8,7 +8,7 @@ at all.
 
 There were no focus yet on protecting the Circus system from attacks on its
 ports, and depending on how you run it, you are creating a potential security
-whole in the system.
+hole in the system.
 
 This section explains what Circus does on your system when you run it, and
 a few recommandations if you want to protect your server.
