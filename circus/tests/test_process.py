@@ -20,7 +20,7 @@ class TestProcess(TestCircus):
     def test_base(self):
         cmd = sys.executable
         args = "-c 'import time; time.sleep(2)'"
-        process = Process('test', cmd, args=args, shell=True)
+        process = Process('test', cmd, args=args, shell=False)
         try:
             info = process.info()
             self.assertEqual(process.pid, info['pid'])
