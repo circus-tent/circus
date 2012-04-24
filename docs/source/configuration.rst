@@ -54,7 +54,7 @@ circus (single section)
 watcher:NAME (as many sections as you want)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     **NAME**
-        The name of the watcher. This name is used for example in **circusctl**
+        The name of the watcher. This name is used in **circusctl**
     **cmd**
         The executable program to run.
     **args**
@@ -84,7 +84,7 @@ watcher:NAME (as many sections as you want)
         number of open files to 500.
     **stderr_stream.class**
         A fully qualified Python class name that will be instanciated, and
-        will receive the **stderr** stream of all workers in its
+        will receive the **stderr** stream of all processes in its
         :func:`__call__` method.
 
         Circus provides two classes you can use without prefix:
@@ -99,7 +99,7 @@ watcher:NAME (as many sections as you want)
         class defined in **stderr_stream.class**.
     **stdout_stream.class**
         A fully qualified Python class name that will be instanciated, and
-        will receive the **stdout** stream of all workers in its
+        will receive the **stdout** stream of all processes in its
         :func:`__call__` method.
         Circus provides two classes you can use without prefix:
 

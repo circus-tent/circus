@@ -7,7 +7,7 @@ Use pip::
 
     $ pip install circus
 
-Or download the archive on PyPI and install it manually with::
+Or download the archive on PyPI, extract and install it manually with::
 
     $ python setup.py install
 

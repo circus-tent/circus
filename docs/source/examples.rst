@@ -43,5 +43,3 @@ the web page.
 
 .. image:: images/websocket.png
    :align: center
-
-

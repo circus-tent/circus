@@ -8,17 +8,17 @@ function and many classes. In most cases, using the high-level function
 should be enough, as it creates everything that is needed for Circus to
 run.
 
-You can subclass Circus' classes if you need more granular
-configurability.
-
+You can subclass Circus' classes if you need more granularity than what is
+offered by the configuration.
 
 
 The get_arbiter function
 ========================
 
-:func:`get_arbiter` is just a convenience on the top of the various
-circus classes. It creates a :class:`Arbiter` instance with the provided
-options, that runs a single :class:`Watcher` with a single :class:`Process`.
+:func:`get_arbiter` is just a convenience on top of the various
+circus classes. It creates a :term:`arbiter` (class :class:`Arbiter`) instance
+with the provided options, which in turn runs a single :class:`Watcher` with a 
+single :class:`Process`.
 
 
 .. autofunction:: circus.get_arbiter
@@ -40,10 +40,10 @@ The classes collection
 ======================
 
 Circus provides a series of classes you can use to implement your own Circus
-runner:
+process manager:
 
-- :class:`Process`: wraps a running process and provides a few helpers on the
-  top of it.
+- :class:`Process`: wraps a running process and provides a few helpers on top
+  of it.
 
 - :class:`Watcher`: run several instances of :class:`Process` against the same
   command. Manage the death and life of processes.
@@ -82,4 +82,3 @@ Example::
 
 .. autoclass:: circus.arbiter.Arbiter
    :members: start, stop, reload, numprocesses, numwatchers, get_watcher, add_watcher
-
