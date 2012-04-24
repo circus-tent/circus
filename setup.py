@@ -36,4 +36,5 @@ setup(name='circus',
       [console_scripts]
       circusd = circus.circusd:main
       circusctl = circus.circusctl:main
+      circushttpd = circus.web.circushttpd:main
       """)
