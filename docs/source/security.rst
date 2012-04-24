@@ -35,11 +35,11 @@ uid and gid
 -----------
 
 By default, all processes started with Circus will be running with the
-same user and group than **circusd**. Depending on the privilege the user
+same user and group than **circusd**. Depending on the privileges the user
 has on the system, you may not have access to all the features Circus provides.
 
 For instance, some statistics features on the running processes require
-privileges. Typically if you all the CPU usage numbers you can get using
+privileges. Typically, if the CPU usage numbers you get using
 the **stats** command are *0*, it means your user can't access the proc
 files.
 
@@ -51,6 +51,6 @@ privilege escalation bugs. While we're doing our best to avoid any bug,
 running as root and facing a bug that performs unwanted actions on your
 system may be an issue.
 
-The best way to prevent this issue is to make sure that the system where
-you run Circus is isolated -- like a VM **or** to run the whole system under
+The best way to prevent this is to make sure that the system running
+Circus is isolated (like a VM) **or** to run the whole system under
 a controlled user.
