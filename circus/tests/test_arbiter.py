@@ -87,7 +87,6 @@ class TestTrainer(TestCircus):
 
         return cmd
 
-
     def _get_cmd_args(self):
         fd, testfile = mkstemp()
         os.close(fd)
@@ -95,7 +94,6 @@ class TestTrainer(TestCircus):
         args = ['generic.py', 'circus.tests.test_arbiter.run_dummy',
                 testfile]
         return cmd, args
-
 
     def test_add_watcher(self):
         msg = make_message("add", name="test1", cmd=self._get_cmd())

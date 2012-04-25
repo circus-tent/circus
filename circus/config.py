@@ -6,8 +6,9 @@ import sys
 from circus.stream import FileStream
 from circus import util
 
+
 def watcher_defaults():
- return {
+    return {
         'name': '',
         'cmd': '',
         'args': '',

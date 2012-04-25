@@ -44,15 +44,15 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
           the stdout stream. Default to None. When provided, may contain:
             - **class**: the fully qualified name of the class to use for
               streaming. Defaults to circus.stream.FileStream
-            - **refresh_time**: the delay between two stream checks. Defaults to
-              0.3 seconds.
+            - **refresh_time**: the delay between two stream checks. Defaults
+              to 0.3 seconds.
             - any other key will be passed the class constructor.
         - **stderr_stream**: a mapping containing the options for configuring
           the stderr stream. Default to None. When provided, may contain:
             - **class**: the fully qualified name of the class to use for
               streaming. Defaults to circus.stream.FileStream
-            - **refresh_time**: the delay between two stream checks. Defaults to
-              0.3 seconds.
+            - **refresh_time**: the delay between two stream checks. Defaults
+              to 0.3 seconds.
             - any other key will be passed the class constructor.
          - **flapping_attempts**: number of times a process can restart
            before we start to detect the flapping (default: 2)
@@ -61,8 +61,8 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
           flapping process. (default: 1)
         - **retry_in**: time in seconds to wait until we try to start a process
           that has been flapping. (default: 7)
-        - **max_retry**: the number of times we attempt to start a process, before
-          we abandon and stop the whole watcher. (default: 5)
+        - **max_retry**: the number of times we attempt to start a process,
+          before we abandon and stop the whole watcher. (default: 5)
 
     - **controller** -- the zmq entry point (default: 'tcp://127.0.0.1:5555')
     - **pubsub_endpoint** -- the zmq entry point for the pubsub

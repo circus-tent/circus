@@ -73,9 +73,9 @@ class Options(Command):
         - cmd: string, The command line used to launch the process
         - env: object, define the environnement in which the process will be
           launch
-        - flapping_attempts: integer, number of times we try to relaunch a process in
-          the flapping_window time before we stop the watcher during the
-          retry_in time.
+        - flapping_attempts: integer, number of times we try to relaunch a
+          process in the flapping_window time before we stop the watcher
+          during the retry_in time.
         - flapping_window: integer or number, times in seconds in which we test
           the number of process restart.
         - retry_in: integer or number, time in seconds we wait before we retry

@@ -87,8 +87,8 @@ class Watcher(object):
       process. Can be *thread* or *gevent*. When set to *gevent* you need
       to have *gevent* and *gevent_zmq* installed. (default: thread)
 
-    - **flapping_attempts** -- number of times a process can restart before we start to
-      detect the flapping (default: 2)
+    - **flapping_attempts** -- number of times a process can restart before we
+      start to detect the flapping (default: 2)
     - **flapping_window** -- the time window in seconds to test for flapping.
       If the process restarts more than **times** times, we consider it a
       flapping process. (default: 1)
@@ -100,7 +100,8 @@ class Watcher(object):
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
                  gid=None, send_hup=False, env=None, stopped=True,
-                 flapping_attempts=2, flapping_window=1., retry_in=7., max_retry=5,
+                 flapping_attempts=2, flapping_window=1., retry_in=7.,
+                 max_retry=5,
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, stream_backend='thread'):
