@@ -151,6 +151,10 @@ def get_info(process=None):
 
     info['cmdline'] = cmdline
 
+    info['children'] = []
+    for child in process.get_children():
+        info['children'].append(get_info(child))
+
     return info
 
 

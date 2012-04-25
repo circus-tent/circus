@@ -65,9 +65,13 @@ class Daemontats(Command):
 
     def _to_str(self, info):
         children = info.pop("children", [])
-        ret = [_INFOLINE % info]
-        for child in children:
-            ret.append(_INFOLINE % child)
+        ret = ['Main Process:',  '    ' + _INFOLINE % info]
+
+        if len(children) > 0:
+            ret.append('Children:')
+            for child in children:
+                ret.append('    ' + _INFOLINE % child)
+
         return "\n".join(ret)
 
     def console_msg(self, msg):
