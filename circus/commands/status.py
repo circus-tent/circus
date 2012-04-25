@@ -21,7 +21,7 @@ class Status(Command):
                 }
             }
 
-        The response return the status "active" ir "stopped" or the
+        The response return the status "active" or "stopped" or the
         status / watchers.
 
 
