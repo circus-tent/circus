@@ -9,19 +9,27 @@ Disconnected
 
 
 % if not client:
-  <p>Connect to a Circus system</p>
+  <legend>Connect to a Circus system</legend>
   <form action="/connect" method="POST">
     <input type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
     <input type="submit"/>
-  </form>
+</form>
 % endif
 
 % if client:
 
 
+<div id="tabs">
+ <div>
+ <ul class="ui-tabs-nav">
+   <li class="ui-tabs-selected"><a href="#tabs-1">Overview</a></li>
+   <li><a href="#tabs-2">Add Watcher</a></li>
+ </ul>
+ </div>
+ <div style="clear: both"></div>
+ <div id="tabs-1" class="ui-tabs-panel">
+
 <div>
-    <fieldset>
-        <legend>Information</legend>
      <table>
     <tr>
         <td>
@@ -33,26 +41,58 @@ Disconnected
     </tr>
     </table>
 
-    </fieldset>
-    <fieldset>
-    <legend>Watchers</legend>
 
-     % for watcher, options in client.watchers:
-     <div class="watcher">
-         <a href="/watchers/${watcher}">${watcher} (${options['numprocesses']})</a>
+    <table class="watchers">
+        <tr>
+            <th>Name</th>
+            <th>Processes</th>
+            <th>Command</th>
+            <th>Shell</th>
+            <th>uid</th>
+            <th>gid</th>
+            <th>Status</th>
+        </tr>
+        <tr>
+            % for watcher, options in client.watchers:
+        <tr>
+            <td>
+                <a href="/watchers/${watcher}">${watcher}</a>
+            </td>
+            <td style="text-align: center">
+
+                <span class="label">${options['numprocesses']}</span>
+                <a href="/watchers/${watcher}/process/incr?redirect=/#tabs-1"><span class="orangelabel">+</span></a>
+          <a href="/watchers/${watcher}/process/decr?redirect=/#tabs-1"><span class="orangelabel">-</span></a>
+
+      </td>
+      <td>
+          ${options['cmd']} ${options['args']}
+      </td>
+      <td>
+          ${options['shell']}
+      </td>
+      <td>
+          ${options['uid']}
+      </td>
+      <td>
+          ${options['uid']}
+      </td>
+            <td>
          <a href="/watchers/${watcher}/switch_status">
-             <img title="${client.get_status(watcher)}" class="status"
-             src="/media/${client.get_status(watcher)}.png" width="20" height="20"/>
-         </a>
-     </div>
-     %endfor
-     <div style="clear: both"/>
-         </fieldset>
-  </div>
+                         <img title="${client.get_status(watcher)}" class="status"
+                         src="/media/${client.get_status(watcher)}.png" width="20" height="20"/>
+            ${client.get_status(watcher)}
 
+         </a>
+           </td>
+        </tr>
+
+        %endfor
+        </table>
+  </div>
+ </div>
+ <div id="tabs-2" class="ui-tabs-panel">
   <form action="add_watcher" method="POST" width="100%">
-   <fieldset>
-     <legend>Add a new watcher</legend>
 
       <p>
           <label for="name">Name</label>
@@ -78,8 +118,14 @@ Disconnected
       <p>
           <input type="submit"></input>
     </p>
-   </fieldset>
   </form>
+  </div>
+
+ <script type="text/javascript">
+  $(function() {
+        $("#tabs").tabs();
+    });
+ </script>
 
 % endif
 

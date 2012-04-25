@@ -585,13 +585,14 @@ div.bodywrapper {
     background-color: #ffffff;
     border-left: 1px solid #ccc;
     border-bottom: 1px solid #ccc;
-    margin: 1em 1em 1em 1em;
+    /*margin: 1em 1em 1em 1em;*/
 }
 
 div.body {
     margin: 0;
-    padding: 0.5em 1.3em;
+    /*padding: 0.5em 1.3em;*/
     min-width: 20em;
+    min-height: 600px;
 }
 
 div.related {
@@ -1157,9 +1158,11 @@ div.stat {
     padding: 0.2em 0.2em 0.2em 0.2em;
     margin: 0.5em;
     border-radius: 0.5em;
-    background-color: #FCFCFC;
-    border-bottom: 1px solid rgb(204, 204, 204);
-    border-right: 1px solid rgb(204, 204, 204);
+    background-color: #E3E3E3;
+    border-top: 1px solid rgb(204, 204, 204);
+    border-left: 1px solid rgb(204, 204, 204);
+    border-bottom: 1px solid #ABABAB;
+    border-right: 1px solid #ABABAB;
     float: left;
     padding: 0.7em;
     width: 300px;
@@ -1248,6 +1251,46 @@ span.label {
     background-color: rgb(153, 153, 153);
 }
 
+fieldset {
+  padding: 1.5em;
+}
+
+table.watchers {
+    margin-top: 1.5em;
+    border: 1px solid #BEC8D1;
+    background-color: #FEF1E1;
+    border: 1px #000000 solid;
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+
+table.watchers td {
+    border-bottom: 1px #cecece dotted;
+    text-align: left;
+    color: #404040;
+    background-color: #FFFFF3;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+span.title {
+    font-weight: bold;
+    font-size: 120%;
+}
+table.watchers th {
+    border-bottom: 1px solid #cecece;
+}
+
+a.nav {
+    border-bottom: 0;
+
+}
+
+div.innerbody {
+    padding: 1em;
+}
+
 label
 {
 width: 30%;
@@ -1268,13 +1311,75 @@ margin-left: 4.5em;
 
 .ui-tabs { position: relative; padding: .2em; zoom: 1; }
 .ui-tabs .ui-tabs-nav { margin: 0; padding: .2em .2em 0; }
-.ui-tabs .ui-tabs-nav li { list-style: none; float: left; position: relative; top: 1px; margin: 0 .2em 1px 0; border-bottom: 0 !important; padding: 0; white-space: nowrap; }
-.ui-tabs .ui-tabs-nav li a { float: left; padding: .5em 1em; text-decoration: none; }
-.ui-tabs .ui-tabs-nav li.ui-tabs-selected { margin-bottom: 0; padding-bottom: 1px; }
-.ui-tabs .ui-tabs-nav li.ui-tabs-selected a, .ui-tabs .ui-tabs-nav li.ui-state-disabled a, .ui-tabs .ui-tabs-nav li.ui-state-processing a { cursor: text; }
+.ui-tabs .ui-tabs-nav li {
+    list-style: none; float: left; position: relative; top: 1px;
+    margin: 0 .2em -1px -3px;!important
+    border-bottom: 0 !important; padding: 0; white-space: nowrap;
+    background-color: rgb(250, 250, 250);
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+.ui-tabs .ui-tabs-nav li a { float: left;
+    border-bottom: none;
+    padding: .5em 1em; text-decoration: none; }
+.ui-tabs .ui-tabs-nav { margin-bottom: 0; padding-bottom: 1px; }
+.ui-tabs .ui-tabs-nav .ui-tabs .ui-tabs-nav li.ui-state-disabled a, .ui-tabs .ui-tabs-nav li.ui-state-processing a { cursor: text; }
 .ui-tabs .ui-tabs-nav li a, .ui-tabs.ui-tabs-collapsible .ui-tabs-nav li.ui-tabs-selected a { cursor: pointer; }
-.ui-tabs .ui-tabs-panel { display: block; border-width: 0; padding: 1em 1.4em; background: none; }
+.ui-tabs { display: block; border-width: 0; padding: 1em 1.4em; background: none; }
 .ui-tabs .ui-tabs-hide { display: none !important; }
+
+li.ui-tabs-selected a {
+    cursor: text;
+    text-decoration: none;
+    border-bottom: none;
+}
+
+li.ui-state-default  {
+  margin-bottom: -1;
+  padding-bottom: 2px!important ;
+  margin: 0 .2em 0 -3px !important;
+  background-color:  rgb(250, 250, 250) !important;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom: none;
+}
+
+.ui-tabs-selected  {
+  margin-bottom: -1;
+  padding-bottom: 2px;
+  margin: 0 .2em -1px -3px;!important
+  background-color: rgb(250, 250, 250) !important;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-top: 1px solid rgb(204, 204, 204);
+  border-left: 1px solid rgb(204, 204, 204);
+  border-right: 1px solid rgb(204, 204, 204);
+  border-bottom: none;
+}
+
+
+
+li.ui-tabs-selected  {
+  margin-bottom: -1;
+  padding-bottom: 2px;
+  margin: 0 .2em -1px -3px;!important
+  background-color: rgb(250, 250, 250) !important;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-top: 1px solid rgb(204, 204, 204);
+  border-left: 1px solid rgb(204, 204, 204);
+  border-right: 1px solid rgb(204, 204, 204);
+  border-bottom: none;
+}
+
+div.ui-tabs-panel {
+    display: block;
+    padding: 1em 1.4em 4em;
+    background: none;
+    border: 1px solid rgb(204, 204, 204);
+    border-width: 1px;
+    background-color: #FAFAFA;
+}
 
 
 /* MOBILE LAYOUT -------------------------------------------------------------- */

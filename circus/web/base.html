@@ -9,6 +9,11 @@
         <link rel="shortcut icon" href="/media/favicon.ico"/>
         <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <meta name="description" content="Control panel for the Circus Process Watcher" />
+        <script type="text/javascript" src="/media/jquery.min.js"></script>
+        <script type="text/javascript" src="/media/jquery.sparkline.min.js"></script>
+        <script type="text/javascript" src="/media/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="/media/circus.js"></script>
+
     </head>
     <body>
         <div class="document">
@@ -16,11 +21,11 @@
                 <div class="bodywrapper">
                     <div class="body">
                         <div class="header">
-                            <a href="/" class="home"><img src="/media/home.png"/></a>
-                            
+                            <a href="/" class="home nav"><img src="/media/home.png"/></a>
+
                             <span class="title">Circus Control Panel - <%block name="title"/></span>
                             % if client:
-                            <a href="/disconnect" class="disconnect"><img
+                            <a href="/disconnect" class="disconnect nav"><img
                                 src="/media/disconnect.png"/></a>
                             % endif
 
@@ -29,14 +34,17 @@
                             ${msg}
                         </div>
                         %endif
-                          </div>
+                    </div>
+                    <div class="innerbody">
                         ${self.body()}
-                        <div class="footer">
-                            &copy; Copyright 2012, Circus Team
-                        </div>
+                        </div>   
                     </div>
                 </div>
             </div>
         </div>
+                        <div class="footer">
+                            &copy; Copyright 2012, Circus Team
+                        </div>
+
     </body>
 </html>
