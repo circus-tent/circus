@@ -109,7 +109,7 @@ def watcher(name):
     if msg:
         msg = cgi.escape(msg)
     tmpl = TMPLS.get_template('watcher.html')
-    return tmpl.render(client=client, msg=msg, name=name)
+    return tmpl.render(client=client, msg=msg, name=name, version=__version__)
 
 
 @route('/connect', method='POST')
