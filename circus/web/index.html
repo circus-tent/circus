@@ -23,7 +23,8 @@ Disconnected
  <div>
  <ul class="ui-tabs-nav">
    <li class="ui-tabs-selected"><a href="#tabs-1">Overview</a></li>
-   <li><a href="#tabs-2">Add Watcher</a></li>
+   <li><a href="#tabs-2">Options</a></li>
+   <li><a href="#tabs-3">Add Watcher</a></li>
  </ul>
  </div>
  <div style="clear: both"></div>
@@ -81,7 +82,9 @@ Disconnected
         %endfor
     </table>
 
-         <h3>Options</h3>
+    </div>
+</div>
+ <div id="tabs-2" class="ui-tabs-panel">
          <table class="options" style="margin-top: 10px">
     <tr>
         <td>
@@ -121,10 +124,8 @@ Disconnected
 
     </table>
 
-
-  </div>
  </div>
- <div id="tabs-2" class="ui-tabs-panel">
+ <div id="tabs-3" class="ui-tabs-panel">
   <form action="add_watcher" method="POST" width="100%">
 
       <p>
@@ -153,7 +154,6 @@ Disconnected
     </p>
   </form>
   </div>
-
  <script type="text/javascript">
   $(function() {
         $("#tabs").tabs();
