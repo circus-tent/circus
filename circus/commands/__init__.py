@@ -2,6 +2,7 @@
 from circus.commands import (   # NOQA
     addwatcher,
     decrproc,
+    dstats,
     get,
     globaloptions,
     incrproc,

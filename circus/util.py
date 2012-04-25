@@ -8,6 +8,7 @@ import sys
 import shlex
 
 from psutil.error import AccessDenied, NoSuchProcess
+from psutil import Process
 from circus import logger
 
 
@@ -89,7 +90,14 @@ def bytes2human(n):
     return "%sB" % n
 
 
-def get_info(process):
+def get_info(process=None):
+    """Return information about a process.
+
+    If process is None, will return the information about the current process
+    """
+    if process is None:
+        process = Process(os.getpid())
+
     info = {}
     try:
         mem_info = process.get_memory_info()
