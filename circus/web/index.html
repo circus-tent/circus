@@ -33,7 +33,7 @@ Disconnected
        goptions = dict(client.get_global_options())
      %>
      <div>
-
+     
     <table class="watchers">
         <tr>
             <th>Name</th>
@@ -81,6 +81,23 @@ Disconnected
 
         %endfor
     </table>
+    <div class="stat" style="float:none; margin-top: 2em; margin-left: -.5em">
+     <div style="margin-bottom: 10px">
+         <span class="orangelabel">circusd</span>
+     </div>
+     <div style="margin-bottom: 4px">
+         <span class="label">CPU</span>
+         <span id="circusd_cpu" class="sparklines"></span>
+         <span class="label" id="circusd_last_cpu" style="margin-left: 4px;
+             float: right">0.0 %</span>
+     </div>
+     <div>
+         <span class="label">Mem</span>
+         <span id="circusd_mem" class="sparklines"></span>
+         <span class="label" style="margin-left: 4px; float: right" id="circusd_last_mem">0.0 %</span>
+     </div>
+    </div>
+
 
     </div>
 </div>
@@ -154,10 +171,14 @@ Disconnected
     </p>
   </form>
   </div>
- <script type="text/javascript">
+  
+  <script type="text/javascript">
   $(function() {
-        $("#tabs").tabs();
-    });
+      $("#tabs").tabs();
+      initializeCircusdGraph();
+      });
+  setInterval("refreshCircusdGraph()", 1000);
+
  </script>
 
 % endif
