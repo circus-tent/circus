@@ -53,7 +53,7 @@ def get_stat(name, field):
         for pid in pids:
             res[pid] = [str(v) for v in client.get_series(name, pid, field,
                         start, end)]
-    except CallError:
+    except (CallError, KeyboardInterrupt):
         pass
 
     return res

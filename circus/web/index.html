@@ -27,16 +27,16 @@ Disconnected
      <div class="watcher">
          <a href="/watchers/${watcher}">${watcher} (${options['numprocesses']})</a>
          <a href="/watchers/${watcher}/switch_status">
-             <img title="${client.get_status(watcher)}" class="status" 
+             <img title="${client.get_status(watcher)}" class="status"
              src="/media/${client.get_status(watcher)}.png" width="20" height="20"/>
          </a>
      </div>
      %endfor
      <div style="clear: both"/>
-         </fieldset>   
+         </fieldset>
   </div>
 
-  <form action="add_watcher" method="POST">
+  <form action="add_watcher" method="POST" width="100%">
    <fieldset>
      <legend>Add a new watcher</legend>
 
@@ -49,9 +49,18 @@ Disconnected
           <input type="text" name="cmd"></input>
       </p>
       <p>
-          <label for="args">Arguments</label>
-          <input type="text" name="args"></input>
+          <label for="working_dir">Working directory</label>
+          <input type="text" name="working_dir"></input>
       </p>
+      <p>
+          <label for="numprocesses">Number of processes</label>
+          <input type="text" name="numprocesses"></input>
+      </p>
+      <p>
+          <label for="shell">Run in Shell ?</label>
+          <input type="checkbox" name="shell"></input>
+      </p>
+
       <p>
           <input type="submit"></input>
     </p>

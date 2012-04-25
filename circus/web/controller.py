@@ -27,7 +27,10 @@ class Refresher(Thread):
         while self.running:
             for name, __ in self.client.watchers:
                 msg = cmds['stats'].make_message(name=name)
-                res = call(msg)
+                try:
+                    res = call(msg)
+                except CallError:
+                    continue
                 stats[name].append(res['info'])
                 if len(stats[name]) > MAX_STATS:
                     start = len(stats[name]) - MAX_STATS
@@ -128,8 +131,18 @@ class LiveClient(object):
         res = self.client.call(msg)
         return res
 
-    def add_watcher(self, name, cmd, args):
-        msg = cmds['add'].make_message(name=name, cmd=cmd, args=args)
+    def add_watcher(self, name, cmd, **kw):
+        msg = cmds['add'].make_message(name=name, cmd=cmd)
         res = self.client.call(msg)
-        self.verify()  # will do better later
-        return res['status'] == 'ok'
+        if res['status'] == 'ok':
+            # now configuring the options
+            options = {}
+            options['numprocesses'] = int(kw.get('numprocesses', '5'))
+            options['working_dir'] = kw.get('working_dir')
+            options['shell'] = kw.get('shell', 'off') == 'on'
+            msg = cmds['set'].make_message(name=name, options=options)
+            res = self.client.call(msg)
+            self.verify()  # will do better later
+            return res['status'] == 'ok'
+        else:
+            return False
