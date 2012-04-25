@@ -868,7 +868,7 @@ input[type="text"] {
     margin: 0;
     padding: 0 3px;
     height: 20px;
-    width: 144px;
+    width: 40%;
     border-top-left-radius: 3px;
     border-bottom-left-radius: 3px;
     -moz-border-radius-topleft: 3px;
@@ -1250,7 +1250,7 @@ span.label {
 
 label
 {
-width: 8em;
+width: 30%;
 float: left;
 text-align: right;
 margin-right: 0.5em;
