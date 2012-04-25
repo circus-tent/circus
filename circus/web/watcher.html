@@ -30,7 +30,13 @@ Not connected. Go <a href="/">back</a> to connect.
  <div style="clear: both"></div>
  <div id="tabs-1" class="ui-tabs-panel">
    <div class="panel">
-       <p>Watcher <strong>${name}</strong> runs <strong>${client.get_option(name, 'numprocesses')}</strong> processes.
+       <p>
+
+       <a href="/watchers/${name}/switch_status?redirect=/watchers/${name}#tabs-1">
+         <img title="${client.get_status(name)}" class="status"
+          src="/media/${client.get_status(name)}.png" width="20" height="20"/>
+       </a>
+       Watcher <strong>${name}</strong> runs <strong>${client.get_option(name, 'numprocesses')}</strong> processes.
           <a href="/watchers/${name}/process/incr?redirect=/watchers/${name}#tabs-1"><span class="orangelabel">+</span></a>
           <a href="/watchers/${name}/process/decr?redirect=/watchers/${name}#tabs-1"><span class="orangelabel">-</span></a>
           </p>

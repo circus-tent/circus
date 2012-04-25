@@ -7,6 +7,7 @@ except ImportError:
     raise ImportError('You need to install Bottle and Mako')
 
 from circus.web.controller import LiveClient, CallError
+from circus import __version__
 
 
 _DIR = os.path.dirname(__file__)
@@ -37,7 +38,7 @@ def index():
     if msg:
         msg = cgi.escape(msg)
     tmpl = TMPLS.get_template('index.html')
-    return tmpl.render(client=client, msg=msg)
+    return tmpl.render(client=client, msg=msg, version=__version__)
 
 
 @route('/watchers/<name>/stats/<field>', method='GET')
@@ -83,11 +84,12 @@ def incr_proc(name):
 
 @route('/watchers/<name>/switch_status', method='GET')
 def switch(name):
+    url = request.query.get('redirect', '/')
     try:
         client.switch_status(name)
-        redirect('/')
+        redirect(url)
     except CallError, e:
-        redirect('/?msg=' + str(e))
+        redirect(url + '?msg=' + str(e))
 
 
 @route('/add_watcher', method='POST')
