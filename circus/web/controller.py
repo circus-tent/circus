@@ -81,6 +81,11 @@ class LiveClient(object):
         watchers = dict(self.watchers)
         return watchers[name][option]
 
+    def get_global_options(self):
+        msg = cmds['globaloptions'].make_message()
+        options = self.client.call(msg)
+        return options['options']
+
     def get_options(self, name):
         watchers = dict(self.watchers)
         return watchers[name].items()

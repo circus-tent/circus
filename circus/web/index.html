@@ -28,19 +28,10 @@ Disconnected
  </div>
  <div style="clear: both"></div>
  <div id="tabs-1" class="ui-tabs-panel">
-
-<div>
-     <table>
-    <tr>
-        <td>
-            circushttpd version
-        </td>
-        <td>
-            <span class="label">${version}</span>
-        </td>
-    </tr>
-    </table>
-
+     <%
+       goptions = dict(client.get_global_options())
+     %>
+     <div>
 
     <table class="watchers">
         <tr>
@@ -88,7 +79,49 @@ Disconnected
         </tr>
 
         %endfor
-        </table>
+    </table>
+
+         <h3>Options</h3>
+         <table class="options" style="margin-top: 10px">
+    <tr>
+        <td>
+            ZeroMQ endpoint used to connect clients like <i>circusctl</i> or 
+            <i>circushttpd</i>
+        </td>
+        <td>
+            <span class="label">${goptions['endpoint']}</span>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            ZeroMQ endpoint used for pub/sub
+        </td>
+        <td>
+            <span class="label">${goptions['pubsub_endpoint']}</span>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            If True, Circus detects flapping processes.
+        </td>
+        <td>
+            <span class="label">${goptions['check_flapping']}</span>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Delay in seconds for the ZMQ polling.
+        </td>
+        <td>
+            <span class="label">${goptions['check_delay']}</span>
+        </td>
+    </tr>
+
+
+
+    </table>
+
+
   </div>
  </div>
  <div id="tabs-2" class="ui-tabs-panel">
