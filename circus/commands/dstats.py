@@ -67,7 +67,7 @@ class Daemontats(Command):
         children = info.pop("children", [])
         ret = [_INFOLINE % info]
         for child in children:
-            ret.append("   " + _INFOLINE % child)
+            ret.append(_INFOLINE % child)
         return "\n".join(ret)
 
     def console_msg(self, msg):
