@@ -247,6 +247,10 @@ class Arbiter(object):
         for watcher in self.watchers:
             watcher.stop()
 
+    def restart(self):
+        self.stop_watchers()
+        self.start_watchers()
+
 
 class ThreadedArbiter(Arbiter, Thread):
 
