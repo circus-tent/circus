@@ -147,6 +147,7 @@ class Watcher(object):
             working_dir = util.get_working_dir()
 
         self.working_dir = working_dir
+        self.pids = {}
         self.processes = {}
         self.shell = shell
         self.uid = uid
@@ -207,6 +208,18 @@ class Watcher(object):
             self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
+    def reap_process(self, wid):
+        process = self.processes.pop(wid)
+        self.pids.pop(process.pid)
+
+        if process.status == DEAD_OR_ZOMBIE:
+            process.stop()
+
+        self.send_msg("reap", {"process_id": wid,
+                               "process_pid": process.pid,
+                               "time": time.time()})
+
+    @util.debuglog
     def reap_processes(self):
         """Reap processes.
         """
@@ -215,6 +228,7 @@ class Watcher(object):
 
         for wid, process in self.processes.items():
             if process.poll() is not None:
+                pid = process.pid
                 if process.status == DEAD_OR_ZOMBIE:
                     process.stop()
 
@@ -223,7 +237,9 @@ class Watcher(object):
                                        "time": time.time()})
                 if self.stopped:
                     break
-                self.processes.pop(wid)
+                process = self.processes.pop(wid)
+                if pid in self.pids:
+                    self.pids.pop(pid)
 
     @util.debuglog
     def manage_processes(self):
@@ -240,6 +256,9 @@ class Watcher(object):
         while len(processes) > self.numprocesses:
             wid = processes.pop(0)
             process = self.processes.pop(wid)
+            if process.pid in self.pids:
+                del self.pids[process.pid]
+
             self.kill_process(process)
 
     @util.debuglog
@@ -288,6 +307,7 @@ class Watcher(object):
                                                            process.stderr)
 
                 self.processes[self._process_counter] = process
+                self.pids[process.pid] = process.wid
                 logger.debug('running %s process [pid %d]', self.name,
                             process.pid)
             except OSError, e:
@@ -328,6 +348,7 @@ class Watcher(object):
         for wid in self.processes.keys():
             try:
                 process = self.processes.pop(wid)
+                del self.pids[process.pid]
                 self.kill_process(process, sig)
             except OSError as e:
                 if e.errno != errno.ESRCH:
