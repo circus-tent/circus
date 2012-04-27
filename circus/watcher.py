@@ -215,6 +215,7 @@ class Watcher(object):
         if process.status == DEAD_OR_ZOMBIE:
             process.stop()
 
+        logger.debug("reap process %s", process.pid)
         self.send_msg("reap", {"process_id": wid,
                                "process_pid": process.pid,
                                "time": time.time()})
@@ -232,6 +233,7 @@ class Watcher(object):
                 if process.status == DEAD_OR_ZOMBIE:
                     process.stop()
 
+                logger.debug("reap process %s", process.pid)
                 self.send_msg("reap", {"process_id": wid,
                                        "process_pid": process.pid,
                                        "time": time.time()})
