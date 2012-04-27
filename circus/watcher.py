@@ -1,4 +1,5 @@
 import errno
+import os
 import signal
 import time
 
@@ -227,21 +228,21 @@ class Watcher(object):
         if self.stopped:
             return
 
-        for wid, process in self.processes.items():
-            if process.poll() is not None:
-                pid = process.pid
-                if process.status == DEAD_OR_ZOMBIE:
-                    process.stop()
+        try:
+            while True:
+                pid, status = os.waitpid(-1, os.WNOHANG)
+                if not pid:
+                    break
+                if pid in self.pids:
+                    self.reap_process(self.pids[pid])
 
-                logger.debug("reap process %s", process.pid)
-                self.send_msg("reap", {"process_id": wid,
-                                       "process_pid": process.pid,
-                                       "time": time.time()})
                 if self.stopped:
                     break
-                process = self.processes.pop(wid)
-                if pid in self.pids:
-                    self.pids.pop(pid)
+        except OSError as e:
+            if e.errno == errno.ECHILD:
+                # process already reaped
+                return
+            raise
 
     @util.debuglog
     def manage_processes(self):
