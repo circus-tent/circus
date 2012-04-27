@@ -2,6 +2,7 @@ import errno
 import logging
 import os
 from threading import Thread
+import time
 
 import zmq
 from zmq.eventloop import ioloop
