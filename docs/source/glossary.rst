@@ -15,9 +15,12 @@ Glossary
         instance can run one or more watchers.
 
     process
+    worker
+    workers
     processes
         A *process* is an independent OS process instance of your program.
-        A single watcher can run one or more processes.
+        A single watcher can run one or more processes. We also call them
+        workers.
 
     arbiter
         The *arbiter* is responsible for managing all the watchers within
