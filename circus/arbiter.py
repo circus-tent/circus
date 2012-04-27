@@ -74,6 +74,13 @@ class Arbiter(object):
 
         return arbiter
 
+    def iter_watchers(self):
+        watchers = [(watcher.priority, watcher) for watcher in self.watchers]
+        watchers.sort()
+        watchers.reverse()
+        for __, watcher in watchers:
+            yield watcher
+
     @debuglog
     def initialize(self):
         # set process title
@@ -90,7 +97,7 @@ class Arbiter(object):
                                      self.pubsub_endpoint, self.check_delay)
 
         # initialize watchers
-        for watcher in self.watchers:
+        for watcher in self.iter_watchers():
             self._watchers_names[watcher.name.lower()] = watcher
             watcher.initialize(self.evpub_socket)
 
@@ -116,7 +123,7 @@ class Arbiter(object):
 
         # initialize processes
         logger.debug('Initializing watchers')
-        for watcher in self.watchers:
+        for watcher in self.iter_watchers():
             watcher.start()
 
         logger.info('Arbiter now waiting for commands')
@@ -145,7 +152,7 @@ class Arbiter(object):
     def reap_processes(self):
         # map watcher to pids
         watchers_pids = {}
-        for watcher in self.watchers:
+        for watcher in self.iter_watchers():
             if not watcher.stopped:
                 for pid, wid in watcher.pids.items():
                     watchers_pids[pid] = (watcher, wid)
@@ -175,7 +182,7 @@ class Arbiter(object):
             self.busy = True
             # manage and reap processes
             self.reap_processes()
-            for watcher in self.watchers:
+            for watcher in self.iter_watchers():
                 watcher.manage_processes()
 
             if self.check_flapping and not self.flapping.is_alive():
@@ -206,7 +213,7 @@ class Arbiter(object):
                 handler.release()
 
         # gracefully reload watchers
-        for watcher in self.watchers:
+        for watcher in self.iter_watchers():
             watcher.reload(graceful=graceful)
 
     def numprocesses(self):
@@ -262,7 +269,7 @@ class Arbiter(object):
         watcher.stop()
 
     def start_watchers(self):
-        for watcher in self.watchers:
+        for watcher in self.iter_watchers():
             watcher.start()
 
     def stop_watchers(self, stop_alive=False):
@@ -273,7 +280,7 @@ class Arbiter(object):
             logger.info('Arbiter exiting')
             self.alive = False
 
-        for watcher in self.watchers:
+        for watcher in self.iter_watchers():
             watcher.stop()
 
     def restart(self):

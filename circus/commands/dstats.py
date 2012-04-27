@@ -61,7 +61,7 @@ class Daemontats(Command):
         return self.make_message()
 
     def execute(self, arbiter, props):
-        return {'info': get_info()}
+        return {'info': get_info(interval=0.01)}
 
     def _to_str(self, info):
         children = info.pop("children", [])
