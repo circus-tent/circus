@@ -1,178 +1,167 @@
 <%inherit file="base.html"/>
 
-<%block name="title">
-%if client:
-Connected to ${client.endpoint}
-%else:
-Disconnected
-%endif
-</%block>
-
-
-% if not client:
-Not connected. Go <a href="/">back</a> to connect.
-% endif
-
 % if client:
+    <div class="title">
+       <div class="watcher_name">Watcher <strong>${name}</strong></div> 
+       <div class="watcher_description"><strong>${client.get_option(name, 'numprocesses')}</strong> <span>processes</span></div>
+    </div>
 
-<div id="tabs">
- <div>
- <ul class="ui-tabs-nav">
-   <li class="ui-tabs-selected"><a href="#tabs-1">Stats</a></li>
-   <li><a href="#tabs-2">Options</a></li>
- </ul>
- </div>
- <div style="clear: both"></div>
- <div id="tabs-1" class="ui-tabs-panel">
-   <div class="panel">
-       <p>
+    <div class="legend">
+        <div class="legend_cpu">
+            <span class="legend_indicator"></span>
+            <span class="">CPU</span>
+        </div>
+        <div class="legend_mem">
+            <span class="legend_indicator"></span>
+            <span class="">Memory</span>
+        </div>
+    </div>
 
-       <a href="/watchers/${name}/switch_status?redirect=/watchers/${name}#tabs-1">
-         <img title="${client.get_status(name)}" class="status"
-          src="/media/${client.get_status(name)}.png" width="20" height="20"/>
-       </a>
-       Watcher <strong>${name}</strong> runs <strong>${client.get_option(name, 'numprocesses')}</strong> processes.
-          <a href="/watchers/${name}/process/incr?redirect=/watchers/${name}#tabs-1"><span class="orangelabel">+</span></a>
-          <a href="/watchers/${name}/process/decr?redirect=/watchers/${name}#tabs-1"><span class="orangelabel">-</span></a>
-          </p>
+    <div class="box">
     %for pid in client.get_pids(name):
-    <div class="stat" id="pid_${pid}">
-     <div style="margin-bottom: 10px">
-         <span class="orangelabel">Process #${pid}</span>
-         <a href="/watchers/${name}/process/kill/${pid}">
-             <span class="redlabel" style="float: right">kill</span>
-         </a>
-     </div>
-     <div style="margin-bottom: 4px">
-         <span class="label">CPU</span>
-         <span id="${pid}_cpu" class="sparklines"></span>
-         <span class="label" id="${pid}_last_cpu" style="margin-left: 4px;
-             float: right">0.0 %</span>
-     </div>
-     <div>
-         <span class="label">Mem</span>
-         <span id="${pid}_mem" class="sparklines"></span>
-         <span class="label" style="margin-left: 4px; float: right" id="${pid}_last_mem">0.0 %</span>
-     </div>
+    <div class="process">
+        <div>
+            <span style="display: inline-block; float: left;" class="label">Process #${pid}</span>
+            <span style="display: inline-block; float: right;">
+                <a href="/watchers/${name}/process/kill/${pid}" title="Kill">
+                    <img src="/media/kill.png" border="0" alt="Kill" />
+                </a>
+            </span>
+        </div>
+        <div class="stat" id="pid_${pid}">
+             <div class="graph">
+                 <span id="${pid}_cpu" class="sparklines"></span>
+             </div>
+             <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
+                <span class="cpu_label">CPU</span>
+                <span class="cpu_value" id="${pid}_last_cpu">0.0 %</span>
+             </div>
+             <div style="padding-bottom: 10px;padding-top: 5px;float:right; width: 49%; text-align:center;">
+                <span class="mem_label">Mem</span>
+                <span class="mem_value" id="${pid}_last_mem">0.0 %</span>
+             </div>
+        </div>
     </div>
     %endfor
-    <div style="clear: both"></div>
-  </div>
- </div>
- <div id="tabs-2" class="ui-tabs-panel">
-     <%
+    <div class="process">
+        <div>
+            <span class="label">Add process</span>
+        </div>
+        <div class="stat">
+             <a class="add_process" title="Add process" href="/watchers/${name}/process/incr?redirect=/watchers/${name}">+</a>
+        </div>
+    </div>
+
+    </div>
+
+    <div class="title">
+       <div class="watcher_name">Options</div> 
+    </div>
+
+    <%
        options = dict(client.get_options(name))
      %>
 
-     <table>
-    <tr>
-        <td>
-            Command to run.
-        </td>
-        <td>
-            <span class="label">${options['cmd']}</span>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Arguments passed to the command.
-        </td>
-        <td>
-            <span class="label">${options['args']}</span>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Environment passed to the command.
-        </td>
-        <td>
-            <span class="label">${options['env']}</span>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Do we run the command in the shell ?
-        </td>
-        <td>
-            <span class="label">${options['shell']}</span>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            uid (defaults to the one used for the circusd process)
-        </td>
-        <td>
-            <span class="label">${options['uid']}</span>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            gid (defaults to the one used for the circusd process)
-        </td>
-        <td>
-            <span class="label">${options['gid']}</span>
-        </td>
-    </tr>
+    <table class="options">
+        <tr>
+            <td>
+                Command to run.
+            </td>
+            <td class="value">
+                <span>${options['cmd']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Arguments passed to the command.
+            </td>
+            <td class="value">
+                <span>${options['args']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Environment passed to the command.
+            </td>
+            <td class="value">
+                <span>${options['env']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Do we run the command in the shell ?
+            </td>
+            <td class="value">
+                <span>${options['shell']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                uid (defaults to the one used for the circusd process)
+            </td>
+            <td class="value">
+                <span>${options['uid']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                gid (defaults to the one used for the circusd process)
+            </td>
+            <td class="value">
+                <span>${options['gid']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Working directory.
+            </td>
+            <td class="value">
+                <span>${options['working_dir']}</span>
+            </td>
+        </tr>
 
+        <tr>
+            <td>
+            Number of processes
+            </td>
+            <td class="value">
+                <a href="/watchers/${name}/process/incr?redirect=/watchers/${name}"><span class="orangelabel">+</span></a>
+                <span class="num_process">${options['numprocesses']}</span>
+                <a href="/watchers/${name}/process/decr?redirect=/watchers/${name}"><span class="orangelabel">-</span></a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Maximum number of attempts to start a process.
+            </td>
+            <td class="value">
+                <span>${options['max_retry']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Warmup delay in seconds after a process is started.
+            </td>
+            <td class="value">
+                <span>${options['warmup_delay']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Number of seconds to wait before retrying to start a flapping
+                process.
+            </td>
+            <td class="value">
+                <span>${options['retry_in']}</span>
+            </td>
+        </tr>
+    </table>
 
-    <tr>
-        <td>
-            Working directory.
-        </td>
-        <td>
-            <span class="label">${options['working_dir']}</span>
-        </td>
-    </tr>
-
-    <tr>
-        <td>
-        Number of processes
-        </td>
-        <td>
-            <span class="label">${options['numprocesses']}</span>
-            <a href="/watchers/${name}/process/incr?redirect=/watchers/${name}#tabs-2"><span class="orangelabel">+</span></a>
-            <a href="/watchers/${name}/process/decr?redirect=/watchers/${name}#tabs-2"><span class="orangelabel">-</span></a>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Maximum number of attempts to start a process.
-        </td>
-        <td>
-            <span class="label">${options['max_retry']}</span>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Warmup delay in seconds after a process is started.
-        </td>
-        <td>
-            <span class="label">${options['warmup_delay']}</span>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Number of seconds to wait before retrying to start a flapping
-            process.
-        </td>
-        <td>
-            <span class="label">${options['retry_in']}</span>
-        </td>
-    </tr>
-
-  </table>
- </div>
-
- </div>
-
- <script type="text/javascript">
-  $(function() {
-        $("#tabs").tabs();
+<script type="text/javascript">
+    $(function() {
         initializeGraphs('${name}');
     });
-
-  setInterval("refreshData('${name}')", 1000);
-
- </script>
+    setInterval("refreshData('${name}')", 1000);
+</script>
 
 % endif

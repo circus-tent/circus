@@ -1,85 +1,99 @@
 <%inherit file="base.html"/>
- <%block name="title">
-%if client:
-Connected to ${client.endpoint}
-%else:
-Disconnected
-%endif
-</%block>
-
 
 % if not client:
-  <legend>Connect to a Circus system</legend>
+  <h1>Connect to a Circus system</h1>
   <form action="/connect" method="POST">
     <input type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
-    <input type="submit"/>
+    <input type="submit" class="connect" value="Connect"/>
 </form>
 % endif
 
 % if client:
-
-
-<div id="tabs">
- <div>
- <ul class="ui-tabs-nav">
-   <li class="ui-tabs-selected"><a href="#tabs-1">Overview</a></li>
-   <li><a href="#tabs-2">Options</a></li>
-   <li><a href="#tabs-3">Add Watcher</a></li>
- </ul>
- </div>
- <div style="clear: both"></div>
- <div id="tabs-1" class="ui-tabs-panel">
      <%
        goptions = dict(client.get_global_options())
      %>
-     <div>
-     
-    <table class="watchers">
-        <tr>
-            <th>Name</th>
-            <th>Processes</th>
-            <th>Command</th>
-            <th>Shell</th>
-            <th>uid</th>
-            <th>gid</th>
-            <th>Status</th>
-        </tr>
-        <tr>
-            % for watcher, options in client.watchers:
+
+    <div class="title">
+        <div style="float: left;" class="watcher_name">Watchers</div>
+
+        <div class="graph_home">
+            <span id="circusd" class="sparklines"></span>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend_cpu">
+            <span class="legend_indicator"></span>
+            <span class="">CPU</span>
+        </div>
+        <div class="legend_mem">
+            <span class="legend_indicator"></span>
+            <span class="">Memory</span>
+        </div>
+    </div>
+
+    <div class="watchers">
+        <div class="header">
+            <div style="width: 300px;">Name</div>
+            <div style="width: 80px;">Processes</div>
+            <div style="width: 342px;">Command</div>
+            <div style="width: 50px;">Shell</div>
+            <div style="width: 50px;">uid</div>
+            <div style="width: 50px;">gid</div>
+            <div style="width: 50px;">Status</div>
+        </div>
+    % for watcher, options in client.watchers:   
+        <div class="watcher">
+            <div style="width: 300px;"><a class="link" href="/watchers/${watcher}">${watcher}</a></div>
+            <div style="width: 80px;">${options['numprocesses']}</div>
+            <div style="width: 342px;">${options['cmd']} ${options['args']}</div>
+            <div style="width: 50px;">${options['shell']}</div>
+            <div style="width: 50px;">${options['uid']}</div>
+            <div style="width: 50px;">${options['gid']}</div>
+            <div style="width: 50px;"><a class="${client.get_status(watcher)}" title="${client.get_status(watcher)}" href="/watchers/${watcher}/switch_status"></a></div>
+        </div>
+    %endfor
+    </div>
+
+    <div class="title">
+       <div class="watcher_name">Options</div> 
+    </div>
+
+    <table class="options">
         <tr>
             <td>
-                <a href="/watchers/${watcher}">${watcher}</a>
+                ZeroMQ endpoint used to connect clients like <i>circusctl</i> or 
+                <i>circushttpd</i>
             </td>
-            <td style="text-align: center">
-
-                <span class="label">${options['numprocesses']}</span>
-                <a href="/watchers/${watcher}/process/incr?redirect=/#tabs-1"><span class="orangelabel">+</span></a>
-          <a href="/watchers/${watcher}/process/decr?redirect=/#tabs-1"><span class="orangelabel">-</span></a>
-
-      </td>
-      <td>
-          ${options['cmd']} ${options['args']}
-      </td>
-      <td>
-          ${options['shell']}
-      </td>
-      <td>
-          ${options['uid']}
-      </td>
-      <td>
-          ${options['uid']}
-      </td>
             <td>
-         <a href="/watchers/${watcher}/switch_status">
-                         <img title="${client.get_status(watcher)}" class="status"
-                         src="/media/${client.get_status(watcher)}.png" width="20" height="20"/>
-            ${client.get_status(watcher)}
-
-         </a>
-           </td>
+                <span class="label">${goptions['endpoint']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                ZeroMQ endpoint used for pub/sub
+            </td>
+            <td>
+                <span class="label">${goptions['pubsub_endpoint']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                If True, Circus detects flapping processes.
+            </td>
+            <td>
+                <span class="label">${goptions['check_flapping']}</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Delay in seconds for the ZMQ polling.
+            </td>
+            <td>
+                <span class="label">${goptions['check_delay']}</span>
+            </td>
         </tr>
 
-        %endfor
     </table>
     <div class="stat" style="float:none; margin-top: 2em; margin-left: -.5em">
      <div style="margin-bottom: 10px">
@@ -180,6 +194,5 @@ Disconnected
   setInterval("refreshCircusdGraph()", 1000);
 
  </script>
-
 % endif
 
