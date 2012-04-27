@@ -190,7 +190,7 @@ class Watcher(object):
                    stdout_stream=config.get('stdout_stream'),
                    stderr_stream=config.get('stderr_stream'),
                    stream_backend=config.get('stream_backend', 'thread'),
-                   priority=int(config.get('prioriyy', 0)))
+                   priority=int(config.get('priority', 0)))
 
     @util.debuglog
     def initialize(self, evpub_socket):
