@@ -84,7 +84,7 @@ class Options(Command):
         - max_retry: integer, The maximum of retries loops
         - graceful_timeout: integer or number, time we wait before we
           definitely kill a process.
-
+        - priority: used to sort watchers in the arbiter
     """
 
     name = "options"

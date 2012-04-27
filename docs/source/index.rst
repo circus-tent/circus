@@ -8,7 +8,7 @@ Circus Process Watcher
 .. image:: images/circus-medium.png
    :align: right
 
-Circus is a process watcher and runner. It can be driven via a 
+Circus is a process watcher and runner. It can be driven via a
 command-line interface, or programmatically, in python, through its APIs.
 
 It shares some of the goals of `Supervisord <http://supervisord.org>`_,
@@ -22,7 +22,7 @@ Using Circus via the command-line
 ---------------------------------
 
 Circus provides a command-line script that can be used to manage one or
-more :term:`watchers`. Each watcher can have one or more running 
+more :term:`watchers`. Each watcher can have one or more running
 :term:`processes`.
 
 Circus' command-line tool is configurable using an ini-style
@@ -52,6 +52,21 @@ perform actions such as adding or removing :term:`workers` or to display
 various statistics.
 
 To learn more about this, see :ref:`cli`
+
+Monitoring and managing Circus through the web
+----------------------------------------------
+
+Circus provides a small web application that can connect to a running
+Circus daemon and let you monitor and interact with it.
+
+Running the web application is as simple as::
+
+    $ circushttpd
+
+By default, **circushttpd** runs on the *8080* port.
+
+
+To learn more about this feature, see :ref:`circushttpd`
 
 
 Using Circus as a Library
@@ -119,7 +134,7 @@ Why should I use Circus instead of X ?
 
 3. **Circus scales**
 
-  One of the use cases of Circus is to manage thousands of processes without 
+  One of the use cases of Circus is to manage thousands of processes without
   adding overhead -- we're dedicated to focus on this.
 
 
@@ -132,6 +147,7 @@ More documentation
    installation
    configuration
    commands
+   circushttpd
    library
    deployment
    security

@@ -90,7 +90,7 @@ def bytes2human(n):
     return "%sB" % n
 
 
-def get_info(process=None):
+def get_info(process=None, interval=0):
     """Return information about a process.
 
     If process is None, will return the information about the current process
@@ -107,7 +107,7 @@ def get_info(process=None):
         info['mem_info1'] = info['mem_info2'] = "N/A"
 
     try:
-        info['cpu'] = process.get_cpu_percent(interval=0)
+        info['cpu'] = process.get_cpu_percent(interval=interval)
     except AccessDenied:
         info['cpu'] = "N/A"
 
@@ -150,6 +150,10 @@ def get_info(process=None):
         cmdline = "N/A"
 
     info['cmdline'] = cmdline
+
+    info['children'] = []
+    for child in process.get_children():
+        info['children'].append(get_info(child, interval=interval))
 
     return info
 

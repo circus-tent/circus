@@ -22,6 +22,7 @@ class Refresher(Thread):
 
     def run(self):
         stats = self.client.stats
+        dstats = self.client.dstats
         call = self.cclient.call
         self.running = True
         while self.running:
@@ -36,6 +37,18 @@ class Refresher(Thread):
                     start = len(stats[name]) - MAX_STATS
                     stats[name][:] = stats[name][start:]
 
+            # getting circusd stats
+            msg = cmds['dstats'].make_message(name=name)
+            try:
+                res = call(msg)
+            except CallError:
+                continue
+
+            dstats.append(res['info'])
+            if len(dstats) > MAX_STATS:
+                start = len(dstats) - MAX_STATS
+                dstats[:] = dstats[start:]
+
             time.sleep(.2)
 
 
@@ -47,6 +60,7 @@ class LiveClient(object):
         self.watchers = []
         self.stats = defaultdict(list)
         self.refresher = Refresher(self)
+        self.dstats = []
 
     def stop(self):
         self.client.stop()
@@ -104,6 +118,13 @@ class LiveClient(object):
 
     def get_stats(self, name, start=0, end=-1):
         return self.stats[name][start:end]
+
+    def get_dstats(self, field, start=0, end=-1):
+        stats = self.dstats[start:end]
+        res = []
+        for stat in stats:
+            res.append(stat[field])
+        return res
 
     def get_pids(self, name):
         msg = cmds['list'].make_message(name=name)

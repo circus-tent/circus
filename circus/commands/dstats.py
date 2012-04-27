@@ -1,4 +1,4 @@
-from circus.exc import MessageError, ArgumentError
+from circus.exc import ArgumentError
 from circus.commands.base import Command
 from circus.util import get_info
 
@@ -61,13 +61,17 @@ class Daemontats(Command):
         return self.make_message()
 
     def execute(self, arbiter, props):
-        return {'info': get_info()}
+        return {'info': get_info(interval=0.01)}
 
     def _to_str(self, info):
         children = info.pop("children", [])
-        ret = [_INFOLINE % info]
-        for child in children:
-            ret.append(_INFOLINE % child)
+        ret = ['Main Process:',  '    ' + _INFOLINE % info]
+
+        if len(children) > 0:
+            ret.append('Children:')
+            for child in children:
+                ret.append('    ' + _INFOLINE % child)
+
         return "\n".join(ret)
 
     def console_msg(self, msg):

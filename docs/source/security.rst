@@ -54,3 +54,16 @@ system may be an issue.
 The best way to prevent this is to make sure that the system running
 Circus is isolated (like a VM) **or** to run the whole system under
 a controlled user.
+
+
+circushttpd
+-----------
+
+The web application is not secured at all and once connected on a running
+Circus, it can do anything and everything.
+
+**Do not make it publicly available**
+
+If you want to protect the access to the web panel, you can serve it
+behind Nginx or Apache or any proxy-capable web server, than can
+set up security.

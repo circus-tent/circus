@@ -13,7 +13,22 @@
        goptions = dict(client.get_global_options())
      %>
     <div class="title">
-       <div class="watcher_name">Watchers</div> 
+        <div style="float: left;" class="watcher_name">Watchers</div>
+
+        <div class="graph_home">
+            <span id="circusd" class="sparklines"></span>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend_cpu">
+            <span class="legend_indicator"></span>
+            <span class="">CPU</span>
+        </div>
+        <div class="legend_mem">
+            <span class="legend_indicator"></span>
+            <span class="">Memory</span>
+        </div>
     </div>
 
     <div class="watchers">
@@ -79,5 +94,11 @@
         </tr>
     </table>
 
+<script type="text/javascript">
+    $(function() {
+        initializeCircusdGraph();
+    });
+    setInterval("refreshCircusdGraph()", 1000);
+</script>
 % endif
 

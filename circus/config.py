@@ -28,7 +28,8 @@ def watcher_defaults():
         'rlimits': dict(),
         'stderr_stream': dict(),
         'stdout_stream': dict(),
-        'stream_backend': 'thread'}
+        'stream_backend': 'thread',
+        'priority': 0}
 
 
 class DefaultConfigParser(ConfigParser.ConfigParser):
@@ -182,6 +183,8 @@ def get_config(config_file):
                 elif opt.startswith('rlimit_'):
                     limit = opt[7:]
                     watcher['rlimits'][limit] = int(val)
+                elif opt == 'priority':
+                    watcher['priority'] = dget(section, "priority", 0, int)
 
             # second pass, parse stream conf
             stdout_conf = watcher.get('stdout_stream', {})

@@ -41,6 +41,20 @@ def index():
     return tmpl.render(client=client, msg=msg, version=__version__)
 
 
+@route('/circusd/stats/<field>', method='GET')
+def get_dstat(field):
+    start = int(request.query.get('start', '0'))
+    end = int(request.query.get('end', '-1'))
+
+    if client is None:
+        return {}
+    try:
+        res = {'info': [str(v) for v in client.get_dstats(field)]}
+    except (CallError, KeyboardInterrupt, KeyError):
+        pass
+    return res
+
+
 @route('/watchers/<name>/stats/<field>', method='GET')
 def get_stat(name, field):
     start = int(request.query.get('start', '0'))

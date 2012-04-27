@@ -1,10 +1,12 @@
 import errno
+import os
 import signal
 import time
 
+from psutil import STATUS_ZOMBIE, STATUS_DEAD
 from zmq.utils.jsonapi import jsonmod as json
 
-from circus.process import Process, DEAD_OR_ZOMBIE
+from circus.process import Process
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector
@@ -96,6 +98,10 @@ class Watcher(object):
       that has been flapping. (default: 7)
     - **max_retry**: the number of times we attempt to start a process, before
       we abandon and stop the whole watcher. (default: 5)
+    - **priority**: integer that defines a priority for the watcher. When
+      the Arbiter do some operations on all watchers, it will sort them
+      with this field, from the bigger number to the smallest.
+      (default: 0)
     """
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None,
@@ -104,7 +110,7 @@ class Watcher(object):
                  max_retry=5,
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
-                 stderr_stream=None, stream_backend='thread'):
+                 stderr_stream=None, stream_backend='thread', priority=0):
         self.name = name
         self.res_name = name.lower().replace(" ", "_")
         self.numprocesses = int(numprocesses)
@@ -121,6 +127,7 @@ class Watcher(object):
         self.prereload_fn = prereload_fn
         self.executable = None
         self.stream_backend = stream_backend
+        self.priority = priority
 
         self.stdout_stream = stdout_stream
         if stdout_stream:
@@ -140,13 +147,15 @@ class Watcher(object):
                          "uid", "gid", "send_hup", "shell", "env",
                          "cmd", "flapping_attempts", "flapping_window",
                          "retry_in", "args",
-                         "max_retry", "graceful_timeout", "executable")
+                         "max_retry", "graceful_timeout", "executable",
+                         "priority")
 
         if not working_dir:
             # working dir hasn't been set
             working_dir = util.get_working_dir()
 
         self.working_dir = working_dir
+        self.pids = {}
         self.processes = {}
         self.shell = shell
         self.uid = uid
@@ -180,7 +189,8 @@ class Watcher(object):
                    executable=config.get('executable'),
                    stdout_stream=config.get('stdout_stream'),
                    stderr_stream=config.get('stderr_stream'),
-                   stream_backend=config.get('stream_backend', 'thread'))
+                   stream_backend=config.get('stream_backend', 'thread'),
+                   priority=int(config.get('priority', 0)))
 
     @util.debuglog
     def initialize(self, evpub_socket):
@@ -207,23 +217,58 @@ class Watcher(object):
             self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
+    def reap_process(self, wid, status):
+        process = self.processes.pop(wid)
+        self.pids.pop(process.pid)
+
+        # get retrn code
+        if os.WIFSIGNALED(status):
+            retcode = os.WTERMSIG(status)
+        # process exited using exit(2) system call; return the
+        # integer exit(2) system call has been called with
+        elif os.WIFEXITED(status):
+            retcode = os.WEXITSTATUS(status)
+        else:
+            # should never happen
+            raise RuntimeError("Unknown process exit status")
+
+        # if the process is dead or a zombie try to definitely stop it.
+        if retcode in (STATUS_ZOMBIE, STATUS_DEAD):
+            process.stop()
+
+        logger.debug("reap process %s", process.pid)
+        self.send_msg("reap", {"process_id": wid,
+                               "process_pid": process.pid,
+                               "time": time.time()})
+
+    @util.debuglog
     def reap_processes(self):
         """Reap processes.
         """
         if self.stopped:
             return
 
-        for wid, process in self.processes.items():
-            if process.poll() is not None:
-                if process.status == DEAD_OR_ZOMBIE:
-                    process.stop()
+        while True:
+            try:
+                pid, status = os.waitpid(-1, os.WNOHANG)
+                if not pid:
+                    break
 
-                self.send_msg("reap", {"process_id": wid,
-                                       "process_pid": process.pid,
-                                       "time": time.time()})
+                if pid in self.pids:
+                    self.reap_process(self.pids[pid], status)
+
+                # watcher have been stopped, exit the loop
                 if self.stopped:
                     break
-                self.processes.pop(wid)
+            except OSError as e:
+                if e.errno == errno.EAGAIN:
+                    time.sleep(0.001)
+                    continue
+                elif e.errno == errno.ECHILD:
+                    # process already reaped
+                    return
+                else:
+                    raise
 
     @util.debuglog
     def manage_processes(self):
@@ -240,6 +285,9 @@ class Watcher(object):
         while len(processes) > self.numprocesses:
             wid = processes.pop(0)
             process = self.processes.pop(wid)
+            if process.pid in self.pids:
+                self.pids.pop(process.pid)
+
             self.kill_process(process)
 
     @util.debuglog
@@ -288,6 +336,7 @@ class Watcher(object):
                                                            process.stderr)
 
                 self.processes[self._process_counter] = process
+                self.pids[process.pid] = process.wid
                 logger.debug('running %s process [pid %d]', self.name,
                             process.pid)
             except OSError, e:
@@ -328,6 +377,7 @@ class Watcher(object):
         for wid in self.processes.keys():
             try:
                 process = self.processes.pop(wid)
+                del self.pids[process.pid]
                 self.kill_process(process, sig)
             except OSError as e:
                 if e.errno != errno.ESRCH:
