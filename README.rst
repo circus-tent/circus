@@ -17,4 +17,3 @@ Links:
 - The full documentation is located at : http://circus.readthedocs.org
 - You can reach us for any feedback, bug report, or to contribute, at
   https://github.com/mozilla-services/circus
-
