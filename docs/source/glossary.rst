@@ -8,11 +8,12 @@ Glossary
 
 .. glossary::
     :sorted:
-    
+
     watchers
     watcher
         A *watcher* is the program you tell Circus to run.  A single Circus
         instance can run one or more watchers.
+
     process
     processes
         A *process* is an independent OS process instance of your program.
@@ -27,7 +28,7 @@ Glossary
         the arbiter.
 
     pub/sub
-        Circus has a *pubsub* that receives events from the watchers and 
+        Circus has a *pubsub* that receives events from the watchers and
         dispatches them to all subscribers.
 
     flapping
@@ -35,5 +36,5 @@ Glossary
         processes are constantly restarting.
 
     remote controller
-        The *remote controller* allows you to communicate with the controller 
+        The *remote controller* allows you to communicate with the controller
         via ZMQ to control Circus.
