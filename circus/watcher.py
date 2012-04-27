@@ -209,11 +209,23 @@ class Watcher(object):
             self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
-    def reap_process(self, wid):
+    def reap_process(self, wid, status):
         process = self.processes.pop(wid)
         self.pids.pop(process.pid)
 
-        if process.status == DEAD_OR_ZOMBIE:
+        # get retrn code
+        if os.WIFSIGNALED(status):
+            retcode = os.WTERMSIG(status)
+        # process exited using exit(2) system call; return the
+        # integer exit(2) system call has been called with
+        elif os.WIFEXITED(status):
+            retcode = os.WEXITSTATUS(status)
+        else:
+            # should never happen
+            raise RuntimeError("Unknown process exit status")
+
+        # if the process is dead or a zombie try to definitely stop it.
+        if retcode == DEAD_OR_ZOMBIE:
             process.stop()
 
         logger.debug("reap process %s", process.pid)
@@ -228,21 +240,27 @@ class Watcher(object):
         if self.stopped:
             return
 
-        try:
-            while True:
+        while True:
+            try:
                 pid, status = os.waitpid(-1, os.WNOHANG)
                 if not pid:
                     break
-                if pid in self.pids:
-                    self.reap_process(self.pids[pid])
 
+                if pid in self.pids:
+                    self.reap_process(self.pids[pid], status)
+
+                # watcher have been stopped, exit the loop
                 if self.stopped:
                     break
-        except OSError as e:
-            if e.errno == errno.ECHILD:
-                # process already reaped
-                return
-            raise
+            except OSError as e:
+                if e.errno == errno.EAGAIN:
+                    time.sleep(0.001)
+                    continue
+                elif e.errno == errno.ECHILD:
+                    # process already reaped
+                    return
+                else:
+                    raise
 
     @util.debuglog
     def manage_processes(self):

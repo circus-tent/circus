@@ -150,19 +150,24 @@ class Arbiter(object):
                     watchers_pids[pid] = (watcher, wid)
 
         # detect dead children
-        try:
-            while True:
+        while True:
+            try:
                 pid, status = os.waitpid(-1, os.WNOHANG)
                 if not pid:
                     break
+
                 if pid in watchers_pids:
                     watcher, wid = watchers_pids[pid]
-                    watcher.reap_process(wid)
-        except OSError as e:
-            if e.errno == errno.ECHILD:
-                # process already reaped
-                return
-            raise
+                    watcher.reap_process(wid, status)
+            except OSError as e:
+                if e.errno == errno.EAGAIN:
+                    time.sleep(0.001)
+                    continue
+                elif e.errno == errno.ECHILD:
+                    # process already reaped
+                    return
+                else:
+                    raise
 
     def manage_watchers(self):
         if not self.busy and self.alive:
