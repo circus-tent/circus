@@ -2,8 +2,11 @@
 
 % if client:
     <div class="title">
-       <div class="watcher_name">Watcher <strong>${name}</strong></div> 
-       <div class="watcher_description"><strong>${client.get_option(name, 'numprocesses')}</strong> <span>processes</span></div>
+     <div class="watcher_name">Watcher <strong>${name}</strong>
+      <a style="display:inline-block;" class="${client.get_status(name)}" 
+         title="${client.get_status(name)}" href="/watchers/${name}/switch_status?redirect=/watchers/${name}"></a></div>
+      <div class="watcher_description"><strong>${client.get_option(name, 'numprocesses')}</strong> <span>processes</span>
+     </div>
     </div>
 
     <div class="legend">
