@@ -3,9 +3,10 @@ import os
 import signal
 import time
 
+from psutil import STATUS_ZOMBIE, STATUS_DEAD
 from zmq.utils.jsonapi import jsonmod as json
 
-from circus.process import Process, DEAD_OR_ZOMBIE
+from circus.process import Process
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector
@@ -225,7 +226,7 @@ class Watcher(object):
             raise RuntimeError("Unknown process exit status")
 
         # if the process is dead or a zombie try to definitely stop it.
-        if retcode == DEAD_OR_ZOMBIE:
+        if retcode in (STATUS_ZOMBIE, STATUS_DEAD):
             process.stop()
 
         logger.debug("reap process %s", process.pid)
