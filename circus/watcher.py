@@ -129,7 +129,7 @@ class Watcher(object):
         self.stream_backend = stream_backend
         self.priority = priority
 
-        self.stdout_strea = stdout_stream
+        self.stdout_stream = stdout_stream
         if stdout_stream:
             self.stdout_redirector = get_pipe_redirector(stdout_stream,
                     backend=stream_backend)
