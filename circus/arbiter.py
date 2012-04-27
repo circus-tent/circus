@@ -2,6 +2,7 @@ import errno
 import logging
 import os
 from threading import Thread
+import time
 
 import zmq
 from zmq.eventloop import ioloop
@@ -141,12 +142,40 @@ class Arbiter(object):
             self.stop_watchers(stop_alive=True)
         self.loop.stop()
 
+    def reap_processes(self):
+        # map watcher to pids
+        watchers_pids = {}
+        for watcher in self.watchers:
+            if not watcher.stopped:
+                for pid, wid in watcher.pids.items():
+                    watchers_pids[pid] = (watcher, wid)
+
+        # detect dead children
+        while True:
+            try:
+                pid, status = os.waitpid(-1, os.WNOHANG)
+                if not pid:
+                    break
+
+                if pid in watchers_pids:
+                    watcher, wid = watchers_pids[pid]
+                    watcher.reap_process(wid, status)
+            except OSError as e:
+                if e.errno == errno.EAGAIN:
+                    time.sleep(0.001)
+                    continue
+                elif e.errno == errno.ECHILD:
+                    # process already reaped
+                    return
+                else:
+                    raise
+
     def manage_watchers(self):
         if not self.busy and self.alive:
             self.busy = True
             # manage and reap processes
+            self.reap_processes()
             for watcher in self.watchers:
-                watcher.reap_processes()
                 watcher.manage_processes()
 
             if self.check_flapping and not self.flapping.is_alive():

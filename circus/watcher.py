@@ -1,10 +1,12 @@
 import errno
+import os
 import signal
 import time
 
+from psutil import STATUS_ZOMBIE, STATUS_DEAD
 from zmq.utils.jsonapi import jsonmod as json
 
-from circus.process import Process, DEAD_OR_ZOMBIE
+from circus.process import Process
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector
@@ -147,6 +149,7 @@ class Watcher(object):
             working_dir = util.get_working_dir()
 
         self.working_dir = working_dir
+        self.pids = {}
         self.processes = {}
         self.shell = shell
         self.uid = uid
@@ -207,23 +210,58 @@ class Watcher(object):
             self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
+    def reap_process(self, wid, status):
+        process = self.processes.pop(wid)
+        self.pids.pop(process.pid)
+
+        # get retrn code
+        if os.WIFSIGNALED(status):
+            retcode = os.WTERMSIG(status)
+        # process exited using exit(2) system call; return the
+        # integer exit(2) system call has been called with
+        elif os.WIFEXITED(status):
+            retcode = os.WEXITSTATUS(status)
+        else:
+            # should never happen
+            raise RuntimeError("Unknown process exit status")
+
+        # if the process is dead or a zombie try to definitely stop it.
+        if retcode in (STATUS_ZOMBIE, STATUS_DEAD):
+            process.stop()
+
+        logger.debug("reap process %s", process.pid)
+        self.send_msg("reap", {"process_id": wid,
+                               "process_pid": process.pid,
+                               "time": time.time()})
+
+    @util.debuglog
     def reap_processes(self):
         """Reap processes.
         """
         if self.stopped:
             return
 
-        for wid, process in self.processes.items():
-            if process.poll() is not None:
-                if process.status == DEAD_OR_ZOMBIE:
-                    process.stop()
+        while True:
+            try:
+                pid, status = os.waitpid(-1, os.WNOHANG)
+                if not pid:
+                    break
 
-                self.send_msg("reap", {"process_id": wid,
-                                       "process_pid": process.pid,
-                                       "time": time.time()})
+                if pid in self.pids:
+                    self.reap_process(self.pids[pid], status)
+
+                # watcher have been stopped, exit the loop
                 if self.stopped:
                     break
-                self.processes.pop(wid)
+            except OSError as e:
+                if e.errno == errno.EAGAIN:
+                    time.sleep(0.001)
+                    continue
+                elif e.errno == errno.ECHILD:
+                    # process already reaped
+                    return
+                else:
+                    raise
 
     @util.debuglog
     def manage_processes(self):
@@ -240,6 +278,9 @@ class Watcher(object):
         while len(processes) > self.numprocesses:
             wid = processes.pop(0)
             process = self.processes.pop(wid)
+            if process.pid in self.pids:
+                self.pids.pop(process.pid)
+
             self.kill_process(process)
 
     @util.debuglog
@@ -288,6 +329,7 @@ class Watcher(object):
                                                            process.stderr)
 
                 self.processes[self._process_counter] = process
+                self.pids[process.pid] = process.wid
                 logger.debug('running %s process [pid %d]', self.name,
                             process.pid)
             except OSError, e:
@@ -328,6 +370,7 @@ class Watcher(object):
         for wid in self.processes.keys():
             try:
                 process = self.processes.pop(wid)
+                del self.pids[process.pid]
                 self.kill_process(process, sig)
             except OSError as e:
                 if e.errno != errno.ESRCH:
