@@ -1,4 +1,4 @@
-from circus.exc import MessageError, ArgumentError
+from circus.exc import ArgumentError
 from circus.commands.base import Command
 from circus.util import get_info
 

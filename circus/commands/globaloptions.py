@@ -1,5 +1,5 @@
 from circus.commands.base import Command
-from circus.exc import ArgumentError, MessageError
+from circus.exc import MessageError
 from circus.util import convert_opt
 
 
