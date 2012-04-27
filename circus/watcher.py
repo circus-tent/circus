@@ -257,7 +257,7 @@ class Watcher(object):
             wid = processes.pop(0)
             process = self.processes.pop(wid)
             if process.pid in self.pids:
-                del self.pids[process.pid]
+                self.pids.pop(process.pid)
 
             self.kill_process(process)
 
