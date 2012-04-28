@@ -61,13 +61,8 @@ class AddWatcher(Command):
         if len(args) < 2:
             raise ArgumentError("number of arguments invalid")
 
-        msg = self.make_message(name=args[0], cmd=" ".join(args[1:]))
-        if opts.get("start", False):
-            return [{'cmd': self,
-                     'msg': msg},
-                    {'cmd': Start(),
-                     'msg': self.make_message(command="start", name=args[0])}]
-        return msg
+        return self.make_message(name=args[0], cmd=" ".join(args[1:]),
+                start=opts.get('start', False))
 
     def execute(self, arbiter, props):
         options = props.get('options', {})
