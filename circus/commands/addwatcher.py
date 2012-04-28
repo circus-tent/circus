@@ -76,7 +76,7 @@ class AddWatcher(Command):
         if 'options' in props:
             options = props.get('options')
             if not isinstance(options, dict):
-                raise MessageError("'options' property shoudl be an object")
+                raise MessageError("'options' property should be an object")
 
             for key, val in props['options'].items():
                 validate_option(key, val)
