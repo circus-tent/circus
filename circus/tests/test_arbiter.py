@@ -135,6 +135,29 @@ class TestTrainer(TestCircus):
         resp = self.cli.call(make_message("status", name="test1"))
         self.assertEqual(resp.get("status"), "active")
 
+    def test_add_watcher6(self):
+        cmd, args = self._get_cmd_args()
+        msg = make_message("add", name="test1", cmd=cmd, args=args,
+                start=True)
+        resp = self.cli.call(msg)
+        self.assertEqual(resp.get("status"), "ok")
+
+        resp = self.cli.call(make_message("status", name="test1"))
+        self.assertEqual(resp.get("status"), "active")
+
+    def test_add_watcher7(self):
+        cmd, args = self._get_cmd_args()
+        msg = make_message("add", name="test1", cmd=cmd, args=args,
+                start=True, options=dict(numprocesses=2))
+        resp = self.cli.call(msg)
+        self.assertEqual(resp.get("status"), "ok")
+        time.sleep(0.1)
+        resp = self.cli.call(make_message("status", name="test1"))
+        self.assertEqual(resp.get("status"), "active")
+
+        resp = self.cli.call(make_message("numprocesses", name="test1"))
+        self.assertEqual(resp.get("numprocesses"), 2)
+
     def test_rm_watcher(self):
         msg = make_message("add", name="test1", cmd=self._get_cmd())
         self.cli.call(msg)

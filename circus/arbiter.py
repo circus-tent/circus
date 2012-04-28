@@ -251,6 +251,7 @@ class Arbiter(object):
         watcher.initialize(self.evpub_socket)
         self.watchers.append(watcher)
         self._watchers_names[watcher.name.lower()] = watcher
+        return watcher
 
     def rm_watcher(self, name):
         """Deletes a watcher.
