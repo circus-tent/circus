@@ -16,7 +16,7 @@ import shlex
 
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
-from circus.py3compat import bytestring
+from circus.py3compat import bytestring, string_types
 from circus.util import get_info, to_uid, to_gid, debuglog, get_working_dir
 from circus import logger
 
@@ -123,10 +123,10 @@ class Process(object):
         logger.debug('args: ' + str(args))
 
         if args is not None:
-            if isinstance(args, str):
+            if isinstance(args, string_types):
                 args_ = shlex.split(bytestring(args))
             else:
-                args_ = args[:]
+                args_ = [bytestring(arg) for arg in args[:]]
 
             args_ = shlex.split(bytestring(cmd)) + args_
         else:
