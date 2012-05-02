@@ -5,6 +5,7 @@ import zmq
 class CircusConsumer(object):
     def __init__(self, topics, context=None, endpoint='tcp://127.0.0.1:5556'):
         self.topics = topics
+        self.keep_context = context is not None
         self.context = context or zmq.Context()
         self.endpoint = endpoint
         self.pubsub_socket = self.context.socket(zmq.SUB)
@@ -30,6 +31,8 @@ class CircusConsumer(object):
                 yield topic, message
 
     def stop(self):
+        if self.keep_context:
+            return
         try:
             self.context.destroy(0)
         except zmq.ZMQError as e:
