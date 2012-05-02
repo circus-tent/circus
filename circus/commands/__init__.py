@@ -8,6 +8,7 @@ from circus.commands import (   # NOQA
     incrproc,
     list,
     listen,
+    listpids,
     numprocesses,
     numwatchers,
     options,
