@@ -119,7 +119,7 @@ class Process(object):
             if self.uid:
                 os.setuid(self.uid)
 
-        logger.debug('cmd: ' + cmd)
+        logger.debug('cmd: ' + bytestring(cmd))
         logger.debug('args: ' + str(args))
 
         if args is not None:
@@ -132,6 +132,7 @@ class Process(object):
         else:
             args_ = shlex.split(bytestring(cmd))
 
+        logger.debug("process args: %s", args_)
         logger.debug('Running %r' % ' '.join(args_))
 
         self._worker = Popen(args_, cwd=self.working_dir,
