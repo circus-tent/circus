@@ -27,9 +27,10 @@ class DummyFly(object):
         print "hello, fly #%s (pid: %s) is alive" % (self.wid, os.getpid())
 
         while self.alive:
-            a = 10 * 10 * 10 * 10
+            #a = 10 * 10 * 10 * 10
 
-            #time.sleep(0.1)
+
+            time.sleep(0.1)
 
 if __name__ == "__main__":
     DummyFly(sys.argv[1]).run()
