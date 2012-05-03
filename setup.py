@@ -1,5 +1,9 @@
+import sys
 from setuptools import setup, find_packages
 from circus import __version__
+
+if not hasattr(sys, 'version_info') or sys.version_info < (2, 6, 0, 'final'):
+    raise SystemExit("Circus requires Python 2.6 or later.")
 
 install_requires=['pyzmq', 'psutil']
 
@@ -27,6 +31,8 @@ setup(name='circus',
       zip_safe=False,
       classifiers=[
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.7",
         "License :: OSI Approved :: Apache Software License",
         "Development Status :: 3 - Alpha"],
       install_requires=install_requires,

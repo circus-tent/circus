@@ -1,5 +1,4 @@
 from circus.commands.base import Command
-from circus.commands.start import Start
 from circus.commands.util import validate_option
 from circus.exc import ArgumentError, MessageError
 
