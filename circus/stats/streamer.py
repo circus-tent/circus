@@ -2,15 +2,18 @@ from collections import defaultdict
 import zmq
 import json
 import threading
+import Queue
 
 from circus.consumer import CircusConsumer
 from circus.commands import get_commands
 from circus.client import CircusClient
 from circus.stats.collector import StatsCollector
+from circus.stats.publisher import StatsPublisher
+from circus import logger
 
 
 class StatsStreamer(object):
-    def __init__(self, endpoint, pubsub_endoint, pool_size=10):
+    def __init__(self, endpoint, pubsub_endoint, stats_endpoint, pool_size=10):
         self.topic = 'watcher.'
         self.ctx = zmq.Context()
         self.consumer = CircusConsumer([self.topic], context=self.ctx,
@@ -22,7 +25,9 @@ class StatsStreamer(object):
         self.running = False
         self.stopped = False
         self.lock = threading.RLock()
+        self.results = Queue.Queue()
         self.stats = StatsCollector(self, pool_size)
+        self.publisher = StatsPublisher(self, stats_endpoint, context=self.ctx)
 
     def get_pids(self):
         return self._pids
@@ -43,21 +48,25 @@ class StatsStreamer(object):
                     self._pids.append(pid)
 
     def remove_pid(self, pid):
+        logger.debug('Removing %d' % pid)
         if pid in self._pids:
             with self.lock:
                 self._pids.remove(pid)
 
     def append_pid(self, pid):
+        logger.debug('Adding %d' % pid)
         if pid in self._pids:
             return
         with self.lock:
             self._pids.append(pid)
 
     def start(self):
+        logger.info('Starting the stats streamer')
         self._init()
-        print 'initial list is ' + str(self._pids)
+        logger.debug('Initial list is ' + str(self._pids))
         self.running = True
         self.stats.start()
+        self.publisher.start()
 
         while self.running:
             # now hooked into the stream
@@ -74,26 +83,26 @@ class StatsStreamer(object):
                         if pid in self._pids:
                             with self.lock:
                                 self._pids.remove(pid)
-                        print self._pids
                     elif action == 'spawn':
                         pid = msg['process_pid']
                         if pid not in self._pids:
                             with self.lock:
                                 self._pids.append(pid)
-                        print self._pids
                     elif action == 'start':
                         self._init()
-                        print self._pids
                     elif action == 'stop':
                         # nothing to do
                         self.stopped = True
                     else:
-                        print action
-                        print msg
+                        logger.debug('Unknown action: %r' % action)
+                        logger.debug(msg)
 
-            except Exception, e:
-                print str(e)
+            except Exception:
+                logger.exception('Failed to treat %r' % msg)
 
     def stop(self):
         self.running = False
+        self.publisher.stop()
+        self.stats.stop()
         self.ctx.destroy(0)
+        logger.info('Stats streamer stopped')
