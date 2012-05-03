@@ -13,7 +13,7 @@ from circus import logger
 
 
 class StatsStreamer(object):
-    def __init__(self, endpoint, pubsub_endoint, stats_endpoint, pool_size=10):
+    def __init__(self, endpoint, pubsub_endoint, stats_endpoint, pool_size=1):
         self.topic = 'watcher.'
         self.ctx = zmq.Context()
         self.consumer = CircusConsumer([self.topic], context=self.ctx,
