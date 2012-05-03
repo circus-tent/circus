@@ -1,6 +1,7 @@
 import threading
 import zmq
 import Queue
+import json
 
 from circus import logger
 
@@ -23,10 +24,11 @@ class StatsPublisher(threading.Thread):
     def run(self):
         self.running = True
         results = self.streamer.results
-        logger.debug('Starting the publisher')
+        logger.debug('Starting the Publisher')
         while self.running:
             try:
-                self.socket.send_multipart(results(timeout=self.delay))
+                pid, info = results.get(timeout=self.delay)
+                self.socket.send_multipart([pid, json.dumps(info)])
             except Queue.Empty:
                 pass
             except Exception:
