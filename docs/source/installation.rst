@@ -1,5 +1,20 @@
 .. _installation:
 
+
+Requirements
+------------
+
+- Python 2.6, 2.7 (3.x need to be tested)
+- zeromq 2.10 or sup
+- pyzmq
+
+.. _note::
+
+    You can optionnaly use circus with gevent. It will requires for now
+    a forked version of `gevent_zeromq <https://github.com/tarekziade/gevent-zeromq>`_ .
+    Hopefully the changes inside will be merged soon in zeromq (poller
+    and ioloop monkey-patching).
+
 Installing Circus
 -----------------
 
