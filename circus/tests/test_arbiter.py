@@ -67,6 +67,7 @@ def run_dummy1():
     dummy1 = DummyProcess1()
     dummy1.run()
 
+
 class TestTrainer(TestCircus):
 
     def setUp(self):
