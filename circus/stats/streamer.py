@@ -14,7 +14,7 @@ from circus import logger
 
 
 class StatsStreamer(object):
-    def __init__(self, endpoint, pubsub_endoint, stats_endpoint, pool_size=1):
+    def __init__(self, endpoint, pubsub_endoint, stats_endpoint):
         self.topic = 'watcher.'
         self.ctx = zmq.Context()
         self.consumer = CircusConsumer([self.topic], context=self.ctx,
@@ -27,7 +27,7 @@ class StatsStreamer(object):
         self.stopped = False
         self.lock = threading.RLock()
         self.results = Queue.Queue()
-        self.stats = StatsCollector(self, pool_size)
+        self.stats = StatsCollector(self)
         self.publisher = StatsPublisher(self, stats_endpoint, context=self.ctx)
 
     def get_watchers(self):

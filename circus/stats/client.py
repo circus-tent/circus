@@ -11,21 +11,30 @@ class StatsClient(CircusConsumer):
         with self:
             while True:
                 topic, stat = self.pubsub_socket.recv_multipart()
-                __, watcher, pid = topic.split('.')
-                yield watcher, long(pid), json.loads(stat)
+                topic = topic.split('.')
+                if len(topic) == 3:
+                    __, watcher, pid = topic
+                    yield watcher, long(pid), json.loads(stat)
+                else:
+                    __, watcher = topic
+                    yield watcher, None, json.loads(stat)
 
 
 TMP = ('watcher: %(watcher)s - pid: %(pid)d - cpu: %(cpu)s%% - '
+       'mem: %(mem)s%%')
+TMP2 = ('Summary - watcher: %(watcher)s - cpu: %(cpu)s%% - '
        'mem: %(mem)s%%')
 
 
 if __name__ == '__main__':
     client = StatsClient()
     try:
-
         for watcher, pid, stat in client:
             stat['watcher'] = watcher
-            stat['pid'] = pid
-            print TMP % stat
+            if pid is not None:
+                stat['pid'] = pid
+                print TMP % stat
+            else:
+                print TMP2 % stat
     except KeyboardInterrupt:
         client.stop()

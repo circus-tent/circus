@@ -45,10 +45,6 @@ def main():
             help='The ZeroMQ pub/sub socket to send data to',
             default='tcp://127.0.0.1:5557')
 
-    parser.add_argument('--poolsize', type=int,
-            help='The number of threads that will compute stats',
-            default=1)
-
     parser.add_argument('--log-level', dest='loglevel', default='info',
             help="log level")
 
