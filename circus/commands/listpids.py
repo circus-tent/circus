@@ -40,7 +40,7 @@ class ListPids(Command):
 
     def execute(self, arbiter, props):
         watcher = self._get_watcher(arbiter, props['name'])
-        pids = [process.pid for process in watcher.processes.values()]
+        pids = watcher.pids.keys()
         pids.sort()
         return {"pids": pids}
 
