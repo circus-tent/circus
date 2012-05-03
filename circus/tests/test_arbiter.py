@@ -171,14 +171,16 @@ class TestTrainer(TestCircus):
     def test_add_watcher7(self):
         cmd, args = self._get_cmd_args()
         msg = make_message("add", name="test1", cmd=cmd, args=args,
-                start=True, options=dict(numprocesses=2))
+                start=True, options={"flapping_window": 100})
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
+
         resp = self.cli.call(make_message("status", name="test1"))
         self.assertEqual(resp.get("status"), "active")
 
-        resp = self.cli.call(make_message("numprocesses", name="test1"))
-        self.assertEqual(resp.get("numprocesses"), 2)
+        resp = self.cli.call(make_message("options", name="test1"))
+        options = resp.get('options', {})
+        self.assertEqual(options.get("flapping_window"), 100)
 
     def test_rm_watcher(self):
         msg = make_message("add", name="test1", cmd=self._get_cmd())
