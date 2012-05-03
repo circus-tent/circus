@@ -8,7 +8,7 @@ from zmq.eventloop import ioloop, zmqstream
 from zmq.utils.jsonapi import jsonmod as json
 
 from circus import logger
-from circus.client import make_message
+from circus.client import make_message, cast_message
 from circus.util import debuglog
 
 
@@ -82,16 +82,18 @@ class Flapping(Thread):
         elif topic_parts[2] == "updated":
             self.update_conf(topic_parts[1])
 
-    def call(self, cmd):
-        self.client.send(json.dumps(cmd))
+    def call(self, command, **props):
+        msg = make_message(command, **props)
+        self.client.send(json.dumps(msg))
         msg = self.client.recv()
         return json.loads(msg)
 
-    def cast(self, cmd):
-        self.client.send(json.dumps(cmd))
+    def cast(self, command, **props):
+        msg = cast_message(command, **props)
+        self.client.send(json.dumps(msg))
 
     def update_conf(self, watcher_name):
-        msg = self.call(make_message("options", name=watcher_name))
+        msg = self.call("options", name=watcher_name)
         conf = self.configs.get(watcher_name, {})
         conf.update(msg.get('options'))
         self.configs[watcher_name] = conf
@@ -120,13 +122,13 @@ class Flapping(Thread):
                     logger.info("%s: flapping detected: retry in %2ds",
                             watcher_name, conf['retry_in'])
 
-                    self.cast(make_message("stop", name=watcher_name))
+                    self.cast("stop", name=watcher_name)
 
                     self.timelines[watcher_name] = []
                     self.tries[watcher_name] = tries + 1
 
                     def _start():
-                        self.cast(make_message("start", name=watcher_name))
+                        self.cast("start", name=watcher_name)
 
                     timer = Timer(conf['retry_in'], _start)
                     timer.start()
@@ -136,7 +138,7 @@ class Flapping(Thread):
                             watcher_name)
                     self.timelines[watcher_name] = []
                     self.tries[watcher_name] = 0
-                    self.cast(make_message("stop", name=watcher_name))
+                    self.cast("stop", name=watcher_name)
             else:
                 self.timelines[watcher_name] = []
                 self.tries[watcher_name] = 0

@@ -64,6 +64,8 @@ class CircusClient(object):
 def make_message(command, **props):
     return {"command": command, "properties": props or {}}
 
+def cast_message(command, **props):
+    return {"command": command, "msg_type": "cast", "properties": props or {}}
 
 def make_json(command, **props):
     return json.dumps(make_message(command, **props))
