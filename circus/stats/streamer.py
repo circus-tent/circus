@@ -3,6 +3,7 @@ import zmq
 import json
 import threading
 import Queue
+from itertools import chain
 
 from circus.consumer import CircusConsumer
 from circus.commands import get_commands
@@ -21,7 +22,7 @@ class StatsStreamer(object):
         self.client = CircusClient(context=self.ctx, endpoint=endpoint)
         self.cmds = get_commands()
         self.watchers = defaultdict(list)
-        self._pids = []
+        self._pids = defaultdict(list)
         self.running = False
         self.stopped = False
         self.lock = threading.RLock()
@@ -29,13 +30,18 @@ class StatsStreamer(object):
         self.stats = StatsCollector(self, pool_size)
         self.publisher = StatsPublisher(self, stats_endpoint, context=self.ctx)
 
-    def get_pids(self):
-        return self._pids
+    def get_watchers(self):
+        return self._pids.keys()
+
+    def get_pids(self, watcher=None):
+        if watcher is not None:
+            return self._pids[watcher]
+        return chain(self._pid.values())
 
     def _init(self):
         with self.lock:
             self.stopped = False
-            self._pids = []
+            self._pids.clear()
             # getting the initial list of watchers/pids
             msg = self.cmds['list'].make_message()
             res = self.client.call(msg)
@@ -43,22 +49,22 @@ class StatsStreamer(object):
                 msg = self.cmds['listpids'].make_message(name=watcher)
                 res = self.client.call(msg)
                 for pid in res['pids']:
-                    if pid in self._pids:
+                    if pid in self._pids[watcher]:
                         continue
-                    self._pids.append(pid)
+                    self._pids[watcher].append(pid)
 
-    def remove_pid(self, pid):
-        logger.debug('Removing %d' % pid)
-        if pid in self._pids:
+    def remove_pid(self, watcher, pid):
+        logger.debug('Removing %d from %s' % (pid, watcher))
+        if pid in self._pids[watcher]:
             with self.lock:
-                self._pids.remove(pid)
+                self._pids[watcher].remove(pid)
 
-    def append_pid(self, pid):
-        logger.debug('Adding %d' % pid)
-        if pid in self._pids:
+    def append_pid(self, watcher, pid):
+        logger.debug('Adding %d in %s' % (pid, watcher))
+        if pid in self._pids[watcher]:
             return
         with self.lock:
-            self._pids.append(pid)
+            self._pids[watcher].append(pid)
 
     def start(self):
         logger.info('Starting the stats streamer')
@@ -73,7 +79,7 @@ class StatsStreamer(object):
             # now hooked into the stream
             try:
                 for topic, msg in self.consumer:
-                    __, name, action = topic.split('.')
+                    __, watcher, action = topic.split('.')
                     msg = json.loads(msg)
                     if action != 'start' and self.stopped:
                         self._init()
@@ -81,14 +87,10 @@ class StatsStreamer(object):
                     if action in ('reap', 'kill'):
                         # a process was reaped
                         pid = msg['process_pid']
-                        if pid in self._pids:
-                            with self.lock:
-                                self._pids.remove(pid)
+                        self.remove_pid(watcher, pid)
                     elif action == 'spawn':
                         pid = msg['process_pid']
-                        if pid not in self._pids:
-                            with self.lock:
-                                self._pids.append(pid)
+                        self.append_pid(watcher, pid)
                     elif action == 'start':
                         self._init()
                     elif action == 'stop':
