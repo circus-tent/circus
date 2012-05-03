@@ -6,12 +6,13 @@ from circus import logger
 
 
 class StatsWorker(threading.Thread):
-    def __init__(self, queue, results, delay=.1):
+    def __init__(self, queue, results, delay=.1, interval=1.):
         threading.Thread.__init__(self)
         self.queue = queue
         self.delay = delay
         self.running = False
         self.results = results
+        self.interval = interval
         self.daemon = True
 
     def run(self):
@@ -20,7 +21,7 @@ class StatsWorker(threading.Thread):
             try:
                 pid = self.queue.get(timeout=self.delay)
                 try:
-                    info = util.get_info(pid, interval=.1)
+                    info = util.get_info(pid, interval=self.interval)
                 except util.NoSuchProcess:
                     # the process is gone !
                     pass
@@ -37,7 +38,7 @@ class StatsWorker(threading.Thread):
 
 class StatsCollector(threading.Thread):
 
-    def __init__(self, streamer, pool_size=10):
+    def __init__(self, streamer, pool_size=1):
         threading.Thread.__init__(self)
         self.daemon = True
         self.streamer = streamer

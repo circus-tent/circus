@@ -47,7 +47,7 @@ def main():
 
     parser.add_argument('--poolsize', type=int,
             help='The number of threads that will compute stats',
-            default=10)
+            default=1)
 
     parser.add_argument('--log-level', dest='loglevel', default='info',
             help="log level")
