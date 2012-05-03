@@ -2,6 +2,7 @@ import threading
 import Queue
 
 from circus import util
+from circus import logger
 
 
 class StatsWorker(threading.Thread):
@@ -24,35 +25,41 @@ class StatsWorker(threading.Thread):
                     # the process is gone !
                     pass
                 else:
-                    self.results.put(info)
+                    self.results.put(('pid.%d' % pid, info))
             except Queue.Empty:
                 pass
-            except Exception, e:
-                print str(e)
-                raise
+            except Exception:
+                logger.exception('Failed to get info for %d' % pid)
+
+    def stop(self):
+        self.running = False
 
 
 class StatsCollector(object):
-    def __init__(self, stats, pool_size=10):
-        self.stats = stats
+    def __init__(self, streamer, pool_size=10):
+        self.streamer = streamer
         self.running = False
         self.pool_size = pool_size
         self.queue = Queue.Queue()
         self.results = Queue.Queue()
-        self.workers = [StatsWorker(self.queue, self.results)
+        self.workers = [StatsWorker(self.queue, self.streamer.results)
                         for i in range(self.pool_size)]
 
     def start(self):
         self.running = True
+
+        logger.debug('Starting the collector with %d workers' %
+                        len(self.workers))
         for worker in self.workers:
             worker.start()
 
         while self.running:
             # filling a working queue with all pids
-            for pid in self.stats.get_pids():
+            for pid in self.streamer.get_pids():
                 self.queue.put(pid)
 
     def stop(self):
         self.running = False
         for worker in self.workers:
             worker.stop()
+        logger.debug('Collector stopped')
