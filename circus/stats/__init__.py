@@ -65,9 +65,7 @@ def main():
     h.setFormatter(fmt)
     logger.addHandler(h)
 
-    stats = StatsStreamer(args.endpoint, args.pubsub, args.statspoint,
-                          args.poolsize)
-
+    stats = StatsStreamer(args.endpoint, args.pubsub, args.statspoint)
     try:
         stats.start()
     finally:
