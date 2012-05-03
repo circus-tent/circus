@@ -365,6 +365,7 @@ class Watcher(object):
             self.stderr_redirector.remove_redirection('stderr', process)
 
         self.send_msg("kill", {"process_id": process.wid,
+                               "process_pid": process.pid,
                                "time": time.time()})
         logger.debug("%s: kill process %s", self.name, process.pid)
         process.send_signal(sig)

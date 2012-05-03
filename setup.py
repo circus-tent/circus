@@ -41,6 +41,7 @@ setup(name='circus',
       entry_points="""
       [console_scripts]
       circusd = circus.circusd:main
+      circusd-stats = circus.stats:main
       circusctl = circus.circusctl:main
       circushttpd = circus.web.circushttpd:main
       """)
