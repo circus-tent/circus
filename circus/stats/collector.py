@@ -35,8 +35,11 @@ class StatsWorker(threading.Thread):
         self.running = False
 
 
-class StatsCollector(object):
+class StatsCollector(threading.Thread):
+
     def __init__(self, streamer, pool_size=10):
+        threading.Thread.__init__(self)
+        self.daemon = True
         self.streamer = streamer
         self.running = False
         self.pool_size = pool_size
@@ -45,9 +48,8 @@ class StatsCollector(object):
         self.workers = [StatsWorker(self.queue, self.streamer.results)
                         for i in range(self.pool_size)]
 
-    def start(self):
+    def run(self):
         self.running = True
-
         logger.debug('Starting the collector with %d workers' %
                         len(self.workers))
         for worker in self.workers:

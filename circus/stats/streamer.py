@@ -68,6 +68,7 @@ class StatsStreamer(object):
         self.stats.start()
         self.publisher.start()
 
+        logger.debug('Now looping to get circusd events')
         while self.running:
             # now hooked into the stream
             try:
