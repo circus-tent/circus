@@ -87,26 +87,27 @@ class Controller(object):
 
         cmd_name = json_msg.get('command')
         properties = json_msg.get('properties', {})
+        cast = json_msg.get('msg_type') == "cast"
 
         try:
             cmd = self.commands[cmd_name.lower()]
         except KeyError:
             error = "unknown command: %r" % cmd_name
-            return self.send_error(cid, msg, error)
+            return self.send_error(cid, msg, error, cast=cast)
 
         try:
             cmd.validate(properties)
             resp = cmd.execute(self.arbiter, properties)
         except MessageError as e:
-            return self.send_error(cid, msg, str(e))
+            return self.send_error(cid, msg, str(e), cast=cast)
         except OSError as e:
-            return self.send_error(cid, msg, str(e))
+            return self.send_error(cid, msg, str(e), cast=cast)
         except:
             exctype, value = sys.exc_info()[:2]
             tb = traceback.format_exc()
             reason = "command %r: %s" % (msg, value)
             logger.debug("error: command %r: %s\n\n%s", msg, value, tb)
-            return self.send_error(cid, msg, reason, tb)
+            return self.send_error(cid, msg, reason, tb, cast=cast)
 
         if resp is None:
             resp = ok()
@@ -115,12 +116,12 @@ class Controller(object):
             msg = "msg %r tried to send a non-dict: %s" % (msg,
                     str(resp))
             logger.error("msg %r tried to send a non-dict: %s", msg, str(resp))
-            return self.send_error(cid, msg, "server error")
+            return self.send_error(cid, msg, "server error", cast=cast)
 
         if isinstance(resp, list):
             resp = {"results": resp}
 
-        self.send_ok(cid, msg, resp)
+        self.send_ok(cid, msg, resp, cast=cast)
 
         if cmd_name.lower() == "quit":
             if cid is not None:
@@ -128,15 +129,18 @@ class Controller(object):
 
             self.arbiter.stop()
 
-    def send_error(self, cid, msg, reason="unknown", tb=None):
+    def send_error(self, cid, msg, reason="unknown", tb=None, cast=False):
         resp = error(reason=reason, tb=tb)
-        self.send_response(cid, msg, resp)
+        self.send_response(cid, msg, resp, cast=cast)
 
-    def send_ok(self, cid, msg, props=None):
+    def send_ok(self, cid, msg, props=None, cast=False):
         resp = ok(props)
-        self.send_response(cid, msg, resp)
+        self.send_response(cid, msg, resp, cast=cast)
 
-    def send_response(self, cid,  msg, resp):
+    def send_response(self, cid,  msg, resp, cast=False):
+        if cast:
+            return
+
         if cid is None:
             return
 

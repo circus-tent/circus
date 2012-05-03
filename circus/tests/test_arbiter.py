@@ -42,6 +42,32 @@ def run_dummy(test_file):
     return 1
 
 
+class DummyProcess1(object):
+
+    def __init__(self):
+        import signal
+        signal.signal(signal.SIGQUIT, self.handle_quit)
+        signal.signal(signal.SIGTERM, self.handle_quit)
+        signal.signal(signal.SIGINT, self.handle_quit)
+        signal.signal(signal.SIGCHLD, self.handle_chld)
+
+    def handle_quit(self, *args):
+        self.alive = False
+
+    def handle_chld(self, *args):
+        pass
+
+    def run(self):
+        self.alive = True
+        while self.alive:
+            time.sleep(0.1)
+
+
+def run_dummy1():
+    dummy1 = DummyProcess1()
+    dummy1.run()
+
+
 class TestTrainer(TestCircus):
 
     def setUp(self):
@@ -88,11 +114,8 @@ class TestTrainer(TestCircus):
         return cmd
 
     def _get_cmd_args(self):
-        fd, testfile = mkstemp()
-        os.close(fd)
         cmd = sys.executable
-        args = ['generic.py', 'circus.tests.test_arbiter.run_dummy',
-                testfile]
+        args = ['generic.py', 'circus.tests.test_arbiter.run_dummy1']
         return cmd, args
 
     def test_add_watcher(self):
@@ -148,15 +171,16 @@ class TestTrainer(TestCircus):
     def test_add_watcher7(self):
         cmd, args = self._get_cmd_args()
         msg = make_message("add", name="test1", cmd=cmd, args=args,
-                start=True, options=dict(numprocesses=2))
+                start=True, options={"flapping_window": 100})
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
-        time.sleep(0.1)
+
         resp = self.cli.call(make_message("status", name="test1"))
         self.assertEqual(resp.get("status"), "active")
 
-        resp = self.cli.call(make_message("numprocesses", name="test1"))
-        self.assertEqual(resp.get("numprocesses"), 2)
+        resp = self.cli.call(make_message("options", name="test1"))
+        options = resp.get('options', {})
+        self.assertEqual(options.get("flapping_window"), 100)
 
     def test_rm_watcher(self):
         msg = make_message("add", name="test1", cmd=self._get_cmd())
