@@ -19,14 +19,14 @@ class StatsWorker(threading.Thread):
         self.running = True
         while self.running:
             try:
-                pid = self.queue.get(timeout=self.delay)
+                watcher, pid = self.queue.get(timeout=self.delay)
                 try:
                     info = util.get_info(pid, interval=self.interval)
                 except util.NoSuchProcess:
                     # the process is gone !
                     pass
                 else:
-                    self.results.put(('pid.%d' % pid, info))
+                    self.results.put((watcher, pid, info))
             except Queue.Empty:
                 pass
             except Exception:
@@ -57,9 +57,10 @@ class StatsCollector(threading.Thread):
             worker.start()
 
         while self.running:
-            # filling a working queue with all pids
-            for pid in self.streamer.get_pids():
-                self.queue.put(pid)
+            # filling a working queue with pids ordered by watchers
+            for watcher in self.streamer.get_watchers():
+                for pid in self.streamer.get_pids(watcher):
+                    self.queue.put((watcher, pid))
 
     def stop(self):
         self.running = False

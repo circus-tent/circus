@@ -27,8 +27,9 @@ class StatsPublisher(threading.Thread):
         logger.debug('Starting the Publisher')
         while self.running:
             try:
-                pid, info = results.get(timeout=self.delay)
-                self.socket.send_multipart([pid, json.dumps(info)])
+                watcher, pid, stat = results.get(timeout=self.delay)
+                topic = b'stat.%s.%d' % (str(watcher), pid)
+                self.socket.send_multipart([topic, json.dumps(stat)])
             except Queue.Empty:
                 pass
             except Exception:
