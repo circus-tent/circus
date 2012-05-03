@@ -10,7 +10,7 @@ Requirements
 
 .. _note::
 
-    You can optionnaly use circus with gevent. It will requires for now
+    You can optionally use circus with gevent. It will requires for now
     a forked version of `gevent_zeromq <https://github.com/tarekziade/gevent-zeromq>`_ .
     Hopefully the changes inside will be merged soon in zeromq (poller
     and ioloop monkey-patching).
