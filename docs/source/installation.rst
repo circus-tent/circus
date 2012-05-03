@@ -6,7 +6,7 @@ Requirements
 
 - Python 2.6, 2.7 (3.x need to be tested)
 - zeromq 2.10 or sup
-- pyzmq
+- pyzmq >= 2.2.0
 
 .. _note::
 

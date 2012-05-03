@@ -126,7 +126,7 @@ class Process(object):
             if isinstance(args, string_types):
                 args_ = shlex.split(bytestring(args))
             else:
-                args_ = [bytestring(arg) for arg in args[:]]
+                args_ = [bytestring(arg) for arg in args]
 
             args_ = shlex.split(bytestring(cmd)) + args_
         else:
