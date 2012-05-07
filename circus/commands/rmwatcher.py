@@ -1,5 +1,5 @@
 from circus.commands.base import Command
-from circus.exc import ArgumentError
+from circus.exc import ArgumentError, MessageError
 
 
 class RmWatcher(Command):
@@ -51,5 +51,11 @@ class RmWatcher(Command):
 
         return self.make_message(name=args[0])
 
-    def execute(self, arbiter, args):
-        arbiter.rm_watcher(args['name'])
+    def execute(self, arbiter, props):
+        watcher_name = props['name']
+        try:
+            arbiter.get_watcher(watcher_name.lower())
+        except KeyError:
+            raise MessageError("program %s not found" % watcher_name)
+
+        arbiter.rm_watcher(props['name'])
