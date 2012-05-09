@@ -35,10 +35,14 @@ def _paint(stdscr, watchers):
     for name in names:
         stdscr.addstr(line, 0, name)
         line += 1
-        pids = watchers[name].keys()
+
+        # sorting by CPU
+        pids = [(stat['cpu'], stat['pid'])
+                for pid, stat in watchers[name].items()]
         pids.sort()
-        for pid in pids:
-            pid = watchers[name][pid]['pid']
+        pids.reverse()
+
+        for cpu, pid in pids[:10]:   # max 10
             if pid == 'all':
                 spid = 'Total  '
             elif isinstance(pid, list):
@@ -46,7 +50,7 @@ def _paint(stdscr, watchers):
                 pid = 'all'
             else:
                 spid = str(pid)
-            cpu = str(watchers[name][pid]['cpu']) + '%'
+            cpu = str(cpu) + '%'
             stdscr.addstr(line, 2, spid)
             stdscr.addstr(line, 25, cpu)
             line += 1
