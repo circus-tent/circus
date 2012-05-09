@@ -52,10 +52,5 @@ class RmWatcher(Command):
         return self.make_message(name=args[0])
 
     def execute(self, arbiter, props):
-        watcher_name = props['name']
-        try:
-            arbiter.get_watcher(watcher_name.lower())
-        except KeyError:
-            raise MessageError("program %s not found" % watcher_name)
-
+        _ = self._get_watcher(arbiter, props['name'])
         arbiter.rm_watcher(props['name'])
