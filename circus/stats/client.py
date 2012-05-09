@@ -1,5 +1,7 @@
 from circus.consumer import CircusConsumer
 import json
+import curses
+from collections import defaultdict
 
 
 class StatsClient(CircusConsumer):
@@ -20,21 +22,57 @@ class StatsClient(CircusConsumer):
                     yield watcher, None, json.loads(stat)
 
 
-TMP = ('watcher: %(watcher)s - pid: %(pid)d - cpu: %(cpu)s%% - '
-       'mem: %(mem)s%%')
-TMP2 = ('Summary - watcher: %(watcher)s - cpu: %(cpu)s%% - '
-       'mem: %(mem)s%%')
-
-
 if __name__ == '__main__':
-    client = StatsClient()
+    stdscr = curses.initscr()
+    watchers = defaultdict(dict)
+
+    def paint(watchers):
+        stdscr.erase()
+        names = watchers.keys()
+        names.sort()
+        stdscr.addstr(0, 0, 'Circus Top')
+        stdscr.addstr(1, 0, '-' * 100)
+        line = 2
+        for name in names:
+            stdscr.addstr(line, 0, name)
+            line += 1
+            pids = watchers[name].keys()
+            pids.sort()
+            for pid in pids:
+                pid = watchers[name][pid]['pid']
+                if pid == 'all':
+                    spid = 'Total  '
+                elif isinstance(pid, list):
+                    spid = 'Total  '
+                    pid = 'all'
+                else:
+                    spid = str(pid)
+                cpu = str(watchers[name][pid]['cpu']) + '%'
+                stdscr.addstr(line, 2, spid)
+                stdscr.addstr(line, 25, cpu)
+                line += 1
+            line += 1
+
+        stdscr.addstr(line, 0, '-' * 100)
+        stdscr.refresh()
+
     try:
-        for watcher, pid, stat in client:
-            stat['watcher'] = watcher
-            if pid is not None:
-                stat['pid'] = pid
-                print TMP % stat
-            else:
-                print TMP2 % stat
-    except KeyboardInterrupt:
-        client.stop()
+        client = StatsClient()
+        try:
+            for watcher, pid, stat in client:
+                # building the line
+                stat['watcher'] = watcher
+                if pid is None:
+                    pid = 'all'
+
+
+                # adding it to the structure
+                watchers[watcher][pid] = stat
+
+                # now painting
+                paint(watchers)
+
+        except KeyboardInterrupt:
+            client.stop()
+    finally:
+        curses.endwin()

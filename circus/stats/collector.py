@@ -7,10 +7,9 @@ from circus import logger
 
 
 class StatsWorker(threading.Thread):
-    def __init__(self, watcher, results, get_pids, delay=.1, interval=1.):
+    def __init__(self, watcher, results, get_pids, interval=.5):
         threading.Thread.__init__(self)
         self.watcher = watcher
-        self.delay = delay
         self.running = False
         self.results = results
         self.interval = interval
@@ -21,8 +20,17 @@ class StatsWorker(threading.Thread):
         res = {'pid': aggregate.keys()}
         # right way to aggregate ?
         stats = aggregate.values()
-        res['cpu'] = sum([stat['cpu'] for stat in stats])
-        res['mem'] = sum([stat['mem'] for stat in stats])
+        cpu = [stat['cpu'] for stat in stats]
+        if 'N/A' in cpu:
+            res['cpu'] = 'N/A'
+        else:
+            res['cpu'] = sum(cpu)
+
+        mem = [stat['mem'] for stat in stats]
+        if 'N/A' in mem:
+            res['mem'] = 'N/A'
+        else:
+            res['mem'] = sum(mem)
         return res
 
     def run(self):
@@ -45,6 +53,9 @@ class StatsWorker(threading.Thread):
 
             # now sending the aggregation
             self.results.put((self.watcher, None, self._aggregate(aggregate)))
+
+            # sleep for accuracy
+            time.sleep(self.interval)
 
     def stop(self):
         self.running = False
