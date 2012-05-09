@@ -45,24 +45,29 @@ def _paint(stdscr, watchers):
     for name in names:
         stdscr.addstr(line, 0, name)
         line += 1
+        stdscr.addstr(line, 3, 'PID')
+        stdscr.addstr(line, 24, 'CPU (%)')
+        stdscr.addstr(line, 44, 'MEMORY (%)')
+
+        line += 1
 
         # sorting by CPU
-        pids = [(stat['cpu'], stat['pid'])
+        pids = [(stat['cpu'], stat['mem'], stat['pid'])
                 for pid, stat in watchers[name].items()]
         pids.sort()
         pids.reverse()
 
-        for cpu, pid in pids[:10]:   # max 10
+        for cpu, mem, pid in pids[:10]:   # max 10
             if pid == 'all':
-                spid = 'Total  '
+                spid = '*sum*'
             elif isinstance(pid, list):
-                spid = 'Total  '
+                spid = '*sum*'
                 pid = 'all'
             else:
                 spid = str(pid)
-            cpu = str(cpu) + '%'
             stdscr.addstr(line, 2, spid)
-            stdscr.addstr(line, 25, cpu)
+            stdscr.addstr(line, 25, str(cpu))
+            stdscr.addstr(line, 45, str(mem))
             line += 1
         line += 1
 
