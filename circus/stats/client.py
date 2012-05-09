@@ -52,22 +52,22 @@ def _paint(stdscr, watchers):
         line += 1
 
         # sorting by CPU
-        pids = [(stat['cpu'], stat['mem'], stat['pid'])
-                for pid, stat in watchers[name].items()]
+        pids = []
+        total = '', 'N/A', 'N/A'
+        for pid, stat in watchers[name].items():
+            if pid == 'all' or isinstance(pid, list):
+                total = str(stat['cpu']) + ' (avg)', str(stat['mem']) + ' (sum)', ''
+            else:
+                pids.append((str(stat['cpu']), str(stat['mem']), str(stat['pid'])))
+
         pids.sort()
         pids.reverse()
+        pids = pids[:10] + [total]
 
         for cpu, mem, pid in pids[:10]:   # max 10
-            if pid == 'all':
-                spid = '*sum*'
-            elif isinstance(pid, list):
-                spid = '*sum*'
-                pid = 'all'
-            else:
-                spid = str(pid)
-            stdscr.addstr(line, 2, spid)
-            stdscr.addstr(line, 25, str(cpu))
-            stdscr.addstr(line, 45, str(mem))
+            stdscr.addstr(line, 2, pid)
+            stdscr.addstr(line, 25, cpu)
+            stdscr.addstr(line, 45, mem)
             line += 1
         line += 1
 

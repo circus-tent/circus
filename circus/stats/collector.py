@@ -18,14 +18,17 @@ class StatsWorker(threading.Thread):
 
     def _aggregate(self, aggregate):
         res = {'pid': aggregate.keys()}
-        # right way to aggregate ?
         stats = aggregate.values()
+
+        # aggregating CPU does not mean anything
+        # but the average can be a good indicator
         cpu = [stat['cpu'] for stat in stats]
         if 'N/A' in cpu:
             res['cpu'] = 'N/A'
         else:
-            res['cpu'] = sum(cpu)
+            res['cpu'] = sum(cpu) / len(cpu)
 
+        # aggregating memory does make sense
         mem = [stat['mem'] for stat in stats]
         if 'N/A' in mem:
             res['mem'] = 'N/A'
