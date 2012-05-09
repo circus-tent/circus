@@ -4,6 +4,10 @@ from circus.commands import get_commands
 _HEADER = """\
 .. _cli:
 
+==================
+Command-line tools
+==================
+
 circus-top
 ==========
 
@@ -28,6 +32,7 @@ Example of output::
     14259                  70.7                0.1
                            74.32 (avg)         0.5 (sum)
 
+    p
     ----------------------------------------------------------------------
 
 
