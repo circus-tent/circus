@@ -109,6 +109,7 @@ def get_config(config_file):
     config['endpoint'] = dget('circus', 'endpoint', 'tcp://127.0.0.1:5555')
     config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
                                      'tcp://127.0.0.1:5556')
+    config['stats_endpoint'] = dget('circus', 'stats_endpoint', None, str)
 
     stream_backend = dget('circus', 'stream_backend', 'thread')
     if stream_backend == 'gevent':

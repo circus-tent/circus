@@ -3,6 +3,7 @@ import logging
 import os
 from threading import Thread
 import time
+import sys
 
 import zmq
 from zmq.eventloop import ioloop
@@ -24,6 +25,8 @@ class Arbiter(object):
     - **watchers** -- a list of Watcher objects
     - **endpoint** -- the controller ZMQ endpoint
     - **pubsub_endpoint** -- the pubsub endpoint
+    - **stats_endpoint** -- the stats endpoint. If not provided,
+      the *circusd-stats* process will not be launched.
     - **check_delay** -- the delay between two controller points
       (default: 1 s)
     - **prereload_fn** -- callable that will be executed on each reload
@@ -37,7 +40,7 @@ class Arbiter(object):
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
-                 check_flapping=True):
+                 check_flapping=True, stats_endpoint=None):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -56,6 +59,17 @@ class Arbiter(object):
         self.busy = False
         self.check_flapping = check_flapping
 
+        # initializing circusd-stats as a watcher when configured
+        self.stats_endpoint = stats_endpoint
+        if self.stats_endpoint is not None:
+            cmd = "%s -c 'from circus import stats; stats.main()'" % \
+                        sys.executable
+            cmd += ' --endpoint %s' % self.endpoint
+            cmd += ' --pubsub %s' % self.pubsub_endpoint
+            cmd += ' --statspoint %s' % self.stats_endpoint
+            stats_watcher = Watcher('circusd-stats', cmd)
+            self.watchers.append(stats_watcher)
+
     @classmethod
     def load_from_config(cls, config_file):
         cfg = get_config(config_file)
@@ -70,7 +84,8 @@ class Arbiter(object):
         # creating arbiter
         arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
                       check_delay=cfg.get('check_delay', 1.),
-                      prereload_fn=cfg.get('prereload_fn'))
+                      prereload_fn=cfg.get('prereload_fn'),
+                      stats_endpoint=cfg.get('stats_endpoint'))
 
         return arbiter
 
