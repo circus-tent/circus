@@ -91,12 +91,14 @@ def bytes2human(n):
 
 
 def get_info(process=None, interval=0):
-    """Return information about a process.
+    """Return information about a process. (can be an pid or a Process object)
 
-    If process is None, will return the information about the current process
+    If process is None, will return the information about the current process.
     """
     if process is None:
         process = Process(os.getpid())
+    elif isinstance(process, int):
+        process = Process(process)
 
     info = {}
     try:
