@@ -3,7 +3,9 @@ import sys
 import json
 import curses
 from collections import defaultdict
+import errno
 
+import zmq
 from circus.consumer import CircusConsumer
 
 
@@ -15,7 +17,15 @@ class StatsClient(CircusConsumer):
         """ Yields tuples of (watcher, pid, stat)"""
         with self:
             while True:
-                topic, stat = self.pubsub_socket.recv_multipart()
+                try:
+                    topic, stat = self.pubsub_socket.recv_multipart()
+                except zmq.core.error.ZMQError, e:
+                    if e.errno != errno.EINTR:
+                        raise
+                    else:
+                        sys.exc_clear()
+                        continue
+
                 topic = topic.split('.')
                 if len(topic) == 3:
                     __, watcher, pid = topic
