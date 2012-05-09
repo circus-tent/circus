@@ -47,11 +47,15 @@ The file is then run using *circusd*::
 
     $ circusd example.ini
 
-Circus also provides a management console, *circusctl*. You can use it to
-perform actions such as adding or removing :term:`workers` or to display
-various statistics.
+Circus also provides two tools to manage your running daemon:
 
-To learn more about this, see :ref:`cli`
+- *circusctl*, a management console you can use it to perform
+  actions such as adding or removing :term:`workers`
+
+- *circus-top*, a top-like console you can use to display the memory and
+  cpu usage of your running Circus.
+
+To learn more about these, see :ref:`cli`
 
 Monitoring and managing Circus through the web
 ----------------------------------------------
