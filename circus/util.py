@@ -90,15 +90,25 @@ def bytes2human(n):
     return "%sB" % n
 
 
+# XXX weak dict ?
+_PROCS = {}
+
+
 def get_info(process=None, interval=0):
     """Return information about a process. (can be an pid or a Process object)
 
     If process is None, will return the information about the current process.
     """
-    if process is None:
-        process = Process(os.getpid())
-    elif isinstance(process, int):
-        process = Process(process)
+    if process is None or isinstance(process, int):
+        if process is None:
+            pid = os.getpid()
+        else:
+            pid = process
+
+        if pid in _PROCS:
+            process = _PROCS[pid]
+        else:
+            _PROCS[pid] = process = Process(pid)
 
     info = {}
     try:

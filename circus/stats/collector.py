@@ -7,7 +7,7 @@ from circus import logger
 
 
 class StatsWorker(threading.Thread):
-    def __init__(self, watcher, results, get_pids, interval=.5):
+    def __init__(self, watcher, results, get_pids, interval=1.):
         threading.Thread.__init__(self)
         self.watcher = watcher
         self.running = False
@@ -44,7 +44,7 @@ class StatsWorker(threading.Thread):
             # sending by pids
             for pid in self.get_pids(self.watcher):
                 try:
-                    info = util.get_info(pid, interval=self.interval)
+                    info = util.get_info(pid, interval=0.0)
                     aggregate[pid] = info
                 except util.NoSuchProcess:
                     # the process is gone !
