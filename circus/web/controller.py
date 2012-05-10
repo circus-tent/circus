@@ -75,6 +75,8 @@ class LiveClient(object):
             res = self.client.call(msg)
             self.connected = True
             for watcher in res['watchers']:
+                if watcher == 'circusd-stats':
+                    continue
                 msg = cmds['options'].make_message(name=watcher)
                 options = self.client.call(msg)
                 self.watchers.append((watcher, options['options']))
