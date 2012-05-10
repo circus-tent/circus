@@ -8,8 +8,8 @@ var cpu_data,
 function updateGraphs() {
     $.each(cpu_data, function (key, val) {
         var id = '#' + key + '_cpu',
-            lastid = '#' + key + '_last_cpu',
-            last = val.length - 1;
+        lastid = '#' + key + '_last_cpu',
+        last = val.length - 1;
         $(lastid).text(parseInt(val[last], 10) + " %");
         $(id).sparkline(val, { height: '80', width: '290', fillColor: false, lineWidth: 2, lineColor: '#7AB94C', spotSize: 2, spotRadius: 4, spotColor: '#7AB94C'});
     });
@@ -132,12 +132,12 @@ function updateCircusdGraph() {
   var lastid = '#circusd_last_cpu';
   var last = circusd_cpu_data.length - 1;
   $(lastid).text(circusd_cpu_data[last] + " %");
-  $(id).sparkline(circusd_cpu_data, {width: '55%'});
-  var id = '#circusd_mem';
+  $(id).sparkline(circusd_cpu_data, { height: '80', width: '290', fillColor: false, lineWidth: 2, lineColor: '#7AB94C', spotSize: 2, spotRadius: 4, spotColor: '#7AB94C'});
+  //var id = '#circusd_mem';
   var lastid = '#circusd_last_mem';
   var last = circusd_mem_data.length - 1;
   $(lastid).text(circusd_mem_data[last] + " %");
-  $(id).sparkline(circusd_mem_data, {width: '55%'});
+  $(id).sparkline(circusd_mem_data, {composite: true, height: '80', width: '290', fillColor: false, lineWidth: 2, lineColor: '#5DAACC', spotSize: 2, spotRadius: 4, spotColor: '#5DAACC'});
 }
 
 function initializeCircusdGraph() {

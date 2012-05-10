@@ -56,6 +56,29 @@
     </div>
 
     <div class="title">
+       <div class="watcher_name">Circus Daemon</div> 
+    </div>
+
+    <div> 
+    <div class="process" style="margin-bottom: 15px">
+        <div class="stat" id="pid_circusd">
+             <div class="graph">
+                 <span id="circusd_cpu" class="sparklines"></span>
+             </div>
+             <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
+                <span class="cpu_label">CPU</span>
+                <span class="cpu_value" id="circusd_last_cpu">0.0 %</span>
+             </div>
+             <div style="padding-bottom: 10px;padding-top: 5px;float:right; width: 49%; text-align:center;">
+                <span class="mem_label">Mem</span>
+                <span class="mem_value" id="circusd_last_mem">0.0 %</span>
+             </div>
+        </div>
+    </div>
+    </div>
+    <div style="clear:both"></div>
+
+    <div class="title">
        <div class="watcher_name">Options</div> 
     </div>
 
@@ -95,100 +118,11 @@
         </tr>
 
     </table>
-    <div class="stat" style="float:none; margin-top: 2em; margin-left: -.5em">
-     <div style="margin-bottom: 10px">
-         <span class="orangelabel">circusd</span>
-     </div>
-     <div style="margin-bottom: 4px">
-         <span class="label">CPU</span>
-         <span id="circusd_cpu" class="sparklines"></span>
-         <span class="label" id="circusd_last_cpu" style="margin-left: 4px;
-             float: right">0.0 %</span>
-     </div>
-     <div>
-         <span class="label">Mem</span>
-         <span id="circusd_mem" class="sparklines"></span>
-         <span class="label" style="margin-left: 4px; float: right" id="circusd_last_mem">0.0 %</span>
-     </div>
-    </div>
-
-
-    </div>
-</div>
- <div id="tabs-2" class="ui-tabs-panel">
-         <table class="options" style="margin-top: 10px">
-    <tr>
-        <td>
-            ZeroMQ endpoint used to connect clients like <i>circusctl</i> or 
-            <i>circushttpd</i>
-        </td>
-        <td>
-            <span class="label">${goptions['endpoint']}</span>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            ZeroMQ endpoint used for pub/sub
-        </td>
-        <td>
-            <span class="label">${goptions['pubsub_endpoint']}</span>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            If True, Circus detects flapping processes.
-        </td>
-        <td>
-            <span class="label">${goptions['check_flapping']}</span>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            Delay in seconds for the ZMQ polling.
-        </td>
-        <td>
-            <span class="label">${goptions['check_delay']}</span>
-        </td>
-    </tr>
-
-
-
-    </table>
 
  </div>
- <div id="tabs-3" class="ui-tabs-panel">
-  <form action="add_watcher" method="POST" width="100%">
-
-      <p>
-          <label for="name">Name</label>
-          <input type="text" name="name"></input>
-      </p>
-      <p>
-          <label for="cmd">Command</label>
-          <input type="text" name="cmd"></input>
-      </p>
-      <p>
-          <label for="working_dir">Working directory</label>
-          <input type="text" name="working_dir"></input>
-      </p>
-      <p>
-          <label for="numprocesses">Number of processes</label>
-          <input type="text" name="numprocesses"></input>
-      </p>
-      <p>
-          <label for="shell">Run in Shell ?</label>
-          <input type="checkbox" name="shell"></input>
-      </p>
-
-      <p>
-          <input type="submit"></input>
-    </p>
-  </form>
-  </div>
-  
+ 
   <script type="text/javascript">
   $(function() {
-      $("#tabs").tabs();
       initializeCircusdGraph();
       });
   setInterval("refreshCircusdGraph()", 1000);
