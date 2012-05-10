@@ -64,7 +64,7 @@ def _paint(stdscr, watchers):
         pids.reverse()
         pids = pids[:10] + [total]
 
-        for cpu, mem, pid in pids[:10]:   # max 10
+        for cpu, mem, pid in pids:
             stdscr.addstr(line, 2, pid)
             stdscr.addstr(line, 25, cpu)
             stdscr.addstr(line, 45, mem)
