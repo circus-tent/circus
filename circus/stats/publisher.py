@@ -32,6 +32,11 @@ class StatsPublisher(threading.Thread):
                 if pid is not None:
                     topic += '.%d' % pid
                 self.socket.send_multipart([topic, json.dumps(stat)])
+            except zmq.ZMQError:
+                if self.socket.closed:
+                    self.running = False
+                else:
+                    raise
             except Queue.Empty:
                 pass
             except Exception:
