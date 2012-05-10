@@ -3,6 +3,8 @@ from tempfile import mkstemp
 import os
 import sys
 import time
+import cProfile
+import pstats
 
 from circus import get_arbiter
 
@@ -86,3 +88,14 @@ class TestCircus(unittest.TestCase):
         for arbiter in self.arbiters:
             arbiter.stop()
         self.arbiters = []
+
+
+def profile(func):
+    """Can be used to dump profile stats"""
+    def _profile(*args, **kw):
+        profiler = cProfile.Profile()
+        try:
+            return profiler.runcall(func, *args, **kw)
+        finally:
+            pstats.Stats(profiler).sort_stats('time').print_stats(30)
+    return _profile
