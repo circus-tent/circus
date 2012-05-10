@@ -82,7 +82,7 @@ class GlobalOptions(Command):
                 raise MessageError('%r not an existing option' % wanted)
             options = (wanted,)
         else:
-            options = ('endpoint', 'pubsub_endpoint',
+            options = ('endpoint', 'pubsub_endpoint', 'stats_endpoint',
                        'check_delay', 'check_flapping')
 
         res = {}
