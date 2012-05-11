@@ -1,5 +1,5 @@
 from circus.commands.base import Command
-from circus.exc import ArgumentError, MessageError
+from circus.exc import ArgumentError
 
 
 class RmWatcher(Command):
@@ -52,5 +52,5 @@ class RmWatcher(Command):
         return self.make_message(name=args[0])
 
     def execute(self, arbiter, props):
-        _ = self._get_watcher(arbiter, props['name'])
+        self._get_watcher(arbiter, props['name'])
         arbiter.rm_watcher(props['name'])
