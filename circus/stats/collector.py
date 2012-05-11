@@ -7,14 +7,17 @@ from circus import logger
 
 
 class StatsWorker(threading.Thread):
-    def __init__(self, watcher, results, get_pids, interval=1.):
+    def __init__(self, name, results, pids, interval=1.):
         threading.Thread.__init__(self)
-        self.watcher = watcher
+        self.name = name
         self.running = False
         self.results = results
         self.interval = interval
         self.daemon = True
-        self.get_pids = get_pids
+        self.pids = pids
+
+    def _get_pids(self):
+        return self.pids
 
     def _aggregate(self, aggregate):
         res = {'pid': aggregate.keys()}
@@ -42,7 +45,7 @@ class StatsWorker(threading.Thread):
             aggregate = {}
 
             # sending by pids
-            for pid in self.get_pids(self.watcher):
+            for name, pid in self._get_pids():
                 try:
                     info = util.get_info(pid, interval=0.0)
                     aggregate[pid] = info
@@ -52,16 +55,27 @@ class StatsWorker(threading.Thread):
                 except Exception:
                     logger.exception('Failed to get info for %d' % pid)
                 else:
-                    self.results.put((self.watcher, pid, info))
+                    self.results.put((self.name, name, pid, info))
 
             # now sending the aggregation
-            self.results.put((self.watcher, None, self._aggregate(aggregate)))
+            self.results.put((self.name, None, None,
+                              self._aggregate(aggregate)))
 
             # sleep for accuracy
             time.sleep(self.interval)
 
     def stop(self):
         self.running = False
+
+
+class WatcherStatsWorker(StatsWorker):
+    def __init__(self, watcher, results, get_pids, interval=1.):
+        StatsWorker.__init__(self, watcher, results, tuple(), interval)
+        self.watcher = watcher
+        self.get_pids = get_pids
+
+    def _get_pids(self):
+        return [(None, pid) for pid in self.get_pids(self.watcher)]
 
 
 class StatsCollector(threading.Thread):
@@ -82,10 +96,16 @@ class StatsCollector(threading.Thread):
 
         # starting the workers
         for watcher in self.streamer.get_watchers():
-            worker = StatsWorker(watcher, self.streamer.results,
-                                 self.streamer.get_pids)
+            worker = WatcherStatsWorker(watcher, self.streamer.results,
+                                        self.streamer.get_pids)
             self.workers[watcher] = worker
             worker.start()
+
+        # adding a worker specialized for circus itself
+        pids = self.streamer.get_circus_pids()
+        worker = StatsWorker('circus', self.streamer.results, pids)
+        self.workers['circus'] = worker
+        worker.start()
 
         # now will maintain the list of watchers : if a watcher
         # is added or removed, we add or remove a thread here
@@ -101,11 +121,15 @@ class StatsCollector(threading.Thread):
                 for watcher in watchers:
                     # added one
                     if watcher not in current:
-                        worker = StatsWorker(watcher, self.streamer.results,
-                                             self.streamer.get_pids)
+                        worker = WatcherStatsWorker(watcher,
+                                                    self.streamer.results,
+                                                    self.streamer.get_pids)
                         self.workers[watcher] = worker
                         worker.start()
                 for watcher in current:
+                    if watcher == 'circus':
+                        continue
+
                     if watcher not in watchers:
                         # one is gone
                         self.workers[watcher].stop()

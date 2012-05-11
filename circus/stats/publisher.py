@@ -27,10 +27,11 @@ class StatsPublisher(threading.Thread):
         logger.debug('Starting the Publisher')
         while self.running:
             try:
-                watcher, pid, stat = results.get(timeout=self.delay)
+                watcher, name, pid, stat = results.get(timeout=self.delay)
                 topic = b'stat.%s' % str(watcher)
                 if pid is not None:
                     topic += '.%d' % pid
+                stat['name'] = name
                 self.socket.send_multipart([topic, json.dumps(stat)])
             except zmq.ZMQError:
                 if self.socket.closed:

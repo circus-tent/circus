@@ -46,28 +46,32 @@ def _paint(stdscr, watchers):
         stdscr.addstr(line, 0, name)
         line += 1
         stdscr.addstr(line, 3, 'PID')
-        stdscr.addstr(line, 24, 'CPU (%)')
-        stdscr.addstr(line, 44, 'MEMORY (%)')
+        stdscr.addstr(line, 28, 'CPU (%)')
+        stdscr.addstr(line, 48, 'MEMORY (%)')
 
         line += 1
 
         # sorting by CPU
         pids = []
-        total = '', 'N/A', 'N/A'
+        total = '', 'N/A', 'N/A', None
         for pid, stat in watchers[name].items():
             if pid == 'all' or isinstance(pid, list):
-                total = str(stat['cpu']) + ' (avg)', str(stat['mem']) + ' (sum)', ''
+                total = (str(stat['cpu']) + ' (avg)',
+                         str(stat['mem']) + ' (sum)', '', None)
             else:
-                pids.append((str(stat['cpu']), str(stat['mem']), str(stat['pid'])))
+                pids.append((str(stat['cpu']), str(stat['mem']),
+                             str(stat['pid']), stat['name']))
 
         pids.sort()
         pids.reverse()
         pids = pids[:10] + [total]
 
-        for cpu, mem, pid in pids:
+        for cpu, mem, pid, name in pids:
+            if name is not None:
+                pid = '%s (%s)' % (pid, name)
             stdscr.addstr(line, 2, pid)
-            stdscr.addstr(line, 25, cpu)
-            stdscr.addstr(line, 45, mem)
+            stdscr.addstr(line, 29, cpu)
+            stdscr.addstr(line, 49, mem)
             line += 1
         line += 1
 
