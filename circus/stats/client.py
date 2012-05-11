@@ -43,6 +43,8 @@ def _paint(stdscr, watchers):
     stdscr.addstr(1, 0, '-' * 100)
     line = 2
     for name in names:
+        if name == 'circusd-stats':
+            continue
         stdscr.addstr(line, 0, name)
         line += 1
         stdscr.addstr(line, 3, 'PID')
