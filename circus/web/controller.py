@@ -1,9 +1,9 @@
 import os
 from collections import defaultdict
 from threading import Thread
-import time
 from circus.commands import get_commands
 from circus.client import CircusClient, CallError
+from circus.stats.client import StatsClient
 
 
 _DIR = os.path.dirname(__file__)
@@ -18,43 +18,36 @@ class Refresher(Thread):
         self.client = client
         self.daemon = True
         self.running = False
-        self.cclient = CircusClient(endpoint=client.endpoint)
+        self.cclient = None
+
+    def _check_size(self, stat):
+        if len(stat) > MAX_STATS:
+            start = len(stat) - MAX_STATS
+            stat[:] = stat[start:]
 
     def run(self):
+        self.cclient = StatsClient(endpoint=self.client.stats_endpoint)
         stats = self.client.stats
         dstats = self.client.dstats
-        call = self.cclient.call
         self.running = True
         while self.running:
-            for name, __ in self.client.watchers:
-                msg = cmds['stats'].make_message(name=name)
-                try:
-                    res = call(msg)
-                except CallError:
-                    continue
-                stats[name].append(res['info'])
-                if len(stats[name]) > MAX_STATS:
-                    start = len(stats[name]) - MAX_STATS
-                    stats[name][:] = stats[name][start:]
+            for watcher, pid, stat in self.cclient:
+                if watcher == 'circus':
+                    data = dstats
+                else:
+                    data = stats[watcher]
+                data.append(stat)
+                #self._check_size(data)
 
-            # getting circusd stats
-            msg = cmds['dstats'].make_message(name=name)
-            try:
-                res = call(msg)
-            except CallError:
-                continue
-
-            dstats.append(res['info'])
-            if len(dstats) > MAX_STATS:
-                start = len(dstats) - MAX_STATS
-                dstats[:] = dstats[start:]
-
-            time.sleep(.2)
+    def stop(self):
+        self.running = False
+        self.cclient.stop()
 
 
 class LiveClient(object):
     def __init__(self, endpoint):
         self.endpoint = str(endpoint)
+        self.stats_endpoint = None
         self.client = CircusClient(endpoint=self.endpoint)
         self.connected = False
         self.watchers = []
@@ -81,6 +74,7 @@ class LiveClient(object):
                 options = self.client.call(msg)
                 self.watchers.append((watcher, options['options']))
             self.watchers.sort()
+            self.stats_endpoint = self.get_global_options()['stats_endpoint']
             if not self.refresher.running:
                 self.refresher.start()
         except CallError:
@@ -129,18 +123,19 @@ class LiveClient(object):
         return res
 
     def get_pids(self, name):
-        msg = cmds['list'].make_message(name=name)
+        msg = cmds['listpids'].make_message(name=name)
         res = self.client.call(msg)
-        return res['processes']
+        return res['pids']
 
     def get_series(self, name, pid, field, start=0, end=-1):
         stats = self.get_stats(name, start, end)
         res = []
-        pid = str(pid)
         for stat in stats:
-            if pid not in stat:
+            pids = stat['pid']
+            if isinstance(pids, list):
                 continue
-            res.append(stat[pid][field])
+            if str(pid) == str(stat['pid']):
+                res.append(stat[field])
         return res
 
     def get_status(self, name):

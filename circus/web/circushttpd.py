@@ -43,8 +43,8 @@ def index():
 
 @route('/circusd/stats/<field>', method='GET')
 def get_dstat(field):
-    start = int(request.query.get('start', '0'))
-    end = int(request.query.get('end', '-1'))
+    #start = int(request.query.get('start', '0'))
+    #end = int(request.query.get('end', '-1'))
 
     if client is None:
         return {}

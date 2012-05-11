@@ -37,7 +37,7 @@ function initializeGraphs(name) {
 
 function refreshData(name) {
     var i = 0;
-    $.getJSON('/watchers/' + name + '/stats/cpu?start=-3&end=-1', function (data) {
+    $.getJSON('/watchers/' + name + '/stats/cpu?start=-10&end=-1', function (data) {
         $.each(data, function (key, values) {
             for (i = 0; i < values.length; i++) {
                 cpu_data[key].push(values[i]);
@@ -48,7 +48,7 @@ function refreshData(name) {
             }
         });
     });
-    $.getJSON('/watchers/' + name + '/stats/mem', function (data) {
+    $.getJSON('/watchers/' + name + '/stats/mem?start=-10&end=-1', function (data) {
         $.each(data, function (key, values) {
             for (i = 0; i < values.length; i++) {
                 mem_data[key].push(values[i]);
@@ -104,7 +104,7 @@ function refreshCircusdGraph() {
             circusd_cpu_data = circusd_cpu_data.slice(start);
         }
     });
-    
+
     $.getJSON('/circusd/stats/mem?start=-3&end=-1', function (data) {
         var values = data['info'];
 
@@ -116,7 +116,7 @@ function refreshCircusdGraph() {
             circusd_mem_data = circusd_mem_data.slice(start);
         }
     });
-  
+
     updateCircusdGraph();
 }
 
@@ -153,7 +153,7 @@ function initializeCircusdGraph() {
 
 function refreshCircusdGraph() {
 
-    $.getJSON('/circusd/stats/cpu?start=-3&end=-1', function(data) {
+    $.getJSON('/circusd/stats/cpu?start=-10&end=-1', function(data) {
         var values = data['info'];
         for (i=0;i<values.length;i++) {
             circusd_cpu_data.push(values[i]);
@@ -164,8 +164,8 @@ function refreshCircusdGraph() {
         }
      });
 
-    
-    $.getJSON('/circusd/stats/mem?start=-3&end=-1', function(data) {
+
+    $.getJSON('/circusd/stats/mem?start=-10&end=-1', function(data) {
         var values = data['info'];
 
         for (i=0;i<values.length;i++) {
@@ -176,7 +176,7 @@ function refreshCircusdGraph() {
               circusd_mem_data = circusd_mem_data.slice(start);
         }
      });
-  
+
   updateCircusdGraph();
 }
 
@@ -184,5 +184,5 @@ $(document).ready(function () {
     $('.add_watcher').click(function () {
         $('#overlay').show();
         return false;
-    }); 
+    });
 });
