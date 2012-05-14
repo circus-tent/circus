@@ -1,5 +1,6 @@
 import os
 import cgi
+import argparse
 try:
     from bottle import route, run, static_file, redirect, request
     from mako.lookup import TemplateLookup
@@ -150,7 +151,11 @@ def disconnect():
 
 
 def main():
-    run(host='localhost', port=8081)
+    parser = argparse.ArgumentParser(description='Run the Web Console')
+    parser.add_argument('--host', help='Host', default='localhost')
+    parser.add_argument('--port', help='port', default=8080)
+    args = parser.parse_args()
+    run(host=args.host, port=args.port)
 
 
 if __name__ == '__main__':
