@@ -102,6 +102,9 @@ A nice combo is Gunicorn & Nginx:
   8080 port.
 - Nginx acts as a proxy in front of Gunicorn. It an also deal with security.
 
+Gunicorn
+--------
+
 To run Gunicorn, make sure Gunicorn is installed in your environment and
 simply use the **--server** option::
 
@@ -117,7 +120,52 @@ simply use the **--server** option::
     2012-05-14 15:10:54 [13537] [INFO] Booting worker with pid: 13537
 
 
+If you want to use another server, you can pick any server listed in
+http://bottlepy.org/docs/dev/tutorial.html#multi-threaded-server
 
-XXX Talk about security
+Nginx
+-----
+
+To hook Nginx, you define a *location* directive that proxies the calls
+to Gunicorn.
+
+Example::
+
+    location / {
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:8080;
+    }
+
+If you want a more complete Nginx configuration example, have a
+look at : http://gunicorn.org/deploy.html
 
 
+Password-protect circushttpd
+----------------------------
+
+As explained in the :ref:`Security` page, running *circushttpd* is pretty
+unsafe. We don't provide any security in Circus itself, but you can protect
+your console at the NGinx level, by using http://wiki.nginx.org/HttpAuthBasicModule
+
+Example::
+
+    location / {
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:8080;
+        auth_basic            "Restricted";
+        auth_basic_user_file  /path/to/htpasswd;
+    }
+
+
+The **htpasswd** file contains users and their passwords, and a password
+prompt will pop when you access the console.
+
+You can use Apache's htpasswd script to edit it, or the Python script they
+provide at: http://trac.edgewall.org/browser/trunk/contrib/htpasswd.py
+
+Of course that's just one way to protect your web console, you could use
+many other techniques.
