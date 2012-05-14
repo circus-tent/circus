@@ -30,7 +30,7 @@ The Web Console will let you:
 To enable the console, run the **circushttpd** script::
 
 
-    $ bin/circushttpd
+    $ circushttpd
     Bottle server starting up (using WSGIRefServer())...
     Listening on http://localhost:8080/
     Hit Ctrl-C to quit.
@@ -53,7 +53,7 @@ You should get this screen:
 
 
 The Web Console is ready to be connected to a Circus system, given its **endpoint**.
-By default the endpoint is *tcp://127.0.0.1:5557*.
+By default the endpoint is *tcp://127.0.0.1:5555*.
 
 Once you hit *Connect*, the web application will connect to the Circus system.
 
