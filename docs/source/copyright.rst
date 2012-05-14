@@ -1,7 +1,7 @@
 Copyright
 =========
 
-Circus was initiated by Tarek Ziadé& Benoit Chesneau, and is licenced under
+Circus was initiated by Tarek Ziad� & Benoit Chesneau, and is licenced under
 APLv2
 
 Licence
@@ -29,15 +29,15 @@ Contributors
 
 In order of appearence:
 
-- Tarek Ziadé - tarek@mozilla.com
-- Benoit Chesneau - benoit@e-engura.com
-- Pratyk S. Paudel (logo)
-- Neil Chintomby - nchintomby@gmail.com
-- Ori Livneh - ori.livneh@gmail.com
-- Pete Fritchman - petef@mozilla.com
-- Johan Charpentier - contact@cyberj.me
-- John Morrison - jmorrison@mozilla.com
-- Chris McDonald - xwraithanx@gmail.com
-- Stefane Fermigier - sf@fermigier.com
-- Adnane Belmadiaf - daker@ubuntu.com
-- Alexis Métaireau - alexis@mozilla.com
+- Tarek Ziadé
+- Benoit Chesneau
+- Pratyk S. Paudel
+- Neil Chintomby
+- Ori Livneh
+- Pete Fritchman
+- Johan Charpentier
+- John Morrison
+- Chris McDonald
+- Stefane Fermigier
+- Adnane Belmadiaf
+- Alexis Métairea
