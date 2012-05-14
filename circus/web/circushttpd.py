@@ -1,6 +1,7 @@
 import os
 import cgi
 import argparse
+import sys
 try:
     from bottle import route, run, static_file, redirect, request
     from mako.lookup import TemplateLookup
@@ -154,8 +155,15 @@ def main():
     parser = argparse.ArgumentParser(description='Run the Web Console')
     parser.add_argument('--host', help='Host', default='localhost')
     parser.add_argument('--port', help='port', default=8080)
+    parser.add_argument('--server', help='web server to use',
+                        default='wsgiref')
     args = parser.parse_args()
-    run(host=args.host, port=args.port)
+    old = sys.argv[:]
+    sys.argv[:] = []
+    try:
+        run(host=args.host, port=args.port, server=args.server)
+    finally:
+        sys.argv[:] = old
 
 
 if __name__ == '__main__':

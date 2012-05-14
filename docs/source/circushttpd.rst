@@ -89,8 +89,34 @@ in the left menu:
 
 
 
-Running behind Nginx
-====================
+Running behind Nginx & Gunicorn
+===============================
+
+*circushttpd* is a WSGI application so you can run it with any web server that's
+compatible with that protocol. By default it uses the standard library
+**wsgiref** server, but that server does not really support any load.
+
+A nice combo is Gunicorn & Nginx:
+
+- Gunicorn is the WSGI web server and serves the Web application on the
+  8080 port.
+- Nginx acts as a proxy in front of Gunicorn. It an also deal with security.
+
+To run Gunicorn, make sure Gunicorn is installed in your environment and
+simply use the **--server** option::
+
+    $ pip install gunicorn
+    $ bin/circushttpd --server gunicorn
+    Bottle server starting up (using GunicornServer())...
+    Listening on http://localhost:8080/
+    Hit Ctrl-C to quit.
+
+    2012-05-14 15:10:54 [13536] [INFO] Starting gunicorn 0.14.2
+    2012-05-14 15:10:54 [13536] [INFO] Listening at: http://127.0.0.1:8080 (13536)
+    2012-05-14 15:10:54 [13536] [INFO] Using worker: sync
+    2012-05-14 15:10:54 [13537] [INFO] Booting worker with pid: 13537
+
+
 
 XXX Talk about security
 
