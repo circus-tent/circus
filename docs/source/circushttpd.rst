@@ -27,8 +27,12 @@ The Web Console will let you:
    By default, this option is not activated.
 
 
-To enable the console, run the **circushttpd** script::
+The web console needs the Bottle web framework and the Mako template engine.
+You can install them using the web-requirements.txt file::
 
+    $ bin/pip install -r web-requirements.txt
+
+To enable the console, run the **circushttpd** script::
 
     $ circushttpd
     Bottle server starting up (using WSGIRefServer())...

@@ -1,0 +1,3 @@
+Mako==0.7.0
+MarkupSafe==0.15
+bottle==0.10.9

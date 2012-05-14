@@ -6,7 +6,8 @@ try:
     from bottle import route, run, static_file, redirect, request
     from mako.lookup import TemplateLookup
 except ImportError:
-    raise ImportError('You need to install Bottle and Mako')
+    raise ImportError('You need to install Bottle and Mako. You ' +
+                      'can do so using pip install -r web-requirements.txt')
 
 from circus.web.controller import LiveClient, CallError
 from circus import __version__
