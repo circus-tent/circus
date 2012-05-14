@@ -46,7 +46,7 @@ Once the script is running, you can open a browser and visit *http://localhost:8
 You should get this screen:
 
 .. image:: images/web-login.png
-   :target: _images/web-login.png
+   :target: ../_images/web-login.png
    :align: center
    :height: 400px
 
@@ -61,7 +61,7 @@ With the Web Console logged in, you should get a list of watchers, and a real-ti
 status of the two Circus processes (circusd and circusd-stats).
 
 .. image:: images/web-index.png
-   :target: _images/web-index.png
+   :target: ../_images/web-index.png
    :align: center
    :height: 400px
 
@@ -73,7 +73,7 @@ If you click on the watcher name, you will get a web page for that particular
 watcher, with its processes:
 
 .. image:: images/web-watchers.png
-   :target: _images/web-watchers.png
+   :target: ../_images/web-watchers.png
    :align: center
    :height: 400px
 
@@ -83,7 +83,7 @@ Last but not least, you can add a brand new watcher by clicking on the *Add Watc
 in the left menu:
 
 .. image:: images/web-add-watcher.png
-   :target: _images/web-add-watcher.png
+   :target: ../_images/web-add-watcher.png
    :align: center
    :height: 400px
 
