@@ -158,6 +158,7 @@ More documentation
    examples
    coverage
    glossary
+   copyright
 
 
 Contributions and Feedback
