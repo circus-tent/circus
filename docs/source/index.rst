@@ -1,10 +1,6 @@
 Circus Process Watcher
 ======================
 
-.. note::
-
-   Before running Circus, make sure you read the :ref:`Security` page.
-
 .. image:: images/circus-medium.png
    :align: right
 
@@ -14,6 +10,10 @@ command-line interface, or programmatically, in python, through its APIs.
 It shares some of the goals of `Supervisord <http://supervisord.org>`_,
 `BluePill <https://github.com/arya/bluepill>`_ and
 `Daemontools <http://cr.yp.to/daemontools.html>`_.
+
+.. note::
+
+   Before running Circus, make sure you read the :ref:`Security` page.
 
 To install it, check out :ref:`installation`
 
