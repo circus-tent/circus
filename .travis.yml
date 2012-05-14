@@ -7,3 +7,7 @@ script: python setup.py test
 notifications:
   email: 
     - tarek@mozilla.com
+  irc:
+    channels: 
+        - "irc.freenode.org#mozilla-circus"
+    on_success: change
