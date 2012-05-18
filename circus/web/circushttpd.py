@@ -2,12 +2,14 @@ import os
 import cgi
 import argparse
 import sys
+import threading
 try:
-    from bottle import route, run, static_file, redirect, request
+    from bottle import (route, run, static_file, redirect, request,
+                        ServerAdapter)
     from mako.lookup import TemplateLookup
 except ImportError:
     raise ImportError('You need to install Bottle and Mako. You ' +
-                      'can do so using pip install -r web-requirements.txt')
+                      'can do so using "pip install -r web-requirements.txt"')
 
 from circus.web.controller import LiveClient, CallError
 from circus import __version__
@@ -15,8 +17,22 @@ from circus import __version__
 
 _DIR = os.path.dirname(__file__)
 TMPLS = TemplateLookup(directories=[_DIR])
+
 client = None
 MAX_STATS = 100
+
+
+def render_template(template, **data):
+    """Finds the given template and renders it with the given data.
+
+    Also adds some data that can be useful to the template, even if not
+    explicitely asked so.
+
+    :param template: the template to render
+    :param **data: the kwargs that will be passed when rendering the template
+    """
+    tmpl = TMPLS.get_template(template)
+    return tmpl.render(client=client, version=__version__, **data)
 
 
 @route('/watchers/<name>/process/kill/<pid>')
@@ -40,8 +56,7 @@ def index():
     msg = request.query.get('msg')
     if msg:
         msg = cgi.escape(msg)
-    tmpl = TMPLS.get_template('index.html')
-    return tmpl.render(client=client, msg=msg, version=__version__)
+    return render_template('index.html', msg=msg)
 
 
 @route('/circusd/stats/<field>', method='GET')
@@ -125,8 +140,7 @@ def watcher(name):
     msg = request.query.get('msg')
     if msg:
         msg = cgi.escape(msg)
-    tmpl = TMPLS.get_template('watcher.html')
-    return tmpl.render(client=client, msg=msg, name=name, version=__version__)
+    return render_template('watcher.html', msg=msg, name=name)
 
 
 @route('/connect', method='POST')
@@ -152,12 +166,25 @@ def disconnect():
         redirect('/?msg=disconnected')
 
 
+class SocketIOServer(ServerAdapter):
+    def run(self, handler):
+        from socketio import SocketIOServer
+        from gevent import monkey, local
+        if self.options.get('monkey', True):
+            if not threading.local is local.local:
+                monkey.patch_all()
+        namespace = self.options.get('namespace', 'socket.io')
+        policy_server = self.options.get('policy_server', False)
+        SocketIOServer((self.host, self.port), handler, namespace=namespace,
+                         policy_server=policy_server).serve_forever()
+
+
 def main():
     parser = argparse.ArgumentParser(description='Run the Web Console')
     parser.add_argument('--host', help='Host', default='localhost')
     parser.add_argument('--port', help='port', default=8080)
     parser.add_argument('--server', help='web server to use',
-                        default='wsgiref')
+                        default=SocketIOServer)
     args = parser.parse_args()
     old = sys.argv[:]
     sys.argv[:] = []

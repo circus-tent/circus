@@ -1,8 +1,17 @@
-
 var cpu_data,
     mem_data,
     MAX_SIZE = 25;
 
+// first run: getting all the data
+function initializeGraphs(name) {
+    $.getJSON('/watchers/' + name + '/stats/cpu', function (data) {
+        cpu_data = data;
+    });
+    $.getJSON('/watchers/' + name + '/stats/mem', function (data) {
+        mem_data = data;
+    });
+    updateGraphs();
+}
 
 // then updating the graphs
 function updateGraphs() {
@@ -24,16 +33,6 @@ function updateGraphs() {
 
 }
 
-// first run: getting all the data
-function initializeGraphs(name) {
-    $.getJSON('/watchers/' + name + '/stats/cpu', function (data) {
-        cpu_data = data;
-    });
-    $.getJSON('/watchers/' + name + '/stats/mem', function (data) {
-        mem_data = data;
-    });
-    updateGraphs();
-}
 
 function refreshData(name) {
     var i = 0;
@@ -181,8 +180,10 @@ function refreshCircusdGraph() {
 }
 
 $(document).ready(function () {
+    /**
     $('.add_watcher').click(function () {
         $('#overlay').show();
         return false;
     });
+    **/
 });
