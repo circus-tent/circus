@@ -438,9 +438,11 @@ class Watcher(object):
         # stop redirectors
         if self.stdout_redirector is not None:
             self.stdout_redirector.kill()
+            self.stdout_redirector = None
 
         if self.stderr_redirector is not None:
             self.stderr_redirector.kill()
+            self.stderr_redirector = None
 
         limit = time.time() + self.graceful_timeout
         while self.processes and time.time() < limit:
