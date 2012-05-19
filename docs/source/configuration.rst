@@ -62,7 +62,10 @@ watcher:NAME (as many sections as you want)
     **cmd**
         The executable program to run.
     **args**
-        Command-line arguments to pass to the program
+        Command-line arguments to pass to the program. You can use the python
+        format syntax here to build the parameters. Environment variables are
+        available, as well as WID and the environment variables that you
+        passed, if any, with the "env" parameter.
     **shell**
         If True, the processes are run in the shell (default: False)
     **working_dir**

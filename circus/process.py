@@ -85,7 +85,15 @@ class Process(object):
         else:
             self.rlimits = {}
 
+        # It's possible to use environment variables and WID in the command.
+        format_kwargs = {'WID': self.wid}
+        format_kwargs.update(os.environ)
+        if env:
+            format_kwargs.update(env)
+
+        cmd = cmd.format(**format_kwargs)
         self.cmd = cmd.replace('$WID', str(self.wid))
+
         if uid is None:
             self.uid = None
         else:
