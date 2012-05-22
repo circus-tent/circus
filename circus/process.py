@@ -38,8 +38,9 @@ class Process(object):
     - **wid**: the process unique identifier. This value will be used to
       replace the *$WID* string in the command line if present.
 
-    - **cmd**: the command to run. May contain *$WID*, which will be
-      replaced by **wid**.
+    - **cmd**: the command to run. May contain any of the variables available
+      that are being passed to this class. They will be replaced using the
+      python format syntax.
 
     - **args**: the arguments for the command to run. Can be a list or
       a string. If **args** is  a string, it's splitted using
@@ -85,8 +86,9 @@ class Process(object):
         else:
             self.rlimits = {}
 
-        # It's possible to use environment variables and WID in the command.
-        format_kwargs = {'WID': self.wid}
+        # It's possible to use environment variables and some other variables
+        # that are available in this context, when spawning the processes.
+        format_kwargs = {'wid': self.wid, 'shell': self.shell, }
         format_kwargs.update(os.environ)
         if env:
             format_kwargs.update(env)
