@@ -128,20 +128,9 @@ class Watcher(object):
         self.executable = None
         self.stream_backend = stream_backend
         self.priority = priority
-
         self.stdout_stream = stdout_stream
-        if stdout_stream:
-            self.stdout_redirector = get_pipe_redirector(stdout_stream,
-                    backend=stream_backend)
-        else:
-            self.stdout_redirector = None
-
         self.stderr_stream = stderr_stream
-        if stderr_stream:
-            self.stderr_redirector = get_pipe_redirector(stderr_stream,
-                    backend=stream_backend)
-        else:
-            self.stderr_redirector = None
+        self.stdout_redirector = self.stderr_redirector = None
 
         self.optnames = ("numprocesses", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env",
@@ -164,6 +153,27 @@ class Watcher(object):
         self.rlimits = rlimits
         self.send_hup = send_hup
         self.evpub_socket = None
+
+    def _create_redirectors(self):
+        if self.stdout_stream:
+            if (self.stdout_redirector is not None and
+                self.stdout_redirector.running):
+                self.stdout_redirector.kill()
+
+            self.stdout_redirector = get_pipe_redirector(self.stdout_stream,
+                    backend=self.stream_backend)
+        else:
+            self.stdout_redirector = None
+
+        if self.stderr_stream:
+            if (self.stderr_redirector is not None and
+                self.stderr_redirector.running):
+                self.stderr_redirector.kill()
+
+            self.stderr_redirector = get_pipe_redirector(self.stderr_stream,
+                    backend=self.stream_backend)
+        else:
+            self.stderr_redirector = None
 
     @classmethod
     def load_from_config(cls, config):
@@ -438,11 +448,9 @@ class Watcher(object):
         # stop redirectors
         if self.stdout_redirector is not None:
             self.stdout_redirector.kill()
-            self.stdout_redirector = None
 
         if self.stderr_redirector is not None:
             self.stderr_redirector.kill()
-            self.stderr_redirector = None
 
         limit = time.time() + self.graceful_timeout
         while self.processes and time.time() < limit:
@@ -464,8 +472,10 @@ class Watcher(object):
             return
 
         self.stopped = False
+        self._create_redirectors()
         self.reap_processes()
         self.manage_processes()
+
         if self.stdout_redirector is not None:
             self.stdout_redirector.start()
 

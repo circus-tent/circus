@@ -46,9 +46,12 @@ class BaseRedirector(object):
         self._names[process.pid, name] = npipe
 
     def remove_redirection(self, name, process):
-        pipe = self._names[process.pid, name]
+        key = process.pid, name
+        if key not in self._names:
+            return
+        pipe = self._names[key]
         self.pipes.remove(pipe)
-        del self._names[process.pid, name]
+        del self._names[key]
 
     def _select(self):
         if len(self.pipes) == 0:
