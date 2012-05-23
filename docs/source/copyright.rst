@@ -1,7 +1,7 @@
 Copyright
 =========
 
-Circus was initiated by Tarek ZiadÃ & Benoit Chesneau, and is licenced under
+Circus was initiated by Tarek Ziadï¿½ & Benoit Chesneau, and is licenced under
 APLv2
 
 Licence
@@ -41,3 +41,4 @@ In order of appearence:
 - Stefane Fermigier
 - Adnane Belmadiaf
 - Alexis MÃ©tairea
+- Christian S. Perone
