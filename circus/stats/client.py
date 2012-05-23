@@ -58,10 +58,11 @@ def _paint(stdscr, watchers):
         total = '', 'N/A', 'N/A', None
         for pid, stat in watchers[name].items():
             if pid == 'all' or isinstance(pid, list):
-                total = (str(stat['cpu']) + ' (avg)',
-                         str(stat['mem']) + ' (sum)', '', None)
+
+                total = ("%.2f" % stat['cpu'] + ' (avg)',
+                         "%.2f" % stat['mem'] + ' (sum)', '', None)
             else:
-                pids.append((str(stat['cpu']), str(stat['mem']),
+                pids.append(("%.2f" % stat['cpu'], "%.2f" % stat['mem'],
                              str(stat['pid']), stat['name']))
 
         pids.sort()
