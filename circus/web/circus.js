@@ -61,3 +61,15 @@ function supervise(socket, watchers, watchersWithPids, config) {
     socket.emit('get_stats', { watchers: watchers,
                                watchersWithPids: watchersWithPids});
 }
+
+$(document).ready(function() {
+    $('.add_watcher').click(function() {
+        $('#overlay').show();
+        return false;
+    });
+
+    $('#cancel_watcher_btn').click(function() {
+        $('#overlay').hide();
+        return false;
+    });
+});
