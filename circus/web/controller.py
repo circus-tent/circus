@@ -5,9 +5,12 @@ from circus.commands import get_commands
 from circus.client import CircusClient, CallError
 from circus.stats.client import StatsClient
 
-from gevent import monkey, local
-if not threading.local is local.local:
-    monkey.patch_all()
+try:
+    from gevent import monkey, local
+    if not threading.local is local.local:
+        monkey.patch_all()
+except ImportError:
+    pass
 
 
 _DIR = os.path.dirname(__file__)

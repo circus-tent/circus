@@ -5,7 +5,7 @@ import sys
 import threading
 try:
     from bottle import (route, run, static_file, redirect, request,
-                        ServerAdapter)
+                        ServerAdapter, app)
     from mako.lookup import TemplateLookup
 except ImportError:
     raise ImportError('You need to install Bottle and Mako. You ' +
@@ -166,17 +166,46 @@ def disconnect():
         redirect('/?msg=disconnected')
 
 
+from socketio import socketio_manage
+from socketio.namespace import BaseNamespace
+from socketio.mixins import RoomsMixin, BroadcastMixin
+
+
+
+class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
+
+    def on_stats(self, msg):
+        streams = msg['streams']
+        # we're sending here the data
+        pkt = dict(type="event", name="stats", endpoint=self.ns_name)
+        self.socket.send_packet(pkt)
+
+
+@route('/socket.io/<someid>/websocket/<socket_id>', method='GET')
+def socketio(someid, socket_id):
+    retval = socketio_manage(request.environ, {'': StatsNamespace})
+    return retval
+
+
 class SocketIOServer(ServerAdapter):
     def run(self, handler):
-        from socketio import SocketIOServer
-        from gevent import monkey, local
-        if self.options.get('monkey', True):
-            if not threading.local is local.local:
-                monkey.patch_all()
+        try:
+            from socketio.server import SocketIOServer
+        except ImportError:
+            raise ImportError('You need to install gevent_socketio')
+
+        from gevent import monkey
+        from gevent_zeromq import monkey_patch
+        monkey.patch_all()
+        monkey_patch()
+
         namespace = self.options.get('namespace', 'socket.io')
         policy_server = self.options.get('policy_server', False)
-        SocketIOServer((self.host, self.port), handler, namespace=namespace,
-                         policy_server=policy_server).serve_forever()
+        socket_server = SocketIOServer((self.host, self.port), handler, namespace=namespace,
+                         policy_server=policy_server)
+        handler.socket_server = socket_server
+        socket_server.serve_forever()
+
 
 
 def main():

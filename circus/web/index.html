@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    
+
     <div class="watchers">
         <div class="header">
             <div style="width: 300px;">Name</div>
@@ -32,7 +32,7 @@
             <div style="width: 50px;">gid</div>
             <div style="width: 50px;">Status</div>
         </div>
-    % for watcher, options in client.watchers:   
+    % for watcher, options in client.watchers:
         <div class="watcher">
             <div style="width: 300px;"><a class="link" href="/watchers/${watcher}">${watcher}</a></div>
             <div style="width: 80px;">${options['numprocesses']}</div>
@@ -46,9 +46,9 @@
     </div>
 
     <div class="title">
-       <div class="watcher_name">Circus Daemons</div> 
+       <div class="watcher_name">Circus Daemons</div>
     </div>
-    
+
     <div class="legend">
         <div class="legend_cpu">
             <span class="legend_indicator"></span>
@@ -60,7 +60,7 @@
         </div>
     </div>
 
-    <div> 
+    <div>
        <div class="process" style="margin-bottom: 15px">
         <div>
             <span style="display: inline-block; float: left;" class="label">circusd</span>
@@ -102,13 +102,13 @@
     <div style="clear:both"></div>
 
     <div class="title">
-       <div class="watcher_name">Options</div> 
+       <div class="watcher_name">Options</div>
     </div>
 
     <table class="options">
         <tr>
             <td>
-                ZeroMQ endpoint used to connect clients like <i>circusctl</i> or 
+                ZeroMQ endpoint used to connect clients like <i>circusctl</i> or
                 <i>circushttpd</i>
             </td>
             <td>
@@ -152,9 +152,16 @@
     </table>
 
  </div>
- 
-  <script type="text/javascript">
-  /*
+
+    <script type="text/javascript">
+    var socket = io.connect('http://localhost');
+    socket.emit('stats', {streams: ['circusd', 'circusd_stats'] });
+
+    socket.on('stats', function (data) {
+        alert(data);
+          });
+
+/*
   $(function() {
       initializeCircusdGraph();
       });
