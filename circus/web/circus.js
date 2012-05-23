@@ -191,6 +191,8 @@ $(document).ready(function () {
         return false;
     });
 
-
+    $('a.stopped, a.active').click(function(e) {
+        return confirm("Are you sure you want to change the status ?");
+    });
 
 });
