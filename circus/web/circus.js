@@ -185,4 +185,12 @@ $(document).ready(function () {
         $('#overlay').show();
         return false;
     });
+
+    $('#cancel_watcher_btn').click(function () {
+        $('#overlay').hide();
+        return false;
+    });
+
+
+
 });
