@@ -39,7 +39,8 @@ class Refresher(threading.Thread):
         self.running = True
         while self.running:
             for watcher, pid, stat in self.cclient:
-                if not self.running: break
+                if not self.running:
+                    break
                 if watcher == 'circus':
                     data = dstats
                 else:
