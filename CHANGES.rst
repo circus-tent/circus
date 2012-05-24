@@ -1,10 +1,14 @@
 CHANGES
 =======
 
-0.4 - ?
--------
+0.3.2 - 2012-05-24
+------------------
 
-???
+- allows optional args property to add_watcher command.
+- added circushttpd, circus-top and circusd-stats
+- allowing Arbiter.add_watcher() to set all Watcher option
+- make sure the redirectors are re-created on restarts
+
 
 0.3.1 - 2012-04-18
 ------------------
