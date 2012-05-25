@@ -1,189 +1,104 @@
-var cpu_data,
-    mem_data,
-    MAX_SIZE = 25;
+var data = {},
+    watchers = [],
+    MAX_SIZE = 25,
+    CPU_OPTIONS = {height: '50', width: '200', fillColor: false, lineWidth: 2, lineColor: '#7AB94C', spotSize: 2, spotRadius: 4, spotColor: '#7AB94C'},
+    MEM_OPTIONS = {composite: true, height: '50', width: '200', fillColor: false, lineWidth: 2, lineColor: '#5DAACC', spotSize: 2, spotRadius: 4, spotColor: '#5DAACC'};
 
-// first run: getting all the data
-function initializeGraphs(name) {
-    $.getJSON('/watchers/' + name + '/stats/cpu', function (data) {
-        cpu_data = data;
+
+function addWatcher(socket, watcher, aggregate){
+    if (aggregate === undefined){
+       aggregate = false;
+    }
+
+    // before starting the socket with the server, initiate the data structures
+    // that will be used to store the data
+    data[watcher] = {mem:[], cpu:[]};
+
+    // tell the server that we want to get stats about the watchers.
+    // it will answer on some specific channels that are named
+    // "stats-<watcher>", so we need to register to them.
+    socket.emit('stats', {streams: watchers, aggregate: aggregate});
+
+    socket.on('stats-' + watcher, function (args) {
+        data[watcher]['cpu'].push(args['cpu']);
+        data[watcher]['mem'].push(args['mem']);
     });
-    $.getJSON('/watchers/' + name + '/stats/mem', function (data) {
-        mem_data = data;
-    });
-    updateGraphs();
+
+    // add the watcher to the list of watchers. this is useful when
+    // refreshing graphs (because we want to refresh them all at once)
+    watchers.push(watcher);
 }
 
-// then updating the graphs
-function updateGraphs() {
-    $.each(cpu_data, function (key, val) {
-        var id = '#' + key + '_cpu',
-        lastid = '#' + key + '_last_cpu',
-        last = val.length - 1;
-        $(lastid).text(parseInt(val[last], 10) + " %");
-        $(id).sparkline(val, { height: '80', width: '290', fillColor: false, lineWidth: 2, lineColor: '#7AB94C', spotSize: 2, spotRadius: 4, spotColor: '#7AB94C'});
-    });
+function displayGraph(watcher, metric, width, height, updateDelay){
 
-    $.each(mem_data, function (key, val) {
-        var id = '#' + key + '_mem',
-            lastid = '#' + key + '_last_mem',
-            last = val.length - 1;
-        $(lastid).text(parseInt(val[last], 10) + " %");
-        $('#' + key + '_cpu').sparkline(val, {composite: true, height: '80', width: '290', fillColor: false, lineWidth: 2, lineColor: '#5DAACC', spotSize: 2, spotRadius: 4, spotColor: '#5DAACC'});
-    });
+    var id = "#" + watcher;
+    var graph = d3.select(id).append("svg:svg").attr("width", "100%").attr("height", "100%");
 
+    var x = d3.scale.linear().domain([0, 48]).range([-5, width]);
+    var y = d3.scale.linear().domain([0, 10]).range([0, height]);
+
+    // create a line object that represents the SVN line we're creating
+    var line = d3.svg.line()
+               .x(function(d,i) { return x(i); })
+               .y(function(d) { return y(d); })
+               .interpolate("basis")
+
+    // display the line by appending an svg:path element with the data line
+    graph.append("svg:path").attr("d", line(data[watcher][metric]));
+
+    function redrawWithAnimation() {
+        console.log('redrawing ' + watcher);
+        // update with animation
+        graph.selectAll("path")
+        .data(data[watcher][metric])
+        .attr("transform", "translate(" + x(1) + ")")
+        .attr("d", line)
+        .transition()
+        .ease("linear")
+        .duration(updateDelay)
+        .attr("transform", "translate(" + x(0) + ")");
+    }
+
+    setInterval(redrawWithAnimation, updateDelay);
 }
 
-
-function refreshData(name) {
-    var i = 0;
-    $.getJSON('/watchers/' + name + '/stats/cpu?start=-10&end=-1', function (data) {
-        $.each(data, function (key, values) {
-            for (i = 0; i < values.length; i++) {
-                cpu_data[key].push(values[i]);
-            }
-            if (cpu_data[key].length > MAX_SIZE) {
-                start = cpu_data[key].length - MAX_SIZE;
-                cpu_data[key] = cpu_data[key].slice(start);
-            }
-        });
-    });
-    $.getJSON('/watchers/' + name + '/stats/mem?start=-10&end=-1', function (data) {
-        $.each(data, function (key, values) {
-            for (i = 0; i < values.length; i++) {
-                mem_data[key].push(values[i]);
-            }
-            if (mem_data[key].length > MAX_SIZE) {
-                start = mem_data[key].length - MAX_SIZE;
-                mem_data[key] = mem_data[key].slice(start);
-            }
-        });
-    });
-    updateGraphs();
-}
-
-/*
-* Circusd graph
-*/
-var circusd_cpu_data,
-    circusd_mem_data;
-
-function updateCircusdGraph() {
-
-    var id = '#circusd',
-        lastid_cpu = '#circusd_last_cpu',
-        last_cpu = circusd_cpu_data.length - 1,
-        lastid_mem = '#circusd_last_mem',
-        last_mem = circusd_mem_data.length - 1;
-
-    $(lastid_cpu).text(circusd_cpu_data[last_cpu] + " %");
-    $(id).sparkline(circusd_cpu_data, { height: '50', width: '200', fillColor: false, lineWidth: 2, lineColor: '#7AB94C', spotSize: 2, spotRadius: 4, spotColor: '#7AB94C'});
-    $(lastid_mem).text(circusd_mem_data[last_mem] + " %");
-    $(id).sparkline(circusd_mem_data, {composite: true, height: '50', width: '200', fillColor: false, lineWidth: 2, lineColor: '#5DAACC', spotSize: 2, spotRadius: 4, spotColor: '#5DAACC'});
-}
-
-function initializeCircusdGraph() {
-    $.getJSON('/circusd/stats/cpu', function (data) {
-        circusd_cpu_data = data['info'];
-    });
-    $.getJSON('/circusd/stats/mem', function (data) {
-        circusd_mem_data = data['info'];
-    });
-    updateCircusdGraph();
-}
-
-function refreshCircusdGraph() {
-    var start = 0;
-    $.getJSON('/circusd/stats/cpu?start=-3&end=-1', function (data) {
-        var values = data['info'];
-        for (i = 0;i<values.length;i++) {
-            circusd_cpu_data.push(values[i]);
-        }
-        if (circusd_cpu_data.length > MAX_SIZE) {
-            start = circusd_cpu_data.length - MAX_SIZE;
-            circusd_cpu_data = circusd_cpu_data.slice(start);
+/**
+ * Update the graphs accordingly to the data that is in memory.
+ *
+ * @param worker the name of the worker to update
+ **/
+function updateGraph(worker){
+    console.log("updating " + worker);
+    // before updating the graphs, slice the data to lower the memory print.
+    ['mem', 'cpu'].forEach(function(val){
+        if (data[worker][val].length > MAX_SIZE){
+            start = data[worker][val].length - MAX_SIZE;
+            data[worker][val] = data[worker][val].slice(start);
         }
     });
 
-    $.getJSON('/circusd/stats/mem?start=-3&end=-1', function (data) {
-        var values = data['info'];
+    // Each watcher is named "#<worker> and there also are some special ids for
+    // the last mem and cpu usages.
+    var id = "#" + worker;
+    var lastid_cpu = id + "_last_cpu";
+    var lastid_mem = id + "_last_mem";
+    var cpu = data[worker]['cpu'];
+    var mem = data[worker]['mem'];
 
-        for (i = 0;i<values.length;i++) {
-            circusd_mem_data.push(values[i]);
-        }
-        if (circusd_mem_data.length > MAX_SIZE) {
-            start = circusd_mem_data.length - MAX_SIZE;
-            circusd_mem_data = circusd_mem_data.slice(start);
-        }
-    });
+    // update the sparklines
+    $(id).sparkline(cpu, CPU_OPTIONS);
+    $(id).sparkline(mem, MEM_OPTIONS);
 
-    updateCircusdGraph();
+    // and the numbers displayed
+    $(id + "_last_cpu").text(parseInt(cpu[cpu.length - 1], 10) + " %");
+    $(id + "_last_mem").text(parseInt(mem[mem.length - 1], 10) + " %");
 }
 
-
-/*
-* Circusd graph
-*/
-var circusd_cpu_data;
-var circusd_mem_data;
-
-function updateCircusdGraph() {
-  var id = '#circusd_cpu';
-  var lastid = '#circusd_last_cpu';
-  var last = circusd_cpu_data.length - 1;
-  $(lastid).text(circusd_cpu_data[last] + " %");
-  $(id).sparkline(circusd_cpu_data, { height: '80', width: '290', fillColor: false, lineWidth: 2, lineColor: '#7AB94C', spotSize: 2, spotRadius: 4, spotColor: '#7AB94C'});
-  //var id = '#circusd_mem';
-  var lastid = '#circusd_last_mem';
-  var last = circusd_mem_data.length - 1;
-  $(lastid).text(circusd_mem_data[last] + " %");
-  $(id).sparkline(circusd_mem_data, {composite: true, height: '80', width: '290', fillColor: false, lineWidth: 2, lineColor: '#5DAACC', spotSize: 2, spotRadius: 4, spotColor: '#5DAACC'});
+/**
+ * Update all the graphs that are registered in the "watchers" variable.
+ **/
+function updateGraphs(){
+    for (i=0; i < watchers.length; i++){
+        updateGraph(watchers[i]);
+    }
 }
-
-function initializeCircusdGraph() {
-    $.getJSON('/circusd/stats/cpu', function(data) {
-        circusd_cpu_data = data['info'];
-    });
-    $.getJSON('/circusd/stats/mem', function(data) {
-        circusd_mem_data = data['info'];
-    });
-    updateCircusdGraph();
-}
-
-
-function refreshCircusdGraph() {
-
-    $.getJSON('/circusd/stats/cpu?start=-10&end=-1', function(data) {
-        var values = data['info'];
-        for (i=0;i<values.length;i++) {
-            circusd_cpu_data.push(values[i]);
-        }
-        if (circusd_cpu_data.length > MAX_SIZE) {
-              start = circusd_cpu_data.length - MAX_SIZE;
-              circusd_cpu_data = circusd_cpu_data.slice(start);
-        }
-     });
-
-
-    $.getJSON('/circusd/stats/mem?start=-10&end=-1', function(data) {
-        var values = data['info'];
-
-        for (i=0;i<values.length;i++) {
-            circusd_mem_data.push(values[i]);
-        }
-        if (circusd_mem_data.length > MAX_SIZE) {
-              start = circusd_mem_data.length - MAX_SIZE;
-              circusd_mem_data = circusd_mem_data.slice(start);
-        }
-     });
-
-  updateCircusdGraph();
-}
-
-$(document).ready(function () {
-    /**
-    $('.add_watcher').click(function () {
-        $('#overlay').show();
-        return false;
-    });
-    **/
-});

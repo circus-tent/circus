@@ -66,17 +66,17 @@
             <span style="display: inline-block; float: left;" class="label">circusd</span>
         </div>
 
-        <div class="stat" id="pid_circusd">
+        <div class="stat" id="pid_circus">
              <div class="graph">
-                 <span id="circusd_cpu" class="sparklines"></span>
+                 <span id="circus" class="sparklines"></span>
              </div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
                 <span class="cpu_label">CPU</span>
-                <span class="cpu_value" id="circusd_last_cpu">0.0 %</span>
+                <span class="cpu_value" id="circus_last_cpu">0 %</span>
              </div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:right; width: 49%; text-align:center;">
                 <span class="mem_label">Mem</span>
-                <span class="mem_value" id="circusd_last_mem">0.0 %</span>
+                <span class="mem_value" id="circus_last_mem">0 %</span>
              </div>
         </div>
      </div>
@@ -84,17 +84,17 @@
         <div>
             <span style="display: inline-block; float: left;" class="label">circusd-stats</span>
         </div>
-        <div class="stat" id="pid_circusd_stats">
+        <div class="stat" id="pid_circusd-stats">
              <div class="graph">
-                 <span id="circusd_stats_cpu" class="sparklines"></span>
+                 <span id="circusd-stats" class="sparklines"></span>
              </div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
                 <span class="cpu_label">CPU</span>
-                <span class="cpu_value" id="circusd_stats_last_cpu">0.0 %</span>
+                <span class="cpu_value" id="circusd-stats_last_cpu">0 %</span>
              </div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:right; width: 49%; text-align:center;">
                 <span class="mem_label">Mem</span>
-                <span class="mem_value" id="circusd_stats_last_mem">0.0 %</span>
+                <span class="mem_value" id="circusd-stats_last_mem">0 %</span>
              </div>
         </div>
      </div>
@@ -154,20 +154,12 @@
  </div>
 
     <script type="text/javascript">
-    var socket = io.connect('http://localhost');
-    socket.emit('stats', {streams: ['circusd', 'circusd_stats'] });
-
-    socket.on('stats', function (data) {
-        alert(data);
-          });
-
-/*
-  $(function() {
-      initializeCircusdGraph();
-      });
-  setInterval("refreshCircusdGraph()", 1000);
-  */
+    $(document).ready(function () {
+        var socket = io.connect('http://localhost');
+        addWatcher(socket, "circusd-stats", true);
+        addWatcher(socket, "circus", true);
+        window.setInterval(updateGraphs, 10);
+    });
 
  </script>
 % endif
-

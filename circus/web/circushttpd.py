@@ -2,16 +2,22 @@ import os
 import cgi
 import argparse
 import sys
-import threading
+
 try:
     from bottle import (route, run, static_file, redirect, request,
-                        ServerAdapter, app)
+                        ServerAdapter)
     from mako.lookup import TemplateLookup
+    from socketio import socketio_manage
+    from socketio.namespace import BaseNamespace
+    from socketio.mixins import RoomsMixin, BroadcastMixin
+
 except ImportError:
-    raise ImportError('You need to install Bottle and Mako. You ' +
-                      'can do so using "pip install -r web-requirements.txt"')
+    raise ImportError('You need to install Bottle, Mako and gevent-socketio. '
+                    + 'You can do so using "pip install -r '
+                    + 'web-requirements.txt"')
 
 from circus.web.controller import LiveClient, CallError
+from circus.stats.client import StatsClient
 from circus import __version__
 
 
@@ -166,18 +172,36 @@ def disconnect():
         redirect('/?msg=disconnected')
 
 
-from socketio import socketio_manage
-from socketio.namespace import BaseNamespace
-from socketio.mixins import RoomsMixin, BroadcastMixin
-
-
-
 class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 
     def on_stats(self, msg):
+        self.send_data('stats', foo='bar')
+
         streams = msg['streams']
-        # we're sending here the data
-        pkt = dict(type="event", name="stats", endpoint=self.ns_name)
+        aggregate = msg['aggregate']
+
+        # We are receiving some data on the "stats" channel.
+        # Get the channels that are interesting to us and initiate the socket
+        # stream with the stats client.
+        stats = StatsClient(endpoint=client.stats_endpoint)
+        for watcher, pid, stat in stats:
+            if watcher in streams:
+                if aggregate and pid is not None:
+                    # do not send pids if we just want the aggregation
+                    continue
+                self.send_data('stats-%s' % watcher, pid=pid,
+                               mem=stat['mem'], cpu=stat['cpu'])
+
+    def send_data(self, topic, **kwargs):
+        """Send the given dict encoded into json to the listening socket on the
+        browser side.
+
+        :param topic: the topic to send the information to
+        :param **kwargs: the dict to serialize and send
+        """
+        pkt = dict(type="event", name=topic, args=kwargs,
+                   endpoint=self.ns_name)
+        print pkt
         self.socket.send_packet(pkt)
 
 
@@ -201,11 +225,11 @@ class SocketIOServer(ServerAdapter):
 
         namespace = self.options.get('namespace', 'socket.io')
         policy_server = self.options.get('policy_server', False)
-        socket_server = SocketIOServer((self.host, self.port), handler, namespace=namespace,
-                         policy_server=policy_server)
+        socket_server = SocketIOServer((self.host, self.port), handler,
+                                       namespace=namespace,
+                                       policy_server=policy_server)
         handler.socket_server = socket_server
         socket_server.serve_forever()
-
 
 
 def main():
