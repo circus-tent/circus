@@ -26,7 +26,7 @@ class DummyFly(object):
         print "hello, fly 2 #%s (pid: %s) is alive" % (self.wid, os.getpid())
 
         while self.alive:
-            time.sleep(0.1)
+            time.sleep(2)
 
 if __name__ == "__main__":
     DummyFly(sys.argv[1]).run()

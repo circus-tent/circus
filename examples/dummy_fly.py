@@ -28,9 +28,7 @@ class DummyFly(object):
 
         while self.alive:
             a = 10 * 10 * 10 * 10
-
-
-            #time.sleep(0.1)
+            time.sleep(2)
 
 if __name__ == "__main__":
     DummyFly(sys.argv[1]).run()
