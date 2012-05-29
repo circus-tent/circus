@@ -156,7 +156,7 @@ def get_config(config_file):
                 elif opt == 'shell':
                     watcher['shell'] = dget(section, 'shell', False, bool)
                 elif opt == 'uid':
-                    watcher['uid '] = val
+                    watcher['uid'] = val
                 elif opt == 'gid':
                     watcher['gid'] = val
                 elif opt == 'send_hup':
