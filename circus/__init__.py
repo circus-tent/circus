@@ -13,7 +13,8 @@ logger = logging.getLogger('circus')
 def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
                 pubsub_endpoint='tcp://127.0.0.1:5556',
                 env=None, name=None, context=None, check_flapping=True,
-                background=False, stream_backend="thread"):
+                background=False, stream_backend="thread",
+                plugins=None):
     """Creates a Arbiter and a single watcher in it.
 
     Options:
@@ -78,6 +79,11 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
     - **stream_backend** -- the backend that will be used for the streaming
       process. Can be *thread* or *gevent*. When set to *gevent* you need
       to have *gevent* and *gevent_zmq* installed. (default: thread)
+    - **plugins** -- a list of plugins. Each item is a mapping with:
+
+        - **use** -- Fully qualified name that points to the plugin class
+        - every other value is passed to the plugin in the **config** option
+
     """
     if stream_backend == 'gevent':
         try:
@@ -109,4 +115,4 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
         _watchers.append(Watcher.load_from_config(watcher))
 
     return Arbiter(_watchers, controller, pubsub_endpoint, context=context,
-                   check_flapping=check_flapping)
+                   check_flapping=check_flapping, plugins=plugins)

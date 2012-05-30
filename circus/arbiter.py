@@ -12,7 +12,7 @@ from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
 from circus.watcher import Watcher
-from circus.util import debuglog, _setproctitle
+from circus.util import debuglog, _setproctitle, resolve_name
 from circus.config import get_config
 
 # will be imported by plugin registration later XXX
@@ -39,10 +39,14 @@ class Arbiter(object):
        to reuse. (default: None)
     - **check_flapping** -- when True, Circus will check for flapping
       processes and automatically restart them. (default: True)
+    - **plugins** -- a list of plugins. Each item is a mapping with:
+
+        - **use** -- Fully qualified name that points to the plugin class
+        - every other value is passed to the plugin in the **config** option
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
-                 check_flapping=True, stats_endpoint=None):
+                 check_flapping=True, stats_endpoint=None, plugins=None):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -72,6 +76,28 @@ class Arbiter(object):
             stats_watcher = Watcher('circusd-stats', cmd)
             self.watchers.append(stats_watcher)
 
+        self.plugins = plugins
+        self._plugins = {}
+
+    def _init_plugins(self):
+        for plugin in self._plugins.items():
+            plugin.stop()
+
+        self._plugins.clear()
+
+        if self.plugins is None:
+            return
+
+        for config in self.plugins:
+            fqn = config['use']
+            del config['use']
+            cls = resolve_name(fqn)
+
+            instance = cls(self.context, self.endpoint,
+                            self.pubsub_endpoint, self.check_delay,
+                            **config)
+            self._plugins[cls.name] = instance
+
     @classmethod
     def load_from_config(cls, config_file):
         cfg = get_config(config_file)
@@ -87,7 +113,8 @@ class Arbiter(object):
         arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
                       check_delay=cfg.get('check_delay', 1.),
                       prereload_fn=cfg.get('prereload_fn'),
-                      stats_endpoint=cfg.get('stats_endpoint'))
+                      stats_endpoint=cfg.get('stats_endpoint'),
+                      plugins=cfg.get('plugins'))
 
         return arbiter
 
@@ -133,6 +160,11 @@ class Arbiter(object):
         # start controller
         self.ctrl.start()
 
+        # start the plugins
+        self._init_plugins()
+        for plugin in self._plugins.values():
+            plugin.start()
+
         # start flapping
         if self.check_flapping:
             logger.debug('Starting flapping')
@@ -158,12 +190,21 @@ class Arbiter(object):
         if self.check_flapping:
             self.flapping.stop()
 
+        # stop the plugins
+        for plugin in self._plugins.values():
+            plugin.stop()
+
         self.ctrl.stop()
         self.evpub_socket.close()
 
     def stop(self):
         if self.alive:
             self.stop_watchers(stop_alive=True)
+
+        # stop the plugins
+        for plugin in self._plugins.values():
+            plugin.stop()
+
         self.loop.stop()
 
     def reap_processes(self):
@@ -228,6 +269,11 @@ class Arbiter(object):
                 handler.stream = open(handler.baseFilename,
                         handler.mode)
                 handler.release()
+
+        # start the plugins over -- fresh instances
+        self._init_plugins()
+        for plugin in self._plugins.values():
+            plugin.start()
 
         # gracefully reload watchers
         for watcher in self.iter_watchers():
@@ -310,11 +356,11 @@ class ThreadedArbiter(Arbiter, Thread):
 
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
-                 check_flapping=True):
+                 check_flapping=True, stats_endpoint=None, plugins=None):
         Thread.__init__(self)
         Arbiter.__init__(self, watchers, endpoint, pubsub_endpoint,
                          check_delay, prereload_fn, context, loop,
-                         check_flapping)
+                         check_flapping, stats_endpoint, plugins)
 
     def start(self):
         return Thread.start(self)
