@@ -20,6 +20,7 @@ def watcher_defaults():
         'uid': None,
         'gid': None,
         'send_hup': False,
+        'check_flapping': True,
         'flapping_attempts': 2,
         'flapping_window': 1,
         'retry_in': 7,
@@ -110,8 +111,10 @@ def get_config(config_file):
     config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
                                      'tcp://127.0.0.1:5556')
     config['stats_endpoint'] = dget('circus', 'stats_endpoint', None, str)
+    config['check_flapping'] = dget('circus', 'check_flapping', True, bool)
 
     stream_backend = dget('circus', 'stream_backend', 'thread')
+
     if stream_backend == 'gevent':
         try:
             import gevent           # NOQA
@@ -162,6 +165,9 @@ def get_config(config_file):
                 elif opt == 'send_hup':
                     watcher['send_hup'] = dget(section, 'send_hup', False,
                             bool)
+                elif opt == 'check_flapping':
+                    watcher['check_flapping'] = dget(section, 'check_flapping',
+                                                     True, bool)
                 elif opt == 'flapping_attempts':
                     watcher['flapping_attempts'] = dget(section,
                                                         "flapping_attempts", 2,

@@ -113,6 +113,11 @@ class Flapping(Thread):
         else:
             conf = self.update_conf(watcher_name)
 
+        # if the watcher is not activated, we skip it
+        if not conf['check_flapping']:
+            # nothing to do here
+            return
+
         tries = self.tries.get(watcher_name, 0)
 
         if len(timeline) == conf['flapping_attempts']:
