@@ -96,6 +96,22 @@ restarting them if they die unexpectedly.
 To learn more about this, see :ref:`library`
 
 
+Extending Circus
+----------------
+
+It's easy to extend Circus to create a more complex system, by listening to all
+the **circusd** events via its pub/sub channel, and driving it via commands.
+
+That's how the flapping feature works for instance: it listens to all the
+processes dying, measures how often it happens, and stops the incriminated
+watchers after too many restarts attempts.
+
+Circus comes with a plugin system to help you write such extensions, and
+a few built-in plugins you can reuse.
+
+See :ref:`plugins`.
+
+
 Why should I use Circus instead of X ?
 --------------------------------------
 
@@ -153,6 +169,7 @@ More documentation
    commands
    circushttpd
    library
+   plugins
    deployment
    security
    examples

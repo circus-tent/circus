@@ -22,6 +22,14 @@ Example::
     stdout_stream.filename = test.log
     stdout_stream.refresh_time = 0.3
 
+    [plugin:statsd]
+    use = circus.plugins._statsd.StatsdEmitter
+    host = localhost
+    port = 8125
+    sample_rate = 1.0
+    application_name = example
+
+
 
 circus (single section)
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -150,3 +158,11 @@ watcher:NAME (as many sections as you want)
         Arbiter do some operations on all watchers, it will sort them
         with this field, from the bigger number to the smallest.
         Defaults to 0.
+
+plugin:NAME (as many sections as you want)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    **use**
+        The fully qualified name that points to the plugin class.
+    **anything else**
+        Every other key found in the section is passed to the
+        plugin constructor in the **config** mapping.
