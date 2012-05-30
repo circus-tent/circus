@@ -5,6 +5,7 @@ import time
 
 from circus.client import CallError, CircusClient, make_message
 from circus.tests.support import TestCircus
+from circus.plugins import CircusPlugin
 
 
 class DummyProcess(object):
@@ -40,6 +41,18 @@ def run_dummy(test_file):
     dummy = DummyProcess(test_file)
     dummy.run()
     return 1
+
+
+class Plugin(CircusPlugin):
+    name = 'dummy'
+    events = []
+
+    def handle_recv(self, data):
+        topic, msg = data
+        topic_parts = topic.split(".")
+        watcher = topic_parts[1]
+        action = topic_parts[2]
+        self.events.append((watcher, action))
 
 
 class DummyProcess1(object):
@@ -256,3 +269,28 @@ class TestTrainer(TestCircus):
 
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get('status'), "active")
+
+    def test_plugins(self):
+        # killing the setUp runner
+        self._stop_runners()
+        self.cli.stop()
+
+        # setting up a circusd with a plugin
+        dummy_process = 'circus.tests.test_arbiter.run_dummy'
+        plugin = 'circus.tests.test_arbiter.Plugin'
+        plugins = [{'use': plugin}]
+        self._run_circus(dummy_process, plugins=plugins)
+
+        # doing a few operations
+        cli = CircusClient()
+        msg1 = make_message("list", name="test")
+        resp = cli.call(msg1)
+        self.assertEqual(resp.get('processes'), [1])
+        msg2 = make_message("incr", name="test")
+        cli.call(msg2)
+        resp = cli.call(msg1)
+        self.assertEqual(resp.get('processes'), [1, 2])
+
+        # checking what the plugin did
+        wanted = [('test', 'spawn'), ('test', 'start'), ('test', 'spawn')]
+        self.assertEqual(Plugin.events, wanted)

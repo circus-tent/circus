@@ -26,6 +26,7 @@ class CircusPlugin(Thread):
         self.check_delay = check_delay
         self.loop = ioloop.IOLoop()
         self._id = uuid.uuid4().hex    # XXX os.getpid()+thread id is enough...
+        self.running = False
 
     @debuglog
     def initialize(self):
@@ -43,7 +44,7 @@ class CircusPlugin(Thread):
     def run(self):
         self.handle_init()
         self.initialize()
-        logger.debug('Flapping entering loop mode.')
+        self.running = True
         while True:
             try:
                 self.loop.start()
@@ -65,11 +66,16 @@ class CircusPlugin(Thread):
 
     @debuglog
     def stop(self):
+        if not self.running:
+            return
+
         try:
             self.handle_stop()
         finally:
             self.loop.stop()
             self.join()
+
+        self.running = False
 
     def call(self, command, **props):
         msg = make_message(command, **props)

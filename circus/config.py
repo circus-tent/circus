@@ -132,9 +132,14 @@ def get_config(config_file):
 
     config['stream_backend'] = stream_backend
 
-    # Initialize watchers to manage
+    # Initialize watchers & plugins to manage
     watchers = []
+    plugins = []
+
     for section in cfg.sections():
+        if section.startswith("plugin:"):
+            plugins.append(dict(cfg.items(section)))
+
         if section.startswith("watcher:"):
             watcher = watcher_defaults()
             watcher['name'] = section.split("watcher:", 1)[1]
@@ -208,4 +213,5 @@ def get_config(config_file):
             watchers.append(watcher)
 
     config['watchers'] = watchers
+    config['plugins'] = plugins
     return config
