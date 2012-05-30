@@ -3,7 +3,7 @@ import os
 import signal
 import time
 
-from psutil import STATUS_ZOMBIE, STATUS_DEAD
+from psutil import STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
 
 from circus.process import Process
@@ -89,6 +89,9 @@ class Watcher(object):
       process. Can be *thread* or *gevent*. When set to *gevent* you need
       to have *gevent* and *gevent_zmq* installed. (default: thread)
 
+    - **check_flapping** -- if set to False, while the global
+      **check_flapping** option is True, will skip the flapping check for this
+      watcher. (default: True)
     - **flapping_attempts** -- number of times a process can restart before we
       start to detect the flapping (default: 2)
     - **flapping_window** -- the time window in seconds to test for flapping.
@@ -110,7 +113,8 @@ class Watcher(object):
                  max_retry=5,
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
-                 stderr_stream=None, stream_backend='thread', priority=0):
+                 stderr_stream=None, stream_backend='thread', priority=0,
+                 check_flapping=True):
         self.name = name
         self.res_name = name.lower().replace(" ", "_")
         self.numprocesses = int(numprocesses)
@@ -131,13 +135,14 @@ class Watcher(object):
         self.stdout_stream = stdout_stream
         self.stderr_stream = stderr_stream
         self.stdout_redirector = self.stderr_redirector = None
+        self.check_flapping = check_flapping
 
         self.optnames = ("numprocesses", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env",
                          "cmd", "flapping_attempts", "flapping_window",
                          "retry_in", "args",
                          "max_retry", "graceful_timeout", "executable",
-                         "priority")
+                         "priority", "check_flapping")
 
         if not working_dir:
             # working dir hasn't been set
@@ -200,7 +205,8 @@ class Watcher(object):
                    stdout_stream=config.get('stdout_stream'),
                    stderr_stream=config.get('stderr_stream'),
                    stream_backend=config.get('stream_backend', 'thread'),
-                   priority=int(config.get('priority', 0)))
+                   priority=int(config.get('priority', 0)),
+                   check_flapping=bool(config.get('check_flapping', True)))
 
     @util.debuglog
     def initialize(self, evpub_socket):
@@ -378,7 +384,12 @@ class Watcher(object):
                                "process_pid": process.pid,
                                "time": time.time()})
         logger.debug("%s: kill process %s", self.name, process.pid)
-        process.send_signal(sig)
+        try:
+            process.send_signal(sig)
+        except NoSuchProcess:
+            # already dead !
+            return
+
         process.stop()
 
     @util.debuglog
