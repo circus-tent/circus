@@ -3,7 +3,7 @@ import os
 import sys
 
 
-version_info = (0, 3, 4)
+version_info = (0, 4)
 __version__ = ".".join(map(str, version_info))
 
 
