@@ -1,7 +1,7 @@
 import errno
 import logging
 import os
-from threading import Thread
+from threading import Thread, RLock
 import time
 import sys
 
@@ -56,7 +56,7 @@ class Arbiter(object):
         self.pid = os.getpid()
         self._watchers_names = {}
         self.alive = True
-        self.busy = False
+        self._lock = RLock()
         self.check_flapping = check_flapping
 
         # initializing circusd-stats as a watcher when configured
@@ -193,8 +193,10 @@ class Arbiter(object):
                     raise
 
     def manage_watchers(self):
-        if not self.busy and self.alive:
-            self.busy = True
+        if not self.alive:
+            return
+
+        with self._lock:
             # manage and reap processes
             self.reap_processes()
             for watcher in self.iter_watchers():
@@ -202,11 +204,9 @@ class Arbiter(object):
 
             if self.check_flapping and not self.flapping.is_alive():
                 self.flapping = Flapping(self.context, self.endpoint,
-                                         self.pubsub_endpoint,
-                                         self.check_delay)
+                                            self.pubsub_endpoint,
+                                            self.check_delay)
                 self.flapping.start()
-
-            self.busy = False
 
     @debuglog
     def reload(self, graceful=True):
