@@ -59,12 +59,11 @@ class TestWatcher(TestCircus):
         self.call('restart')
         time.sleep(1.)
 
-        current = time.time()
         # should be running
         with open(self.log) as f:
             data = f.readlines()
 
         # last log should be less than one second old
         last = data[-1]
-        delta = abs(current - int(last.split('-')[0]))
+        delta = abs(time.time() - int(last.split('-')[0]))
         self.assertTrue(delta < 1, delta)
