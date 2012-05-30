@@ -29,6 +29,7 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
           programs as the command name, which can then be different from the
           actual executable name. It becomes the display name for the executing
           program in utilities such as **ps**.
+
         - **numprocesses** -- the number of processes to spawn (default: 1).
         - **warmup_delay** -- the delay in seconds between two spawns
           (default: 0)
@@ -42,6 +43,7 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
           the SIGHUP signal. (default: False)
         - **stdout_stream**: a mapping containing the options for configuring
           the stdout stream. Default to None. When provided, may contain:
+
             - **class**: the fully qualified name of the class to use for
               streaming. Defaults to circus.stream.FileStream
             - **refresh_time**: the delay between two stream checks. Defaults
@@ -49,6 +51,7 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
             - any other key will be passed the class constructor.
         - **stderr_stream**: a mapping containing the options for configuring
           the stderr stream. Default to None. When provided, may contain:
+
             - **class**: the fully qualified name of the class to use for
               streaming. Defaults to circus.stream.FileStream
             - **refresh_time**: the delay between two stream checks. Defaults
