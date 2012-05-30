@@ -12,10 +12,10 @@ def run_process(*args, **kw):
     try:
         i = 0
         while True:
-            sys.stdout.write('%d-stdout-%d-%s\n' % (time.time(),
+            sys.stdout.write('%.2f-stdout-%d-%s\n' % (time.time(),
                                                      os.getpid(), i))
             sys.stdout.flush()
-            sys.stderr.write('%d-stderr-%d-%s\n' % (time.time(),
+            sys.stderr.write('%.2f-stderr-%d-%s\n' % (time.time(),
                                                      os.getpid(), i))
             sys.stderr.flush()
             time.sleep(.25)
@@ -65,5 +65,5 @@ class TestWatcher(TestCircus):
 
         # last log should be less than one second old
         last = data[-1]
-        delta = abs(time.time() - int(last.split('-')[0]))
-        self.assertTrue(delta < 1, delta)
+        delta = abs(time.time() - float(last.split('-')[0]))
+        self.assertTrue(delta < 1., delta)
