@@ -10,11 +10,13 @@ from zmq.eventloop import ioloop
 
 from circus.controller import Controller
 from circus.exc import AlreadyExist
-from circus.flapping import Flapping
 from circus import logger
 from circus.watcher import Watcher
 from circus.util import debuglog, _setproctitle
 from circus.config import get_config
+
+# will be imported by plugin registration later XXX
+from circus.plugins.flapping import Flapping
 
 
 class Arbiter(object):
