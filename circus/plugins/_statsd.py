@@ -20,9 +20,10 @@ class StatsdEmitter(CircusPlugin):
         self.prefix = 'circus.%s.watcher' % self.app
 
         # initialize statsd
-        statsd.init_statsd({'STATSD_HOST': 'localhost',
-                            'STATSD_PORT': 8125,
-                            'STATSD_SAMPLE_RATE': 1.0,
+        statsd.init_statsd({'STATSD_HOST': config.get('host', 'localhost'),
+                            'STATSD_PORT': int(config.get('port', '8125')),
+                            'STATSD_SAMPLE_RATE':
+                                    float(config.get('sample_rate', '1.0')),
                             'STATSD_BUCKET_PREFIX': self.prefix})
 
     def handle_recv(self, data):
