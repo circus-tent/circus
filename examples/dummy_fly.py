@@ -2,7 +2,6 @@
 import os
 import signal
 import sys
-import time
 
 
 class DummyFly(object):
@@ -26,9 +25,9 @@ class DummyFly(object):
     def run(self):
         print "hello, fly #%s (pid: %s) is alive" % (self.wid, os.getpid())
 
+        a = 2
         while self.alive:
-            a = 10 * 10 * 10 * 10
-            time.sleep(2)
+            a = a + 200
 
 if __name__ == "__main__":
     DummyFly(sys.argv[1]).run()

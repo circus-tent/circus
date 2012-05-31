@@ -156,9 +156,7 @@
     <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect('http://localhost');
-        addWatcher(socket, "circusd-stats", true);
-        addWatcher(socket, "circus", true);
-        window.setInterval(updateGraphs, 10);
+        supervise(socket, ['circusd-stats', 'circus']);
     });
 
  </script>

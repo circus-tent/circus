@@ -25,20 +25,6 @@ _DIR = os.path.dirname(__file__)
 TMPLS = TemplateLookup(directories=[_DIR])
 
 client = None
-MAX_STATS = 100
-
-
-def render_template(template, **data):
-    """Finds the given template and renders it with the given data.
-
-    Also adds some data that can be useful to the template, even if not
-    explicitely asked so.
-
-    :param template: the template to render
-    :param **data: the kwargs that will be passed when rendering the template
-    """
-    tmpl = TMPLS.get_template(template)
-    return tmpl.render(client=client, version=__version__, **data)
 
 
 @route('/watchers/<name>/process/kill/<pid>')
@@ -63,39 +49,6 @@ def index():
     if msg:
         msg = cgi.escape(msg)
     return render_template('index.html', msg=msg)
-
-
-@route('/circusd/stats/<field>', method='GET')
-def get_dstat(field):
-    #start = int(request.query.get('start', '0'))
-    #end = int(request.query.get('end', '-1'))
-
-    if client is None:
-        return {}
-    try:
-        res = {'info': [str(v) for v in client.get_dstats(field)]}
-    except (CallError, KeyboardInterrupt, KeyError):
-        pass
-    return res
-
-
-@route('/watchers/<name>/stats/<field>', method='GET')
-def get_stat(name, field):
-    start = int(request.query.get('start', '0'))
-    end = int(request.query.get('end', '-1'))
-
-    if client is None:
-        return {}
-    res = {}
-    try:
-        pids = [str(pid) for pid in client.get_pids(name)]
-        for pid in pids:
-            res[pid] = [str(v) for v in client.get_series(name, pid, field,
-                        start, end)]
-    except (CallError, KeyboardInterrupt, KeyError):
-        pass
-
-    return res
 
 
 @route('/watchers/<name>/process/decr', method='GET')
@@ -172,25 +125,59 @@ def disconnect():
         redirect('/?msg=disconnected')
 
 
+@route('/socket.io/<someid>/websocket/<socket_id>', method='GET')
+def socketio(someid, socket_id):
+    return socketio_manage(request.environ, {'': StatsNamespace})
+
+
 class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
+    def on_get_stats(self, msg):
+        """This method is the one way to start a conversation with the socket.
+        When sending a message here, the parameters are packt into the msg
+        dictionary, which contains:
 
-    def on_stats(self, msg):
-        self.send_data('stats', foo='bar')
+            - "streams", a list of streams that the client want to be notified
+              about.
+            - "get_processes", if it wants to include the subprocesses managed
+              by this watcher or not (optional, defaults to False)
 
-        streams = msg['streams']
-        aggregate = msg['aggregate']
+        The server sends back to the client some messages, on different
+        channels:
 
-        # We are receiving some data on the "stats" channel.
-        # Get the channels that are interesting to us and initiate the socket
-        # stream with the stats client.
+            - "stats-<watchername>" sends memory and cpu info for the
+              aggregation of stats.
+            - stats-<watchername>-pids sends the list of pids for this watcher
+            - "stats-<watchername>-<pid>" sends the information about
+              specific pids for the different watchers (works only if
+              "get_processes" is set to True when calling this method)
+        """
+
+        print msg
+        # unpack the params
+        streams = msg.get('watchers', [])
+        streamsWithPids = msg.get('watchersWithPids', [])
+
+        # if we want to supervise the processes of a watcher, then send the
+        # list of pids trough a socket.
+        for watcher in streamsWithPids:
+            pids = [int(pid) for pid in client.get_pids(watcher)]
+            channel = 'stats-{watcher}-pids'.format(watcher=watcher)
+            print channel
+            self.send_data(channel, pids=pids)
+
+        # Get the channels that are interesting to us and send back information
+        # there when we got them.
         stats = StatsClient(endpoint=client.stats_endpoint)
         for watcher, pid, stat in stats:
-            if watcher in streams:
-                if aggregate and pid is not None:
-                    # do not send pids if we just want the aggregation
-                    continue
-                self.send_data('stats-%s' % watcher, pid=pid,
-                               mem=stat['mem'], cpu=stat['cpu'])
+            if watcher in streams or watcher in streamsWithPids:
+                if pid is None:  # means that it's the aggregation
+                    self.send_data('stats-{watcher}'.format(watcher=watcher),
+                                   mem=stat['mem'], cpu=stat['cpu'])
+                else:
+                    if watcher in streamsWithPids:
+                        self.send_data('stats-{watcher}-{pid}'\
+                                       .format(watcher=watcher, pid=pid),
+                                       mem=stat['mem'], cpu=stat['cpu'])
 
     def send_data(self, topic, **kwargs):
         """Send the given dict encoded into json to the listening socket on the
@@ -201,15 +188,10 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         """
         pkt = dict(type="event", name=topic, args=kwargs,
                    endpoint=self.ns_name)
-        print pkt
         self.socket.send_packet(pkt)
 
 
-@route('/socket.io/<someid>/websocket/<socket_id>', method='GET')
-def socketio(someid, socket_id):
-    retval = socketio_manage(request.environ, {'': StatsNamespace})
-    return retval
-
+# Utils
 
 class SocketIOServer(ServerAdapter):
     def run(self, handler):
@@ -232,6 +214,19 @@ class SocketIOServer(ServerAdapter):
         socket_server.serve_forever()
 
 
+def render_template(template, **data):
+    """Finds the given template and renders it with the given data.
+
+    Also adds some data that can be useful to the template, even if not
+    explicitely asked so.
+
+    :param template: the template to render
+    :param **data: the kwargs that will be passed when rendering the template
+    """
+    tmpl = TMPLS.get_template(template)
+    return tmpl.render(client=client, version=__version__, **data)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Run the Web Console')
     parser.add_argument('--host', help='Host', default='localhost')
@@ -239,12 +234,12 @@ def main():
     parser.add_argument('--server', help='web server to use',
                         default=SocketIOServer)
     args = parser.parse_args()
-    old = sys.argv[:]
-    sys.argv[:] = []
+    old = list(sys.argv)
+    sys.argv = []
     try:
         run(host=args.host, port=args.port, server=args.server)
     finally:
-        sys.argv[:] = old
+        sys.argv = old
 
 
 if __name__ == '__main__':
