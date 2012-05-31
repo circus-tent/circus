@@ -14,7 +14,15 @@ from circus.util import debuglog
 
 
 class CircusPlugin(Thread):
+    """Base class to write plugins.
 
+    Options:
+
+    - **context** -- the ZMQ context to use
+    - **endpoint** -- the circusd ZMQ endpoint
+    - **pubsub_endpoint** -- the circusd ZMQ pub/sub endpoint
+    - **check_delay** -- the configured check delay
+    """
     name = ''
 
     def __init__(self, context, endpoint, pubsub_endpoint, check_delay):
@@ -78,12 +86,28 @@ class CircusPlugin(Thread):
         self.running = False
 
     def call(self, command, **props):
+        """Sends to **circusd** the command.
+
+        Options:
+
+        - **command** -- the command to call
+        - **props** -- keywords argument to add to the call
+
+        Returns the JSON mapping sent back by **circusd**
+        """
         msg = make_message(command, **props)
         self.client.send(json.dumps(msg))
         msg = self.client.recv()
         return json.loads(msg)
 
     def cast(self, command, **props):
+        """Fire-and-forget a command to **circusd**
+
+        Options:
+
+        - **command** -- the command to call
+        - **props** -- keywords argument to add to the call
+        """
         msg = cast_message(command, **props)
         self.client.send(json.dumps(msg))
 
@@ -91,10 +115,20 @@ class CircusPlugin(Thread):
     # methods to override.
     #
     def handle_recv(self, data):
+        """Receives every event published by **circusd**
+
+        Options:
+
+        - **data** -- a tuple containing the topic and the message.
+        """
         raise NotImplementedError()
 
     def handle_stop(self):
+        """Called right before the plugin is stopped by Circus.
+        """
         pass
 
     def handle_init(self):
+        """Called right befor a plugin is started - in the thread context.
+        """
         pass
