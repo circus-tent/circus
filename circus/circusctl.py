@@ -145,10 +145,7 @@ class ControllerApp(object):
 
     def display_version(self, *args, **opts):
         from circus import __version__
-
-        print("Circus (version %s)" % __version__)
-        print("Licensed under the Apache License, Version 2.0.")
-        print("")
+        print(__version__)
         return 0
 
     def handle_sub(self, cmd, opts, topics, endpoint, timeout):
@@ -184,6 +181,11 @@ class ControllerApp(object):
     def _parse(self, args):
         options = {}
         cmdoptions = {}
+
+        # placeholder so "circusctl --version" works
+        if args == ['--version']:
+            args.append('XX')
+
         args = self._parseopts(args, globalopts, options)
 
         if args:

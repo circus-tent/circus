@@ -233,9 +233,19 @@ def main():
     parser.add_argument('--port', help='port', default=8080)
     parser.add_argument('--server', help='web server to use',
                         default=SocketIOServer)
+    parser.add_argument('--version', action='store_true',
+                     default=False, help='Displays Circus version and exits.')
+
     args = parser.parse_args()
     old = list(sys.argv)
     sys.argv = []
+
+    args = parser.parse_args()
+
+    if args.version:
+        print(__version__)
+        sys.exit(0)
+
     try:
         run(host=args.host, port=args.port, server=args.server)
     finally:
