@@ -158,7 +158,15 @@ def main():
     parser.add_argument('--port', help='port', default=8080)
     parser.add_argument('--server', help='web server to use',
                         default='wsgiref')
+    parser.add_argument('--version', action='store_true',
+                     default=False, help='Displays Circus version and exits.')
+
     args = parser.parse_args()
+
+    if args.version:
+        print(__version__)
+        sys.exit(0)
+
     old = sys.argv[:]
     sys.argv[:] = []
     try:

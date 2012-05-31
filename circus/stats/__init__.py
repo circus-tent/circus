@@ -16,6 +16,7 @@ import logging
 from circus.stats.streamer import StatsStreamer
 from circus import logger
 from circus import util
+from circus import __version__
 
 
 LOG_LEVELS = {
@@ -51,7 +52,14 @@ def main():
     parser.add_argument('--log-output', dest='logoutput', default='-',
             help="log output")
 
+    parser.add_argument('--version', action='store_true',
+                      default=False, help='Displays Circus version and exits.')
+
     args = parser.parse_args()
+
+    if args.version:
+        print(__version__)
+        sys.exit(0)
 
     # configure the logger
     loglevel = LOG_LEVELS.get(args.loglevel.lower(), logging.INFO)
