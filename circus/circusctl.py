@@ -171,8 +171,7 @@ class ControllerApp(object):
             else:
                 print(self._console(client, cmd, opts, msg))
         except CallError as e:
-
-            sys.stderr.write(str(e))
+            sys.stderr.write(str(e) + " Try to raise the --timeout value\n")
             return 1
         finally:
             client.stop()
