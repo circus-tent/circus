@@ -171,6 +171,9 @@ def get_info(process=None, interval=0):
 
 
 def to_bool(s):
+    if isinstance(s, bool):
+        return s
+
     if s.lower().strip() in ("true", "1",):
         return True
     elif s.lower().strip() in ("false", "0"):

@@ -10,7 +10,7 @@ from zmq.utils.jsonapi import jsonmod as json
 
 from circus import logger
 from circus.client import make_message, cast_message
-from circus.util import debuglog
+from circus.util import debuglog, to_bool
 
 
 class CircusPlugin(Thread):
@@ -22,12 +22,15 @@ class CircusPlugin(Thread):
     - **endpoint** -- the circusd ZMQ endpoint
     - **pubsub_endpoint** -- the circusd ZMQ pub/sub endpoint
     - **check_delay** -- the configured check delay
+    -- **config** -- free config mapping
     """
     name = ''
 
-    def __init__(self, context, endpoint, pubsub_endpoint, check_delay):
+    def __init__(self, context, endpoint, pubsub_endpoint, check_delay,
+                 **config):
         super(CircusPlugin, self).__init__()
         self.daemon = True
+        self.active = to_bool(config.get('active', True))
         self.context = context
         self.pubsub_endpoint = pubsub_endpoint
         self.endpoint = endpoint
@@ -50,6 +53,8 @@ class CircusPlugin(Thread):
 
     @debuglog
     def run(self):
+        if not self.active:
+            raise ValueError('Will not start an inactive plugin')
         self.handle_init()
         self.initialize()
         self.running = True

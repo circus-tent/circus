@@ -43,10 +43,6 @@ circus (single section)
         The ZMQ PUB/SUB socket receiving publications of stats.
         If not configured, this feature is deactivated.
         (default: *tcp://127.0.0.1:5557*)
-    **check_flapping**
-        If True, Circus will detect "flapping" processes and stop
-        the worker after some failed attempts to start it.
-        (default: True)
     **check_delay**
         The polling interval in seconds for the ZMQ socket. (default: 5)
     **include**
@@ -131,23 +127,6 @@ watcher:NAME (as many sections as you want)
     **send_hup**
         if True, a process reload will be done by sending the SIGHUP signal.
         Defaults to False.
-
-    **check_flapping**
-      If set to False, while the global **check_flapping** option is True, will skip
-      the flapping check for this wacther. Defaults to True.
-
-    **flapping_attempts**
-        Number of times a process can restart before we start to
-        detect the flapping. Defaults to 2.
-
-    **flapping_window**
-        The time window in seconds to test for flapping. If the
-        process restarts more than **flapping_attempts**
-        times, we consider it a flapping process. Defaults to 1.
-
-    **retry_in**
-        The time in seconds to wait until we try to start a process
-        that has been flapping. Defaults to 7.
 
     **max_retry**
         The number of times we attempt to start a process, before

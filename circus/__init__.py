@@ -12,7 +12,7 @@ logger = logging.getLogger('circus')
 
 def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
                 pubsub_endpoint='tcp://127.0.0.1:5556',
-                env=None, name=None, context=None, check_flapping=True,
+                env=None, name=None, context=None,
                 background=False, stream_backend="thread",
                 plugins=None):
     """Creates a Arbiter and a single watcher in it.
@@ -58,13 +58,6 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
             - **refresh_time**: the delay between two stream checks. Defaults
               to 0.3 seconds.
             - any other key will be passed the class constructor.
-         - **flapping_attempts**: number of times a process can restart
-           before we start to detect the flapping (default: 2)
-        - **flapping_window**: the time window in seconds to test for flapping.
-          If the process restarts more than **times** times, we consider it a
-          flapping process. (default: 1)
-        - **retry_in**: time in seconds to wait until we try to start a process
-          that has been flapping. (default: 7)
         - **max_retry**: the number of times we attempt to start a process,
           before we abandon and stop the whole watcher. (default: 5)
 
@@ -72,8 +65,6 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
     - **pubsub_endpoint** -- the zmq entry point for the pubsub
       (default: 'tcp://127.0.0.1:5556')
     - **context** -- the zmq context (default: None)
-    - **check_flapping** -- If True, the flapping detection is activated.
-      (default:True)
     - **background** -- If True, the arbiter is launched in a thread in the
       background (default: False)
     - **stream_backend** -- the backend that will be used for the streaming
@@ -115,4 +106,4 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
         _watchers.append(Watcher.load_from_config(watcher))
 
     return Arbiter(_watchers, controller, pubsub_endpoint, context=context,
-                   check_flapping=check_flapping, plugins=plugins)
+                   plugins=plugins)
