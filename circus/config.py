@@ -20,10 +20,6 @@ def watcher_defaults():
         'uid': None,
         'gid': None,
         'send_hup': False,
-        'check_flapping': True,
-        'flapping_attempts': 2,
-        'flapping_window': 1,
-        'retry_in': 7,
         'max_retry': 5,
         'graceful_timeout': 30,
         'rlimits': dict(),
@@ -111,8 +107,6 @@ def get_config(config_file):
     config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
                                      'tcp://127.0.0.1:5556')
     config['stats_endpoint'] = dget('circus', 'stats_endpoint', None, str)
-    config['check_flapping'] = dget('circus', 'check_flapping', True, bool)
-
     stream_backend = dget('circus', 'stream_backend', 'thread')
 
     if stream_backend == 'gevent':
@@ -173,16 +167,6 @@ def get_config(config_file):
                 elif opt == 'check_flapping':
                     watcher['check_flapping'] = dget(section, 'check_flapping',
                                                      True, bool)
-                elif opt == 'flapping_attempts':
-                    watcher['flapping_attempts'] = dget(section,
-                                                        "flapping_attempts", 2,
-                                                        int)
-                elif opt == 'flapping_window':
-                    watcher['flapping_window'] = dget(section,
-                                                      "flapping_window", 1,
-                                                      int)
-                elif opt == 'retry_in':
-                    watcher['retry_in'] = dget(section, "retry_in", 7, int)
                 elif opt == 'max_retry':
                     watcher['max_retry'] = dget(section, "max_retry", 5, int)
                 elif opt == 'graceful_timout':
@@ -197,6 +181,9 @@ def get_config(config_file):
                     watcher['rlimits'][limit] = int(val)
                 elif opt == 'priority':
                     watcher['priority'] = dget(section, "priority", 0, int)
+                else:
+                    # freeform
+                    watcher[opt] = val
 
             # second pass, parse stream conf
             stdout_conf = watcher.get('stdout_stream', {})
