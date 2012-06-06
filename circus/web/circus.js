@@ -1,4 +1,6 @@
-DEFAULT_CONFIG = { width: 290, height: 50, delay: 1000, dataSize: 25};
+DEFAULT_CONFIG = { width: 290, height: 50, delay: 1000, dataSize: 25,
+                   memory_color: 'rgb(93, 170, 204)',
+                   cpu_color: 'rgb(122, 185, 76)'};
 
 function hookGraph(socket, watcher, config) {
     if (config == undefined) { config = DEFAULT_CONFIG; }
@@ -10,7 +12,8 @@ function hookGraph(socket, watcher, config) {
             renderer: 'line',
             interpolation: 'basis',
             series: new Rickshaw.Series.FixedDuration(
-                [{ name: 'mem' }],
+                [{ name: 'mem', color: config.memory_color },
+                 { name: 'cpu', color: config.cpu_color }],
                 undefined,
                 { timeInterval: config.delay,
                   maxDataPoints: 25,
