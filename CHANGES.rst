@@ -1,6 +1,8 @@
 CHANGES
 =======
 
+0.4
+---
 ???next release
 
 

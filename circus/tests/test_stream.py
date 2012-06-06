@@ -13,10 +13,10 @@ def run_process(*args, **kw):
         i = 0
         while True:
             sys.stdout.write('%.2f-stdout-%d-%s\n' % (time.time(),
-                                                     os.getpid(), i))
+                                                      os.getpid(), i))
             sys.stdout.flush()
             sys.stderr.write('%.2f-stderr-%d-%s\n' % (time.time(),
-                                                     os.getpid(), i))
+                                                      os.getpid(), i))
             sys.stderr.flush()
             time.sleep(.25)
     except:
