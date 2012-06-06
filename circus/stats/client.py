@@ -38,7 +38,14 @@ class StatsClient(CircusConsumer):
 
 
 def _paint(stdscr, watchers):
+
+    h, w = stdscr.getmaxyx()
+    curses.endwin()
+    stdscr.refresh()
+
     stdscr.erase()
+    stdscr.resize(h, w)
+
     names = watchers.keys()
     names.sort()
     stdscr.addstr(0, 0, 'Circus Top')
