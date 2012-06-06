@@ -69,8 +69,13 @@ $(document).ready(function() {
         return false;
     });
 
+    $('#cancel_watcher_btn').click(function () {
+        $('#overlay').hide();
+        return false;
+    });
+
     $('a.stopped, a.active').click(function(e) {
-        return confirm('Are you sure you want to change the status ?');
+        return confirm("Are you sure you want to change the status ?");
     });
 
 });
