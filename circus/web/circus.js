@@ -1,4 +1,4 @@
-DEFAULT_CONFIG = { width: 290, height: 50, delay: 1000, dataSize: 25,
+DEFAULT_CONFIG = { width: 290, height: 79, delay: 10, dataSize: 25,
                    memory_color: 'rgb(93, 170, 204)',
                    cpu_color: 'rgb(122, 185, 76)'};
 
