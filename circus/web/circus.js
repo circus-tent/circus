@@ -1,11 +1,10 @@
 DEFAULT_CONFIG = { width: 290, height: 50, delay: 1000, dataSize: 25};
 
-function getGraph(id, config) {
-
+function hookGraph(socket, watcher, config) {
     if (config == undefined) { config = DEFAULT_CONFIG; }
 
     var graph = new Rickshaw.Graph({
-            element: document.getElementById(id),
+            element: document.getElementById(watcher),
             width: config.width,
             height: config.height,
             renderer: 'line',
@@ -18,10 +17,6 @@ function getGraph(id, config) {
                   timeBase: new Date().getTime() / 1000 })
     });
 
-    return graph;
-}
-
-function hookData(socket, watcher, graph, config) {
     socket.on('stats-' + watcher, function(data) {
         // cap to 100
         if (data.cpu > 100) { data.cpu = 100; }
@@ -42,8 +37,7 @@ function supervise(socket, watchers, watchersWithPids, config) {
     if (config == undefined) { config = DEFAULT_CONFIG; }
 
     watchers.forEach(function(watcher) {
-        graph = getGraph(watcher, config);
-        hookData(socket, watcher, graph, config);
+        hookGraph(socket, watcher, config);
     });
 
     watchersWithPids.forEach(function(watcher) {
@@ -51,8 +45,7 @@ function supervise(socket, watchers, watchersWithPids, config) {
         socket.on('stats-' + watcher + '-pids', function(data) {
             data.pids.forEach(function(pid) {
                 var id = watcher + '-' + pid;
-                graph = getGraph(id, config);
-                hookData(socket, id, graph, config);
+                hookGraph(socket, id, config);
             });
         });
     });
@@ -74,7 +67,7 @@ $(document).ready(function() {
     });
 
     $('a.stopped, a.active').click(function(e) {
-        return confirm("Are you sure you want to change the status ?");
+        return confirm('Are you sure you want to change the status ?');
     });
 
 });
