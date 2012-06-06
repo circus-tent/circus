@@ -1,5 +1,4 @@
 import argparse
-import cgi
 import os
 import sys
 
@@ -12,10 +11,10 @@ try:
     from socketio.mixins import RoomsMixin, BroadcastMixin
     from socketio.namespace import BaseNamespace
 
-except ImportError:
+except ImportError, e:
     raise ImportError('You need to install dependencies to run the webui. '\
                     + 'You can do so by using "pip install -r '
-                    + 'web-requirements.txt"')
+                    + 'web-requirements.txt"\nInitial error: %s' % str(e))
 
 from circus.web.controller import LiveClient, CallError
 from circus.stats.client import StatsClient
