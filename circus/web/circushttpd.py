@@ -1,19 +1,20 @@
-import os
-import cgi
 import argparse
+import cgi
+import os
 import sys
 
 try:
-    from bottle import (route, run, static_file, redirect, request,
+    from beaker.middleware import SessionMiddleware
+    from bottle import (app, route, run, static_file, redirect, request,
                         ServerAdapter)
     from mako.lookup import TemplateLookup
     from socketio import socketio_manage
-    from socketio.namespace import BaseNamespace
     from socketio.mixins import RoomsMixin, BroadcastMixin
+    from socketio.namespace import BaseNamespace
 
 except ImportError:
-    raise ImportError('You need to install Bottle, Mako and gevent-socketio. '
-                    + 'You can do so using "pip install -r '
+    raise ImportError('You need to install dependencies to run the webui. '\
+                    + 'You can do so by using "pip install -r '
                     + 'web-requirements.txt"')
 
 from circus.web.controller import LiveClient, CallError
@@ -24,18 +25,16 @@ from circus import __version__
 _DIR = os.path.dirname(__file__)
 TMPLS = TemplateLookup(directories=[_DIR])
 
+session_opts = {
+    'session.type': 'file',
+    'session.cookie_expires': 300,
+    'session.data_dir': './data',
+    'session.auto': True
+}
+
+app = SessionMiddleware(app(), session_opts)
+
 client = None
-
-
-@route('/watchers/<name>/process/kill/<pid>')
-def kill_process(name, pid):
-    try:
-        client.killproc(name, pid)
-        msg = 'success'
-    except CallError, e:
-        msg = str(e)
-
-    redirect('/watchers/%s?msg=%s' % (name, msg))
 
 
 @route('/media/<filename:path>')
@@ -45,61 +44,58 @@ def get_media(filename):
 
 @route('/', method='GET')
 def index():
-    msg = request.query.get('msg')
-    if msg:
-        msg = cgi.escape(msg)
-    return render_template('index.html', msg=msg)
+    return render_template('index.html')
+
+
+@route('/watchers/<name>/process/kill/<pid>')
+def kill_process(name, pid):
+    return run_command(
+        lambda: client.killproc(name, pid),
+        'process {pid} for watcher {watcher} killed sucessfully'\
+        .format(pid=pid, watcher=name),
+        '/watchers/%s' % name)
 
 
 @route('/watchers/<name>/process/decr', method='GET')
 def decr_proc(name):
-    url = request.query.get('redirect', '/watchers/%s' % name)
-    try:
-        client.decrproc(name)
-        msg = 'success'
-    except CallError, e:
-        msg = str(e)
-    redirect(url + '?msg=' + msg)
+    return run_command(
+        lambda: client.decrproc(name),
+        'removed one process from the {watcher} pool'.format(watcher=name),
+        '/watchers/%s' % name)
 
 
 @route('/watchers/<name>/process/incr', method='GET')
 def incr_proc(name):
-    url = request.query.get('redirect', '/watchers/%s' % name)
-    try:
-        client.incrproc(name)
-        msg = 'success'
-    except CallError, e:
-        msg = str(e)
-    redirect(url + '?msg=' + msg)
+
+    return run_command(
+        lambda: client.incrproc(name),
+        'added one process to the {watcher} pool'.format(watcher=name),
+        '/watchers/%s' % name)
 
 
 @route('/watchers/<name>/switch_status', method='GET')
 def switch(name):
-    url = request.query.get('redirect', '/')
-    try:
-        client.switch_status(name)
-        redirect(url)
-    except CallError, e:
-        redirect(url + '?msg=' + str(e))
+    return run_command(
+        lambda: client.switch_status(name),
+        'status switched',
+        '/')
 
 
 @route('/add_watcher', method='POST')
 def add_watcher():
     try:
         if client.add_watcher(**request.POST):
+            set_message('new watcher sucessfully added')
             redirect('/watchers/%(name)s' % request.POST)
         else:
-            redirect('/?msg=Failed')
+            redirect('/')
     except CallError:
-        redirect('/?msg=Failed')
+        redirect('/')
 
 
 @route('/watchers/<name>', method='GET')
 def watcher(name):
-    msg = request.query.get('msg')
-    if msg:
-        msg = cgi.escape(msg)
-    return render_template('watcher.html', msg=msg, name=name)
+    return render_template('watcher.html', name=name)
 
 
 @route('/connect', method='POST')
@@ -110,9 +106,10 @@ def connect():
     _client.verify()
     if _client.connected:
         client = _client
-        redirect('/?msg=Connected')
+        set_message('You are now connected')
     else:
-        redirect('/?msg=Failed to connect')
+        set_message('Impossible to connect')
+    redirect('/')
 
 
 @route('/disconnect')
@@ -122,7 +119,8 @@ def disconnect():
     if client is not None:
         client.stop()
         client = None
-        redirect('/?msg=disconnected')
+        set_message('You are now disconnected')
+    redirect('/')
 
 
 @route('/socket.io/<someid>/websocket/<socket_id>', method='GET')
@@ -212,6 +210,29 @@ class SocketIOServer(ServerAdapter):
         socket_server.serve_forever()
 
 
+def get_session():
+    return request.environ.get('beaker.session')
+
+
+def set_message(message):
+    session = get_session()
+    session['message'] = message
+    session.save()
+
+
+def set_error(message):
+    return set_message("An error happened: %s" % message)
+
+
+def run_command(func, message, url):
+    try:
+        func()
+        set_message(message)
+    except CallError, e:
+        set_message("An error happened: %s" % e)
+    redirect(url)
+
+
 def render_template(template, **data):
     """Finds the given template and renders it with the given data.
 
@@ -222,7 +243,11 @@ def render_template(template, **data):
     :param **data: the kwargs that will be passed when rendering the template
     """
     tmpl = TMPLS.get_template(template)
-    return tmpl.render(client=client, version=__version__, **data)
+
+    # send the last message stored in the session in addition, in the "message"
+    # attribute.
+    return tmpl.render(client=client, version=__version__,
+                       session=get_session(), **data)
 
 
 def main():
@@ -245,7 +270,7 @@ def main():
         sys.exit(0)
 
     try:
-        run(host=args.host, port=args.port, server=args.server)
+        run(app, host=args.host, port=args.port, server=args.server)
     finally:
         sys.argv = old
 

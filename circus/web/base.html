@@ -86,9 +86,9 @@
         % else:
             <section id="login">
         % endif
-        % if msg:
+        % if 'message' in session:
             <div class="note">
-                ${msg}
+                ${session.pop('message')}
             </div>
         %endif
         ${self.body()}
