@@ -31,17 +31,16 @@
                 </a>
             </span>
         </div>
-        <div class="stat" id="pid_${pid}">
-             <div class="graph">
-                 <span id="${pid}_cpu" class="sparklines"></span>
-             </div>
+
+        <div class="stat">
+             <div id="${name}-${pid}" class="graph"></div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
                 <span class="cpu_label">CPU</span>
-                <span class="cpu_value" id="${pid}_last_cpu">0.0 %</span>
+                <span class="cpu_value" id="${name}-${pid}_last_cpu">0.0 %</span>
              </div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:right; width: 49%; text-align:center;">
                 <span class="mem_label">Mem</span>
-                <span class="mem_value" id="${pid}_last_mem">0.0 %</span>
+                <span class="mem_value" id="${name}-${pid}_last_mem">0.0 %</span>
              </div>
         </div>
     </div>
@@ -149,22 +148,18 @@
                 <span>${options['warmup_delay']}</span>
             </td>
         </tr>
-        <tr>
-            <td>
-                Number of seconds to wait before retrying to start a flapping
-                process.
-            </td>
-            <td class="value">
-                <span>${options['retry_in']}</span>
-            </td>
-        </tr>
     </table>
 
+<script src="/media/socket.io.js"></script>
 <script type="text/javascript">
-    $(function() {
-        initializeGraphs('${name}');
+    $(document).ready(function () {
+        var socket = io.connect('http://localhost');
+
+        $(document).ready(function () {
+            var socket = io.connect('http://localhost');
+            supervise(socket, [], ['${name}']);
+        });
     });
-    setInterval("refreshData('${name}')", 1000);
 </script>
 
 % endif

@@ -6,7 +6,9 @@ from collections import defaultdict
 import errno
 
 import zmq
+
 from circus.consumer import CircusConsumer
+from circus import __version__
 
 
 class StatsClient(CircusConsumer):
@@ -97,7 +99,15 @@ def main():
             help='The circusd-stats ZeroMQ socket to connect to',
             default='tcp://127.0.0.1:5557')
 
+    parser.add_argument('--version', action='store_true',
+                     default=False, help='Displays Circus version and exits.')
+
     args = parser.parse_args()
+
+    if args.version:
+        print(__version__)
+        sys.exit(0)
+
     stdscr = curses.initscr()
     watchers = defaultdict(dict)
 

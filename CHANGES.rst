@@ -3,8 +3,22 @@ CHANGES
 
 0.4
 ---
+???next release
 
-???
+
+0.3.4 - 2012-05-30
+------------------
+
+- Fixed a race condition that prevented the controller
+  to cleanly reap finished processes.
+- Now check_flapping can be controlled in the configuration.
+  And activated/deactivated per watcher.
+
+
+0.3.3 - 2012-05-29
+------------------
+
+- Fixed the regression on the uid handling
 
 0.3.2 - 2012-05-24
 ------------------

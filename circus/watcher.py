@@ -3,7 +3,7 @@ import os
 import signal
 import time
 
-from psutil import STATUS_ZOMBIE, STATUS_DEAD
+from psutil import STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
 
 from circus.process import Process
@@ -89,28 +89,23 @@ class Watcher(object):
       process. Can be *thread* or *gevent*. When set to *gevent* you need
       to have *gevent* and *gevent_zmq* installed. (default: thread)
 
-    - **flapping_attempts** -- number of times a process can restart before we
-      start to detect the flapping (default: 2)
-    - **flapping_window** -- the time window in seconds to test for flapping.
-      If the process restarts more than **times** times, we consider it a
-      flapping process. (default: 1)
-    - **retry_in**: time in seconds to wait until we try to start a process
-      that has been flapping. (default: 7)
-    - **max_retry**: the number of times we attempt to start a process, before
-      we abandon and stop the whole watcher. (default: 5)
     - **priority**: integer that defines a priority for the watcher. When
       the Arbiter do some operations on all watchers, it will sort them
       with this field, from the bigger number to the smallest.
       (default: 0)
+
+    - **options** -- extra options for the worker. All options
+      found in the configuration file for instance, are passed
+      in this mapping -- this can be used by plugins for watcher-specific
+      options.
     """
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
-                 working_dir=None, shell=False, uid=None,
+                 working_dir=None, shell=False, uid=None, max_retry=5,
                  gid=None, send_hup=False, env=None, stopped=True,
-                 flapping_attempts=2, flapping_window=1., retry_in=7.,
-                 max_retry=5,
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
-                 stderr_stream=None, stream_backend='thread', priority=0):
+                 stderr_stream=None, stream_backend='thread', priority=0,
+                 **options):
         self.name = name
         self.res_name = name.lower().replace(" ", "_")
         self.numprocesses = int(numprocesses)
@@ -119,10 +114,6 @@ class Watcher(object):
         self.args = args
         self._process_counter = 0
         self.stopped = stopped
-        self.flapping_attempts = flapping_attempts
-        self.flapping_window = flapping_window
-        self.retry_in = retry_in
-        self.max_retry = max_retry
         self.graceful_timeout = 30
         self.prereload_fn = prereload_fn
         self.executable = None
@@ -131,13 +122,12 @@ class Watcher(object):
         self.stdout_stream = stdout_stream
         self.stderr_stream = stderr_stream
         self.stdout_redirector = self.stderr_redirector = None
-
+        self.max_retry = max_retry
+        self._options = options
         self.optnames = ("numprocesses", "warmup_delay", "working_dir",
-                         "uid", "gid", "send_hup", "shell", "env",
-                         "cmd", "flapping_attempts", "flapping_window",
-                         "retry_in", "args",
-                         "max_retry", "graceful_timeout", "executable",
-                         "priority")
+                         "uid", "gid", "send_hup", "shell", "env", "max_retry",
+                         "cmd", "args", "graceful_timeout", "executable",
+                         "priority") + tuple(options.keys())
 
         if not working_dir:
             # working dir hasn't been set
@@ -177,6 +167,18 @@ class Watcher(object):
 
     @classmethod
     def load_from_config(cls, config):
+        options = ('name', 'cmd', 'args', 'numprocesses', 'warmup_delay',
+                   'working_dir', 'shell', 'uid', 'gid', 'send_hup',
+                   'env', 'stopped', 'max_retry', 'graceful_timeout',
+                   'prereload_fn', 'rlimits', 'executable', 'stdout_stream',
+                   'stream_backend', 'stderr_stream', 'priority')
+
+        extra_options = {}
+        for name, value in config.items():
+            if name in options:
+                continue
+            extra_options[name] = value
+
         return cls(name=config['name'],
                    cmd=config['cmd'],
                    args=config.get('args'),
@@ -189,9 +191,6 @@ class Watcher(object):
                    send_hup=config.get('send_hup', False),
                    env=config.get('env'),
                    stopped=config.get('stopped', True),
-                   flapping_attempts=config.get('flapping_attempts', 2),
-                   flapping_window=config.get('flapping_window', 1),
-                   retry_in=config.get('retry_in', 7),
                    max_retry=config.get('max_retry', 5),
                    graceful_timeout=config.get('graceful_timeout', 30),
                    prereload_fn=config.get('prereload_fn'),
@@ -200,7 +199,8 @@ class Watcher(object):
                    stdout_stream=config.get('stdout_stream'),
                    stderr_stream=config.get('stderr_stream'),
                    stream_backend=config.get('stream_backend', 'thread'),
-                   priority=int(config.get('priority', 0)))
+                   priority=int(config.get('priority', 0)),
+                   **extra_options)
 
     @util.debuglog
     def initialize(self, evpub_socket):
@@ -378,7 +378,12 @@ class Watcher(object):
                                "process_pid": process.pid,
                                "time": time.time()})
         logger.debug("%s: kill process %s", self.name, process.pid)
-        process.send_signal(sig)
+        try:
+            process.send_signal(sig)
+        except NoSuchProcess:
+            # already dead !
+            return
+
         process.stop()
 
     @util.debuglog
@@ -542,7 +547,11 @@ class Watcher(object):
         """
 
         action = 0
-        if key == "numprocesses":
+
+        if key in self._options:
+            self._options[key] = val
+            action = -1    # XXX for now does not trigger a reload
+        elif key == "numprocesses":
             self.numprocesses = int(val)
         elif key == "warmup_delay":
             self.warmup_delay = float(val)
@@ -566,15 +575,6 @@ class Watcher(object):
         elif key == "cmd":
             self.cmd = val
             action = 1
-        elif key == "flapping_attempts":
-            self.flapping_attempts = int(val)
-            action = -1
-        elif key == "flapping_window":
-            self.flapping_window = float(val)
-        elif key == "retry_in":
-            self.retry_in = float(val)
-        elif key == "max_retry":
-            self.max_retry = int(val)
         elif key == "graceful_timeout":
             self.graceful_timeout = float(val)
             action = -1
@@ -595,4 +595,10 @@ class Watcher(object):
 
     @util.debuglog
     def options(self, *args):
-        return [(name, getattr(self, name)) for name in sorted(self.optnames)]
+        options = []
+        for name in sorted(self.optnames):
+            if name in self._options:
+                options.append((name, self._options[name]))
+            else:
+                options.append((name, getattr(self, name)))
+        return options

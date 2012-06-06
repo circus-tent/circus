@@ -22,6 +22,14 @@ Example::
     stdout_stream.filename = test.log
     stdout_stream.refresh_time = 0.3
 
+    [plugin:statsd]
+    use = circus.plugins._statsd.StatsdEmitter
+    host = localhost
+    port = 8125
+    sample_rate = 1.0
+    application_name = example
+
+
 
 circus (single section)
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,19 +128,6 @@ watcher:NAME (as many sections as you want)
         if True, a process reload will be done by sending the SIGHUP signal.
         Defaults to False.
 
-    **flapping_attempts**
-        Number of times a process can restart before we start to
-        detect the flapping. Defaults to 2.
-
-    **within**
-        The time window in seconds to test for flapping. If the
-        process restarts more than **flapping_attempts**
-        times, we consider it a flapping process. Defaults to 1.
-
-    **retry_in**
-        The time in seconds to wait until we try to start a process
-        that has been flapping. Defaults to 7.
-
     **max_retry**
         The number of times we attempt to start a process, before
         we abandon and stop the whole watcher. Defaults to 5.
@@ -142,3 +137,11 @@ watcher:NAME (as many sections as you want)
         Arbiter do some operations on all watchers, it will sort them
         with this field, from the bigger number to the smallest.
         Defaults to 0.
+
+plugin:NAME (as many sections as you want)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    **use**
+        The fully qualified name that points to the plugin class.
+    **anything else**
+        Every other key found in the section is passed to the
+        plugin constructor in the **config** mapping.

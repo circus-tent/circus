@@ -44,7 +44,7 @@ By default the script will run the Web Console on port 8080, but the --port opti
 be used to change it.
 
 Using the console
-=================
+-----------------
 
 Once the script is running, you can open a browser and visit *http://localhost:8080*.
 You should get this screen:
@@ -94,7 +94,7 @@ in the left menu:
 
 
 Running behind Nginx & Gunicorn
-===============================
+-------------------------------
 
 *circushttpd* is a WSGI application so you can run it with any web server that's
 compatible with that protocol. By default it uses the standard library
@@ -107,7 +107,7 @@ A nice combo is Gunicorn & Nginx:
 - Nginx acts as a proxy in front of Gunicorn. It an also deal with security.
 
 Gunicorn
---------
+::::::::
 
 To run Gunicorn, make sure Gunicorn is installed in your environment and
 simply use the **--server** option::
@@ -128,7 +128,7 @@ If you want to use another server, you can pick any server listed in
 http://bottlepy.org/docs/dev/tutorial.html#multi-threaded-server
 
 Nginx
------
+:::::
 
 To hook Nginx, you define a *location* directive that proxies the calls
 to Gunicorn.

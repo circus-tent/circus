@@ -59,8 +59,6 @@ class GlobalOptions(Command):
         - endpoint: the controller ZMQ endpoint
         - pubsub_endpoint: the pubsub endpoint
         - check_delay: the delay between two controller points
-        - check_flapping: when True, Circus will check for flapping
-          processes and automatically restart them.
     """
 
     name = "globaloptions"
@@ -75,7 +73,7 @@ class GlobalOptions(Command):
     def execute(self, arbiter, props):
         wanted = props.get('option')
         available = ('endpoint', 'pubsub_endpoint',
-                     'check_delay', 'check_flapping')
+                     'check_delay')
 
         if wanted:
             if wanted not in available:
@@ -83,7 +81,7 @@ class GlobalOptions(Command):
             options = (wanted,)
         else:
             options = ('endpoint', 'pubsub_endpoint', 'stats_endpoint',
-                       'check_delay', 'check_flapping')
+                       'check_delay')
 
         res = {}
 

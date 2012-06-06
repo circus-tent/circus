@@ -20,9 +20,6 @@ def watcher_defaults():
         'uid': None,
         'gid': None,
         'send_hup': False,
-        'flapping_attempts': 2,
-        'flapping_window': 1,
-        'retry_in': 7,
         'max_retry': 5,
         'graceful_timeout': 30,
         'rlimits': dict(),
@@ -110,8 +107,8 @@ def get_config(config_file):
     config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
                                      'tcp://127.0.0.1:5556')
     config['stats_endpoint'] = dget('circus', 'stats_endpoint', None, str)
-
     stream_backend = dget('circus', 'stream_backend', 'thread')
+
     if stream_backend == 'gevent':
         try:
             import gevent           # NOQA
@@ -129,9 +126,14 @@ def get_config(config_file):
 
     config['stream_backend'] = stream_backend
 
-    # Initialize watchers to manage
+    # Initialize watchers & plugins to manage
     watchers = []
+    plugins = []
+
     for section in cfg.sections():
+        if section.startswith("plugin:"):
+            plugins.append(dict(cfg.items(section)))
+
         if section.startswith("watcher:"):
             watcher = watcher_defaults()
             watcher['name'] = section.split("watcher:", 1)[1]
@@ -156,22 +158,15 @@ def get_config(config_file):
                 elif opt == 'shell':
                     watcher['shell'] = dget(section, 'shell', False, bool)
                 elif opt == 'uid':
-                    watcher['uid '] = val
+                    watcher['uid'] = val
                 elif opt == 'gid':
                     watcher['gid'] = val
                 elif opt == 'send_hup':
                     watcher['send_hup'] = dget(section, 'send_hup', False,
                             bool)
-                elif opt == 'flapping_attempts':
-                    watcher['flapping_attempts'] = dget(section,
-                                                        "flapping_attempts", 2,
-                                                        int)
-                elif opt == 'flapping_window':
-                    watcher['flapping_window'] = dget(section,
-                                                      "flapping_window", 1,
-                                                      int)
-                elif opt == 'retry_in':
-                    watcher['retry_in'] = dget(section, "retry_in", 7, int)
+                elif opt == 'check_flapping':
+                    watcher['check_flapping'] = dget(section, 'check_flapping',
+                                                     True, bool)
                 elif opt == 'max_retry':
                     watcher['max_retry'] = dget(section, "max_retry", 5, int)
                 elif opt == 'graceful_timout':
@@ -186,6 +181,9 @@ def get_config(config_file):
                     watcher['rlimits'][limit] = int(val)
                 elif opt == 'priority':
                     watcher['priority'] = dget(section, "priority", 0, int)
+                else:
+                    # freeform
+                    watcher[opt] = val
 
             # second pass, parse stream conf
             stdout_conf = watcher.get('stdout_stream', {})
@@ -202,4 +200,5 @@ def get_config(config_file):
             watchers.append(watcher)
 
     config['watchers'] = watchers
+    config['plugins'] = plugins
     return config

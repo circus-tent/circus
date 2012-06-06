@@ -1,9 +1,16 @@
 import os
 from collections import defaultdict
-from threading import Thread
+import threading
 from circus.commands import get_commands
 from circus.client import CircusClient, CallError
 from circus.stats.client import StatsClient
+
+try:
+    from gevent import monkey, local
+    if not threading.local is local.local:
+        monkey.patch_all()
+except ImportError:
+    pass
 
 
 _DIR = os.path.dirname(__file__)
@@ -12,9 +19,9 @@ cmds = get_commands()
 MAX_STATS = 25
 
 
-class Refresher(Thread):
+class Refresher(threading.Thread):
     def __init__(self, client):
-        Thread.__init__(self)
+        threading.Thread.__init__(self)
         self.client = client
         self.daemon = True
         self.running = False
@@ -32,6 +39,8 @@ class Refresher(Thread):
         self.running = True
         while self.running:
             for watcher, pid, stat in self.cclient:
+                if not self.running:
+                    break
                 if watcher == 'circus':
                     data = dstats
                 else:

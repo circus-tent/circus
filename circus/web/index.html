@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    
+
     <div class="watchers">
         <div class="header">
             <div style="width: 300px;">Name</div>
@@ -32,7 +32,7 @@
             <div style="width: 50px;">gid</div>
             <div style="width: 50px;">Status</div>
         </div>
-    % for watcher, options in client.watchers:   
+    % for watcher, options in client.watchers:
         <div class="watcher">
             <div style="width: 300px;"><a class="link" href="/watchers/${watcher}">${watcher}</a></div>
             <div style="width: 80px;">${options['numprocesses']}</div>
@@ -46,9 +46,9 @@
     </div>
 
     <div class="title">
-       <div class="watcher_name">Circus Daemons</div> 
+       <div class="watcher_name">Circus Daemons</div>
     </div>
-    
+
     <div class="legend">
         <div class="legend_cpu">
             <span class="legend_indicator"></span>
@@ -60,23 +60,21 @@
         </div>
     </div>
 
-    <div> 
+    <div>
        <div class="process" style="margin-bottom: 15px">
         <div>
             <span style="display: inline-block; float: left;" class="label">circusd</span>
         </div>
 
-        <div class="stat" id="pid_circusd">
-             <div class="graph">
-                 <span id="circusd_cpu" class="sparklines"></span>
-             </div>
+        <div class="stat">
+             <div id="circus" class="graph"></div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
                 <span class="cpu_label">CPU</span>
-                <span class="cpu_value" id="circusd_last_cpu">0.0 %</span>
+                <span class="cpu_value" id="circus_last_cpu">0 %</span>
              </div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:right; width: 49%; text-align:center;">
                 <span class="mem_label">Mem</span>
-                <span class="mem_value" id="circusd_last_mem">0.0 %</span>
+                <span class="mem_value" id="circus_last_mem">0 %</span>
              </div>
         </div>
      </div>
@@ -84,17 +82,15 @@
         <div>
             <span style="display: inline-block; float: left;" class="label">circusd-stats</span>
         </div>
-        <div class="stat" id="pid_circusd_stats">
-             <div class="graph">
-                 <span id="circusd_stats_cpu" class="sparklines"></span>
-             </div>
+        <div class="stat" id="pid_circusd-stats">
+             <div id="circusd-stats" class="graph"></div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
                 <span class="cpu_label">CPU</span>
-                <span class="cpu_value" id="circusd_stats_last_cpu">0.0 %</span>
+                <span class="cpu_value" id="circusd-stats_last_cpu">0 %</span>
              </div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:right; width: 49%; text-align:center;">
                 <span class="mem_label">Mem</span>
-                <span class="mem_value" id="circusd_stats_last_mem">0.0 %</span>
+                <span class="mem_value" id="circusd-stats_last_mem">0 %</span>
              </div>
         </div>
      </div>
@@ -102,13 +98,13 @@
     <div style="clear:both"></div>
 
     <div class="title">
-       <div class="watcher_name">Options</div> 
+       <div class="watcher_name">Options</div>
     </div>
 
     <table class="options">
         <tr>
             <td>
-                ZeroMQ endpoint used to connect clients like <i>circusctl</i> or 
+                ZeroMQ endpoint used to connect clients like <i>circusctl</i> or
                 <i>circushttpd</i>
             </td>
             <td>
@@ -134,14 +130,6 @@
 
         <tr>
             <td>
-                If True, Circus detects flapping processes.
-            </td>
-            <td>
-                <span class="label">${goptions['check_flapping']}</span>
-            </td>
-        </tr>
-        <tr>
-            <td>
                 Delay in seconds for the ZMQ polling.
             </td>
             <td>
@@ -152,13 +140,12 @@
     </table>
 
  </div>
- 
-  <script type="text/javascript">
-  $(function() {
-      initializeCircusdGraph();
-      });
-  setInterval("refreshCircusdGraph()", 1000);
+
+    <script type="text/javascript">
+    $(document).ready(function () {
+        var socket = io.connect('http://localhost');
+        supervise(socket, ['circusd-stats', 'circus']);
+    });
 
  </script>
 % endif
-

@@ -22,6 +22,7 @@ class CircusClient(object):
         self.socket.connect(endpoint)
         self.poller = zmq.Poller()
         self.poller.register(self.socket, zmq.POLLIN)
+        self._timeout = timeout
         self.timeout = timeout * 1000
 
     def stop(self):
@@ -51,7 +52,7 @@ class CircusClient(object):
                 break
 
         if len(events) == 0:
-            raise CallError("Timed out")
+            raise CallError("Timed out.")
 
         for socket in events:
             msg = socket.recv()
