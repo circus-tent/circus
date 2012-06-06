@@ -152,7 +152,6 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
               "get_processes" is set to True when calling this method)
         """
 
-        print msg
         # unpack the params
         streams = msg.get('watchers', [])
         streamsWithPids = msg.get('watchersWithPids', [])
@@ -162,7 +161,6 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         for watcher in streamsWithPids:
             pids = [int(pid) for pid in client.get_pids(watcher)]
             channel = 'stats-{watcher}-pids'.format(watcher=watcher)
-            print channel
             self.send_data(channel, pids=pids)
 
         # Get the channels that are interesting to us and send back information
