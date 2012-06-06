@@ -39,6 +39,10 @@ class StatsClient(CircusConsumer):
 
 def _paint(stdscr, watchers):
 
+    def addstr(line, *args):
+        if line < h:
+            stdscr.addstr(line, *args)
+
     h, w = stdscr.getmaxyx()
     curses.endwin()
     stdscr.refresh()
@@ -48,17 +52,17 @@ def _paint(stdscr, watchers):
 
     names = watchers.keys()
     names.sort()
-    stdscr.addstr(0, 0, 'Circus Top')
-    stdscr.addstr(1, 0, '-' * 100)
+    addstr(0, 0, 'Circus Top')
+    addstr(1, 0, '-' * w)
     line = 2
     for name in names:
         if name == 'circusd-stats':
             continue
         stdscr.addstr(line, 0, name)
         line += 1
-        stdscr.addstr(line, 3, 'PID')
-        stdscr.addstr(line, 28, 'CPU (%)')
-        stdscr.addstr(line, 48, 'MEMORY (%)')
+        addstr(line, 3, 'PID')
+        addstr(line, 28, 'CPU (%)')
+        addstr(line, 48, 'MEMORY (%)')
 
         line += 1
 
@@ -81,13 +85,14 @@ def _paint(stdscr, watchers):
         for cpu, mem, pid, name in pids:
             if name is not None:
                 pid = '%s (%s)' % (pid, name)
-            stdscr.addstr(line, 2, pid)
-            stdscr.addstr(line, 29, cpu)
-            stdscr.addstr(line, 49, mem)
+            addstr(line, 2, pid)
+            addstr(line, 29, cpu)
+            addstr(line, 49, mem)
             line += 1
         line += 1
 
-    stdscr.addstr(line, 0, '-' * 100)
+    if line <= h:
+        stdscr.addstr(line, 0, '-' * w)
     stdscr.refresh()
 
 
