@@ -36,7 +36,7 @@ setup(name='circus',
         "License :: OSI Approved :: Apache Software License",
         "Development Status :: 3 - Alpha"],
       install_requires=install_requires,
-      test_requires=['nose'],
+      test_requires=['nose', 'webtest'],
       test_suite = 'nose.collector',
       entry_points="""
       [console_scripts]
