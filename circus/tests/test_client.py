@@ -60,4 +60,10 @@ class TestClient(TestCircus):
 
         self.assertEquals(options.get('env'), {'test': '1', 'test': '2'})
 
+        resp = call('stats', name='test')
+        self.assertEqual(resp['status'], 'ok')
+
+        resp = call('globaloptions', name='test')
+        self.assertEqual(resp['options']['pubsub_endpoint'],
+                        'tcp://127.0.0.1:5556')
         client.stop()
