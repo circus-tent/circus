@@ -21,11 +21,12 @@ class TestHttpd(TestCircus):
         # let's run a circus
         cmd = '%s -c "from circus import circusd; circusd.main()" %s' % \
             (sys.executable, cfg)
-        self.p = subprocess.Popen(cmd, shell=True)
+        self.p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
 
     def tearDown(self):
         self.p.terminate()
-        self.p.wait()
+        self.p.kill()
         time.sleep(0.4)
         TestCircus.tearDown(self)
 
