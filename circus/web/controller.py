@@ -3,7 +3,6 @@ from collections import defaultdict
 import threading
 from circus.commands import get_commands
 from circus.client import CircusClient, CallError
-from circus.stats.client import StatsClient
 
 try:
     from gevent import monkey, local
@@ -19,40 +18,6 @@ cmds = get_commands()
 MAX_STATS = 25
 
 
-class Refresher(threading.Thread):
-    def __init__(self, client):
-        threading.Thread.__init__(self)
-        self.client = client
-        self.daemon = True
-        self.running = False
-        self.cclient = None
-
-    def _check_size(self, stat):
-        if len(stat) > MAX_STATS:
-            start = len(stat) - MAX_STATS
-            stat[:] = stat[start:]
-
-    def run(self):
-        self.cclient = StatsClient(endpoint=self.client.stats_endpoint)
-        stats = self.client.stats
-        dstats = self.client.dstats
-        self.running = True
-        while self.running:
-            for watcher, pid, stat in self.cclient:
-                if not self.running:
-                    break
-                if watcher == 'circus':
-                    data = dstats
-                else:
-                    data = stats[watcher]
-                data.append(stat)
-                #self._check_size(data)
-
-    def stop(self):
-        self.running = False
-        self.cclient.stop()
-
-
 class LiveClient(object):
     def __init__(self, endpoint):
         self.endpoint = str(endpoint)
@@ -61,13 +26,10 @@ class LiveClient(object):
         self.connected = False
         self.watchers = []
         self.stats = defaultdict(list)
-        self.refresher = Refresher(self)
         self.dstats = []
 
     def stop(self):
         self.client.stop()
-        self.refresher.running = False
-        self.refresher.join()
 
     def verify(self):
         self.watchers = []
@@ -84,8 +46,6 @@ class LiveClient(object):
                 self.watchers.append((watcher, options['options']))
             self.watchers.sort()
             self.stats_endpoint = self.get_global_options()['stats_endpoint']
-            if not self.refresher.running:
-                self.refresher.start()
         except CallError:
             self.connected = False
 
