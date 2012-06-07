@@ -12,6 +12,7 @@ logger = logging.getLogger('circus')
 
 def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
                 pubsub_endpoint='tcp://127.0.0.1:5556',
+                stats_endpoint=None,
                 env=None, name=None, context=None,
                 background=False, stream_backend="thread",
                 plugins=None):
@@ -64,6 +65,8 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
     - **controller** -- the zmq entry point (default: 'tcp://127.0.0.1:5555')
     - **pubsub_endpoint** -- the zmq entry point for the pubsub
       (default: 'tcp://127.0.0.1:5556')
+    - **stats_endpoint** -- the stats endpoint. If not provided,
+      the *circusd-stats* process will not be launched. (default: None)
     - **context** -- the zmq context (default: None)
     - **background** -- If True, the arbiter is launched in a thread in the
       background (default: False)
@@ -105,5 +108,6 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
         watcher['stream_backend'] = stream_backend
         _watchers.append(Watcher.load_from_config(watcher))
 
-    return Arbiter(_watchers, controller, pubsub_endpoint, context=context,
-                   plugins=plugins)
+    return Arbiter(_watchers, controller, pubsub_endpoint,
+                   stats_endpoint=stats_endpoint,
+                   context=context, plugins=plugins)
