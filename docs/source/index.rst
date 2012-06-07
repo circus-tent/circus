@@ -5,7 +5,7 @@ Circus Process Watcher
    :align: right
 
 Circus is a process watcher and runner. It can be driven via a
-command-line interface, or programmatically, in python, through its APIs.
+command-line interface or programmatically, in python, through its API.
 
 It shares some of the goals of `Supervisord <http://supervisord.org>`_,
 `BluePill <https://github.com/arya/bluepill>`_ and
@@ -63,7 +63,7 @@ Monitoring and managing Circus through the web
 Circus provides a small web application that can connect to a running
 Circus daemon and let you monitor and interact with it.
 
-Running the web application is as simple as::
+Running the web application is as simple as running::
 
     $ circushttpd
 
@@ -184,4 +184,5 @@ Contributions and Feedback
 You can reach us for any feedback, bug report, or to contribute, at
 https://github.com/mozilla-services/circus
 
-We can also be found in the **#mozilla-circus** channel on freenode.net.
+We can also be found in the **#mozilla-circus** channel on freenode.net. Don't
+hesitate to come and say hi.

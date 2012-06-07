@@ -43,5 +43,5 @@ In order of appearence:
 - Chris McDonald
 - Stefane Fermigier
 - Adnane Belmadiaf
-- Alexis Métaireu
+- Alexis Métaireau
 - Christian S. Perone

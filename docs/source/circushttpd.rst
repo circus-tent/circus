@@ -5,13 +5,12 @@ The Web Console
 
 Circus comes with a Web Console that can be used to manage the system.
 
-The Web Console will let you:
+The Web Console lets you:
 
 * Connect to any running Circus system
 * Watch the processes CPU and Memory usage in real-time
 * Add or kill processes
-* Add a new watcher
-
+* Add new watchers
 
 .. note::
 
@@ -26,16 +25,15 @@ The Web Console will let you:
 
    By default, this option is not activated.
 
-
-The web console needs the Bottle web framework and the Mako template engine.
-You can install them using the web-requirements.txt file::
+The web console needs a few dependencies that you can install them using the
+web-requirements.txt file::
 
     $ bin/pip install -r web-requirements.txt
 
 To enable the console, run the **circushttpd** script::
 
     $ circushttpd
-    Bottle server starting up (using WSGIRefServer())...
+    Bottle server starting up...
     Listening on http://localhost:8080/
     Hit Ctrl-C to quit.
 

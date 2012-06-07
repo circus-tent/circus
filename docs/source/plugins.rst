@@ -3,7 +3,7 @@
 The Plugin System
 =================
 
-Circus comes with a plugin system that will let you interact with **circusd**.
+Circus comes with a plugin system which let you interact with **circusd**.
 
 .. note::
 
@@ -25,6 +25,8 @@ A few examples of some plugins you could create with this system:
 Circus itself provides a few plugins:
 
 - a statsd plugin, that sends to statsd all events emited by circusd
+- the flapping feature which avoid to re-launch processes infinitely when they
+  die too quickly.
 - many more to come !
 
 
@@ -72,12 +74,10 @@ The plugin could look like this::
 
         name = 'logger'
 
-        def __init__(self, context, endpoint, pubsub_endpoint, check_delay,
-                    **config):
-            super(Logger, self).__init__(context, endpoint,
-                    pubsub_endpoint, check_delay)
+        def __init__(self, filename, **kwargs):
+            super(Logger, self).__init__(**kwargs)
 
-            self.filename = config['filename']
+            self.filename = filename
             self.file = None
 
         def handle_init(self):
