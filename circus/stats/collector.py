@@ -49,13 +49,13 @@ class StatsWorker(threading.Thread):
                 try:
                     info = util.get_info(pid, interval=0.0)
                     aggregate[pid] = info
+                    self.results.put((self.name, name, pid, info))
                 except util.NoSuchProcess:
                     # the process is gone !
                     pass
-                except Exception:
-                    logger.exception('Failed to get info for %d' % pid)
-                else:
-                    self.results.put((self.name, name, pid, info))
+                except Exception, e:
+                    logger.exception('Failed to get info for %d. %s' % (pid,
+                        str(e)))
 
             # now sending the aggregation
             self.results.put((self.name, None, None,
