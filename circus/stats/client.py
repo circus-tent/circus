@@ -17,10 +17,12 @@ class StatsClient(CircusConsumer):
 
     def iter_messages(self):
         """ Yields tuples of (watcher, pid, stat)"""
+        recv = self.pubsub_socket.recv_multipart
+
         with self:
             while True:
                 try:
-                    topic, stat = self.pubsub_socket.recv_multipart()
+                    topic, stat = recv()
                 except zmq.core.error.ZMQError, e:
                     if e.errno != errno.EINTR:
                         raise
@@ -70,13 +72,20 @@ def _paint(stdscr, watchers):
         pids = []
         total = '', 'N/A', 'N/A', None
         for pid, stat in watchers[name].items():
-            if pid == 'all' or isinstance(pid, list):
-
-                total = ("%.2f" % stat['cpu'] + ' (avg)',
-                         "%.2f" % stat['mem'] + ' (sum)', '', None)
+            if stat['cpu'] == 'N/A':
+                cpu = 'N/A'
             else:
-                pids.append(("%.2f" % stat['cpu'], "%.2f" % stat['mem'],
-                             str(stat['pid']), stat['name']))
+                cpu = "%.2f" % stat['cpu']
+
+            if stat['mem'] == 'N/A':
+                mem = 'N/A'
+            else:
+                mem = "%.2f" % stat['mem']
+
+            if pid == 'all' or isinstance(pid, list):
+                total = (cpu + ' (avg)', mem + ' (sum)', '', None)
+            else:
+                pids.append((cpu, mem, str(stat['pid']), stat['name']))
 
         pids.sort()
         pids.reverse()

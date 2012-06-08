@@ -29,7 +29,10 @@ class StatsWorker(threading.Thread):
         if 'N/A' in cpu:
             res['cpu'] = 'N/A'
         else:
-            res['cpu'] = sum(cpu) / len(cpu)
+            try:
+                res['cpu'] = sum(cpu) / len(cpu)
+            except ZeroDivisionError:
+                res['cpu'] = 0.
 
         # aggregating memory does make sense
         mem = [stat['mem'] for stat in stats]
