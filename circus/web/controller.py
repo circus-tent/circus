@@ -1,4 +1,3 @@
-import os
 from collections import defaultdict
 import threading
 from circus.commands import get_commands
@@ -11,11 +10,7 @@ try:
 except ImportError:
     pass
 
-
-_DIR = os.path.dirname(__file__)
-client = None
 cmds = get_commands()
-MAX_STATS = 25
 
 
 class LiveClient(object):
