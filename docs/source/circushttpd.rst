@@ -171,3 +171,32 @@ provide at: http://trac.edgewall.org/browser/trunk/contrib/htpasswd.py
 
 Of course that's just one way to protect your web console, you could use
 many other techniques.
+
+Extending the web console
+-------------------------
+
+We chosed to use bottle to build the webconsole, mainly because it's a really
+tiny framework that doesn't do much. By having a look at the code of the web
+console, you'll eventually find out that it's really simple to understand.
+Here is how it's split:
+
+* The `circushttpd.py` file contains the "views" definitions and some code to
+  handle the socket connection (via socketio).
+* the `controller.py` contains a single class which is in charge of doing the
+  communication with the circus controller. It allows to have a nicer high
+  level API when defining the web server.
+
+If you want to add a feature in the web console you can reuse the code that's
+existing. A few tools are at your disposal to ease the process:
+
+* There is a `render_template` function, which takes the named arguments you
+  pass to it and pass them to the template renderer and return the resulting
+  HTML. It also passes some additional variables, such as the session, the
+  circus version and the client if defined.
+* If you want to run commands and doa redirection depending the result of it,
+  you can use the `run_command` function, which takes a callable as a first
+  argument, a message in case of success and a redirection url.
+
+You may also encounter the StatsNamespace class. It's the class which manages
+the websocket communication on the server side. Its documentation should help
+you to understand what it does.
