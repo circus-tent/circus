@@ -47,6 +47,7 @@ def main():
             default='tcp://127.0.0.1:5557')
 
     parser.add_argument('--log-level', dest='loglevel', default='info',
+            choices=LOG_LEVEL.keys(),
             help="log level")
 
     parser.add_argument('--log-output', dest='logoutput', default='-',
