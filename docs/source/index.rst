@@ -5,7 +5,7 @@ Circus Process Watcher
    :align: right
 
 Circus is a process watcher and runner. It can be driven via a
-command-line interface or programmatically, in python, through its API.
+command-line interface or programmatically trough its python API.
 
 It shares some of the goals of `Supervisord <http://supervisord.org>`_,
 `BluePill <https://github.com/arya/bluepill>`_ and
@@ -175,6 +175,7 @@ More documentation
    examples
    coverage
    glossary
+   contributing
    copyright
 
 
