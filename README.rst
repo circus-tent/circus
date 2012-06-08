@@ -14,7 +14,7 @@ For more information about the motivation for this project, see `this blog post 
 
 Links:
 
-- The full documentation is located at : http://circus.readthedocs.org
-- You can reach us for any feedback, bug report, or to contribute, at
-  https://github.com/mozilla-services/circus
-- Join us on Freenode, channel #mozilla-circus
+- The full documentation is located at : http://circus.io
+- There's a maling list for any feedback or question: https://lists.mozilla.org/listinfo/dev-services-circus
+- The repository and issue tracker is at GitHub : https://github.com/mozilla-services/circus
+- Join us on the IRC : Freenode, channel #mozilla-circus

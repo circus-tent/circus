@@ -182,8 +182,12 @@ More documentation
 Contributions and Feedback
 --------------------------
 
-You can reach us for any feedback, bug report, or to contribute, at
-https://github.com/mozilla-services/circus
+More on contribution: :ref:`contribs`.
 
-We can also be found in the **#mozilla-circus** channel on freenode.net. Don't
-hesitate to come and say hi.
+
+Useful Links:
+
+- There's a maling list for any feedback or question: https://lists.mozilla.org/listinfo/dev-services-circus
+- The repository and issue tracker is at GitHub : https://github.com/mozilla-services/circus
+- Join us on the IRC : Freenode, channel **#mozilla-circus**
+
