@@ -223,13 +223,13 @@ def set_error(message):
     return set_message("An error happened: %s" % message)
 
 
-def run_command(func, message, url):
+def run_command(func, message, redirection_url):
     try:
         func()
         set_message(message)
     except CallError, e:
         set_message("An error happened: %s" % e)
-    redirect(url)
+    redirect(redirection_url)
 
 
 def render_template(template, **data):
