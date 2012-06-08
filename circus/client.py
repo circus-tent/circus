@@ -10,6 +10,18 @@ from circus.py3compat import string_types
 from zmq.utils.jsonapi import jsonmod as json
 
 
+def make_message(command, **props):
+    return {"command": command, "properties": props or {}}
+
+
+def cast_message(command, **props):
+    return {"command": command, "msg_type": "cast", "properties": props or {}}
+
+
+def make_json(command, **props):
+    return json.dumps(make_message(command, **props))
+
+
 class CircusClient(object):
     def __init__(self, context=None, endpoint='tcp://127.0.0.1:5555',
                  timeout=5.0):
@@ -27,6 +39,9 @@ class CircusClient(object):
 
     def stop(self):
         self.socket.close()
+
+    def send_message(self, command, **props):
+        return self.call(make_message(command, **props))
 
     def call(self, cmd):
         if not isinstance(cmd, string_types):
@@ -60,15 +75,3 @@ class CircusClient(object):
                 return json.loads(msg)
             except ValueError as e:
                 raise CallError(str(e))
-
-
-def make_message(command, **props):
-    return {"command": command, "properties": props or {}}
-
-
-def cast_message(command, **props):
-    return {"command": command, "msg_type": "cast", "properties": props or {}}
-
-
-def make_json(command, **props):
-    return json.dumps(make_message(command, **props))
