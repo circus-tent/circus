@@ -4,6 +4,8 @@ import json
 import curses
 from collections import defaultdict
 import errno
+import threading
+import time
 
 import zmq
 
@@ -39,23 +41,31 @@ class StatsClient(CircusConsumer):
                     yield watcher, None, json.loads(stat)
 
 
-def _paint(stdscr, watchers):
+def _paint(stdscr, watchers=None, old_h=None, old_w=None):
 
     def addstr(line, *args):
-        if line < h:
+        if line < current_h:
             stdscr.addstr(line, *args)
 
-    h, w = stdscr.getmaxyx()
-    curses.endwin()
-    stdscr.refresh()
+    current_h, current_w = stdscr.getmaxyx()
 
-    stdscr.erase()
-    stdscr.resize(h, w)
+    if watchers is None:
+        stdscr.erase()
+        addstr(1, 0, '*** Waiting for data ***')
+        stdscr.refresh()
+        return current_h, current_w
 
+    if current_h != old_h or current_w != old_w:
+        # we need a resize
+        curses.endwin()
+        stdscr.refresh()
+        stdscr.erase()
+        stdscr.resize(current_h, current_w)
+
+    addstr(0, 0, 'Circus Top')
+    addstr(1, 0, '-' * current_w)
     names = watchers.keys()
     names.sort()
-    addstr(0, 0, 'Circus Top')
-    addstr(1, 0, '-' * w)
     line = 2
     for name in names:
         if name == 'circusd-stats':
@@ -100,9 +110,30 @@ def _paint(stdscr, watchers):
             line += 1
         line += 1
 
-    if line <= h:
-        stdscr.addstr(line, 0, '-' * w)
+    if line <= current_h and len(watchers) > 0:
+        stdscr.addstr(line, 0, '-' * current_w)
     stdscr.refresh()
+    return current_h, current_w
+
+
+class Painter(threading.Thread):
+    def __init__(self, screen, watchers, h, w):
+        threading.Thread.__init__(self)
+        self.daemon = True
+        self.screen = screen
+        self.watchers = watchers
+        self.running = False
+        self.h = h
+        self.w = w
+
+    def stop(self):
+        self.running = False
+
+    def run(self):
+        self.running = True
+        while self.running:
+            self.h, self.w = _paint(self.screen, self.watchers, self.h, self.w)
+            time.sleep(1.)
 
 
 def main():
@@ -124,6 +155,11 @@ def main():
 
     stdscr = curses.initscr()
     watchers = defaultdict(dict)
+    h, w = _paint(stdscr)
+    time.sleep(1.)
+
+    painter = Painter(stdscr, watchers, h, w)
+    painter.start()
 
     try:
         client = StatsClient(args.endpoint)
@@ -136,13 +172,10 @@ def main():
 
                 # adding it to the structure
                 watchers[watcher][pid] = stat
-
-                # now painting
-                _paint(stdscr, watchers)
-
         except KeyboardInterrupt:
             client.stop()
     finally:
+        painter.stop()
         curses.endwin()
 
 
