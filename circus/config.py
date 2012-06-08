@@ -97,6 +97,11 @@ def stream_config(watcher_name, stream_conf):
 
 
 def get_config(config_file):
+    if not os.path.exists(config_file):
+        sys.stderr.write("the configuration file %r does not exist\n" % (config_file,))
+        sys.stderr.write("Exiting...\n")
+        sys.exit(1)
+
     cfg, cfg_files_read = read_config(config_file)
     dget = cfg.dget
     config = {}
