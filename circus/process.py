@@ -155,11 +155,14 @@ class Process(object):
     def stop(self):
         """Terminate the process."""
         try:
-            if self._worker.poll() is None:
-                return self._worker.terminate()
-        finally:
-            self._worker.stderr.close()
-            self._worker.stdout.close()
+            try:
+                if self._worker.poll() is None:
+                    return self._worker.terminate()
+            finally:
+                self._worker.stderr.close()
+                self._worker.stdout.close()
+        except NoSuchProcess:
+            pass
 
     def age(self):
         """Return the age of the process in seconds."""
