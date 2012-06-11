@@ -307,3 +307,14 @@ class TestTrainer(TestCircus):
 
         wanted = ['test:spawn', 'test:spawn']
         self.assertEqual(data, wanted)
+
+    def test_singleton(self):
+        self._stop_runners()
+
+        dummy_process = 'circus.tests.test_arbiter.run_dummy'
+        self._run_circus(dummy_process, singleton=True)
+        cli = CircusClient()
+
+        # adding more than one process should fail
+        res = cli.send_message('incr', name='test')
+        self.assertEqual(res['numprocesses'], 1)

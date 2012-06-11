@@ -85,6 +85,7 @@ class Options(Command):
         - graceful_timeout: integer or number, time we wait before we
           definitely kill a process.
         - priority: used to sort watchers in the arbiter
+        - singleton: if True, a singleton watcher.
     """
 
     name = "options"

@@ -16,7 +16,7 @@ class IncrProc(Command):
 
             {
                 "command": "incr",
-                "propeties": {
+                "properties": {
                     "name": "<watchername>"
                 }
             }
@@ -50,9 +50,16 @@ class IncrProc(Command):
 
     def execute(self, arbiter, props):
         watcher = self._get_watcher(arbiter, props.get('name'))
-        return {"numprocesses": watcher.incr()}
+        if watcher.singleton:
+            return {"numprocesses": watcher.numprocesses, "singleton": True}
+        else:
+            return {"numprocesses": watcher.incr()}
 
     def console_msg(self, msg):
         if msg.get("status") == "ok":
-            return str(msg.get("numprocesses"))
+            if "singleton" in msg:
+                return ('This watcher is a Singleton - not raising the number '
+                        ' of processes')
+            else:
+                return str(msg.get("numprocesses"))
         return self.console_error(msg)

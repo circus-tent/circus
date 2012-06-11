@@ -89,10 +89,13 @@ class Watcher(object):
       process. Can be *thread* or *gevent*. When set to *gevent* you need
       to have *gevent* and *gevent_zmq* installed. (default: thread)
 
-    - **priority**: integer that defines a priority for the watcher. When
+    - **priority** -- integer that defines a priority for the watcher. When
       the Arbiter do some operations on all watchers, it will sort them
       with this field, from the bigger number to the smallest.
       (default: 0)
+
+    - **singleton** -- If True, this watcher has a single process.
+      (default:False)
 
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
@@ -105,7 +108,7 @@ class Watcher(object):
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, stream_backend='thread', priority=0,
-                 **options):
+                 singleton=False, **options):
         self.name = name
         self.res_name = name.lower().replace(" ", "_")
         self.numprocesses = int(numprocesses)
@@ -124,10 +127,15 @@ class Watcher(object):
         self.stdout_redirector = self.stderr_redirector = None
         self.max_retry = max_retry
         self._options = options
+        self.singleton = singleton
+        if singleton and self.numprocesses not in (0, 1):
+            raise ValueError("Cannot have %d processes with a singleton "
+                             " watcher" % self.numprocesses)
+
         self.optnames = ("numprocesses", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env", "max_retry",
                          "cmd", "args", "graceful_timeout", "executable",
-                         "priority") + tuple(options.keys())
+                         "priority", "singleton") + tuple(options.keys())
 
         if not working_dir:
             # working dir hasn't been set
@@ -522,6 +530,9 @@ class Watcher(object):
 
     @util.debuglog
     def incr(self):
+        if self.singleton and self.numprocesses == 1:
+            raise ValueError('Singleton watcher has a single process')
+
         self.numprocesses += 1
         self.manage_processes()
         return self.numprocesses
@@ -552,7 +563,10 @@ class Watcher(object):
             self._options[key] = val
             action = -1    # XXX for now does not trigger a reload
         elif key == "numprocesses":
-            self.numprocesses = int(val)
+            val = int(val)
+            if self.singleton and val > 1:
+                raise ValueError('Singleton watcher has a single process')
+            self.numprocesses = val
         elif key == "warmup_delay":
             self.warmup_delay = float(val)
         elif key == "working_dir":
