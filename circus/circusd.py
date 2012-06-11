@@ -58,7 +58,8 @@ def main():
 
     # XXX we should be able to add all these options in the config file as well
     parser.add_argument('--log-level', dest='loglevel', default='info',
-            choices=LOG_LEVELS.keys(),
+            choices=LOG_LEVELS.keys() + [key.upper() for key in
+                LOG_LEVELS.keys()],
             help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
             help="log output")
