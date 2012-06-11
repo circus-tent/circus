@@ -11,11 +11,10 @@ class StatsdEmitter(CircusPlugin):
     """
     name = 'statsd'
 
-    def __init__(self, context, endpoint, pubsub_endpoint, check_delay,
+    def __init__(self, endpoint, pubsub_endpoint, check_delay,
                  **config):
-        super(StatsdEmitter, self).__init__(context, endpoint,
-                pubsub_endpoint, check_delay)
-
+        super(StatsdEmitter, self).__init__(endpoint, pubsub_endpoint,
+                                            check_delay)
         self.app = config.get('application_name', 'app')
         self.prefix = 'circus.%s.watcher' % self.app
 

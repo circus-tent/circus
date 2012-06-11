@@ -9,23 +9,7 @@ from circus.arbiter import Arbiter
 from circus.pidfile import Pidfile
 from circus import util
 from circus import __version__
-
-
-MAXFD = 1024
-if hasattr(os, "devnull"):
-    REDIRECT_TO = os.devnull
-else:
-    REDIRECT_TO = "/dev/null"
-
-LOG_LEVELS = {
-    "critical": logging.CRITICAL,
-    "error": logging.ERROR,
-    "warning": logging.WARNING,
-    "info": logging.INFO,
-    "debug": logging.DEBUG}
-
-LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
-LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
+from circus.util import MAXFD, REDIRECT_TO, LOG_LEVELS, LOG_FMT, LOG_DATE_FMT
 
 
 def get_maxfd():

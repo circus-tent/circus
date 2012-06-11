@@ -12,8 +12,9 @@ from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
 from circus.watcher import Watcher
-from circus.util import debuglog, _setproctitle, resolve_name
+from circus.util import debuglog, _setproctitle
 from circus.config import get_config
+from circus.plugins import get_plugin_cmd
 
 
 class Arbiter(object):
@@ -70,35 +71,15 @@ class Arbiter(object):
             stats_watcher = Watcher('circusd-stats', cmd)
             self.watchers.append(stats_watcher)
 
-        self.plugins = plugins
-        self._plugins = {}
-
-    def _stop_plugins(self):
-        for plugin in self._plugins.values():
-            if not plugin.running:
-                continue
-            plugin.stop()
-
-    def _start_plugins(self):
-        self._stop_plugins()
-        self._plugins.clear()
-
-        if self.plugins is None:
-            return
-
-        for config in self.plugins:
-            fqn = config['use']
-            del config['use']
-            cls = resolve_name(fqn)
-            instance = cls(self.context, self.endpoint,
-                           self.pubsub_endpoint, self.check_delay,
-                           **config)
-            self._plugins[cls.name] = instance
-
-        for plugin in self._plugins.values():
-            if not plugin.active:
-                continue
-            plugin.start()
+        # adding each plugin as a watcher
+        if plugins is not None:
+            for plugin in plugins:
+                fqnd = plugin['use']
+                cmd = get_plugin_cmd(plugin, self.endpoint,
+                                     self.pubsub_endpoint, self.check_delay)
+                plugin_watcher = Watcher('plugin:%s' %
+                            fqnd.replace('.', '-'), cmd, priority=1)
+                self.watchers.append(plugin_watcher)
 
     @classmethod
     def load_from_config(cls, config_file):
@@ -157,9 +138,6 @@ class Arbiter(object):
         # start controller
         self.ctrl.start()
 
-        # start the plugins
-        self._start_plugins()
-
         # initialize processes
         logger.debug('Initializing watchers')
         for watcher in self.iter_watchers():
@@ -177,8 +155,6 @@ class Arbiter(object):
             else:
                 break
 
-        # stop the plugins
-        self._stop_plugins()
         self.ctrl.stop()
         self.evpub_socket.close()
 
@@ -186,8 +162,6 @@ class Arbiter(object):
         if self.alive:
             self.stop_watchers(stop_alive=True)
 
-        # stop the plugins
-        self._stop_plugins()
         self.loop.stop()
 
     def reap_processes(self):
@@ -246,9 +220,6 @@ class Arbiter(object):
                 handler.stream = open(handler.baseFilename,
                         handler.mode)
                 handler.release()
-
-        # start the plugins over -- fresh instances
-        self._start_plugins()
 
         # gracefully reload watchers
         for watcher in self.iter_watchers():

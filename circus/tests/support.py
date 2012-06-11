@@ -68,7 +68,7 @@ class TestCircus(unittest.TestCase):
                 f.write(content)
         return file
 
-    def _run_circus(self, callable, plugins=None, **kw):
+    def _run_circus(self, callable, plugins=None, stats=False, **kw):
         resolve_name(callable)   # used to check the callable
         fd, testfile = mkstemp()
         os.close(fd)
@@ -77,7 +77,12 @@ class TestCircus(unittest.TestCase):
         worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
                   'name': 'test'}
         worker.update(kw)
-        arbiter = get_arbiter([worker], background=True, plugins=plugins)
+        if stats:
+            arbiter = get_arbiter([worker], background=True, plugins=plugins,
+                                  stats_endpoint='tcp://localhost:5557')
+        else:
+            arbiter = get_arbiter([worker], background=True, plugins=plugins)
+
         arbiter.start()
         time.sleep(.3)
         self.arbiters.append(arbiter)

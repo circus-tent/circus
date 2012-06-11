@@ -45,14 +45,14 @@ def run_dummy(test_file):
 
 class Plugin(CircusPlugin):
     name = 'dummy'
-    events = []
 
     def handle_recv(self, data):
         topic, msg = data
         topic_parts = topic.split(".")
         watcher = topic_parts[1]
         action = topic_parts[2]
-        self.events.append((watcher, action))
+        with open(self.config['file'], 'a+') as f:
+            f.write('%s:%s\n' % (watcher, action))
 
 
 class DummyProcess1(object):
@@ -275,10 +275,13 @@ class TestTrainer(TestCircus):
         self._stop_runners()
         self.cli.stop()
 
+        fd, datafile = mkstemp()
+        os.close(fd)
+
         # setting up a circusd with a plugin
         dummy_process = 'circus.tests.test_arbiter.run_dummy'
         plugin = 'circus.tests.test_arbiter.Plugin'
-        plugins = [{'use': plugin}]
+        plugins = [{'use': plugin, 'file': datafile}]
         self._run_circus(dummy_process, plugins=plugins)
 
         # doing a few operations
@@ -290,7 +293,17 @@ class TestTrainer(TestCircus):
         cli.call(msg2)
         resp = cli.call(msg1)
         self.assertEqual(resp.get('processes'), [1, 2])
+        cli.call(msg2)
+        resp = cli.call(msg1)
+        self.assertEqual(resp.get('processes'), [1, 2, 3])
+
+        # wait a bit
+        time.sleep(.2)
 
         # checking what the plugin did
-        wanted = [('test', 'spawn'), ('test', 'start'), ('test', 'spawn')]
-        self.assertEqual(Plugin.events, wanted)
+        with open(datafile) as f:
+            data = [line for line in f.read().split('\n')
+                    if line != '']
+
+        wanted = ['test:spawn', 'test:spawn']
+        self.assertEqual(data, wanted)

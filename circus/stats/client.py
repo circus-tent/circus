@@ -36,7 +36,7 @@ class StatsClient(CircusConsumer):
                 if len(topic) == 3:
                     __, watcher, pid = topic
                     yield watcher, long(pid), json.loads(stat)
-                else:
+                elif len(topic) == 2:
                     __, watcher = topic
                     yield watcher, None, json.loads(stat)
 
@@ -70,6 +70,9 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
     for name in names:
         if name == 'circusd-stats':
             continue
+        if name.startswith('plugin:'):
+            name = name.replace('-', '.')
+
         stdscr.addstr(line, 0, name)
         line += 1
         addstr(line, 3, 'PID')

@@ -45,4 +45,5 @@ setup(name='circus',
       circusctl = circus.circusctl:main
       circushttpd = circus.web.circushttpd:main
       circus-top = circus.stats.client:main
+      circus-plugin = circus.plugins:main
       """)

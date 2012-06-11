@@ -28,9 +28,9 @@ class Flapping(CircusPlugin):
     """
     name = 'flapping'
 
-    def __init__(self, context, endpoint, pubsub_endpoint, check_delay,
+    def __init__(self, endpoint, pubsub_endpoint, check_delay,
                  **config):
-        super(Flapping, self).__init__(context, endpoint, pubsub_endpoint,
+        super(Flapping, self).__init__(endpoint, pubsub_endpoint,
                                        check_delay, **config)
         self.timelines = {}
         self.timers = {}
