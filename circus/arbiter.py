@@ -75,10 +75,10 @@ class Arbiter(object):
         if plugins is not None:
             for plugin in plugins:
                 fqnd = plugin['use']
+                name = 'plugin:%s' % fqnd.replace('.', '-')
                 cmd = get_plugin_cmd(plugin, self.endpoint,
                                      self.pubsub_endpoint, self.check_delay)
-                plugin_watcher = Watcher('plugin:%s' %
-                            fqnd.replace('.', '-'), cmd, priority=1)
+                plugin_watcher = Watcher(name, cmd, priority=1, singleton=True)
                 self.watchers.append(plugin_watcher)
 
     @classmethod

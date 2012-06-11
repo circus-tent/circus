@@ -3,9 +3,6 @@
 Glossary
 ========
 
-.. image:: images/circus-architecture.png
-   :align: center
-
 .. glossary::
     :sorted:
 

@@ -11,6 +11,9 @@ It shares some of the goals of `Supervisord <http://supervisord.org>`_,
 `BluePill <https://github.com/arya/bluepill>`_ and
 `Daemontools <http://cr.yp.to/daemontools.html>`_.
 
+
+Circus is designed using Zero MQ. See :ref:`design` for more details.
+
 .. note::
 
    Before running Circus, make sure you read the :ref:`Security` page.
@@ -172,6 +175,7 @@ More documentation
    plugins
    deployment
    security
+   design
    examples
    coverage
    glossary
