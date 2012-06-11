@@ -138,6 +138,10 @@ watcher:NAME (as many sections as you want)
         with this field, from the bigger number to the smallest.
         Defaults to 0.
 
+    **singleton**
+        If set to True, this watcher will have at the most one process.
+        Default to False.
+
 plugin:NAME (as many sections as you want)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     **use**
