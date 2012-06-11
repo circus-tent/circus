@@ -15,6 +15,8 @@ A Plugin is composed of two parts:
 - a ZMQ subscriber to all events published by **circusd**
 - a ZMQ client to send commands to **circusd**
 
+Each plugin is run as a separate process under a custom watcher.
+
 A few examples of some plugins you could create with this system:
 
 - a notification system that sends e-mail alerts when a watcher is flapping
@@ -39,9 +41,6 @@ Circus provides a base class to help you implement plugins:
 
 .. autoclass:: circus.plugins.CircusPlugin
    :members: call, cast, handle_recv, handle_stop, handle_init
-
-The class is overriding :func:`threading.Thread` so the plugin is executed
-in a separate thread than the main event loop.
 
 When initialized by Circus, this class creates its own event loop that receives
 all **circusd** events and pass them to :func:`handle_recv`. The data received
@@ -76,7 +75,6 @@ The plugin could look like this::
 
         def __init__(self, filename, **kwargs):
             super(Logger, self).__init__(**kwargs)
-
             self.filename = filename
             self.file = None
 
@@ -101,20 +99,27 @@ For example, :class:`Logger` could be found in a *plugins* module in a
 Using a plugin
 --------------
 
-Using a plugin in a Circus configuration is done by adding a **[plugin:NAME]**
-section in the configuration file, where *NAME* is a unique name for your
-plugin::
+You can run a plugin through the command line with the **circus-plugin** command,
+by specifying the plugin fully qualified name::
 
+    $ circus-plugin --endpoint tcp://127.0.0.1:5555 --pubsub tcp://127.0.0.1:5556 myproject.plugins.Logger
+    [INFO] Loading the plugin...
+    [INFO] Endpoint: 'tcp://127.0.0.1:5555'
+    [INFO] Pub/sub: 'tcp://127.0.0.1:5556'
+    [INFO] Starting
+
+Another way to run a plugin is to let Circus handle its initialization. This is done
+by adding a **[plugin:NAME]** section in the configuration file, where *NAME* is a unique
+name for your plugin::
 
     [plugin:logger]
     use = myproject.plugins.Logger
     filename = /var/myproject/circus.log
 
-
 **use** is mandatory and points to the fully qualified name of the plugin.
 
-When Circus starts, it creates one instance of the pointed class, and
-pass any other variable contained in the section to the plugin constructor
+When Circus starts, it creates a watcher with one process that runs the pointed class,
+and pass any other variable contained in the section to the plugin constructor
 via the **config** mapping.
 
 You can also programmatically add plugins when you create a
@@ -125,15 +130,6 @@ see :ref:`library`.
 Performances
 ------------
 
-Since every plugin is loaded in its own thread, it should not impact
+Since every plugin is loaded in its own process, it should not impact
 the overall performances of the system as long as the work done by the
-plugin is not CPU-heavy.
-
-If you have a plugin that's doing a lot of work, a better option is
-to execute it on its own process by using the *process* flag.
-
-When this flag is activated, Circus starts the plugin as a watcher.
-
-.. warning::
-
-   The process option is not yet implemented.
+plugin is not doing too many calls to the **circusd** process.
