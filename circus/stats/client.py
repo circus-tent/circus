@@ -70,10 +70,8 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
     for name in names:
         if name == 'circusd-stats':
             continue
-        if name.startswith('plugin:'):
-            name = name.replace('-', '.')
 
-        stdscr.addstr(line, 0, name)
+        stdscr.addstr(line, 0, name.replace('-', '.'))
         line += 1
         addstr(line, 3, 'PID')
         addstr(line, 28, 'CPU (%)')
