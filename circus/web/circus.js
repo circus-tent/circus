@@ -25,8 +25,8 @@ function hookGraph(socket, watcher, config) {
         if (data.cpu > 100) { data.cpu = 100; }
         if (data.mem > 100) { data.mem = 100; }
 
-        $('#' + watcher + '_last_mem').text(data.mem.toPrecision(1) + '%');
-        $('#' + watcher + '_last_cpu').text(data.cpu.toPrecision(1) + '%');
+        $('#' + watcher + '_last_mem').text(data.mem.toFixed(1) + '%');
+        $('#' + watcher + '_last_cpu').text(data.cpu.toFixed(1) + '%');
 
         graph.series.addData(data);
         graph.render();
