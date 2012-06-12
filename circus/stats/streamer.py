@@ -166,7 +166,6 @@ class StatsStreamer(object):
 
         self.loop.stop()
         self.ctx.destroy(0)
-        self.sub_socket.close()
         self.publisher.stop()
         self.stopped = True
         self.running = False
