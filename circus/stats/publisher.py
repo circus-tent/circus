@@ -1,19 +1,11 @@
-import threading
 import zmq
-import Queue
 import json
 
 from circus import logger
 
 
-class StatsPublisher(threading.Thread):
-    def __init__(self, streamer, stats_endpoint='tcp://127.0.0.1:5557',
-                 delay=0.1, context=None):
-        threading.Thread.__init__(self)
-        self.streamer = streamer
-        self.running = False
-        self.daemon = True
-        self.delay = delay
+class StatsPublisher(object):
+    def __init__(self, stats_endpoint='tcp://127.0.0.1:5557', context=None):
         self.ctx = context or zmq.Context()
         self.destroy_context = context is None
         self.stats_endpoint = stats_endpoint
@@ -21,30 +13,21 @@ class StatsPublisher(threading.Thread):
         self.socket.bind(self.stats_endpoint)
         self.socket.linger = 0
 
-    def run(self):
-        self.running = True
-        results = self.streamer.results
-        logger.debug('Starting the Publisher')
-        while self.running:
-            try:
-                watcher, name, pid, stat = results.get(timeout=self.delay)
-                topic = b'stat.%s' % str(watcher)
-                if pid is not None:
-                    topic += '.%d' % pid
-                stat['name'] = name
-                self.socket.send_multipart([topic, json.dumps(stat)])
-            except zmq.ZMQError:
-                if self.socket.closed:
-                    self.running = False
-                else:
-                    raise
-            except Queue.Empty:
+    def publish(self, watcher, process_name, pid, stat):
+        try:
+            topic = b'stat.%s' % str(watcher)
+            if pid is not None:
+                topic += '.%d' % pid
+            stat['name'] = process_name
+            self.socket.send_multipart([topic, json.dumps(stat)])
+
+        except zmq.ZMQError:
+            if self.socket.closed:
                 pass
-            except Exception:
-                logger.exception('Failed to some data from the queue')
+            else:
+                raise
 
     def stop(self):
-        self.running = False
         if self.destroy_context:
             self.ctx.destroy(0)
         logger.debug('Publisher stopped')

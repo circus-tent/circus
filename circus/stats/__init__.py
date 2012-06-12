@@ -15,8 +15,19 @@ import logging
 
 from circus.stats.streamer import StatsStreamer
 from circus import logger
+from circus import util
 from circus import __version__
-from circus.util import LOG_LEVELS, LOG_FMT, LOG_DATE_FMT, close_on_exec
+
+
+LOG_LEVELS = {
+    "critical": logging.CRITICAL,
+    "error": logging.ERROR,
+    "warning": logging.WARNING,
+    "info": logging.INFO,
+    "debug": logging.DEBUG}
+
+LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
+LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
 
 
 def main():
@@ -36,8 +47,6 @@ def main():
             default='tcp://127.0.0.1:5557')
 
     parser.add_argument('--log-level', dest='loglevel', default='info',
-            choices=LOG_LEVELS.keys() + [key.upper() for key in
-                LOG_LEVELS.keys()],
             help="log level")
 
     parser.add_argument('--log-output', dest='logoutput', default='-',
@@ -59,7 +68,7 @@ def main():
         h = logging.StreamHandler()
     else:
         h = logging.FileHandler(args.logoutput)
-        close_on_exec(h.stream.fileno())
+        util.close_on_exec(h.stream.fileno())
     fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
     h.setFormatter(fmt)
     logger.addHandler(h)

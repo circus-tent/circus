@@ -110,7 +110,7 @@ def bytes2human(n):
 _PROCS = {}
 
 
-def get_info(process=None, interval=0):
+def get_info(process=None, interval=0, with_childs=False):
     """Return information about a process. (can be an pid or a Process object)
 
     If process is None, will return the information about the current process.
@@ -180,8 +180,9 @@ def get_info(process=None, interval=0):
     info['cmdline'] = cmdline
 
     info['children'] = []
-    for child in process.get_children():
-        info['children'].append(get_info(child, interval=interval))
+    if with_childs:
+        for child in process.get_children():
+            info['children'].append(get_info(child, interval=interval))
 
     return info
 
