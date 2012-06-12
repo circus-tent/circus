@@ -1,10 +1,20 @@
 CHANGES
 =======
 
-0.4
----
-???next release
+0.4 - 2012-06-12
+----------------
 
+* Added a plugin system
+* Added a "singleton" option for watchers
+* Fixed circus-top screen flickering
+* Removed threads from circus.stats in favor of zmq periodic callbacks
+* Enhanced the documentation
+* Circus client now have a send_message api
+* The flapping feature is now a plugin
+* Every command line tool have a --version option
+* Added a statsd plugin (sends the events from circus to statsd)
+* The web UI now uses websockets (via socketio) to get the stats
+* The web UI now uses sessions for "flash messages" in the web ui
 
 0.3.4 - 2012-05-30
 ------------------
