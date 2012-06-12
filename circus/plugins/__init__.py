@@ -25,7 +25,7 @@ class CircusPlugin(object):
     - **endpoint** -- the circusd ZMQ endpoint
     - **pubsub_endpoint** -- the circusd ZMQ pub/sub endpoint
     - **check_delay** -- the configured check delay
-    -- **config** -- free config mapping
+    - **config** -- free config mapping
     """
     name = ''
 
