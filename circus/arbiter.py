@@ -15,6 +15,7 @@ from circus.watcher import Watcher
 from circus.util import debuglog, _setproctitle
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
+from circus.sockets import CircusSocket, CircusSockets
 
 
 class Arbiter(object):
@@ -39,10 +40,12 @@ class Arbiter(object):
 
         - **use** -- Fully qualified name that points to the plugin class
         - every other value is passed to the plugin in the **config** option
+
+    XXX sockets
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
-                 stats_endpoint=None, plugins=None):
+                 stats_endpoint=None, plugins=None, sockets=None):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -81,6 +84,8 @@ class Arbiter(object):
                 plugin_watcher = Watcher(name, cmd, priority=1, singleton=True)
                 self.watchers.append(plugin_watcher)
 
+        self.sockets = CircusSockets(sockets)
+
     @classmethod
     def load_from_config(cls, config_file):
         cfg = get_config(config_file)
@@ -92,12 +97,16 @@ class Arbiter(object):
         for watcher in cfg.get('watchers', []):
             watchers.append(Watcher.load_from_config(watcher))
 
+        sockets = []
+        for socket in cfg.get('sockets', []):
+            sockets.append(CircusSocket.load_from_config(socket))
+
         # creating arbiter
         arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
                       check_delay=cfg.get('check_delay', 1.),
                       prereload_fn=cfg.get('prereload_fn'),
                       stats_endpoint=cfg.get('stats_endpoint'),
-                      plugins=cfg.get('plugins'))
+                      plugins=cfg.get('plugins'), sockets=sockets)
 
         return arbiter
 
@@ -117,6 +126,11 @@ class Arbiter(object):
         self.evpub_socket = self.context.socket(zmq.PUB)
         self.evpub_socket.bind(self.pubsub_endpoint)
         self.evpub_socket.linger = 0
+
+        # initialize sockets
+        if len(self.sockets) > 0:
+            self.sockets.bind_and_listen_all()
+            logger.info("sockets started")
 
         # initialize watchers
         for watcher in self.iter_watchers():
@@ -163,6 +177,9 @@ class Arbiter(object):
             self.stop_watchers(stop_alive=True)
 
         self.loop.stop()
+
+        # close sockets
+        self.sockets.close_all()
 
     def reap_processes(self):
         # map watcher to pids

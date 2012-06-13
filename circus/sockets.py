@@ -38,7 +38,7 @@ class CircusSocket(socket.socket):
         self.host, self.port = self.getsockname()
 
     @classmethod
-    def from_config(cls, config):
+    def load_from_config(cls, config):
         name = config['name']
         host = config.get('host', 'localhost')
         port = int(config.get('port', '8080'))
@@ -52,7 +52,7 @@ class CircusSocket(socket.socket):
 class CircusSockets(dict):
     """Manage CircusSockets objects.
     """
-    def __init__(self, backlog=1, sockets=None):
+    def __init__(self, sockets=None, backlog=-1):
         self.backlog = backlog
         if sockets is not None:
             for sock in sockets:

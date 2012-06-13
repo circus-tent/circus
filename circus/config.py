@@ -132,11 +132,17 @@ def get_config(config_file):
 
     config['stream_backend'] = stream_backend
 
-    # Initialize watchers & plugins to manage
+    # Initialize watchers, plugins & sockets to manage
     watchers = []
     plugins = []
+    sockets = []
 
     for section in cfg.sections():
+        if section.startswith("socket:"):
+            sock = dict(cfg.items(section))
+            sock['name'] = section.split("socket:")[-1]
+            sockets.append(sock)
+
         if section.startswith("plugin:"):
             plugins.append(dict(cfg.items(section)))
 
@@ -207,4 +213,5 @@ def get_config(config_file):
 
     config['watchers'] = watchers
     config['plugins'] = plugins
+    config['sockets'] = sockets
     return config
