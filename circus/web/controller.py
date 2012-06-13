@@ -20,6 +20,7 @@ class LiveClient(object):
         self.client = CircusClient(endpoint=self.endpoint)
         self.connected = False
         self.watchers = []
+        self.plugins = []
         self.stats = defaultdict(list)
         self.dstats = []
 
@@ -35,11 +36,13 @@ class LiveClient(object):
         # trying to list the watchers
         try:
             self.connected = True
-            for watcher in self.client.send_message('list'):
+            for watcher in self.client.send_message('list')['watchers']:
                 if watcher == 'circusd-stats':
                     continue
                 options = self.client.send_message('options', name=watcher)
                 self.watchers.append((watcher, options['options']))
+                if watcher.startswith('plugin:'):
+                    self.plugins.append(watcher)
 
             self.watchers.sort()
             self.stats_endpoint = self.get_global_options()['stats_endpoint']
@@ -99,7 +102,7 @@ class LiveClient(object):
         return res
 
     def get_status(self, name):
-        return self.client.send_message('status', name=name)
+        return self.client.send_message('status', name=name)['status']
 
     def switch_status(self, name):
         msg = cmds['status'].make_message(name=name)

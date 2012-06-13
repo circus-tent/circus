@@ -33,6 +33,7 @@
             <div style="width: 50px;">Status</div>
         </div>
     % for watcher, options in client.watchers:
+        % if watcher not in client.plugins:
         <div class="watcher">
             <div style="width: 300px;"><a class="link" href="/watchers/${watcher}">${watcher}</a></div>
             <div style="width: 80px;">${options['numprocesses']}</div>
@@ -42,6 +43,7 @@
             <div style="width: 50px;">${options['gid']}</div>
             <div style="width: 50px;"><a class="${client.get_status(watcher)}" title="${client.get_status(watcher)}" href="/watchers/${watcher}/switch_status"></a></div>
         </div>
+        %endif
     %endfor
     </div>
 
@@ -61,39 +63,37 @@
     </div>
 
     <div>
+        <%def name='draw_graph_div(watcher, name=None, display_status=False)'>
+
        <div class="process" style="margin-bottom: 15px">
         <div>
-            <span style="display: inline-block; float: left;" class="label">circusd</span>
+            <span style="display: inline-block; float: left;" class="label">${name or watcher}</span>
+            %if display_status:
+            <div style="width: 20px; float: right; margin-right: 10px;"><a class="${client.get_status(watcher)}" title="${client.get_status(watcher)}" href="/watchers/${watcher}/switch_status"></a></div>
+            %endif
         </div>
 
         <div class="stat">
-             <div id="circus" class="graph"></div>
+            <div id="${watcher}" class="graph"></div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
                 <span class="cpu_label">CPU</span>
-                <span class="cpu_value" id="circus_last_cpu">0 %</span>
+                <span class="cpu_value" id="${watcher}_last_cpu">0 %</span>
              </div>
              <div style="padding-bottom: 10px;padding-top: 5px;float:right; width: 49%; text-align:center;">
                 <span class="mem_label">Mem</span>
-                <span class="mem_value" id="circus_last_mem">0 %</span>
+                <span class="mem_value" id="${watcher}_last_mem">0 %</span>
              </div>
         </div>
      </div>
-     <div class="process" style="margin-bottom: 15px">
-        <div>
-            <span style="display: inline-block; float: left;" class="label">circusd-stats</span>
-        </div>
-        <div class="stat" id="pid_circusd-stats">
-             <div id="circusd-stats" class="graph"></div>
-             <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
-                <span class="cpu_label">CPU</span>
-                <span class="cpu_value" id="circusd-stats_last_cpu">0 %</span>
-             </div>
-             <div style="padding-bottom: 10px;padding-top: 5px;float:right; width: 49%; text-align:center;">
-                <span class="mem_label">Mem</span>
-                <span class="mem_value" id="circusd-stats_last_mem">0 %</span>
-             </div>
-        </div>
-     </div>
+     </%def>
+
+     ${draw_graph_div('circus')}
+     ${draw_graph_div('circusd-stats')}
+
+     %for plugin in client.plugins:
+         ${draw_graph_div(plugin, plugin.split(':')[1].replace('-', '.'), True)}
+     %endfor
+
     </div>
     <div style="clear:both"></div>
 
@@ -144,7 +144,13 @@
     <script type="text/javascript">
     $(document).ready(function () {
         var socket = io.connect('http://localhost');
-        supervise(socket, ['circusd-stats', 'circus']);
+        var watchers = ['circusd-stats', 'circus'];
+
+        %for plugin in client.plugins:
+            watchers.push('${plugin}');
+        %endfor
+
+        supervise(socket, watchers);
     });
 
  </script>

@@ -75,7 +75,7 @@ def incr_proc(name):
 @route('/watchers/<name>/switch_status', method='GET')
 def switch(name):
     return run_command(func=client.switch_status, args=(name,),
-                       messages='status switched', redirect_url='/')
+                       message='status switched', redirect_url='/')
 
 
 @route('/add_watcher', method='POST')
