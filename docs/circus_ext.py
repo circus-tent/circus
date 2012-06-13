@@ -79,7 +79,7 @@ def generate_commands(app):
         toc.write("-------------------\n\n")
 
         commands = get_commands()
-        for name, cmd in items():
+        for name, cmd in items:
             toc.write("- **%s**: :doc:`commands/%s`\n" % (name, name))
 
             # write the command file
