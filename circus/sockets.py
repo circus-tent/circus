@@ -59,7 +59,7 @@ class CircusSocket(socket.socket):
 class CircusSockets(dict):
     """Manage CircusSockets objects.
     """
-    def __init__(self, sockets=None, backlog=-1):
+    def __init__(self, sockets=None, backlog=1):
         self.backlog = backlog
         if sockets is not None:
             for sock in sockets:
