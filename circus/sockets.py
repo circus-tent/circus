@@ -33,6 +33,9 @@ class CircusSocket(socket.socket):
         self.backlog = backlog
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
+    def __str__(self):
+        return 'socket %r at %s:%d' % (self.name, self.host, self.port)
+
     def bind_and_listen(self):
         self.bind((self.host, self.port))
         self.listen(self.backlog)
