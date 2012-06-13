@@ -1,30 +1,26 @@
 import unittest
-from circus.sockets import CircusSocket, CircusSocketManager
+from circus.sockets import CircusSocket, CircusSockets
 
 
 class TestSockets(unittest.TestCase):
 
     def test_socket(self):
-        sock = CircusSocket('localhost', 0)
+        sock = CircusSocket('somename', 'localhost', 0)
         try:
             sock.bind_and_listen()
         finally:
             sock.close()
 
     def test_manager(self):
-        mgr = CircusSocketManager()
+        mgr = CircusSockets()
 
         for i in range(5):
-            mgr.add('localhost', 0)
+            mgr.add(str(i), 'localhost', 0)
 
-        self.assertEqual(len(mgr.names), 5)
-
-        one = mgr.names[0]
-        mgr.get_fileno(*one)
+        port = mgr['1'].port
         try:
             mgr.bind_and_listen_all()
-            two = mgr.names[0]
             # we should have a port now
-            self.assertNotEqual(one, two)
+            self.assertNotEqual(port, mgr['1'].port)
         finally:
             mgr.close_all()
