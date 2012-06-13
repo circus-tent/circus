@@ -1,17 +1,7 @@
 <%inherit file="base.html"/>
 
-% if not client:
-  <h1>Connect to a Circus system</h1>
-  <form action="/connect" method="POST">
-    <input type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
-    <input type="submit" class="connect" value="Connect"/>
-</form>
-% endif
-
 % if client:
-     <%
-       goptions = dict(client.get_global_options())
-     %>
+     <% goptions = dict(client.get_global_options()) %>
 
     <div class="title">
         <div style="float: left;" class="watcher_name">Watchers</div>
@@ -154,4 +144,29 @@
     });
 
  </script>
+
+% else:
+
+  <h1>Connect to a Circus system</h1>
+  <form id='connector' action="/connect" method="POST">
+    <input id="endpoint" type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
+    <input type="submit" class="connect" value="Connect"/>
+  </form>
+
+  <!-- autoconnect -->
+  <script type="text/javascript" charset="utf-8">
+
+      var autoconnect = true;
+
+      $('#endpoint').focus(function(){
+        autoconnect = false;
+      });
+
+      setTimeout(function(){
+        if (autoconnect == true) {
+            $('#connector').submit();
+        }
+      }, 10000);
+      
+  </script>
 % endif
