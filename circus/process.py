@@ -69,10 +69,15 @@ class Process(object):
 
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
+
+    - use_fds XXX
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
-                 uid=None, gid=None, env=None, rlimits=None, executable=None):
+                 uid=None, gid=None, env=None, rlimits=None, executable=None,
+                 use_fds=False):
         self.wid = wid
+        self.use_fds = use_fds
+
         if working_dir is None:
             self.working_dir = get_working_dir()
         else:
@@ -137,8 +142,8 @@ class Process(object):
 
         self._worker = Popen(args_, cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
-                             env=self.env, close_fds=False, stdout=PIPE,
-                             stderr=PIPE, executable=executable)
+                             env=self.env, close_fds= not self.use_fds,
+                             stdout=PIPE, stderr=PIPE, executable=executable)
 
         self.started = time.time()
 

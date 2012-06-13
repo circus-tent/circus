@@ -98,6 +98,8 @@ class Watcher(object):
     - **singleton** -- If True, this watcher has a single process.
       (default:False)
 
+    = **use_sockets** -- XXX
+
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
       in this mapping -- this can be used by plugins for watcher-specific
@@ -109,8 +111,9 @@ class Watcher(object):
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, stream_backend='thread', priority=0,
-                 singleton=False, **options):
+                 singleton=False, use_sockets=False, **options):
         self.name = name
+        self.use_sockets = use_sockets
         self.res_name = name.lower().replace(" ", "_")
         self.numprocesses = int(numprocesses)
         self.warmup_delay = warmup_delay
@@ -136,7 +139,8 @@ class Watcher(object):
         self.optnames = ("numprocesses", "warmup_delay", "working_dir",
                          "uid", "gid", "send_hup", "shell", "env", "max_retry",
                          "cmd", "args", "graceful_timeout", "executable",
-                         "priority", "singleton") + tuple(options.keys())
+                         "use_sockets", "priority",
+                         "singleton") + tuple(options.keys())
 
         if not working_dir:
             # working dir hasn't been set
@@ -180,7 +184,8 @@ class Watcher(object):
                    'working_dir', 'shell', 'uid', 'gid', 'send_hup',
                    'env', 'stopped', 'max_retry', 'graceful_timeout',
                    'prereload_fn', 'rlimits', 'executable', 'stdout_stream',
-                   'stream_backend', 'stderr_stream', 'priority')
+                   'stream_backend', 'stderr_stream', 'priority',
+                   'use_sockets')
 
         extra_options = {}
         for name, value in config.items():
@@ -209,6 +214,7 @@ class Watcher(object):
                    stderr_stream=config.get('stderr_stream'),
                    stream_backend=config.get('stream_backend', 'thread'),
                    priority=int(config.get('priority', 0)),
+                   use_sockets=config.get('use_sockets', False),
                    **extra_options)
 
     @util.debuglog
@@ -349,7 +355,7 @@ class Watcher(object):
                           args=self.args, working_dir=self.working_dir,
                           shell=self.shell, uid=self.uid, gid=self.gid,
                           env=self.env, rlimits=self.rlimits,
-                          executable=self.executable)
+                          executable=self.executable, use_fds=self.use_sockets)
 
                 # stream stderr/stdout if configured
                 if self.stdout_redirector is not None:

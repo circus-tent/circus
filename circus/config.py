@@ -26,7 +26,8 @@ def watcher_defaults():
         'stderr_stream': dict(),
         'stdout_stream': dict(),
         'stream_backend': 'thread',
-        'priority': 0}
+        'priority': 0,
+        'use_sockets': False}
 
 
 class DefaultConfigParser(ConfigParser.ConfigParser):
@@ -193,6 +194,9 @@ def get_config(config_file):
                     watcher['rlimits'][limit] = int(val)
                 elif opt == 'priority':
                     watcher['priority'] = dget(section, "priority", 0, int)
+                elif opt == 'use_sockets':
+                    watcher['use_sockets'] = dget(section, "use_sockets", False,
+                                                  bool)
                 else:
                     # freeform
                     watcher[opt] = val
