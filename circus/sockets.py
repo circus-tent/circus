@@ -1,4 +1,5 @@
 import socket
+from circus import logger
 
 
 _FAMILY = {
@@ -36,6 +37,8 @@ class CircusSocket(socket.socket):
         self.bind((self.host, self.port))
         self.listen(self.backlog)
         self.host, self.port = self.getsockname()
+        logger.debug('Socket bound at %s:%d - fd: %d' % (self.host, self.port,
+                                                         self.fileno()))
 
     @classmethod
     def load_from_config(cls, config):

@@ -2,6 +2,7 @@ import errno
 import os
 import signal
 import time
+import re
 
 from psutil import STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
@@ -150,7 +151,7 @@ class Watcher(object):
         self.env = env
         self.rlimits = rlimits
         self.send_hup = send_hup
-        self.evpub_socket = None
+        self.sockets = self.evpub_socket = None
 
     def _create_redirectors(self):
         if self.stdout_stream:
@@ -211,8 +212,9 @@ class Watcher(object):
                    **extra_options)
 
     @util.debuglog
-    def initialize(self, evpub_socket):
+    def initialize(self, evpub_socket, sockets):
         self.evpub_socket = evpub_socket
+        self.sockets = sockets
 
     def __len__(self):
         return len(self.processes)
@@ -331,12 +333,19 @@ class Watcher(object):
         if self.stopped:
             return
 
+        def _repl(matchobj):
+            name = matchobj.group(1)
+            if name in self.sockets:
+                return str(self.sockets[name].fileno())
+            return '${socket:%s}' % name
+
+        cmd = re.sub('\$\{socket\:(\w+)\}', _repl, self.cmd)
         self._process_counter += 1
         nb_tries = 0
         while nb_tries < self.max_retry:
             process = None
             try:
-                process = Process(self._process_counter, self.cmd,
+                process = Process(self._process_counter, cmd,
                           args=self.args, working_dir=self.working_dir,
                           shell=self.shell, uid=self.uid, gid=self.gid,
                           env=self.env, rlimits=self.rlimits,

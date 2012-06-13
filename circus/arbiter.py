@@ -135,7 +135,7 @@ class Arbiter(object):
         # initialize watchers
         for watcher in self.iter_watchers():
             self._watchers_names[watcher.name.lower()] = watcher
-            watcher.initialize(self.evpub_socket)
+            watcher.initialize(self.evpub_socket, self.sockets)
 
     @debuglog
     def start(self):
