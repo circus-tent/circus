@@ -4,8 +4,8 @@ import sys
 
 try:
     from beaker.middleware import SessionMiddleware
-    from bottle import (app, route, run, static_file, redirect, request,
-                        ServerAdapter)
+    from bottle import (app, route as route_, run, static_file, redirect,
+                        request, ServerAdapter)
     from mako.lookup import TemplateLookup
     from socketio import socketio_manage
     from socketio.mixins import RoomsMixin, BroadcastMixin
@@ -36,7 +36,28 @@ app = SessionMiddleware(app(), session_opts)
 client = None
 
 
-@route('/media/<filename:path>')
+def route(*args, **kwargs):
+    """Replace the default bottle route decorator and redirect to the
+    connection page if the client is not defined
+    """
+    ensure_client = kwargs.get('ensure_client', True)
+
+    def wrapper(func):
+        def client_or_redirect(*fargs, **fkwargs):
+            if ensure_client:
+                global client
+                if client is None:
+                    session = get_session()
+                    if 'endpoint' in session:
+                        client = connect_to_endpoint(session['endpoint'])
+                    else:
+                        return redirect('/connect')
+            return func(*fargs, **fkwargs)
+        return route_(*args, **kwargs)(client_or_redirect)
+    return wrapper
+
+
+@route('/media/<filename:path>', ensure_client=False)
 def get_media(filename):
     return static_file(filename, root=_DIR)
 
@@ -92,18 +113,23 @@ def watcher(name):
     return render_template('watcher.html', name=name)
 
 
-@route('/connect', method='POST')
+@route('/connect', method=['POST', 'GET'], ensure_client=False)
 def connect():
-    endpoint = request.forms.endpoint
-    global client
-    _client = LiveClient(endpoint=endpoint)
-    _client.update_watchers()
-    if _client.connected:
-        client = _client
-        set_message('You are now connected')
-    else:
-        set_message('Impossible to connect')
-    redirect('/')
+    if request.method == 'GET':
+        return render_template('connect.html')
+
+    elif request.method == 'POST':
+        session = get_session()
+        session['endpoint'] = request.forms.endpoint
+        session.save()
+
+        client = connect_to_endpoint(request.forms.endpoint)
+        if client.connected:
+            message = 'You are now connected'
+        else:
+            message = 'Impossible to connect'
+        set_message(message)
+        redirect('/')
 
 
 @route('/disconnect')
@@ -113,6 +139,9 @@ def disconnect():
     if client is not None:
         client.stop()
         client = None
+        session = get_session()
+        session.pop('endpoint')
+        session.save()
         set_message('You are now disconnected')
     redirect('/')
 
@@ -239,6 +268,12 @@ def run_command(func, message, redirect_url, redirect_on_error=None,
     redirect(redirect_url)
 
 
+def connect_to_endpoint(endpoint):
+    client = LiveClient(endpoint=endpoint)
+    client.update_watchers()
+    return client
+
+
 def render_template(template, **data):
     """Finds the given template and renders it with the given data.
 
@@ -252,13 +287,15 @@ def render_template(template, **data):
 
     # send the last message stored in the session in addition, in the "message"
     # attribute.
+    server = '%s://%s' % (request.urlparts.scheme, request.urlparts.netloc)
+
     return tmpl.render(client=client, version=__version__,
-                       session=get_session(), **data)
+                       session=get_session(), SERVER=server, **data)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Run the Web Console')
-    parser.add_argument('--host', help='Host', default='localhost')
+    parser.add_argument('--host', help='Host', default='0.0.0.0')
     parser.add_argument('--port', help='port', default=8080)
     parser.add_argument('--server', help='web server to use',
                         default=SocketIOServer)

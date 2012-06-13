@@ -153,12 +153,8 @@
 <script src="/media/socket.io.js"></script>
 <script type="text/javascript">
     $(document).ready(function () {
-        var socket = io.connect('http://localhost');
-
-        $(document).ready(function () {
-            var socket = io.connect('http://localhost');
-            supervise(socket, [], ['${name}']);
-        });
+        var socket = io.connect('${SERVER}');
+        supervise(socket, [], ['${name}']);
     });
 </script>
 
