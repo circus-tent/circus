@@ -408,8 +408,8 @@ class Watcher(object):
                     raise
 
     @util.debuglog
-    def send_signal(self, wid, signum):
-        self.processes[wid].send_signal(signum)
+    def send_signal(self, pid, signum):
+        self.processes[self.pids[pid]].send_signal(signum)
 
     def send_signal_processes(self, signum):
         for _, process in self.processes.items():
