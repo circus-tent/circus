@@ -142,7 +142,7 @@ class Process(object):
 
         self._worker = Popen(args_, cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
-                             env=self.env, close_fds= not self.use_fds,
+                             env=self.env, close_fds=not self.use_fds,
                              stdout=PIPE, stderr=PIPE, executable=executable)
 
         self.started = time.time()

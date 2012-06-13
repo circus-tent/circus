@@ -27,7 +27,8 @@ class CircusSocket(socket.socket):
     def __init__(self, name='', host='localhost', port=8080,
                  family=socket.AF_INET, type=socket.SOCK_STREAM,
                  proto=0, backlog=1):
-        super(CircusSocket, self).__init__(family=family, type=type, proto=proto)
+        super(CircusSocket, self).__init__(family=family, type=type,
+                                           proto=proto)
         self.name = name
         self.host, self.port = addrinfo(host, port)
         self.backlog = backlog

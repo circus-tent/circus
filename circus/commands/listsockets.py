@@ -1,5 +1,4 @@
 from circus.commands.base import Command
-from circus.exc import ArgumentError
 
 
 class ListSockets(Command):
