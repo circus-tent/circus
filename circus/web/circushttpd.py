@@ -49,47 +49,42 @@ def index():
 @route('/watchers/<name>/process/kill/<pid>')
 def kill_process(name, pid):
     return run_command(
-        lambda: client.killproc(name, pid),
-        'process {pid} for watcher {watcher} killed sucessfully'\
-        .format(pid=pid, watcher=name),
-        '/watchers/%s' % name)
+        func=client.killproc, args=(name, pid),
+        message='process {pid} killed sucessfully'.format(pid=pid),
+        redirect_url='/watchers/%s' % name)
 
 
 @route('/watchers/<name>/process/decr', method='GET')
 def decr_proc(name):
     return run_command(
-        lambda: client.decrproc(name),
-        'removed one process from the {watcher} pool'.format(watcher=name),
-        '/watchers/%s' % name)
+        func=client.decrproc, args=(name,),
+        message='removed one process from the {watcher} pool'\
+                .format(watcher=name),
+        redirect_url='/watchers/%s' % name)
 
 
 @route('/watchers/<name>/process/incr', method='GET')
 def incr_proc(name):
 
     return run_command(
-        lambda: client.incrproc(name),
-        'added one process to the {watcher} pool'.format(watcher=name),
-        '/watchers/%s' % name)
+        func=client.incrproc, args=(name,),
+        message='added one process to the {watcher} pool'.format(watcher=name),
+        redirect_url='/watchers/%s' % name)
 
 
 @route('/watchers/<name>/switch_status', method='GET')
 def switch(name):
-    return run_command(
-        lambda: client.switch_status(name),
-        'status switched',
-        '/')
+    return run_command(func=client.switch_status, args=(name,),
+                       message='status switched', redirect_url='/')
 
 
 @route('/add_watcher', method='POST')
 def add_watcher():
-    try:
-        if client.add_watcher(**request.POST):
-            set_message('new watcher sucessfully added')
-            redirect('/watchers/%(name)s' % request.POST)
-        else:
-            redirect('/')
-    except CallError:
-        redirect('/')
+    return run_command(client.add_watcher,
+                       kwargs=request.POST,
+                       message='added a new watcher',
+                       redirect_url='/watchers/%(name)s' % request.POST,
+                       redirect_on_error='/')
 
 
 @route('/watchers/<name>', method='GET')
@@ -102,7 +97,7 @@ def connect():
     endpoint = request.forms.endpoint
     global client
     _client = LiveClient(endpoint=endpoint)
-    _client.verify()
+    _client.update_watchers()
     if _client.connected:
         client = _client
         set_message('You are now connected')
@@ -223,13 +218,25 @@ def set_error(message):
     return set_message("An error happened: %s" % message)
 
 
-def run_command(func, message, redirection_url):
+def run_command(func, message, redirect_url, redirect_on_error=None,
+                args=None, kwargs=None):
+
+    if redirect_on_error is None:
+        redirect_on_error = redirect_url
+    args = args or ()
+    kwargs = kwargs or {}
+
     try:
-        func()
-        set_message(message)
+        res = func(*args, **kwargs)
+        if res['status'] != 'ok':
+            message = "An error happened: %s" % res['reason']
     except CallError, e:
-        set_message("An error happened: %s" % e)
-    redirect(redirection_url)
+        message = "An error happened: %s" % e
+        redirect_url = redirect_on_error
+
+    if message:
+        set_message(message)
+    redirect(redirect_url)
 
 
 def render_template(template, **data):
