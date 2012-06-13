@@ -26,22 +26,19 @@ class LiveClient(object):
     def stop(self):
         self.client.stop()
 
-    def verify(self):
+    def update_watchers(self):
         """Calls circus and initialize the list of watchers.
 
         If circus is not connected raises an error.
         """
         self.watchers = []
         # trying to list the watchers
-        msg = cmds['list'].make_message()
         try:
-            res = self.client.call(msg)
             self.connected = True
-            for watcher in res['watchers']:
+            for watcher in self.client.send_message('list'):
                 if watcher == 'circusd-stats':
                     continue
-                msg = cmds['options'].make_message(name=watcher)
-                options = self.client.call(msg)
+                options = self.client.send_message('options', name=watcher)
                 self.watchers.append((watcher, options['options']))
             self.watchers.sort()
             self.stats_endpoint = self.get_global_options()['stats_endpoint']
@@ -51,7 +48,7 @@ class LiveClient(object):
     def killproc(self, name, pid):
         res = self.client.send_message('signal', name=name, process=int(pid),
                                        signum=9)
-        self.verify()  # will do better later
+        self.update_watchers()  # will do better later
         return res
 
     def get_option(self, name, option):
@@ -70,13 +67,13 @@ class LiveClient(object):
     def incrproc(self, name):
         msg = cmds['incr'].make_message(name=name)
         res = self.client.call(msg)
-        self.verify()  # will do better later
+        self.update_watchers()  # will do better later
         return res
 
     def decrproc(self, name):
         msg = cmds['decr'].make_message(name=name)
         res = self.client.call(msg)
-        self.verify()  # will do better later
+        self.update_watchers()  # will do better later
         return res
 
     def get_stats(self, name, start=0, end=-1):
@@ -131,5 +128,5 @@ class LiveClient(object):
             options['working_dir'] = kw.get('working_dir')
             options['shell'] = kw.get('shell', 'off') == 'on'
             res = self.client.send_message('set', name=name, options=options)
-            self.verify()  # will do better later
+            self.update_watchers()  # will do better later
         return res
