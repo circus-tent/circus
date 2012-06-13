@@ -69,13 +69,17 @@ def generate_commands(app):
 
     tocname = os.path.join(app.srcdir, "commands%s" % ext)
 
+    commands = get_commands()
+    items = commands.items()
+    items.sort()
+
     with open(tocname, "w") as toc:
         toc.write(_HEADER)
         toc.write("circus-ctl commands\n")
         toc.write("-------------------\n\n")
 
         commands = get_commands()
-        for name, cmd in commands.items():
+        for name, cmd in items():
             toc.write("- **%s**: :doc:`commands/%s`\n" % (name, name))
 
             # write the command file
