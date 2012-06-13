@@ -274,7 +274,7 @@ class Arbiter(object):
             return ValueError("command name shouldn't be empty")
 
         watcher = Watcher(name, cmd, **kw)
-        watcher.initialize(self.evpub_socket)
+        watcher.initialize(self.evpub_socket, self.sockets)
         self.watchers.append(watcher)
         self._watchers_names[watcher.name.lower()] = watcher
         return watcher
