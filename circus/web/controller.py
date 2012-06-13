@@ -27,6 +27,10 @@ class LiveClient(object):
         self.client.stop()
 
     def verify(self):
+        """Calls circus and initialize the list of watchers.
+
+        If circus is not connected raises an error.
+        """
         self.watchers = []
         # trying to list the watchers
         msg = cmds['list'].make_message()
@@ -45,11 +49,10 @@ class LiveClient(object):
             self.connected = False
 
     def killproc(self, name, pid):
-        msg = cmds['signal'].make_message(name=name, process=int(pid),
-                signum=9)
-        res = self.client.call(msg)
+        res = self.client.send_message('signal', name=name, process=int(pid),
+                                       signum=9)
         self.verify()  # will do better later
-        return res['status'] == 'ok'
+        return res
 
     def get_option(self, name, option):
         watchers = dict(self.watchers)
@@ -68,13 +71,13 @@ class LiveClient(object):
         msg = cmds['incr'].make_message(name=name)
         res = self.client.call(msg)
         self.verify()  # will do better later
-        return res['numprocesses']
+        return res
 
     def decrproc(self, name):
         msg = cmds['decr'].make_message(name=name)
         res = self.client.call(msg)
         self.verify()  # will do better later
-        return res['numprocesses']
+        return res
 
     def get_stats(self, name, start=0, end=-1):
         return self.stats[name][start:end]
@@ -105,7 +108,7 @@ class LiveClient(object):
     def get_status(self, name):
         msg = cmds['status'].make_message(name=name)
         res = self.client.call(msg)
-        return res['status']
+        return res
 
     def switch_status(self, name):
         msg = cmds['status'].make_message(name=name)
@@ -120,17 +123,13 @@ class LiveClient(object):
         return res
 
     def add_watcher(self, name, cmd, **kw):
-        msg = cmds['add'].make_message(name=name, cmd=cmd)
-        res = self.client.call(msg)
+        res = self.client.send_message('add', name=name, cmd=cmd)
         if res['status'] == 'ok':
             # now configuring the options
             options = {}
             options['numprocesses'] = int(kw.get('numprocesses', '5'))
             options['working_dir'] = kw.get('working_dir')
             options['shell'] = kw.get('shell', 'off') == 'on'
-            msg = cmds['set'].make_message(name=name, options=options)
-            res = self.client.call(msg)
+            res = self.client.send_message('set', name=name, options=options)
             self.verify()  # will do better later
-            return res['status'] == 'ok'
-        else:
-            return False
+        return res
