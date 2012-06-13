@@ -97,7 +97,7 @@ def connect():
     endpoint = request.forms.endpoint
     global client
     _client = LiveClient(endpoint=endpoint)
-    _client.verify()
+    _client.update_watchers()
     if _client.connected:
         client = _client
         set_message('You are now connected')
@@ -230,7 +230,6 @@ def run_command(func, message, redirect_url, redirect_on_error=None,
         res = func(*args, **kwargs)
         if res['status'] != 'ok':
             message = "An error happened: %s" % res['reason']
-            from pdb import set_trace; set_trace()
     except CallError, e:
         message = "An error happened: %s" % e
         redirect_url = redirect_on_error

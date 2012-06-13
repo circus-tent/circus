@@ -40,6 +40,7 @@ class LiveClient(object):
                     continue
                 options = self.client.send_message('options', name=watcher)
                 self.watchers.append((watcher, options['options']))
+
             self.watchers.sort()
             self.stats_endpoint = self.get_global_options()['stats_endpoint']
         except CallError:
@@ -56,23 +57,19 @@ class LiveClient(object):
         return watchers[name][option]
 
     def get_global_options(self):
-        msg = cmds['globaloptions'].make_message()
-        options = self.client.call(msg)
-        return options['options']
+        return self.client.send_message('globaloptions')['options']
 
     def get_options(self, name):
         watchers = dict(self.watchers)
         return watchers[name].items()
 
     def incrproc(self, name):
-        msg = cmds['incr'].make_message(name=name)
-        res = self.client.call(msg)
+        res = self.client.send_message('incr', name=name)
         self.update_watchers()  # will do better later
         return res
 
     def decrproc(self, name):
-        msg = cmds['decr'].make_message(name=name)
-        res = self.client.call(msg)
+        res = self.client.send_message('decr', name=name)
         self.update_watchers()  # will do better later
         return res
 
@@ -87,8 +84,7 @@ class LiveClient(object):
         return res
 
     def get_pids(self, name):
-        msg = cmds['listpids'].make_message(name=name)
-        res = self.client.call(msg)
+        res = self.client.send_message('listpids', name=name)
         return res['pids']
 
     def get_series(self, name, pid, field, start=0, end=-1):
@@ -103,9 +99,7 @@ class LiveClient(object):
         return res
 
     def get_status(self, name):
-        msg = cmds['status'].make_message(name=name)
-        res = self.client.call(msg)
-        return res
+        return self.client.send_message('status', name=name)
 
     def switch_status(self, name):
         msg = cmds['status'].make_message(name=name)
