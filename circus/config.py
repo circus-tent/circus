@@ -50,16 +50,32 @@ def read_config(config_path):
         cfg.readfp(f)
     cfg_files_read = [config_path]
 
+    current_dir = os.path.dirname(config_path)
+
     # load included config files
     includes = []
+
+    def include_filename(filename):
+        if '*' in filename:
+            include_dir = os.path.dirname(filename)
+            if os.path.abspath(filename) != filename:
+                include_dir = os.path.join(current_dir,
+                                           os.path.dirname(filename))
+
+            wildcard = os.path.basename(filename)
+            for root, dirnames, filenames in os.walk(include_dir):
+                for filename in fnmatch.filter(filenames, wildcard):
+                    cfg_file = os.path.join(root, filename)
+                    includes.append(cfg_file)
+
+        elif os.path.isfile(filename):
+            includes.append(filename)
+
     for include_file in cfg.dget('circus', 'include', '').split():
-        includes.append(include_file)
+        include_filename(include_file)
 
     for include_dir in cfg.dget('circus', 'include_dir', '').split():
-        for root, dirnames, filenames in os.walk(include_dir):
-            for filename in fnmatch.filter(filenames, '*.ini'):
-                cfg_file = os.path.join(root, filename)
-                includes.append(cfg_file)
+        include_filename(os.path.join(include_dir, '*.ini'))
 
     cfg_files_read.extend(cfg.read(includes))
 
