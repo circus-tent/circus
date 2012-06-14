@@ -26,7 +26,8 @@ def watcher_defaults():
         'stderr_stream': dict(),
         'stdout_stream': dict(),
         'stream_backend': 'thread',
-        'priority': 0}
+        'priority': 0,
+        'use_sockets': False}
 
 
 class DefaultConfigParser(ConfigParser.ConfigParser):
@@ -148,11 +149,17 @@ def get_config(config_file):
 
     config['stream_backend'] = stream_backend
 
-    # Initialize watchers & plugins to manage
+    # Initialize watchers, plugins & sockets to manage
     watchers = []
     plugins = []
+    sockets = []
 
     for section in cfg.sections():
+        if section.startswith("socket:"):
+            sock = dict(cfg.items(section))
+            sock['name'] = section.split("socket:")[-1]
+            sockets.append(sock)
+
         if section.startswith("plugin:"):
             plugins.append(dict(cfg.items(section)))
 
@@ -203,6 +210,9 @@ def get_config(config_file):
                     watcher['rlimits'][limit] = int(val)
                 elif opt == 'priority':
                     watcher['priority'] = dget(section, "priority", 0, int)
+                elif opt == 'use_sockets':
+                    watcher['use_sockets'] = dget(section, "use_sockets",
+                                                  False, bool)
                 else:
                     # freeform
                     watcher[opt] = val
@@ -223,4 +233,5 @@ def get_config(config_file):
 
     config['watchers'] = watchers
     config['plugins'] = plugins
+    config['sockets'] = sockets
     return config
