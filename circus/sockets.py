@@ -40,7 +40,7 @@ class CircusSocket(socket.socket):
     def bind_and_listen(self):
         self.bind((self.host, self.port))
         self.setblocking(0)
-        self.listen(2048)   #self.backlog)
+        self.listen(self.backlog)
         self.host, self.port = self.getsockname()
         logger.debug('Socket bound at %s:%d - fd: %d' % (self.host, self.port,
                                                          self.fileno()))
