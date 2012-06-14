@@ -7,7 +7,7 @@ class Start(Command):
         Start the arbiter or a watcher
         ==============================
 
-        This command start all the process in a watcher or all watchers.
+        This command starts all the processes in a watcher or all watchers.
 
 
         ZMQ Message
@@ -16,7 +16,7 @@ class Start(Command):
         ::
 
             {
-                "command": "stop",
+                "command": "start",
                 "properties": {
                     "name": '<name>",
                 }
