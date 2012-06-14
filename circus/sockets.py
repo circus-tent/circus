@@ -26,7 +26,7 @@ class CircusSocket(socket.socket):
     """
     def __init__(self, name='', host='localhost', port=8080,
                  family=socket.AF_INET, type=socket.SOCK_STREAM,
-                 proto=0, backlog=1):
+                 proto=0, backlog=socket.SOMAXCONN):
         super(CircusSocket, self).__init__(family=family, type=type,
                                            proto=proto)
         self.name = name
@@ -39,6 +39,7 @@ class CircusSocket(socket.socket):
 
     def bind_and_listen(self):
         self.bind((self.host, self.port))
+        self.setblocking(0)
         self.listen(self.backlog)
         self.host, self.port = self.getsockname()
         logger.debug('Socket bound at %s:%d - fd: %d' % (self.host, self.port,
@@ -52,14 +53,14 @@ class CircusSocket(socket.socket):
         family = _FAMILY[config.get('family', 'AF_INET').upper()]
         type = _TYPE[config.get('type', 'SOCK_STREAM').upper()]
         proto = socket.getprotobyname(config.get('proto', 'ip'))
-        backlog = int(config.get('backlog', '1'))
+        backlog = int(config.get('backlog', socket.SOMAXCONN))
         return cls(name, host, port, family, type, proto, backlog)
 
 
 class CircusSockets(dict):
     """Manage CircusSockets objects.
     """
-    def __init__(self, sockets=None, backlog=1):
+    def __init__(self, sockets=None, backlog=socket.SOMAXCONN):
         self.backlog = backlog
         if sockets is not None:
             for sock in sockets:
