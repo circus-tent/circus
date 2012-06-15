@@ -75,7 +75,7 @@ class TestCircus(unittest.TestCase):
         wdir = os.path.dirname(__file__)
         args = ['generic.py', callable, testfile]
         worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
-                'name': 'test', 'graceful_timeout': 4}
+                  'name': 'test', 'graceful_timeout': 4}
         worker.update(kw)
         if stats:
             arbiter = get_arbiter([worker], background=True, plugins=plugins,

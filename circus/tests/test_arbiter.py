@@ -86,7 +86,7 @@ class TestTrainer(TestCircus):
     def setUp(self):
         super(TestTrainer, self).setUp()
         dummy_process = 'circus.tests.test_arbiter.run_dummy'
-        self.test_file = self._run_circus(dummy_process, graceful_timeout=4)
+        self.test_file = self._run_circus(dummy_process)
         self.cli = CircusClient()
 
     def tearDown(self):
@@ -131,50 +131,60 @@ class TestTrainer(TestCircus):
         args = ['generic.py', 'circus.tests.test_arbiter.run_dummy1']
         return cmd, args
 
+    def _get_options(self, **kwargs):
+        if 'graceful_timeout' not in kwargs:
+            kwargs['graceful_timeout'] = 4
+        return kwargs
+
     def test_add_watcher(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+                           options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
     def test_add_watcher1(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+                           options=self._get_options())
         self.cli.call(msg)
         resp = self.cli.call(make_message("list"))
         self.assertEqual(resp.get('watchers'), ["test", "test1"])
 
     def test_add_watcher2(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+                           options=self._get_options())
         self.cli.call(msg)
         resp = self.cli.call(make_message("numwatchers"))
         self.assertEqual(resp.get("numwatchers"), 2)
 
     def test_add_watcher3(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+                           options=self._get_options())
         self.cli.call(msg)
         resp = self.cli.call(msg)
         self.assertTrue(resp.get('status'), 'error')
 
     def test_add_watcher4(self):
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args)
+        msg = make_message("add", name="test1", cmd=cmd, args=args,
+                options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
     def test_add_watcher5(self):
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args)
+        msg = make_message("add", name="test1", cmd=cmd, args=args,
+                options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
         resp = self.cli.call(make_message("start", name="test1"))
         self.assertEqual(resp.get("status"), "ok")
-
         resp = self.cli.call(make_message("status", name="test1"))
         self.assertEqual(resp.get("status"), "active")
 
     def test_add_watcher6(self):
         cmd, args = self._get_cmd_args()
         msg = make_message("add", name="test1", cmd=cmd, args=args,
-                start=True)
+                           start=True, options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
@@ -183,8 +193,8 @@ class TestTrainer(TestCircus):
 
     def test_add_watcher7(self):
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args,
-                start=True, options={"flapping_window": 100})
+        msg = make_message("add", name="test1", cmd=cmd, args=args, start=True,
+                           options=self._get_options(flapping_window=100))
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
@@ -196,7 +206,8 @@ class TestTrainer(TestCircus):
         self.assertEqual(options.get("flapping_window"), 100)
 
     def test_rm_watcher(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd())
+        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+                           options=self._get_options())
         self.cli.call(msg)
         msg = make_message("rm", name="test1")
         self.cli.call(msg)
@@ -258,7 +269,8 @@ class TestTrainer(TestCircus):
 
     def test_stop_watchers3(self):
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args)
+        msg = make_message("add", name="test1", cmd=cmd, args=args,
+                           options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
         resp = self.cli.call(make_message("start", name="test1"))
