@@ -186,19 +186,20 @@ class Arbiter(object):
         watchers_pids = {}
         for watcher in self.iter_watchers():
             if not watcher.stopped:
-                for pid, wid in watcher.pids.items():
-                    watchers_pids[pid] = (watcher, wid)
+                for process in watcher.processes.values():
+                    watchers_pids[process.pid] = watcher
 
         # detect dead children
         while True:
             try:
+                # wait for our child (so it's not a zombie)
                 pid, status = os.waitpid(-1, os.WNOHANG)
                 if not pid:
                     break
 
                 if pid in watchers_pids:
-                    watcher, wid = watchers_pids[pid]
-                    watcher.reap_process(wid, status)
+                    watcher = watchers_pids[pid]
+                    watcher.reap_process(pid, status)
             except OSError as e:
                 if e.errno == errno.EAGAIN:
                     time.sleep(0.001)
