@@ -62,7 +62,7 @@ class TestWatcher(TestCircus):
         # we still should have two processes, but not the same pids for them
         pids = get_pids()
         self.assertEquals(len(pids), 2)
-        self.assertNotIn(to_kill, pids)
+        self.assertTrue(to_kill not in pids)
 
     def test_stats(self):
         resp = self.call("stats").get('infos')
