@@ -126,8 +126,8 @@ class Watcher(object):
         self.executable = None
         self.stream_backend = stream_backend
         self.priority = priority
-        self.stdout_stream = stdout_stream
-        self.stderr_stream = stderr_stream
+        self.stdout_stream = util.stream_config(stdout_stream)
+        self.stderr_stream = util.stream_config(stderr_stream)
         self.stdout_redirector = self.stderr_redirector = None
         self.max_retry = max_retry
         self._options = options

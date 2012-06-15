@@ -261,6 +261,36 @@ def close_on_exec(fd):
     fcntl.fcntl(fd, fcntl.F_SETFD, flags)
 
 
+def stream_config(stream_conf):
+    if not stream_conf:
+        return stream_conf
+
+    if not 'class' in stream_conf:
+        # we can handle othe class there
+        if 'filename' in stream_conf:
+            obj = FileStream
+        else:
+            raise ValueError("stream configuration invalid")
+
+    else:
+        class_name = stream_conf.pop('class')
+        if not "." in class_name:
+            class_name = "circus.stream.%s" % class_name
+
+        obj = resolve_name(class_name)
+
+    # default refres_time
+    if not 'refresh_time' in stream_conf:
+        refresh_time = 0.3
+    else:
+        refresh_time = float(stream_conf.pop('refresh_time'))
+
+    # initialize stream instance
+    inst = obj(**stream_conf)
+
+    return {'stream': inst, 'refresh_time': refresh_time}
+
+
 def debuglog(func):
     @wraps(func)
     def _log(self, *args, **kw):

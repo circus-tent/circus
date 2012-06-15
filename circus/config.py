@@ -81,38 +81,6 @@ def read_config(config_path):
 
     return cfg, cfg_files_read
 
-
-def stream_config(watcher_name, stream_conf):
-    if not stream_conf:
-        return stream_conf
-
-    if not 'class' in stream_conf:
-        # we can handle othe class there
-        if 'filename' in stream_conf:
-            obj = FileStream
-        else:
-            raise ValueError("stream configuration invalid in %r" %
-                    watcher_name)
-
-    else:
-        class_name = stream_conf.pop('class')
-        if not "." in class_name:
-            class_name = "circus.stream.%s" % class_name
-
-        obj = util.resolve_name(class_name)
-
-    # default refres_time
-    if not 'refresh_time' in stream_conf:
-        refresh_time = 0.3
-    else:
-        refresh_time = float(stream_conf.pop('refresh_time'))
-
-    # initialize stream instance
-    inst = obj(**stream_conf)
-
-    return {'stream': inst, 'refresh_time': refresh_time}
-
-
 def get_config(config_file):
     if not os.path.exists(config_file):
         sys.stderr.write("the configuration file %r does not exist\n" %
@@ -216,15 +184,6 @@ def get_config(config_file):
                 else:
                     # freeform
                     watcher[opt] = val
-
-            # second pass, parse stream conf
-            stdout_conf = watcher.get('stdout_stream', {})
-            watcher['stdout_stream'] = stream_config(watcher['name'],
-                stdout_conf)
-
-            stderr_conf = watcher.get('stderr_stream', {})
-            watcher['stderr_stream'] = stream_config(watcher['name'],
-                stderr_conf)
 
             # set the stream backend
             watcher['stream_backend'] = stream_backend
