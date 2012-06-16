@@ -60,10 +60,7 @@ def get_stream(conf):
         obj = resolve_name(class_name)
 
     # default refresh_time
-    if not 'refresh_time' in conf:
-        refresh_time = 0.3
-    else:
-        refresh_time = float(conf.pop('refresh_time'))
+    refresh_time = float(conf.get('refresh_time', 0.3))
 
     # initialize stream instance
     inst = obj(**conf)
