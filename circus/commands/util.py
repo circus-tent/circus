@@ -59,10 +59,15 @@ def validate_option(key, val):
         if not isinstance(val, bool):
             raise MessageError("%r isn't a valid boolean" % key)
 
-    if key in ('env', 'stderr_stream', 'stdout_stream'):
+    if key in ('env', ):
         if not isinstance(val, dict):
             raise MessageError("%r isn't a valid object" % key)
 
         for k, v in val.items():
             if not isinstance(v, string_types):
                 raise MessageError("%r isn't a string" % k)
+
+    if key in ('stderr_stream', 'stdout_stream'):
+        for k, v in val.items():
+          if not k in ('class', 'filename', 'refresh_time'):
+            raise MessageError("%r is an invalid option for %r" % (k, key))
