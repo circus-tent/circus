@@ -18,9 +18,7 @@ _TYPE = {
 
 
 def addrinfo(host, port):
-    info = socket.getaddrinfo(host, port)[0][-1]
-    logger.debug(info)
-    return info
+    return socket.getaddrinfo(host, port)[0][-1]
 
 
 class CircusSocket(socket.socket):
