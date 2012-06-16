@@ -1,5 +1,5 @@
 import os
-import unittest
+from circus.tests.support import unittest
 from circus.sockets import CircusSocket, CircusSockets
 
 TRAVIS = os.getenv('TRAVIS', False)
