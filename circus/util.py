@@ -260,7 +260,6 @@ def close_on_exec(fd):
     flags |= fcntl.FD_CLOEXEC
     fcntl.fcntl(fd, fcntl.F_SETFD, flags)
 
-
 def debuglog(func):
     @wraps(func)
     def _log(self, *args, **kw):

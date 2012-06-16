@@ -1,7 +1,7 @@
 import sys
 from Queue import Queue
 
-from circus.util import import_module
+from circus.util import import_module, resolve_name
 
 
 class QueueStream(Queue):
@@ -40,6 +40,32 @@ class StdoutStream(object):
     def close(self):
         pass
 
+
+def get_stream(conf):
+    if not conf:
+        return conf
+
+    if not 'class' in conf:
+        # default to file class if we have a filename
+        if 'filename' in conf:
+            obj = FileStream
+        else:
+            raise ValueError("stream configuration invalid")
+
+    else:
+        class_name = conf.pop('class')
+        if not "." in class_name:
+            class_name = "circus.stream.%s" % class_name
+
+        obj = resolve_name(class_name)
+
+    # default refresh_time
+    refresh_time = float(conf.get('refresh_time', 0.3))
+
+    # initialize stream instance
+    inst = obj(**conf)
+
+    return {'stream': inst, 'refresh_time': refresh_time}
 
 def get_pipe_redirector(redirect, backend='thread', extra_info=None,
         buffer=1024):
