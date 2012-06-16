@@ -10,7 +10,7 @@ from zmq.utils.jsonapi import jsonmod as json
 from circus.process import Process
 from circus import logger
 from circus import util
-from circus.stream import get_pipe_redirector
+from circus.stream import get_pipe_redirector, get_stream
 
 
 class Watcher(object):
@@ -126,8 +126,8 @@ class Watcher(object):
         self.executable = None
         self.stream_backend = stream_backend
         self.priority = priority
-        self.stdout_stream = util.stream_config(stdout_stream)
-        self.stderr_stream = util.stream_config(stderr_stream)
+        self.stdout_stream = get_stream(stdout_stream)
+        self.stderr_stream = get_stream(stderr_stream)
         self.stdout_redirector = self.stderr_redirector = None
         self.max_retry = max_retry
         self._options = options
