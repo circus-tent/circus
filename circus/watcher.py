@@ -179,42 +179,7 @@ class Watcher(object):
 
     @classmethod
     def load_from_config(cls, config):
-        options = ('name', 'cmd', 'args', 'numprocesses', 'warmup_delay',
-                   'working_dir', 'shell', 'uid', 'gid', 'send_hup',
-                   'env', 'stopped', 'max_retry', 'graceful_timeout',
-                   'prereload_fn', 'rlimits', 'executable', 'stdout_stream',
-                   'stream_backend', 'stderr_stream', 'priority',
-                   'use_sockets')
-
-        extra_options = {}
-        for name, value in config.items():
-            if name in options:
-                continue
-            extra_options[name] = value
-
-        return cls(name=config['name'],
-                   cmd=config['cmd'],
-                   args=config.get('args'),
-                   numprocesses=config.get('numprocesses', 1),
-                   warmup_delay=config.get('warmup_delay', 0),
-                   working_dir=config.get('working_dir'),
-                   shell=config.get('shell', False),
-                   uid=config.get('uid'),
-                   gid=config.get('gid'),
-                   send_hup=config.get('send_hup', False),
-                   env=config.get('env'),
-                   stopped=config.get('stopped', True),
-                   max_retry=config.get('max_retry', 5),
-                   graceful_timeout=config.get('graceful_timeout', 30),
-                   prereload_fn=config.get('prereload_fn'),
-                   rlimits=config.get('rlimits'),
-                   executable=config.get('executable'),
-                   stdout_stream=config.get('stdout_stream'),
-                   stderr_stream=config.get('stderr_stream'),
-                   stream_backend=config.get('stream_backend', 'thread'),
-                   priority=int(config.get('priority', 0)),
-                   use_sockets=config.get('use_sockets', False),
-                   **extra_options)
+        return cls(name=config.pop('name'), cmd=config.pop('cmd'), **config)
 
     @util.debuglog
     def initialize(self, evpub_socket, sockets):
