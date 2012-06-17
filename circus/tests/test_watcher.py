@@ -78,6 +78,19 @@ class TestWatcher(TestCircus):
         # let's see what we got
         self.assertTrue(self.stream.qsize() > 1)
 
+    def test_max_age(self):
+        watcher = self.arbiters[0].watchers[0]
+        watcher.decr()
+        self.assertEqual(len(watcher), 0)
+        watcher.max_age = 1
+        watcher.max_age_variance = 0
+        watcher.incr()
+        self.assertEqual(len(watcher), 1)
+        initial_pid = watcher.processes.keys()[0]
+        time.sleep(2)  # allow process to start and reach max_age
+        current_pid = watcher.processes.keys()[0]
+        self.assertNotEqual(initial_pid, current_pid)
+
 
 class TestWatcherFromConfiguration(TestCircus):
 

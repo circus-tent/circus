@@ -3,6 +3,8 @@ import errno
 import os
 import signal
 import time
+import random
+from threading import Timer
 
 from psutil import STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
@@ -109,6 +111,14 @@ class Watcher(object):
     - **copy_env** -- If True, the environment in which circus had been
       run will be reproduced for the workers.
 
+    - **max_age**: If set after around max_age seconds, the process is
+      replaced with a new one.  (default: Disabled)
+
+    - **max_age_variance**: The maximum number of seconds that can be added to
+      max_age. This extra value is to avoid restarting all processes at the
+      same time.  A process will live between max_age and
+      max_age + max_age_variance seconds.
+
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
       in this mapping -- this can be used by plugins for watcher-specific
@@ -121,6 +131,7 @@ class Watcher(object):
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, stream_backend='thread', priority=0,
                  singleton=False, use_sockets=False, copy_env=False,
+                 max_age=0, max_age_variance=30,
                  **options):
         self.name = name
         self.use_sockets = use_sockets
@@ -145,6 +156,8 @@ class Watcher(object):
         self._options = options
         self.singleton = singleton
         self.copy_env = copy_env
+        self.max_age = int(max_age)
+        self.max_age_variance = int(max_age_variance)
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
@@ -153,7 +166,8 @@ class Watcher(object):
                       "uid", "gid", "send_hup", "shell", "env", "max_retry",
                       "cmd", "args", "graceful_timeout", "executable",
                       "use_sockets", "priority", "copy_env",
-                      "singleton", "stdout_stream_conf", "stderr_stream_conf")
+                      "singleton", "stdout_stream_conf", "stderr_stream_conf",
+                      "max_age", "max_age_variance")
                       + tuple(options.keys()))
 
         if not working_dir:
@@ -176,6 +190,7 @@ class Watcher(object):
         self.rlimits = rlimits
         self.send_hup = send_hup
         self.sockets = self.evpub_socket = None
+        self.kill_timers = {}
 
     def _create_redirectors(self):
         if self.stdout_stream:
@@ -366,6 +381,20 @@ class Watcher(object):
                 nb_tries += 1
                 continue
             else:
+                if self.max_age:
+                    timeout = self.max_age + random.randint(0, self.max_age_variance)
+                    def _kill():
+                        logger.debug('%s: expired, restarting %s',
+                                    self.name, process.pid)
+                        self.notify_event("restart",
+                                            {"process_pid": process.pid,
+                                             "time": time.time()})
+                        self.kill_process(process)
+                        self.spawn_process()
+                    timer = Timer(timeout, _kill)
+                    self.kill_timers[process] = timer
+                    timer.start()
+
                 self.notify_event("spawn", {"process_pid": process.pid,
                                             "time": time.time()})
                 time.sleep(self.warmup_delay)
@@ -383,6 +412,11 @@ class Watcher(object):
         if self.stderr_redirector is not None:
             self.stderr_redirector.remove_redirection('stderr', process)
 
+        if process in self.kill_timers:
+            timer = self.kill_timers.pop(process)
+            timer.cancel()
+
+        logger.debug("%s: kill process %s", self.name, process.pid)
         try:
             # sending the same signal to all the children
             for child_pid in process.children():
@@ -620,6 +654,12 @@ class Watcher(object):
         elif key == "graceful_timeout":
             self.graceful_timeout = float(val)
             action = -1
+        elif key == "max_age":
+            self.max_age = int(val)
+            action = 1
+        elif key == "max_age_variance":
+            self.max_age_variance = int(val)
+            action = 1
 
         # send update event
         self.notify_event("updated", {"time": time.time()})
