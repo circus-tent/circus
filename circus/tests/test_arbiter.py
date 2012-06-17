@@ -86,7 +86,7 @@ class TestTrainer(TestCircus):
     def setUp(self):
         super(TestTrainer, self).setUp()
         dummy_process = 'circus.tests.test_arbiter.run_dummy'
-        self.test_file = self._run_circus(dummy_process)
+        self.test_file = self._run_circus(dummy_process, graceful_timeout=4)
         self.cli = CircusClient()
 
     def tearDown(self):
@@ -106,13 +106,13 @@ class TestTrainer(TestCircus):
     def test_processes(self):
         msg1 = make_message("list", name="test")
         resp = self.cli.call(msg1)
-        self.assertEqual(resp.get('processes'), [1])
+        self.assertEqual(len(resp.get('pids')), 1)
 
         msg2 = make_message("incr", name="test")
         self.cli.call(msg2)
 
         resp = self.cli.call(msg1)
-        self.assertEqual(resp.get('processes'), [1, 2])
+        self.assertEqual(len(resp.get('pids')), 2)
 
     def test_watchers(self):
         resp = self.cli.call(make_message("list"))
@@ -215,22 +215,22 @@ class TestTrainer(TestCircus):
     def test_reload1(self):
         msg1 = make_message("list", name="test")
         resp = self.cli.call(msg1)
-        processes1 = resp.get('processes')
+        processes1 = resp.get('pids')
 
         self.cli.call(make_message("reload"))
         time.sleep(0.5)
 
         msg2 = make_message("list", name="test")
         resp = self.cli.call(msg2)
-        processes2 = resp.get('processes')
+        processes2 = resp.get('pids')
 
         self.assertNotEqual(processes1, processes2)
 
     def test_reload2(self):
         msg1 = make_message("list", name="test")
         resp = self.cli.call(msg1)
-        processes1 = resp.get('processes')
-        self.assertEqual(processes1, [1])
+        processes1 = resp.get('pids')
+        self.assertEqual(len(processes1), 1)
 
         self.cli.call(make_message("reload"))
         time.sleep(0.5)
@@ -238,8 +238,9 @@ class TestTrainer(TestCircus):
         make_message("list", name="test")
         resp = self.cli.call(msg1)
 
-        processes2 = resp.get('processes')
-        self.assertEqual(processes2, [2])
+        processes2 = resp.get('pids')
+        self.assertEqual(len(processes2), 1)
+        self.assertNotEqual(processes1[0], processes2[0])
 
     def test_stop_watchers(self):
         resp = self.cli.call(make_message("stop"))
@@ -285,17 +286,18 @@ class TestTrainer(TestCircus):
         self._run_circus(dummy_process, plugins=plugins)
 
         # doing a few operations
+        def nb_processes():
+            return len(cli.send_message('list', name='test').get('pids'))
+
+        def incr_processes():
+            return cli.send_message('incr', name='test')
+
         cli = CircusClient()
-        msg1 = make_message("list", name="test")
-        resp = cli.call(msg1)
-        self.assertEqual(resp.get('processes'), [1])
-        msg2 = make_message("incr", name="test")
-        cli.call(msg2)
-        resp = cli.call(msg1)
-        self.assertEqual(resp.get('processes'), [1, 2])
-        cli.call(msg2)
-        resp = cli.call(msg1)
-        self.assertEqual(resp.get('processes'), [1, 2, 3])
+        self.assertEqual(nb_processes(), 1)
+        incr_processes()
+        self.assertEqual(nb_processes(), 2)
+        incr_processes()
+        self.assertEqual(nb_processes(), 3)
 
         # wait a bit
         time.sleep(.2)

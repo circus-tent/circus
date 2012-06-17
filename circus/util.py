@@ -261,6 +261,9 @@ def close_on_exec(fd):
     fcntl.fcntl(fd, fcntl.F_SETFD, flags)
 
 
+LEVEL = 0
+
+
 def debuglog(func):
     @wraps(func)
     def _log(self, *args, **kw):
@@ -268,11 +271,16 @@ def debuglog(func):
             return func(self, *args, **kw)
 
         cls = self.__class__.__name__
-        logger.debug("'%s.%s' starts" % (cls, func.func_name))
+        global LEVEL
+        logger.debug("    " * LEVEL +\
+                     "'%s.%s' starts" % (cls, func.func_name))
+        LEVEL += 1
         try:
             return func(self, *args, **kw)
         finally:
-            logger.debug("'%s.%s' ends" % (cls, func.func_name))
+            LEVEL -= 1
+            logger.debug("    " * LEVEL +\
+                         "'%s.%s' ends" % (cls, func.func_name))
 
     return _log
 

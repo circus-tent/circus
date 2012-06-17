@@ -154,6 +154,7 @@ class Process(object):
     @debuglog
     def send_signal(self, sig):
         """Sends a signal **sig** to the process."""
+        logger.debug("sending signal %s to %s" % (sig, self.pid))
         return self._worker.send_signal(sig)
 
     @debuglog
@@ -260,3 +261,12 @@ class Process(object):
     def stderr(self):
         """Return the *stdout* stream"""
         return self._worker.stderr
+
+    def __eq__(self, other):
+        return self is other
+
+    def __lt__(self, other):
+        return self.started < other.started
+
+    def __gt__(self, other):
+        return self.started > other.started

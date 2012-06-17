@@ -76,7 +76,7 @@ class StatsStreamer(object):
         res = self.client.send_message('list')
 
         for watcher in res['watchers']:
-            pids = self.client.send_message('listpids', name=watcher)['pids']
+            pids = self.client.send_message('list', name=watcher)['pids']
             for pid in pids:
                 self.append_pid(watcher, pid)
 
