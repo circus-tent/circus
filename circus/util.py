@@ -261,7 +261,7 @@ def close_on_exec(fd):
     fcntl.fcntl(fd, fcntl.F_SETFD, flags)
 
 
-LEVEL = 0
+INDENTATION_LEVEL = 0
 
 
 def debuglog(func):
@@ -271,15 +271,15 @@ def debuglog(func):
             return func(self, *args, **kw)
 
         cls = self.__class__.__name__
-        global LEVEL
-        logger.debug("    " * LEVEL +\
+        global INDENTATION_LEVEL
+        logger.debug("    " * INDENTATION_LEVEL +\
                      "'%s.%s' starts" % (cls, func.func_name))
-        LEVEL += 1
+        INDENTATION_LEVEL += 1
         try:
             return func(self, *args, **kw)
         finally:
-            LEVEL -= 1
-            logger.debug("    " * LEVEL +\
+            INDENTATION_LEVEL -= 1
+            logger.debug("    " * INDENTATION_LEVEL +\
                          "'%s.%s' ends" % (cls, func.func_name))
 
     return _log
