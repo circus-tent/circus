@@ -1,4 +1,8 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest  # NOQA
+
 from tempfile import mkstemp
 import os
 import sys
@@ -75,7 +79,7 @@ class TestCircus(unittest.TestCase):
         wdir = os.path.dirname(__file__)
         args = ['generic.py', callable, testfile]
         worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
-                  'name': 'test'}
+                  'name': 'test', 'graceful_timeout': 4}
         worker.update(kw)
         if stats:
             arbiter = get_arbiter([worker], background=True, plugins=plugins,

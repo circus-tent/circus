@@ -169,6 +169,7 @@ More documentation
 
    installation
    configuration
+   cli
    commands
    circushttpd
    library

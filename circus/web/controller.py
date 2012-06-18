@@ -87,7 +87,7 @@ class LiveClient(object):
         return res
 
     def get_pids(self, name):
-        res = self.client.send_message('listpids', name=name)
+        res = self.client.send_message('list', name=name)
         return res['pids']
 
     def get_series(self, name, pid, field, start=0, end=-1):

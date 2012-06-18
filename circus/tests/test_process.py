@@ -58,3 +58,16 @@ class TestProcess(TestCircus):
 
         self.assertEqual(srt2ints(output['NOFILE']), wanted)
         self.assertEqual(srt2ints(output['NPROC']), wanted)
+
+    def test_comparison(self):
+        cmd = sys.executable
+        args = ['import time; time.sleep(2)', ]
+        p1 = Process('1', cmd, args=args)
+        p2 = Process('2', cmd, args=args)
+
+        self.assertTrue(p1 < p2)
+        self.assertFalse(p1 == p2)
+        self.assertTrue(p1 == p1)
+
+        p1.stop()
+        p2.stop()

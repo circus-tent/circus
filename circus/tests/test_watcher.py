@@ -45,33 +45,34 @@ class TestWatcher(TestCircus):
         resp = self.call(cmd, **props)
         return resp.get('numprocesses')
 
-    def testSignal(self):
-        self.assertEquals(self.numprocesses("incr", name="test"), 2)
-        self.assertEquals(self.call("list", name="test").get('processes'),
-                          [1, 2])
-        self.assertEquals(self.status("signal", name="test", process=2,
-            signum=signal.SIGKILL), "ok")
+    def test_signal(self):
+        self.assertEquals(self.numprocesses('incr', name='test'), 2)
 
-        time.sleep(1.0)
-        self.assertEquals(self.call("list", name="test").get('processes'),
-                          [1, 3])
+        def get_pids():
+            return self.call('list', name='test').get('pids')
 
-        processes = self.call("list", name="test").get('processes')
-        self.assertEquals(self.status("signal", name="test",
-            signum=signal.SIGKILL), "ok")
+        pids = get_pids()
+        self.assertEquals(len(pids), 2)
+        to_kill = pids[0]
+        self.assertEquals(self.status('signal', name='test', pid=to_kill,
+                                      signum=signal.SIGKILL), 'ok')
 
-        time.sleep(1.0)
-        self.assertNotEqual(self.call("list", name="test").get('processes'),
-                processes)
+        time.sleep(1)  # wait for the process to die
 
-    def testStats(self):
+        # we still should have two processes, but not the same pids for them
+        pids = get_pids()
+        self.assertEquals(len(pids), 2)
+        self.assertTrue(to_kill not in pids)
+
+    def test_stats(self):
         resp = self.call("stats").get('infos')
         self.assertTrue("test" in resp)
+        watchers = resp['test']
 
-        self.assertEqual(resp['test']['1']['cmdline'],
+        self.assertEqual(watchers[watchers.keys()[0]]['cmdline'],
                          sys.executable.split(os.sep)[-1])
 
     def test_streams(self):
-        time.sleep(2.)
+        time.sleep(1.)
         # let's see what we got
         self.assertTrue(self.stream.qsize() > 1)
