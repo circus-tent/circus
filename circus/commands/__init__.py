@@ -16,6 +16,7 @@ from circus.commands import (   # NOQA
     reload,
     restart,
     rmwatcher,
+    run,
     sendsignal,
     set,
     start,
