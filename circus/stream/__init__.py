@@ -45,25 +45,22 @@ def get_stream(conf):
     if not conf:
         return conf
 
-    if not 'class' in conf:
-        # default to file class if we have a filename
-        if 'filename' in conf:
-            obj = FileStream
-        else:
-            raise ValueError("stream configuration invalid")
+    # we can have 'stream' or 'class' or 'filename'
+    if 'filename' in conf:
 
-    else:
+        inst = FileStream(**conf)
+    elif 'stream' in conf:
+        inst = conf['stream']
+    elif 'class' in conf:
         class_name = conf.pop('class')
         if not "." in class_name:
             class_name = "circus.stream.%s" % class_name
-
-        obj = resolve_name(class_name)
+        inst = resolve_name(class_name)(**conf)
+    else:
+        raise ValueError("stream configuration invalid")
 
     # default refresh_time
     refresh_time = float(conf.get('refresh_time', 0.3))
-
-    # initialize stream instance
-    inst = obj(**conf)
 
     return {'stream': inst, 'refresh_time': refresh_time}
 
