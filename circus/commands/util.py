@@ -39,7 +39,7 @@ def validate_option(key, val):
     if key not in ('numprocesses', 'warmup_delay', 'working_dir', 'uid',
             'gid', 'send_hup', 'shell', 'env', 'cmd', 'flapping_attempts',
             'flapping_window', 'retry_in', 'max_retry',
-            'graceful_timeout'):
+            'graceful_timeout', 'stdout_stream', 'stderr_stream'):
         raise MessageError('unkown key %r' % key)
 
     if key in ('numprocesses', 'flapping_attempts', 'max_retry',):
@@ -59,10 +59,15 @@ def validate_option(key, val):
         if not isinstance(val, bool):
             raise MessageError("%r isn't a valid boolean" % key)
 
-    if key == "env":
+    if key in ('env', ):
         if not isinstance(val, dict):
             raise MessageError("%r isn't a valid object" % key)
 
         for k, v in val.items():
             if not isinstance(v, string_types):
                 raise MessageError("%r isn't a string" % k)
+
+    if key in ('stderr_stream', 'stdout_stream'):
+        for k, v in val.items():
+          if not k in ('class', 'filename', 'refresh_time'):
+            raise MessageError("%r is an invalid option for %r" % (k, key))

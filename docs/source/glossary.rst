@@ -3,9 +3,6 @@
 Glossary
 ========
 
-.. image:: images/circus-architecture.png
-   :align: center
-
 .. glossary::
     :sorted:
 
@@ -27,7 +24,7 @@ Glossary
         circus, ensuring all processes run correctly.
 
     controller
-        A *controller* contains the set of actions that con be performed on
+        A *controller* contains the set of actions that can be performed on
         the arbiter.
 
     pub/sub

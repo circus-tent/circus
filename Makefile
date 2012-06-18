@@ -19,9 +19,11 @@ docs: bin/sphinx-build
 
 bin/sphinx-build: bin/python
 	bin/pip install sphinx
+	bin/pip install coverage
 
 bin/nosetests: bin/python
 	bin/pip install nose
+	bin/pip install WebTest
 
 bin/coverage: bin/python
 	bin/pip install coverage

@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 import grp
 import os
@@ -56,6 +57,21 @@ except ImportError:
         return
 
 
+MAXFD = 1024
+if hasattr(os, "devnull"):
+    REDIRECT_TO = os.devnull
+else:
+    REDIRECT_TO = "/dev/null"
+
+LOG_LEVELS = {
+    "critical": logging.CRITICAL,
+    "error": logging.ERROR,
+    "warning": logging.WARNING,
+    "info": logging.INFO,
+    "debug": logging.DEBUG}
+
+LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
+LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
 _SYMBOLS = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 
 
@@ -94,7 +110,7 @@ def bytes2human(n):
 _PROCS = {}
 
 
-def get_info(process=None, interval=0):
+def get_info(process=None, interval=0, with_childs=False):
     """Return information about a process. (can be an pid or a Process object)
 
     If process is None, will return the information about the current process.
@@ -164,13 +180,17 @@ def get_info(process=None, interval=0):
     info['cmdline'] = cmdline
 
     info['children'] = []
-    for child in process.get_children():
-        info['children'].append(get_info(child, interval=interval))
+    if with_childs:
+        for child in process.get_children():
+            info['children'].append(get_info(child, interval=interval))
 
     return info
 
 
 def to_bool(s):
+    if isinstance(s, bool):
+        return s
+
     if s.lower().strip() in ("true", "1",):
         return True
     elif s.lower().strip() in ("false", "0"):
@@ -241,6 +261,9 @@ def close_on_exec(fd):
     fcntl.fcntl(fd, fcntl.F_SETFD, flags)
 
 
+INDENTATION_LEVEL = 0
+
+
 def debuglog(func):
     @wraps(func)
     def _log(self, *args, **kw):
@@ -248,11 +271,16 @@ def debuglog(func):
             return func(self, *args, **kw)
 
         cls = self.__class__.__name__
-        logger.debug("'%s.%s' starts" % (cls, func.func_name))
+        global INDENTATION_LEVEL
+        logger.debug("    " * INDENTATION_LEVEL +\
+                     "'%s.%s' starts" % (cls, func.func_name))
+        INDENTATION_LEVEL += 1
         try:
             return func(self, *args, **kw)
         finally:
-            logger.debug("'%s.%s' ends" % (cls, func.func_name))
+            INDENTATION_LEVEL -= 1
+            logger.debug("    " * INDENTATION_LEVEL +\
+                         "'%s.%s' ends" % (cls, func.func_name))
 
     return _log
 

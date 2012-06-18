@@ -47,7 +47,6 @@ class TestClient(TestCircus):
         self.assertEquals(numwatchers("numwatchers"), 1)
 
         self.assertEquals(call("list").get('watchers'), ['test'])
-        self.assertEquals(call("list", name="test").get('processes'), [10])
         self.assertEquals(numprocesses("incr", name="test"), 2)
         self.assertEquals(numprocesses("numprocesses"), 2)
         self.assertEquals(numprocesses("decr", name="test"), 1)
@@ -60,4 +59,10 @@ class TestClient(TestCircus):
 
         self.assertEquals(options.get('env'), {'test': '1', 'test': '2'})
 
+        resp = call('stats', name='test')
+        self.assertEqual(resp['status'], 'ok')
+
+        resp = call('globaloptions', name='test')
+        self.assertEqual(resp['options']['pubsub_endpoint'],
+                        'tcp://127.0.0.1:5556')
         client.stop()

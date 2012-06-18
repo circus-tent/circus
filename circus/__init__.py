@@ -3,7 +3,29 @@ import os
 import sys
 
 
-version_info = (0, 4)
+try:
+    import gevent       # NOQA
+    try:
+        from gevent_zeromq import monkey_patch, IOLOOP_IS_MONKEYPATCHED  # NOQA
+        monkey_patch()
+    except ImportError:
+        msg = """We have detected that you have gevent in your
+        environment. In order to have Circus working, you *must*
+        install gevent_zmq from :
+
+          https://github.com/tarekziade/gevent-zeromq
+
+        Circus will not need this in the future once
+        pyzmq gets a green poller:
+
+          https://github.com/zeromq/pyzmq/issues/197
+        """
+        raise ImportError(msg)
+except ImportError:
+    pass
+
+
+version_info = (0, 5)
 __version__ = ".".join(map(str, version_info))
 
 
@@ -12,8 +34,10 @@ logger = logging.getLogger('circus')
 
 def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
                 pubsub_endpoint='tcp://127.0.0.1:5556',
-                env=None, name=None, context=None, check_flapping=True,
-                background=False, stream_backend="thread"):
+                stats_endpoint=None,
+                env=None, name=None, context=None,
+                background=False, stream_backend="thread",
+                plugins=None):
     """Creates a Arbiter and a single watcher in it.
 
     Options:
@@ -29,6 +53,7 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
           programs as the command name, which can then be different from the
           actual executable name. It becomes the display name for the executing
           program in utilities such as **ps**.
+
         - **numprocesses** -- the number of processes to spawn (default: 1).
         - **warmup_delay** -- the delay in seconds between two spawns
           (default: 0)
@@ -42,6 +67,7 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
           the SIGHUP signal. (default: False)
         - **stdout_stream**: a mapping containing the options for configuring
           the stdout stream. Default to None. When provided, may contain:
+
             - **class**: the fully qualified name of the class to use for
               streaming. Defaults to circus.stream.FileStream
             - **refresh_time**: the delay between two stream checks. Defaults
@@ -49,32 +75,31 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
             - any other key will be passed the class constructor.
         - **stderr_stream**: a mapping containing the options for configuring
           the stderr stream. Default to None. When provided, may contain:
+
             - **class**: the fully qualified name of the class to use for
               streaming. Defaults to circus.stream.FileStream
             - **refresh_time**: the delay between two stream checks. Defaults
               to 0.3 seconds.
             - any other key will be passed the class constructor.
-         - **flapping_attempts**: number of times a process can restart
-           before we start to detect the flapping (default: 2)
-        - **flapping_window**: the time window in seconds to test for flapping.
-          If the process restarts more than **times** times, we consider it a
-          flapping process. (default: 1)
-        - **retry_in**: time in seconds to wait until we try to start a process
-          that has been flapping. (default: 7)
         - **max_retry**: the number of times we attempt to start a process,
           before we abandon and stop the whole watcher. (default: 5)
 
     - **controller** -- the zmq entry point (default: 'tcp://127.0.0.1:5555')
     - **pubsub_endpoint** -- the zmq entry point for the pubsub
       (default: 'tcp://127.0.0.1:5556')
+    - **stats_endpoint** -- the stats endpoint. If not provided,
+      the *circusd-stats* process will not be launched. (default: None)
     - **context** -- the zmq context (default: None)
-    - **check_flapping** -- If True, the flapping detection is activated.
-      (default:True)
     - **background** -- If True, the arbiter is launched in a thread in the
       background (default: False)
     - **stream_backend** -- the backend that will be used for the streaming
       process. Can be *thread* or *gevent*. When set to *gevent* you need
       to have *gevent* and *gevent_zmq* installed. (default: thread)
+    - **plugins** -- a list of plugins. Each item is a mapping with:
+
+        - **use** -- Fully qualified name that points to the plugin class
+        - every other value is passed to the plugin in the **config** option
+
     """
     if stream_backend == 'gevent':
         try:
@@ -105,5 +130,6 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
         watcher['stream_backend'] = stream_backend
         _watchers.append(Watcher.load_from_config(watcher))
 
-    return Arbiter(_watchers, controller, pubsub_endpoint, context=context,
-                   check_flapping=check_flapping)
+    return Arbiter(_watchers, controller, pubsub_endpoint,
+                   stats_endpoint=stats_endpoint,
+                   context=context, plugins=plugins)

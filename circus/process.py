@@ -70,10 +70,15 @@ class Process(object):
 
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
+
+    - use_fds XXX
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
-                 uid=None, gid=None, env=None, rlimits=None, executable=None):
+                 uid=None, gid=None, env=None, rlimits=None, executable=None,
+                 use_fds=False):
         self.wid = wid
+        self.use_fds = use_fds
+
         if working_dir is None:
             self.working_dir = get_working_dir()
         else:
@@ -147,8 +152,8 @@ class Process(object):
 
         self._worker = Popen(args_, cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
-                             env=self.env, close_fds=True, stdout=PIPE,
-                             stderr=PIPE, executable=executable)
+                             env=self.env, close_fds=not self.use_fds,
+                             stdout=PIPE, stderr=PIPE, executable=executable)
 
         self.started = time.time()
 
@@ -159,17 +164,21 @@ class Process(object):
     @debuglog
     def send_signal(self, sig):
         """Sends a signal **sig** to the process."""
+        logger.debug("sending signal %s to %s" % (sig, self.pid))
         return self._worker.send_signal(sig)
 
     @debuglog
     def stop(self):
         """Terminate the process."""
         try:
-            if self._worker.poll() is None:
-                return self._worker.terminate()
-        finally:
-            self._worker.stderr.close()
-            self._worker.stdout.close()
+            try:
+                if self._worker.poll() is None:
+                    return self._worker.terminate()
+            finally:
+                self._worker.stderr.close()
+                self._worker.stdout.close()
+        except NoSuchProcess:
+            pass
 
     def age(self):
         """Return the age of the process in seconds."""
@@ -262,3 +271,12 @@ class Process(object):
     def stderr(self):
         """Return the *stdout* stream"""
         return self._worker.stderr
+
+    def __eq__(self, other):
+        return self is other
+
+    def __lt__(self, other):
+        return self.started < other.started
+
+    def __gt__(self, other):
+        return self.started > other.started

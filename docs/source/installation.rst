@@ -10,10 +10,13 @@ Requirements
 
 .. _note::
 
-    You can optionally use circus with gevent. It will requires for now
-    a forked version of `gevent_zeromq <https://github.com/tarekziade/gevent-zeromq>`_ .
-    Hopefully the changes inside will be merged soon in zeromq (poller
-    and ioloop monkey-patching).
+    You can optionally use circus with gevent. This allows to run smoothly
+    because the threads will run cooperatively inside an event loop based on
+    libevent, which allows to increase the performances.
+
+    It will requires for now a forked version of `gevent_zeromq
+    <https://github.com/tarekziade/gevent-zeromq>`_ .  Hopefully the changes
+    inside will be merged soon in zeromq (poller and ioloop monkey-patching).
 
 Installing Circus
 -----------------

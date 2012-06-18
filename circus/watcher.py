@@ -2,14 +2,15 @@ import errno
 import os
 import signal
 import time
+import re
 
-from psutil import STATUS_ZOMBIE, STATUS_DEAD
+from psutil import STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
 
-from circus.process import Process
+from circus.process import Process, DEAD_OR_ZOMBIE
 from circus import logger
 from circus import util
-from circus.stream import get_pipe_redirector
+from circus.stream import get_pipe_redirector, get_stream
 
 
 class Watcher(object):
@@ -89,29 +90,30 @@ class Watcher(object):
       process. Can be *thread* or *gevent*. When set to *gevent* you need
       to have *gevent* and *gevent_zmq* installed. (default: thread)
 
-    - **flapping_attempts** -- number of times a process can restart before we
-      start to detect the flapping (default: 2)
-    - **flapping_window** -- the time window in seconds to test for flapping.
-      If the process restarts more than **times** times, we consider it a
-      flapping process. (default: 1)
-    - **retry_in**: time in seconds to wait until we try to start a process
-      that has been flapping. (default: 7)
-    - **max_retry**: the number of times we attempt to start a process, before
-      we abandon and stop the whole watcher. (default: 5)
-    - **priority**: integer that defines a priority for the watcher. When
+    - **priority** -- integer that defines a priority for the watcher. When
       the Arbiter do some operations on all watchers, it will sort them
       with this field, from the bigger number to the smallest.
       (default: 0)
+
+    - **singleton** -- If True, this watcher has a single process.
+      (default:False)
+
+    = **use_sockets** -- XXX
+
+    - **options** -- extra options for the worker. All options
+      found in the configuration file for instance, are passed
+      in this mapping -- this can be used by plugins for watcher-specific
+      options.
     """
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
-                 working_dir=None, shell=False, uid=None,
+                 working_dir=None, shell=False, uid=None, max_retry=5,
                  gid=None, send_hup=False, env=None, stopped=True,
-                 flapping_attempts=2, flapping_window=1., retry_in=7.,
-                 max_retry=5,
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
-                 stderr_stream=None, stream_backend='thread', priority=0):
+                 stderr_stream=None, stream_backend='thread', priority=0,
+                 singleton=False, use_sockets=False, **options):
         self.name = name
+        self.use_sockets = use_sockets
         self.res_name = name.lower().replace(" ", "_")
         self.numprocesses = int(numprocesses)
         self.warmup_delay = warmup_delay
@@ -119,43 +121,32 @@ class Watcher(object):
         self.args = args
         self._process_counter = 0
         self.stopped = stopped
-        self.flapping_attempts = flapping_attempts
-        self.flapping_window = flapping_window
-        self.retry_in = retry_in
-        self.max_retry = max_retry
-        self.graceful_timeout = 30
+        self.graceful_timeout = graceful_timeout
         self.prereload_fn = prereload_fn
         self.executable = None
         self.stream_backend = stream_backend
         self.priority = priority
-
-        self.stdout_stream = stdout_stream
-        if stdout_stream:
-            self.stdout_redirector = get_pipe_redirector(stdout_stream,
-                    backend=stream_backend)
-        else:
-            self.stdout_redirector = None
-
-        self.stderr_stream = stderr_stream
-        if stderr_stream:
-            self.stderr_redirector = get_pipe_redirector(stderr_stream,
-                    backend=stream_backend)
-        else:
-            self.stderr_redirector = None
+        self.stdout_stream = get_stream(stdout_stream)
+        self.stderr_stream = get_stream(stderr_stream)
+        self.stdout_redirector = self.stderr_redirector = None
+        self.max_retry = max_retry
+        self._options = options
+        self.singleton = singleton
+        if singleton and self.numprocesses not in (0, 1):
+            raise ValueError("Cannot have %d processes with a singleton "
+                             " watcher" % self.numprocesses)
 
         self.optnames = ("numprocesses", "warmup_delay", "working_dir",
-                         "uid", "gid", "send_hup", "shell", "env",
-                         "cmd", "flapping_attempts", "flapping_window",
-                         "retry_in", "args",
-                         "max_retry", "graceful_timeout", "executable",
-                         "priority")
+                         "uid", "gid", "send_hup", "shell", "env", "max_retry",
+                         "cmd", "args", "graceful_timeout", "executable",
+                         "use_sockets", "priority",
+                         "singleton") + tuple(options.keys())
 
         if not working_dir:
             # working dir hasn't been set
             working_dir = util.get_working_dir()
 
         self.working_dir = working_dir
-        self.pids = {}
         self.processes = {}
         self.shell = shell
         self.uid = uid
@@ -163,44 +154,43 @@ class Watcher(object):
         self.env = env
         self.rlimits = rlimits
         self.send_hup = send_hup
-        self.evpub_socket = None
+        self.sockets = self.evpub_socket = None
+
+    def _create_redirectors(self):
+        if self.stdout_stream:
+            if (self.stdout_redirector is not None and
+                self.stdout_redirector.running):
+                self.stdout_redirector.kill()
+
+            self.stdout_redirector = get_pipe_redirector(self.stdout_stream,
+                    backend=self.stream_backend)
+        else:
+            self.stdout_redirector = None
+
+        if self.stderr_stream:
+            if (self.stderr_redirector is not None and
+                self.stderr_redirector.running):
+                self.stderr_redirector.kill()
+
+            self.stderr_redirector = get_pipe_redirector(self.stderr_stream,
+                    backend=self.stream_backend)
+        else:
+            self.stderr_redirector = None
 
     @classmethod
     def load_from_config(cls, config):
-        return cls(name=config['name'],
-                   cmd=config['cmd'],
-                   args=config.get('args'),
-                   numprocesses=config.get('numprocesses', 1),
-                   warmup_delay=config.get('warmup_delay', 0),
-                   working_dir=config.get('working_dir'),
-                   shell=config.get('shell', False),
-                   uid=config.get('uid'),
-                   gid=config.get('gid'),
-                   send_hup=config.get('send_hup', False),
-                   env=config.get('env'),
-                   stopped=config.get('stopped', True),
-                   flapping_attempts=config.get('flapping_attempts', 2),
-                   flapping_window=config.get('flapping_window', 1),
-                   retry_in=config.get('retry_in', 7),
-                   max_retry=config.get('max_retry', 5),
-                   graceful_timeout=config.get('graceful_timeout', 30),
-                   prereload_fn=config.get('prereload_fn'),
-                   rlimits=config.get('rlimits'),
-                   executable=config.get('executable'),
-                   stdout_stream=config.get('stdout_stream'),
-                   stderr_stream=config.get('stderr_stream'),
-                   stream_backend=config.get('stream_backend', 'thread'),
-                   priority=int(config.get('priority', 0)))
+        return cls(name=config.pop('name'), cmd=config.pop('cmd'), **config)
 
     @util.debuglog
-    def initialize(self, evpub_socket):
+    def initialize(self, evpub_socket, sockets):
         self.evpub_socket = evpub_socket
+        self.sockets = sockets
 
     def __len__(self):
         return len(self.processes)
 
-    def send_msg(self, topic, msg):
-        """send msg"""
+    def notify_event(self, topic, msg):
+        """Publish a message on the event publisher channel"""
 
         json_msg = json.dumps(msg)
         if isinstance(json_msg, unicode):
@@ -217,11 +207,11 @@ class Watcher(object):
             self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
-    def reap_process(self, wid, status):
-        process = self.processes.pop(wid)
-        self.pids.pop(process.pid)
+    def reap_process(self, pid, status):
+        """ensure that the process is killed (and not a zombie)"""
+        process = self.processes.pop(pid)
 
-        # get retrn code
+        # get return code
         if os.WIFSIGNALED(status):
             retcode = os.WTERMSIG(status)
         # process exited using exit(2) system call; return the
@@ -236,36 +226,36 @@ class Watcher(object):
         if retcode in (STATUS_ZOMBIE, STATUS_DEAD):
             process.stop()
 
-        logger.debug("reap process %s", process.pid)
-        self.send_msg("reap", {"process_id": wid,
-                               "process_pid": process.pid,
-                               "time": time.time()})
+        logger.debug('reaping process %s [%s]' % (pid, self.name))
+        self.notify_event("reap", {"process_pid": pid, "time": time.time()})
 
     @util.debuglog
     def reap_processes(self):
-        """Reap processes.
+        """Reap all the processes for this watcher.
         """
         if self.stopped:
+            logger.debug('do not reap processes as the watcher is stopped')
             return
 
         while True:
             try:
+                # wait for completion of all the childs of circus, if it
+                # pertains to this watcher. Call reap on it.
                 pid, status = os.waitpid(-1, os.WNOHANG)
                 if not pid:
-                    break
+                    return
 
-                if pid in self.pids:
-                    self.reap_process(self.pids[pid], status)
+                if pid in self.processes:
+                    self.reap_process(pid, status)
 
-                # watcher have been stopped, exit the loop
                 if self.stopped:
-                    break
+                    logger.debug('watcher have been stopped, exit the loop')
+                    return
             except OSError as e:
                 if e.errno == errno.EAGAIN:
                     time.sleep(0.001)
                     continue
                 elif e.errno == errno.ECHILD:
-                    # process already reaped
                     return
                 else:
                     raise
@@ -277,18 +267,18 @@ class Watcher(object):
         if self.stopped:
             return
 
-        if len(self.processes.keys()) < self.numprocesses:
+        if len(self.processes) < self.numprocesses:
             self.spawn_processes()
 
-        processes = self.processes.keys()
+        processes = self.processes.values()
         processes.sort()
         while len(processes) > self.numprocesses:
-            wid = processes.pop(0)
-            process = self.processes.pop(wid)
-            if process.pid in self.pids:
-                self.pids.pop(process.pid)
-
-            self.kill_process(process)
+            process = processes.pop(0)
+            if process.status == STATUS_DEAD:
+                self.processes.pop(process.pid)
+            else:
+                self.processes.pop(process.pid)
+                self.kill_process(process)
 
     @util.debuglog
     def reap_and_manage_processes(self):
@@ -303,7 +293,7 @@ class Watcher(object):
     def spawn_processes(self):
         """Spawn processes.
         """
-        for i in range(self.numprocesses - len(self.processes.keys())):
+        for i in range(self.numprocesses - len(self.processes)):
             self.spawn_process()
             time.sleep(self.warmup_delay)
 
@@ -313,16 +303,23 @@ class Watcher(object):
         if self.stopped:
             return
 
+        def _repl(matchobj):
+            name = matchobj.group(1)
+            if name in self.sockets:
+                return str(self.sockets[name].fileno())
+            return '${socket:%s}' % name
+
+        cmd = re.sub('\$\{socket\:(\w+)\}', _repl, self.cmd)
         self._process_counter += 1
         nb_tries = 0
         while nb_tries < self.max_retry:
             process = None
             try:
-                process = Process(self._process_counter, self.cmd,
+                process = Process(self._process_counter, cmd,
                           args=self.args, working_dir=self.working_dir,
                           shell=self.shell, uid=self.uid, gid=self.gid,
                           env=self.env, rlimits=self.rlimits,
-                          executable=self.executable)
+                          executable=self.executable, use_fds=self.use_sockets)
 
                 # stream stderr/stdout if configured
                 if self.stdout_redirector is not None:
@@ -335,8 +332,7 @@ class Watcher(object):
                                                            process,
                                                            process.stderr)
 
-                self.processes[self._process_counter] = process
-                self.pids[process.pid] = process.wid
+                self.processes[process.pid] = process
                 logger.debug('running %s process [pid %d]', self.name,
                             process.pid)
             except OSError, e:
@@ -346,9 +342,8 @@ class Watcher(object):
                 nb_tries += 1
                 continue
             else:
-                self.send_msg("spawn", {"process_id": process.wid,
-                                        "process_pid": process.pid,
-                                        "time": time.time()})
+                self.notify_event("spawn", {"process_pid": process.pid,
+                                            "time": time.time()})
                 time.sleep(self.warmup_delay)
                 return
 
@@ -364,54 +359,60 @@ class Watcher(object):
         if self.stderr_redirector is not None:
             self.stderr_redirector.remove_redirection('stderr', process)
 
-        self.send_msg("kill", {"process_id": process.wid,
-                               "process_pid": process.pid,
-                               "time": time.time()})
-        logger.debug("%s: kill process %s", self.name, process.pid)
-        process.send_signal(sig)
+        try:
+            self.send_signal(process.pid, sig)
+            self.notify_event("kill", {"process_pid": process.pid,
+                                   "time": time.time()})
+        except NoSuchProcess:
+            # already dead !
+            return
+
         process.stop()
 
     @util.debuglog
     def kill_processes(self, sig):
-        """Kill processes.
+        """Kill all the processes of this watcher.
         """
-        for wid in self.processes.keys():
+
+        for process in self.processes.values():
             try:
-                process = self.processes.pop(wid)
-                del self.pids[process.pid]
                 self.kill_process(process, sig)
             except OSError as e:
                 if e.errno != errno.ESRCH:
                     raise
 
     @util.debuglog
-    def send_signal(self, wid, signum):
-        self.processes[wid].send_signal(signum)
+    def send_signal(self, pid, signum):
+        if pid in self.processes:
+            process = self.processes[pid]
+            process.send_signal(signum)
+        else:
+            logger.debug('process %s does not exist' % pid)
 
     def send_signal_processes(self, signum):
-        for _, process in self.processes.items():
+        for pid in self.processes:
             try:
-                process.send_signal(signum)
+                self.send_signal(pid, signum)
             except OSError as e:
                 if e.errno != errno.ESRCH:
                     raise
 
     @util.debuglog
-    def send_signal_child(self, wid, pid, signum):
+    def send_signal_child(self, pid, child_id, signum):
         """Send signal to a child.
         """
-        process = self.processes[int(wid)]
+        process = self.processes[pid]
         try:
-            process.send_signal_child(int(pid), signum)
+            process.send_signal_child(int(child_id), signum)
         except OSError as e:
             if e.errno != errno.ESRCH:
                 raise
 
     @util.debuglog
-    def send_signal_children(self, wid, signum):
+    def send_signal_children(self, pid, signum):
         """Send signal to all children.
         """
-        process = self.processes[int(wid)]
+        process = self.processes[int(pid)]
         process.send_signal_children(signum)
 
     @util.debuglog
@@ -421,20 +422,21 @@ class Watcher(object):
         return "active"
 
     @util.debuglog
-    def process_info(self, wid):
-        process = self.processes[int(wid)]
+    def process_info(self, pid):
+        process = self.processes[int(pid)]
         return process.info()
 
     @util.debuglog
     def info(self):
-        return dict([(fid, proc.info()) for fid, proc in
-                     self.processes.items()])
+        return dict([(proc.pid, proc.info())\
+                     for proc in self.processes.values()])
 
     @util.debuglog
     def stop(self):
         """Stop.
         """
-        self.stopped = True
+        logger.debug('stopping the %s watcher' % self.name)
+
         # stop redirectors
         if self.stdout_redirector is not None:
             self.stdout_redirector.kill()
@@ -443,16 +445,28 @@ class Watcher(object):
             self.stderr_redirector.kill()
 
         limit = time.time() + self.graceful_timeout
-        while self.processes and time.time() < limit:
+
+        logger.debug('gracefully stopping processes [%s] for %ss' % (
+                     self.name, self.graceful_timeout))
+
+        while self.get_active_pids() and time.time() < limit:
             self.kill_processes(signal.SIGTERM)
             time.sleep(0.1)
             self.reap_processes()
 
         self.kill_processes(signal.SIGKILL)
+
         if self.evpub_socket is not None:
-            self.send_msg("stop", {"time": time.time()})
+            self.notify_event("stop", {"time": time.time()})
+
+        self.stopped = True
 
         logger.info('%s stopped', self.name)
+
+    def get_active_pids(self):
+        """return a list of pids of active processes (not already stopped)"""
+        return [p.pid for p in self.processes.values()
+                if p.status != DEAD_OR_ZOMBIE]
 
     @util.debuglog
     def start(self):
@@ -462,8 +476,10 @@ class Watcher(object):
             return
 
         self.stopped = False
+        self._create_redirectors()
         self.reap_processes()
         self.manage_processes()
+
         if self.stdout_redirector is not None:
             self.stdout_redirector.start()
 
@@ -471,13 +487,13 @@ class Watcher(object):
             self.stderr_redirector.start()
 
         logger.info('%s started' % self.name)
-        self.send_msg("start", {"time": time.time()})
+        self.notify_event("start", {"time": time.time()})
 
     @util.debuglog
     def restart(self):
         """Restart.
         """
-        self.send_msg("restart", {"time": time.time()})
+        self.notify_event("restart", {"time": time.time()})
         self.stop()
         self.start()
         logger.info('%s restarted', self.name)
@@ -493,18 +509,21 @@ class Watcher(object):
             return self.restart()
 
         if self.send_hup:
-            for wid, process in self.processes.items():
-                logger.info("SEND HUP to %s [%s]" % (wid, process.pid))
+            for process in self.processes.values():
+                logger.info("SENDING HUP to %s" % process.pid)
                 process.send_signal(signal.SIGHUP)
         else:
             for i in range(self.numprocesses):
                 self.spawn_process()
             self.manage_processes()
-        self.send_msg("reload", {"time": time.time()})
+        self.notify_event("reload", {"time": time.time()})
         logger.info('%s reloaded', self.name)
 
     @util.debuglog
     def incr(self):
+        if self.singleton and self.numprocesses == 1:
+            raise ValueError('Singleton watcher has a single process')
+
         self.numprocesses += 1
         self.manage_processes()
         return self.numprocesses
@@ -515,9 +534,6 @@ class Watcher(object):
             self.numprocesses -= 1
             self.manage_processes()
         return self.numprocesses
-
-    def get_process(self, wid):
-        return self.processes[wid]
 
     def set_opt(self, key, val):
         """Set a watcher option.
@@ -530,8 +546,15 @@ class Watcher(object):
         """
 
         action = 0
-        if key == "numprocesses":
-            self.numprocesses = int(val)
+
+        if key in self._options:
+            self._options[key] = val
+            action = -1    # XXX for now does not trigger a reload
+        elif key == "numprocesses":
+            val = int(val)
+            if self.singleton and val > 1:
+                raise ValueError('Singleton watcher has a single process')
+            self.numprocesses = val
         elif key == "warmup_delay":
             self.warmup_delay = float(val)
         elif key == "working_dir":
@@ -554,21 +577,12 @@ class Watcher(object):
         elif key == "cmd":
             self.cmd = val
             action = 1
-        elif key == "flapping_attempts":
-            self.flapping_attempts = int(val)
-            action = -1
-        elif key == "flapping_window":
-            self.flapping_window = float(val)
-        elif key == "retry_in":
-            self.retry_in = float(val)
-        elif key == "max_retry":
-            self.max_retry = int(val)
         elif key == "graceful_timeout":
             self.graceful_timeout = float(val)
             action = -1
 
         # send update event
-        self.send_msg("updated", {"time": time.time()})
+        self.notify_event("updated", {"time": time.time()})
         return action
 
     def do_action(self, num):
@@ -583,4 +597,10 @@ class Watcher(object):
 
     @util.debuglog
     def options(self, *args):
-        return [(name, getattr(self, name)) for name in sorted(self.optnames)]
+        options = []
+        for name in sorted(self.optnames):
+            if name in self._options:
+                options.append((name, self._options[name]))
+            else:
+                options.append((name, getattr(self, name)))
+        return options

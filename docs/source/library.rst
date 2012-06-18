@@ -39,8 +39,8 @@ Example:
 The classes collection
 ======================
 
-Circus provides a series of classes you can use to implement your own Circus
-process manager:
+Circus provides a series of classes you can use to implement your own process
+manager:
 
 - :class:`Process`: wraps a running process and provides a few helpers on top
   of it.
@@ -48,7 +48,7 @@ process manager:
 - :class:`Watcher`: run several instances of :class:`Process` against the same
   command. Manage the death and life of processes.
 
-- :class:`Arbiter`: run several instances of :class:`Watcher`.
+- :class:`Arbiter`: manages several :class:`Watcher`.
 
 
 .. autoclass:: circus.process.Process
@@ -75,7 +75,7 @@ Example::
 
 
 .. autoclass:: circus.watcher.Watcher
-   :members: send_msg, reap_processes, manage_processes, reap_and_manage_processes,
+   :members: notify_event, reap_processes, manage_processes, reap_and_manage_processes,
              spawn_processes, spawn_process, kill_process,kill_processes, send_signal_child, stop,start,
              restart, reload, do_action
 

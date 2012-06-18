@@ -8,23 +8,8 @@ from circus import logger
 from circus.arbiter import Arbiter
 from circus.pidfile import Pidfile
 from circus import util
-
-
-MAXFD = 1024
-if hasattr(os, "devnull"):
-    REDIRECT_TO = os.devnull
-else:
-    REDIRECT_TO = "/dev/null"
-
-LOG_LEVELS = {
-    "critical": logging.CRITICAL,
-    "error": logging.ERROR,
-    "warning": logging.WARNING,
-    "info": logging.INFO,
-    "debug": logging.DEBUG}
-
-LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
-LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
+from circus import __version__
+from circus.util import MAXFD, REDIRECT_TO, LOG_LEVELS, LOG_FMT, LOG_DATE_FMT
 
 
 def get_maxfd():
@@ -69,18 +54,30 @@ def daemonize():
 
 def main():
     parser = argparse.ArgumentParser(description='Run some watchers.')
-    parser.add_argument('config', help='configuration file')
+    parser.add_argument('config', help='configuration file', nargs='?')
 
     # XXX we should be able to add all these options in the config file as well
     parser.add_argument('--log-level', dest='loglevel', default='info',
+            choices=LOG_LEVELS.keys() + [key.upper() for key in
+                LOG_LEVELS.keys()],
             help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
             help="log output")
     parser.add_argument('--daemon', dest='daemonize', action='store_true',
             help="Start circusd in the background")
     parser.add_argument('--pidfile', dest='pidfile')
+    parser.add_argument('--version', action='store_true',
+                     default=False, help='Displays Circus version and exits.')
 
     args = parser.parse_args()
+
+    if args.version:
+        print(__version__)
+        sys.exit(0)
+
+    if args.config is None:
+        parser.print_usage()
+        sys.exit(0)
 
     if args.daemonize:
         daemonize()

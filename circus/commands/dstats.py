@@ -17,7 +17,7 @@ class Daemontats(Command):
        ZMQ Message
        -----------
 
-       To get the circusd stats, simply run:
+       To get the circusd stats, simply run::
 
             {
                 "command": "dstats"
@@ -51,7 +51,7 @@ class Daemontats(Command):
 
             $ circusctl dstats
 
-        """
+    """
 
     name = "dstats"
 

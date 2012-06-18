@@ -1,7 +1,7 @@
 import errno
 import logging
 import os
-from threading import Thread
+from threading import Thread, RLock
 import time
 import sys
 
@@ -10,11 +10,12 @@ from zmq.eventloop import ioloop
 
 from circus.controller import Controller
 from circus.exc import AlreadyExist
-from circus.flapping import Flapping
 from circus import logger
 from circus.watcher import Watcher
 from circus.util import debuglog, _setproctitle
 from circus.config import get_config
+from circus.plugins import get_plugin_cmd
+from circus.sockets import CircusSocket, CircusSockets
 
 
 class Arbiter(object):
@@ -35,12 +36,16 @@ class Arbiter(object):
       (default: None)
     - **loop**: if provided, a :class:`zmq.eventloop.ioloop.IOLoop` instance
        to reuse. (default: None)
-    - **check_flapping** -- when True, Circus will check for flapping
-      processes and automatically restart them. (default: True)
+    - **plugins** -- a list of plugins. Each item is a mapping with:
+
+        - **use** -- Fully qualified name that points to the plugin class
+        - every other value is passed to the plugin in the **config** option
+
+    XXX sockets
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
-                 check_flapping=True, stats_endpoint=None):
+                 stats_endpoint=None, plugins=None, sockets=None):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -56,8 +61,7 @@ class Arbiter(object):
         self.pid = os.getpid()
         self._watchers_names = {}
         self.alive = True
-        self.busy = False
-        self.check_flapping = check_flapping
+        self._lock = RLock()
 
         # initializing circusd-stats as a watcher when configured
         self.stats_endpoint = stats_endpoint
@@ -70,6 +74,18 @@ class Arbiter(object):
             stats_watcher = Watcher('circusd-stats', cmd)
             self.watchers.append(stats_watcher)
 
+        # adding each plugin as a watcher
+        if plugins is not None:
+            for plugin in plugins:
+                fqnd = plugin['use']
+                name = 'plugin:%s' % fqnd.replace('.', '-')
+                cmd = get_plugin_cmd(plugin, self.endpoint,
+                                     self.pubsub_endpoint, self.check_delay)
+                plugin_watcher = Watcher(name, cmd, priority=1, singleton=True)
+                self.watchers.append(plugin_watcher)
+
+        self.sockets = CircusSockets(sockets)
+
     @classmethod
     def load_from_config(cls, config_file):
         cfg = get_config(config_file)
@@ -81,11 +97,16 @@ class Arbiter(object):
         for watcher in cfg.get('watchers', []):
             watchers.append(Watcher.load_from_config(watcher))
 
+        sockets = []
+        for socket in cfg.get('sockets', []):
+            sockets.append(CircusSocket.load_from_config(socket))
+
         # creating arbiter
         arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
                       check_delay=cfg.get('check_delay', 1.),
                       prereload_fn=cfg.get('prereload_fn'),
-                      stats_endpoint=cfg.get('stats_endpoint'))
+                      stats_endpoint=cfg.get('stats_endpoint'),
+                      plugins=cfg.get('plugins'), sockets=sockets)
 
         return arbiter
 
@@ -106,15 +127,15 @@ class Arbiter(object):
         self.evpub_socket.bind(self.pubsub_endpoint)
         self.evpub_socket.linger = 0
 
-        # initialize flapping
-        if self.check_flapping:
-            self.flapping = Flapping(self.context, self.endpoint,
-                                     self.pubsub_endpoint, self.check_delay)
+        # initialize sockets
+        if len(self.sockets) > 0:
+            self.sockets.bind_and_listen_all()
+            logger.info("sockets started")
 
         # initialize watchers
         for watcher in self.iter_watchers():
             self._watchers_names[watcher.name.lower()] = watcher
-            watcher.initialize(self.evpub_socket)
+            watcher.initialize(self.evpub_socket, self.sockets)
 
     @debuglog
     def start(self):
@@ -130,11 +151,6 @@ class Arbiter(object):
 
         # start controller
         self.ctrl.start()
-
-        # start flapping
-        if self.check_flapping:
-            logger.debug('Starting flapping')
-            self.flapping.start()
 
         # initialize processes
         logger.debug('Initializing watchers')
@@ -153,35 +169,37 @@ class Arbiter(object):
             else:
                 break
 
-        if self.check_flapping:
-            self.flapping.stop()
-
         self.ctrl.stop()
         self.evpub_socket.close()
 
     def stop(self):
         if self.alive:
             self.stop_watchers(stop_alive=True)
+
         self.loop.stop()
+
+        # close sockets
+        self.sockets.close_all()
 
     def reap_processes(self):
         # map watcher to pids
         watchers_pids = {}
         for watcher in self.iter_watchers():
             if not watcher.stopped:
-                for pid, wid in watcher.pids.items():
-                    watchers_pids[pid] = (watcher, wid)
+                for process in watcher.processes.values():
+                    watchers_pids[process.pid] = watcher
 
         # detect dead children
         while True:
             try:
+                # wait for our child (so it's not a zombie)
                 pid, status = os.waitpid(-1, os.WNOHANG)
                 if not pid:
                     break
 
                 if pid in watchers_pids:
-                    watcher, wid = watchers_pids[pid]
-                    watcher.reap_process(wid, status)
+                    watcher = watchers_pids[pid]
+                    watcher.reap_process(pid, status)
             except OSError as e:
                 if e.errno == errno.EAGAIN:
                     time.sleep(0.001)
@@ -193,20 +211,14 @@ class Arbiter(object):
                     raise
 
     def manage_watchers(self):
-        if not self.busy and self.alive:
-            self.busy = True
+        if not self.alive:
+            return
+
+        with self._lock:
             # manage and reap processes
             self.reap_processes()
             for watcher in self.iter_watchers():
                 watcher.manage_processes()
-
-            if self.check_flapping and not self.flapping.is_alive():
-                self.flapping = Flapping(self.context, self.endpoint,
-                                         self.pubsub_endpoint,
-                                         self.check_delay)
-                self.flapping.start()
-
-            self.busy = False
 
     @debuglog
     def reload(self, graceful=True):
@@ -263,7 +275,7 @@ class Arbiter(object):
             return ValueError("command name shouldn't be empty")
 
         watcher = Watcher(name, cmd, **kw)
-        watcher.initialize(self.evpub_socket)
+        watcher.initialize(self.evpub_socket, self.sockets)
         self.watchers.append(watcher)
         self._watchers_names[watcher.name.lower()] = watcher
         return watcher
@@ -308,11 +320,11 @@ class ThreadedArbiter(Arbiter, Thread):
 
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
-                 check_flapping=True):
+                 stats_endpoint=None, plugins=None):
         Thread.__init__(self)
         Arbiter.__init__(self, watchers, endpoint, pubsub_endpoint,
                          check_delay, prereload_fn, context, loop,
-                         check_flapping)
+                         stats_endpoint, plugins)
 
     def start(self):
         return Thread.start(self)

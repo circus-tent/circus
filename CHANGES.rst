@@ -1,10 +1,46 @@
 CHANGES
 =======
 
-0.4 - ?
--------
+0.5
+---
 
-???
+0.4 - 2012-06-12
+----------------
+
+* Added a plugin system
+* Added a "singleton" option for watchers
+* Fixed circus-top screen flickering
+* Removed threads from circus.stats in favor of zmq periodic callbacks
+* Enhanced the documentation
+* Circus client now have a send_message api
+* The flapping feature is now a plugin
+* Every command line tool have a --version option
+* Added a statsd plugin (sends the events from circus to statsd)
+* The web UI now uses websockets (via socketio) to get the stats
+* The web UI now uses sessions for "flash messages" in the web ui
+
+0.3.4 - 2012-05-30
+------------------
+
+- Fixed a race condition that prevented the controller
+  to cleanly reap finished processes.
+- Now check_flapping can be controlled in the configuration.
+  And activated/deactivated per watcher.
+
+
+0.3.3 - 2012-05-29
+------------------
+
+- Fixed the regression on the uid handling
+
+0.3.2 - 2012-05-24
+------------------
+
+- allows optional args property to add_watcher command.
+- added circushttpd, circus-top and circusd-stats
+- allowing Arbiter.add_watcher() to set all Watcher option
+- make sure the redirectors are re-created on restarts
+
 
 0.3.1 - 2012-04-18
 ------------------

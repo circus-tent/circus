@@ -5,11 +5,14 @@ Circus Process Watcher
    :align: right
 
 Circus is a process watcher and runner. It can be driven via a
-command-line interface, or programmatically, in python, through its APIs.
+command-line interface or programmatically trough its python API.
 
 It shares some of the goals of `Supervisord <http://supervisord.org>`_,
 `BluePill <https://github.com/arya/bluepill>`_ and
 `Daemontools <http://cr.yp.to/daemontools.html>`_.
+
+
+Circus is designed using Zero MQ. See :ref:`design` for more details.
 
 .. note::
 
@@ -63,7 +66,7 @@ Monitoring and managing Circus through the web
 Circus provides a small web application that can connect to a running
 Circus daemon and let you monitor and interact with it.
 
-Running the web application is as simple as::
+Running the web application is as simple as running::
 
     $ circushttpd
 
@@ -94,6 +97,22 @@ This snippet will run four instances of *myprogram* and watch them for you,
 restarting them if they die unexpectedly.
 
 To learn more about this, see :ref:`library`
+
+
+Extending Circus
+----------------
+
+It's easy to extend Circus to create a more complex system, by listening to all
+the **circusd** events via its pub/sub channel, and driving it via commands.
+
+That's how the flapping feature works for instance: it listens to all the
+processes dying, measures how often it happens, and stops the incriminated
+watchers after too many restarts attempts.
+
+Circus comes with a plugin system to help you write such extensions, and
+a few built-in plugins you can reuse.
+
+See :ref:`plugins`.
 
 
 Why should I use Circus instead of X ?
@@ -150,21 +169,30 @@ More documentation
 
    installation
    configuration
+   cli
    commands
    circushttpd
    library
+   plugins
    deployment
    security
+   design
    examples
    coverage
    glossary
+   contributing
    copyright
 
 
 Contributions and Feedback
 --------------------------
 
-You can reach us for any feedback, bug report, or to contribute, at
-https://github.com/mozilla-services/circus
+More on contribution: :ref:`contribs`.
 
-We can also be found in the **#mozilla-circus** channel on freenode.net.
+
+Useful Links:
+
+- There's a maling list for any feedback or question: https://lists.mozilla.org/listinfo/dev-services-circus
+- The repository and issue tracker is at GitHub : https://github.com/mozilla-services/circus
+- Join us on the IRC : Freenode, channel **#mozilla-circus**
+

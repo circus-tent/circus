@@ -1,8 +1,11 @@
 Copyright
 =========
 
-Circus was initiated by Tarek Ziad� & Benoit Chesneau, and is licenced under
-APLv2
+Circus was initiated by Tarek Ziade and is licenced under APLv2
+
+Benoit Chesneau was an early contributor and did many things, like most of
+the circus.commands work.
+
 
 Licence
 -------
@@ -40,4 +43,5 @@ In order of appearence:
 - Chris McDonald
 - Stefane Fermigier
 - Adnane Belmadiaf
-- Alexis Métairea
+- Alexis Métaireau
+- Christian S. Perone

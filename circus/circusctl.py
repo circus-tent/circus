@@ -20,7 +20,7 @@ from circus.exc import CallError, ArgumentError
 
 
 globalopts = [
-    ('', 'endpoint', "", "connection endpointt"),
+    ('', 'endpoint', "", "connection endpoint"),
     ('', 'timeout', 5, "connection timeout"),
     ('', 'json', False, "output to JSON"),
     ('', 'prettify', False, "prettify output"),
@@ -145,10 +145,7 @@ class ControllerApp(object):
 
     def display_version(self, *args, **opts):
         from circus import __version__
-
-        print("Circus (version %s)" % __version__)
-        print("Licensed under the Apache License, Version 2.0.")
-        print("")
+        print(__version__)
         return 0
 
     def handle_sub(self, cmd, opts, topics, endpoint, timeout):
@@ -174,8 +171,7 @@ class ControllerApp(object):
             else:
                 print(self._console(client, cmd, opts, msg))
         except CallError as e:
-
-            sys.stderr.write(str(e))
+            sys.stderr.write(str(e) + " Try to raise the --timeout value\n")
             return 1
         finally:
             client.stop()
@@ -184,6 +180,11 @@ class ControllerApp(object):
     def _parse(self, args):
         options = {}
         cmdoptions = {}
+
+        # placeholder so "circusctl --version" works
+        if args == ['--version']:
+            args.append('XX')
+
         args = self._parseopts(args, globalopts, options)
 
         if args:
