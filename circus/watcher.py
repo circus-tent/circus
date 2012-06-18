@@ -189,8 +189,8 @@ class Watcher(object):
     def __len__(self):
         return len(self.processes)
 
-    def send_msg(self, topic, msg):
-        """send msg"""
+    def notify_event(self, topic, msg):
+        """Publish a message on the event publisher channel"""
 
         json_msg = json.dumps(msg)
         if isinstance(json_msg, unicode):
@@ -227,8 +227,7 @@ class Watcher(object):
             process.stop()
 
         logger.debug('reaping process %s [%s]' % (pid, self.name))
-        self.send_msg("reap", {"process_pid": pid,
-                               "time": time.time()})
+        self.notify_event("reap", {"process_pid": pid, "time": time.time()})
 
     @util.debuglog
     def reap_processes(self):
@@ -343,8 +342,8 @@ class Watcher(object):
                 nb_tries += 1
                 continue
             else:
-                self.send_msg("spawn", {"process_pid": process.pid,
-                                        "time": time.time()})
+                self.notify_event("spawn", {"process_pid": process.pid,
+                                            "time": time.time()})
                 time.sleep(self.warmup_delay)
                 return
 
@@ -362,7 +361,7 @@ class Watcher(object):
 
         try:
             self.send_signal(process.pid, sig)
-            self.send_msg("kill", {"process_pid": process.pid,
+            self.notify_event("kill", {"process_pid": process.pid,
                                    "time": time.time()})
         except NoSuchProcess:
             # already dead !
@@ -458,7 +457,7 @@ class Watcher(object):
         self.kill_processes(signal.SIGKILL)
 
         if self.evpub_socket is not None:
-            self.send_msg("stop", {"time": time.time()})
+            self.notify_event("stop", {"time": time.time()})
 
         self.stopped = True
 
@@ -488,13 +487,13 @@ class Watcher(object):
             self.stderr_redirector.start()
 
         logger.info('%s started' % self.name)
-        self.send_msg("start", {"time": time.time()})
+        self.notify_event("start", {"time": time.time()})
 
     @util.debuglog
     def restart(self):
         """Restart.
         """
-        self.send_msg("restart", {"time": time.time()})
+        self.notify_event("restart", {"time": time.time()})
         self.stop()
         self.start()
         logger.info('%s restarted', self.name)
@@ -517,7 +516,7 @@ class Watcher(object):
             for i in range(self.numprocesses):
                 self.spawn_process()
             self.manage_processes()
-        self.send_msg("reload", {"time": time.time()})
+        self.notify_event("reload", {"time": time.time()})
         logger.info('%s reloaded', self.name)
 
     @util.debuglog
@@ -583,7 +582,7 @@ class Watcher(object):
             action = -1
 
         # send update event
-        self.send_msg("updated", {"time": time.time()})
+        self.notify_event("updated", {"time": time.time()})
         return action
 
     def do_action(self, num):

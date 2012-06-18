@@ -75,7 +75,7 @@ Example::
 
 
 .. autoclass:: circus.watcher.Watcher
-   :members: send_msg, reap_processes, manage_processes, reap_and_manage_processes,
+   :members: notify_event, reap_processes, manage_processes, reap_and_manage_processes,
              spawn_processes, spawn_process, kill_process,kill_processes, send_signal_child, stop,start,
              restart, reload, do_action
 
