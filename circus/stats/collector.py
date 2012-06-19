@@ -1,8 +1,28 @@
 from circus import util
 from circus import logger
 
+from zmq.eventloop import ioloop
 
-class StatsCollector(object):
+
+class StatsCollector(ioloop.PeriodicCallback):
+
+    def __init__(self, streamer, watcher=None, callback_time=1., io_loop=None):
+        ioloop.PeriodicCallback.__init__(self, self._callback,
+                                         callback_time * 1000, io_loop)
+        self.get_pids = streamer.get_pids
+        self.streamer = streamer
+        self.publisher = streamer.publisher
+        self.watcher = watcher
+
+    def _callback(self):
+        logger.debug('Publishing stats about {0}'.format(self.watcher))
+        process_name = None
+
+        for pid, stats in self.collect_stats():
+            if self.watcher == 'circus':
+                if pid in self.streamer.circus_pids:
+                    process_name = self.streamer.circus_pids[pid]
+            self.publisher.publish(self.watcher, process_name, pid, stats)
 
     def _aggregate(self, aggregate):
         res = {'pid': aggregate.keys()}
@@ -27,15 +47,15 @@ class StatsCollector(object):
             res['mem'] = sum(mem)
         return res
 
-    def collect_stats(self, watcher, pids):
+    def collect_stats(self):
         aggregate = {}
 
         # sending by pids
-        for pid in pids:
+        for pid in self.get_pids(self.watcher):
             try:
                 info = util.get_info(pid)
                 aggregate[pid] = info
-                yield (watcher, pid, info)
+                yield pid, info
             except util.NoSuchProcess:
                 # the process is gone !
                 pass
@@ -44,4 +64,4 @@ class StatsCollector(object):
                     str(e)))
 
         # now sending the aggregation
-        yield (watcher, None, self._aggregate(aggregate))
+        yield None, self._aggregate(aggregate)

@@ -23,30 +23,17 @@ class StatsStreamer(object):
         self.sub_socket = self.ctx.socket(zmq.SUB)
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, self.topic)
         self.sub_socket.connect(self.pubsub_endpoint)
-        self.loop = ioloop.IOLoop()  # events coming from circusd
+        self.loop = ioloop.IOLoop.instance()  # events coming from circusd
         self.substream = zmqstream.ZMQStream(self.sub_socket, self.loop)
         self.substream.on_recv(self.handle_recv)
         self.client = CircusClient(context=self.ctx, endpoint=endpoint)
         self.cmds = get_commands()
         self._pids = defaultdict(list)
         self._callbacks = dict()
-        self.collector = StatsCollector()
         self.publisher = StatsPublisher(stats_endpoint, self.ctx)
         self.running = False  # should the streamer be running?
         self.stopped = False  # did the collect started yet?
         self.circus_pids = {}
-
-    def publish_stats(self, watcher=None):
-        """Get and publish the stats for the given watcher"""
-        logger.debug('Publishing stats about {0}'.format(watcher))
-        process_name = None
-        for __, pid, stats in self.collector.collect_stats(
-                watcher, self.get_pids(watcher)):
-            if watcher == 'circus':
-                if pid in self.circus_pids:
-                    process_name = self.circus_pids[pid]
-
-            self.publisher.publish(watcher, process_name, pid, stats)
 
     def get_watchers(self):
         return self._pids.keys()
@@ -64,13 +51,19 @@ class StatsStreamer(object):
         return {os.getpid(): 'circusd-stats',
                 res['info']['pid']: 'circusd'}
 
+    def _add_callback(self, name, start=True):
+        self._callbacks[name] = StatsCollector(self, name, self.delay,
+                                               self.loop)
+        if start:
+            self._callbacks[name].start()
+
     def _init(self):
         self.circus_pids = self.get_circus_pids()
         if 'circus' not in self._callbacks:
-            self._callbacks['circus'] = ioloop.PeriodicCallback(
-                    lambda: self.publish_stats("circus"),
-                    self.delay * 1000, self.loop)
-        self._callbacks['circus'].start()
+            self._add_callback('circus')
+        else:
+            self._callbacks['circus'].start()
+
         self._pids.clear()
         # getting the initial list of watchers/pids
         res = self.client.send_message('list')
@@ -91,13 +84,12 @@ class StatsStreamer(object):
 
     def append_pid(self, watcher, pid):
         if watcher not in self._pids or len(self._pids[watcher]) == 0:
-            if watcher not in self._callbacks:
-                self._callbacks[watcher] = ioloop.PeriodicCallback(
-                        lambda: self.publish_stats(watcher),
-                        self.delay * 1000, self.loop)
             logger.debug('Starting the periodic callback for {0}'\
                          .format(watcher))
-            self._callbacks[watcher].start()
+            if watcher not in self._callbacks:
+                self._add_callback(watcher)
+            else:
+                self._callbacks[watcher].start()
 
         if pid in self._pids[watcher]:
             return
