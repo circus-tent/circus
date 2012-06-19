@@ -13,7 +13,7 @@ Example::
 
     [watcher:myprogram]
     cmd = python
-    args = -u myprogram.py {wid} {env.VAR}
+    args = -u myprogram.py $(WID) $(ENV.VAR)
     warmup_delay = 0
     numprocesses = 5
 
@@ -194,6 +194,8 @@ Additionally, it is possible to access the options passed to the
 :class:`Watcher` which instanciated the process.
 
 For instance, if you want to access some variables that are contained in the
-environment, you would need to specify your command like this::
+environment, you would need to do it with a setting like this::
 
-    cmd = "make-me-a-coffee --sugar {env.WITH_SUGAR}"
+    cmd = "make-me-a-coffee --sugar $(ENV.SUGAR_AMOUNT)"
+
+This works with both `cmd` and `args`.

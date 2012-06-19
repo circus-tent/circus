@@ -20,7 +20,7 @@ from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
 from circus.py3compat import bytestring, string_types
 from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
-                         ObjectDict)
+                         ObjectDict, replace_gnu_args)
 from circus import logger
 
 
@@ -151,22 +151,22 @@ class Process(object):
                 if option not in format_kwargs:
                     format_kwargs[option] = getattr(self.watcher, option)
 
-        cmd = self.cmd.format(**format_kwargs)
+        cmd = replace_gnu_args(self.cmd, **format_kwargs)
 
         if '$WID' in cmd or (self.args and '$WID' in self.args):
             msg = "Using $WID in the command is deprecated. You should use "\
                   "the python string format instead. In you case, this means "\
-                  "replacing the $WID in your command by {wid}."
+                  "replacing the $WID in your command by $(WID)."
 
             warnings.warn(msg, DeprecationWarning)
             self.cmd = cmd.replace('$WID', str(self.wid))
 
         if self.args is not None:
             if isinstance(self.args, string_types):
-                args = shlex.split(
-                        bytestring(self.args.format(**format_kwargs)))
+                args = shlex.split(bytestring(replace_gnu_args(self.args,
+                            **format_kwargs)))
             else:
-                args = [bytestring(arg.format(**format_kwargs))\
+                args = [bytestring(replace_gnu_args(arg, **format_kwargs))\
                         for arg in self.args]
             args = shlex.split(bytestring(cmd)) + args
         else:
