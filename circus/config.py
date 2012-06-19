@@ -27,7 +27,8 @@ def watcher_defaults():
         'stdout_stream': dict(),
         'stream_backend': 'thread',
         'priority': 0,
-        'use_sockets': False}
+        'use_sockets': False,
+        'singleton': False}
 
 
 class DefaultConfigParser(ConfigParser.ConfigParser):
@@ -181,6 +182,9 @@ def get_config(config_file):
                 elif opt == 'use_sockets':
                     watcher['use_sockets'] = dget(section, "use_sockets",
                                                   False, bool)
+                elif opt == 'singleton':
+                    watcher['singleton'] = dget(section, "singleton", False,
+                                                bool)
                 else:
                     # freeform
                     watcher[opt] = val
