@@ -64,6 +64,7 @@ def get_stream(conf):
 
     return {'stream': inst, 'refresh_time': refresh_time}
 
+
 def get_pipe_redirector(redirect, backend='thread', extra_info=None,
         buffer=1024):
     """Redirects data received in pipes to the redirect callable.

@@ -3,9 +3,6 @@ import os
 import fnmatch
 import sys
 
-from circus.stream import FileStream
-from circus import util
-
 
 def watcher_defaults():
     return {
@@ -81,6 +78,7 @@ def read_config(config_path):
     cfg_files_read.extend(cfg.read(includes))
 
     return cfg, cfg_files_read
+
 
 def get_config(config_file):
     if not os.path.exists(config_file):
