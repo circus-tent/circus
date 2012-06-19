@@ -9,7 +9,7 @@ from zmq.eventloop import ioloop, zmqstream
 
 from circus.commands import get_commands
 from circus.client import CircusClient
-from circus.stats.collector import StatsCollector
+from circus.stats.collector import WatcherStatsCollector
 from circus.stats.publisher import StatsPublisher
 from circus import logger
 
@@ -52,8 +52,8 @@ class StatsStreamer(object):
                 res['info']['pid']: 'circusd'}
 
     def _add_callback(self, name, start=True):
-        self._callbacks[name] = StatsCollector(self, name, self.delay,
-                                               self.loop)
+        self._callbacks[name] = WatcherStatsCollector(self, name, self.delay,
+                                                      self.loop)
         if start:
             self._callbacks[name].start()
 
