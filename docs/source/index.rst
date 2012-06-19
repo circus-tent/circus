@@ -17,7 +17,7 @@ Circus is designed using ZeroMQ. See :ref:`design` for more details.
 
 .. note::
 
-   Circus does not contains any security when sending information trough
+   Circus doesn't secure its messages when sending information trough
    ZeroMQ. Before running Circus, make sure you read the :ref:`Security` page.
 
 To install it, check out :ref:`installation`
