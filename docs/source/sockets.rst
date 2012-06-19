@@ -51,8 +51,8 @@ it could look like this:
     import socket
     import sys
 
-    fd = int(sys.argv(1))   # getting the FD from circus
-    sock = socket.fromfd(FAMILY, TYPE)
+    fd = int(sys.argv[1])   # getting the FD from circus
+    sock = socket.fromfd(fd, FAMILY, TYPE)
 
     # dealing with one request at a time
     while True:
