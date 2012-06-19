@@ -7,17 +7,20 @@ except MemoryError:
 except ImportError:
     # Python on Solaris compiled with Sun Studio doesn't have ctypes
     ctypes = None       # NOQA
+
 import errno
 import os
 import resource
 from subprocess import PIPE
 import time
 import shlex
+import warnings
 
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
 from circus.py3compat import bytestring, string_types
-from circus.util import get_info, to_uid, to_gid, debuglog, get_working_dir
+from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
+                         ObjectDict)
 from circus import logger
 
 
@@ -75,41 +78,26 @@ class Process(object):
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
                  uid=None, gid=None, env=None, rlimits=None, executable=None,
-                 use_fds=False):
+                 use_fds=False, watcher=None, spawn=True):
+
         self.wid = wid
-        self.use_fds = use_fds
-
-        if working_dir is None:
-            self.working_dir = get_working_dir()
-        else:
-            self.working_dir = working_dir
+        self.cmd = cmd
+        self.args = args
+        self.working_dir = working_dir or get_working_dir()
         self.shell = shell
-        self.env = env
+        self.uid = to_uid(uid) if uid else None
+        self.gid = to_gid(gid) if gid else None
+        self.env = env or {}
+        self.rlimits = rlimits or {}
+        self.executable = executable
+        self.use_fds = use_fds
+        self.watcher = watcher
 
-        if rlimits is not None:
-            self.rlimits = rlimits
-        else:
-            self.rlimits = {}
+        if spawn:
+            self.spawn()
 
-        # It's possible to use environment variables and some other variables
-        # that are available in this context, when spawning the processes.
-        format_kwargs = {'wid': self.wid, 'shell': self.shell, }
-        format_kwargs.update(os.environ)
-        if env:
-            format_kwargs.update(env)
-
-        cmd = cmd.format(**format_kwargs)
-        self.cmd = cmd.replace('$WID', str(self.wid))
-
-        if uid is None:
-            self.uid = None
-        else:
-            self.uid = to_uid(uid)
-
-        if gid is None:
-            self.gid = None
-        else:
-            self.gid = to_gid(gid)
+    def spawn(self):
+        args = self.format_args()
 
         def preexec_fn():
             os.setsid()
@@ -134,28 +122,58 @@ class Process(object):
             if self.uid:
                 os.setuid(self.uid)
 
-        logger.debug('cmd: ' + bytestring(cmd))
-        logger.debug('args: ' + str(args))
-
-        if args is not None:
-            if isinstance(args, string_types):
-                args_ = shlex.split(bytestring(args))
-            else:
-                args_ = [bytestring(arg) for arg in args]
-
-            args_ = shlex.split(bytestring(cmd)) + args_
-        else:
-            args_ = shlex.split(bytestring(cmd))
-
-        logger.debug("process args: %s", args_)
-        logger.debug('Running %r' % ' '.join(args_))
-
-        self._worker = Popen(args_, cwd=self.working_dir,
+        self._worker = Popen(args, cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
                              env=self.env, close_fds=not self.use_fds,
-                             stdout=PIPE, stderr=PIPE, executable=executable)
+                             stdout=PIPE, stderr=PIPE,
+                             executable=self.executable)
 
         self.started = time.time()
+
+    def format_args(self):
+        """ It's possible to use environment variables and some other variables
+        that are available in this context, when spawning the processes.
+        """
+        logger.debug('cmd: ' + bytestring(self.cmd))
+        logger.debug('args: ' + str(self.args))
+
+        current_env = ObjectDict(self.env.copy())
+        current_env.update(os.environ)
+
+        format_kwargs = {
+            'wid': self.wid, 'shell': self.shell, 'args': self.args,
+            'env': current_env, 'working_dir': self.working_dir,
+            'uid': self.uid, 'gid': self.gid, 'rlimits': self.rlimits,
+            'executable': self.executable, 'use_fds': self.use_fds}
+
+        if self.watcher is not None:
+            for option in self.watcher.optnames:
+                if option not in format_kwargs:
+                    format_kwargs[option] = getattr(self.watcher, option)
+
+        cmd = self.cmd.format(**format_kwargs)
+
+        if '$WID' in cmd or (self.args and '$WID' in self.args):
+            msg = "Using $WID in the command is deprecated. You should use "\
+                  "the python string format instead. In you case, this means "\
+                  "replacing the $WID in your command by {wid}."
+
+            warnings.warn(msg, DeprecationWarning)
+            self.cmd = cmd.replace('$WID', str(self.wid))
+
+        if self.args is not None:
+            if isinstance(self.args, string_types):
+                args = shlex.split(
+                        bytestring(self.args.format(**format_kwargs)))
+            else:
+                args = [bytestring(arg.format(**format_kwargs))\
+                        for arg in self.args]
+            args = shlex.split(bytestring(cmd)) + args
+        else:
+            args = shlex.split(bytestring(cmd))
+
+        logger.debug("process args: %s", args)
+        return args
 
     @debuglog
     def poll(self):

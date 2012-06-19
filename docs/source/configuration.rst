@@ -13,7 +13,7 @@ Example::
 
     [watcher:myprogram]
     cmd = python
-    args = -u myprogram.py $WID
+    args = -u myprogram.py {wid} {env.VAR}
     warmup_delay = 0
     numprocesses = 5
 
@@ -73,8 +73,9 @@ watcher:NAME (as many sections as you want)
     **args**
         Command-line arguments to pass to the program. You can use the python
         format syntax here to build the parameters. Environment variables are
-        available, as well as WID and the environment variables that you
-        passed, if any, with the "env" parameter.
+        available, as well as the worker id and the environment variables that
+        you passed, if any, with the "env" parameter. See
+        :ref:`formating_cmd` for more information on this.
     **shell**
         If True, the processes are run in the shell (default: False)
     **working_dir**
@@ -153,3 +154,19 @@ plugin:NAME (as many sections as you want)
     **anything else**
         Every other key found in the section is passed to the
         plugin constructor in the **config** mapping.
+
+
+.. _formating_cmd:
+Formating the commands and arguments with dynamic variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As you may have seen, it is possible to pass some information that are computed
+dynamically when running the processes. Among other things, you can get the
+worker id (WID) and all the options that are passed to the :class:`Process`.
+Additionally, it is possible to access the options passed to the
+:class:`Watcher` which instanciated the process.
+
+For instance, if you want to access some variables that are contained in the
+environment, you would need to specify your command like this::
+
+    cmd = "make-me-a-coffee --sugar {env.WITH_SUGAR}"

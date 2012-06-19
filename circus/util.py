@@ -339,3 +339,8 @@ def resolve_name(name):
             raise ImportError(exc)
 
     return ret
+
+
+class ObjectDict(dict):
+    def __getattr__(self, item):
+        return self[item]

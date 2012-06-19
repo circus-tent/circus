@@ -319,7 +319,8 @@ class Watcher(object):
                           args=self.args, working_dir=self.working_dir,
                           shell=self.shell, uid=self.uid, gid=self.gid,
                           env=self.env, rlimits=self.rlimits,
-                          executable=self.executable, use_fds=self.use_sockets)
+                          executable=self.executable, use_fds=self.use_sockets,
+                          watcher=self)
 
                 # stream stderr/stdout if configured
                 if self.stdout_redirector is not None:
