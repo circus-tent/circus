@@ -2,21 +2,25 @@ import os
 from circus.tests.support import unittest
 from circus.sockets import CircusSocket, CircusSockets
 
+
 TRAVIS = os.getenv('TRAVIS', False)
 
 
 class TestSockets(unittest.TestCase):
 
-    @unittest.skipIf(TRAVIS, "Unable to bind a socket on travis")
     def test_socket(self):
+        if TRAVIS:
+            return
         sock = CircusSocket('somename', 'localhost', 0)
         try:
             sock.bind_and_listen()
         finally:
             sock.close()
 
-    @unittest.skipIf(TRAVIS, "Unable to bind a socket on travis")
     def test_manager(self):
+        if TRAVIS:
+            return
+
         mgr = CircusSockets()
 
         for i in range(5):
