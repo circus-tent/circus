@@ -69,5 +69,6 @@ def validate_option(key, val):
 
     if key in ('stderr_stream', 'stdout_stream'):
         for k, v in val.items():
-          if not k in ('class', 'filename', 'refresh_time'):
-            raise MessageError("%r is an invalid option for %r" % (k, key))
+            if not k in ('class', 'filename', 'refresh_time'):
+                raise MessageError("%r is an invalid option for %r" % \
+                        (k, key))

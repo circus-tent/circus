@@ -32,12 +32,14 @@ class ListSockets(Command):
         return self.make_message()
 
     def execute(self, arbiter, props):
-        sockets = [str(socket) for socket in arbiter.sockets.values()]
+        sockets = [(socket.fileno(), str(socket))
+                   for socket in arbiter.sockets.values()]
         sockets.sort()
         return {"sockets": sockets}
 
     def console_msg(self, msg):
         if 'sockets' in msg:
-            return "\n".join(msg['sockets'])
+            return "\n".join(['%d:%s' % (fd, sock)
+                              for fd, sock in msg['sockets']])
 
         return self.console_error(msg)

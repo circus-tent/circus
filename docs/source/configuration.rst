@@ -29,9 +29,13 @@ Example::
     sample_rate = 1.0
     application_name = example
 
+    [socket:web]
+    host = localhost
+    port = 8080
 
 
-circus (single section)
+
+circus - single section
 ~~~~~~~~~~~~~~~~~~~~~~~
     **endpoint**
         The ZMQ socket used to manage Circus via **circusctl**.
@@ -64,7 +68,7 @@ circus (single section)
    not made it upstream yet.
 
 
-watcher:NAME (as many sections as you want)
+watcher:NAME - as many sections as you want
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     **NAME**
         The name of the watcher. This name is used in **circusctl**
@@ -145,16 +149,39 @@ watcher:NAME (as many sections as you want)
 
     **singleton**
         If set to True, this watcher will have at the most one process.
-        Default to False.
+        Defaults to False.
 
-plugin:NAME (as many sections as you want)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    **use_sockets**
+        If set to True, this watcher will be able to access defined sockets
+        via their file descriptors. If False, all parent fds are closed
+        when the child process is forked. Defaults to False.
+
+
+plugin:NAME - as many sections as you want
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     **use**
         The fully qualified name that points to the plugin class.
     **anything else**
         Every other key found in the section is passed to the
         plugin constructor in the **config** mapping.
 
+
+socket:NAME - as many sections as you want
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    **host**
+        The host of the socket. Defaults to 'localhost'
+    **port**
+        The port. Defaults to 8080.
+    **family**
+        The socket family. Can be 'AF_UNIX', 'AF_INET' or 'AF_INET6'.
+        Defaults to 'AF_INET'.
+    **type**
+        The socket type. Can be 'SOCK_STREAM', 'SOCK_DGRAM', 'SOCK_RAW',
+        'SOCK_RDM' or 'SOCK_SEQPACKET'. Defaults to 'SOCK_STREAM'.
+
+
+Once a socket is created, the *${socket:NAME}* string can be used in the
+command of a watcher. Circus will replace it by the FD value.
 
 .. _formating_cmd:
 Formating the commands and arguments with dynamic variables

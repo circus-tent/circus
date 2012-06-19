@@ -11,12 +11,14 @@ It shares some of the goals of `Supervisord <http://supervisord.org>`_,
 `BluePill <https://github.com/arya/bluepill>`_ and
 `Daemontools <http://cr.yp.to/daemontools.html>`_.
 
+Circus is also a socket manager you can use to run a network application.
 
-Circus is designed using Zero MQ. See :ref:`design` for more details.
+Circus is designed using ZeroMQ. See :ref:`design` for more details.
 
 .. note::
 
-   Before running Circus, make sure you read the :ref:`Security` page.
+   Circus does not contains any security when sending information trough
+   zeromq. Before running Circus, make sure you read the :ref:`Security` page.
 
 To install it, check out :ref:`installation`
 
@@ -99,6 +101,23 @@ restarting them if they die unexpectedly.
 To learn more about this, see :ref:`library`
 
 
+Using Sockets
+-------------
+
+Besides processes, Circus can also bind sockets. Since every process managed by
+Circus is a child of the main Circus daemon, that means any program that's
+controlled by Circus can use those sockets.
+
+Running a socket is as simple as adding a *socket* section in the config file::
+
+    [socket:mysocket]
+    host = localhost
+    port = 8080
+
+
+To learn more about sockets, see :ref:`sockets`.
+
+
 Extending Circus
 ----------------
 
@@ -172,6 +191,7 @@ More documentation
    cli
    commands
    circushttpd
+   sockets
    library
    plugins
    deployment

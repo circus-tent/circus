@@ -3,9 +3,6 @@ import os
 import fnmatch
 import sys
 
-from circus.stream import FileStream
-from circus import util
-
 
 def watcher_defaults():
     return {
@@ -27,7 +24,8 @@ def watcher_defaults():
         'stdout_stream': dict(),
         'stream_backend': 'thread',
         'priority': 0,
-        'use_sockets': False}
+        'use_sockets': False,
+        'singleton': False}
 
 
 class DefaultConfigParser(ConfigParser.ConfigParser):
@@ -80,6 +78,7 @@ def read_config(config_path):
     cfg_files_read.extend(cfg.read(includes))
 
     return cfg, cfg_files_read
+
 
 def get_config(config_file):
     if not os.path.exists(config_file):
@@ -181,6 +180,9 @@ def get_config(config_file):
                 elif opt == 'use_sockets':
                     watcher['use_sockets'] = dget(section, "use_sockets",
                                                   False, bool)
+                elif opt == 'singleton':
+                    watcher['singleton'] = dget(section, "singleton", False,
+                                                bool)
                 else:
                     # freeform
                     watcher[opt] = val

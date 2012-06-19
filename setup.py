@@ -5,7 +5,7 @@ from circus import __version__
 if not hasattr(sys, 'version_info') or sys.version_info < (2, 6, 0, 'final'):
     raise SystemExit("Circus requires Python 2.6 or later.")
 
-install_requires=['pyzmq', 'psutil']
+install_requires = ['pyzmq', 'psutil']
 
 try:
     import argparse     # NOQA
@@ -23,7 +23,7 @@ setup(name='circus',
       version=__version__,
       packages=find_packages(),
       description=("Circus is a program that will let you run and watch "
-                   " multiple processes."),
+                   " multiple processes and sockets."),
       long_description=README + '\n' + CHANGES,
       author="Mozilla Foundation & contributors",
       author_email="services-dev@lists.mozila.org",
@@ -36,8 +36,8 @@ setup(name='circus',
         "License :: OSI Approved :: Apache Software License",
         "Development Status :: 3 - Alpha"],
       install_requires=install_requires,
-      test_requires=['nose', 'webtest'],
-      test_suite = 'nose.collector',
+      tests_require=['nose', 'webtest', 'unittest2'],
+      test_suite='nose.collector',
       entry_points="""
       [console_scripts]
       circusd = circus.circusd:main
