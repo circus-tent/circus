@@ -40,7 +40,7 @@ class StatsStreamer(object):
         """Get and publish the stats for the given watcher"""
         logger.debug('Publishing stats about {0}'.format(watcher))
         process_name = None
-        for watcher, pid, stats in self.collector.collect_stats(
+        for __, pid, stats in self.collector.collect_stats(
                 watcher, self.get_pids(watcher)):
             if watcher == 'circus':
                 if pid in self.circus_pids:
