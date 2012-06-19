@@ -148,7 +148,8 @@ class Process(object):
 
         if self.watcher is not None:
             for option in self.watcher.optnames:
-                if option not in format_kwargs:
+                if option not in format_kwargs\
+                        and hasattr(self.watcher, option):
                     format_kwargs[option] = getattr(self.watcher, option)
 
         cmd = replace_gnu_args(self.cmd, **format_kwargs)
