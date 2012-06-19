@@ -11,14 +11,14 @@ It shares some of the goals of `Supervisord <http://supervisord.org>`_,
 `BluePill <https://github.com/arya/bluepill>`_ and
 `Daemontools <http://cr.yp.to/daemontools.html>`_.
 
-Circus is also a socket manager, you can use to run a network
-application.
+Circus is also a socket manager you can use to run a network application.
 
-Circus is designed using Zero MQ. See :ref:`design` for more details.
+Circus is designed using ZeroMQ. See :ref:`design` for more details.
 
 .. note::
 
-   Before running Circus, make sure you read the :ref:`Security` page.
+   Circus does not contains any security when sending information trough
+   zeromq. Before running Circus, make sure you read the :ref:`Security` page.
 
 To install it, check out :ref:`installation`
 
