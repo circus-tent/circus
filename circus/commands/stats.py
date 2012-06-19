@@ -43,7 +43,7 @@ class Stats(Command):
                 }
             }
 
-       The response retun an object per process with the property "infos"
+       The response retun an object per process with the property "info"
        containing some process informations::
 
             {
