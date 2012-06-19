@@ -13,12 +13,12 @@ class StatsPublisher(object):
         self.socket.bind(self.stats_endpoint)
         self.socket.linger = 0
 
-    def publish(self, watcher, process_name, pid, stat):
+    def publish(self, name, stat):
         try:
-            topic = b'stat.%s' % str(watcher)
-            if pid is not None:
-                topic += '.%d' % pid
-            stat['name'] = process_name
+            topic = b'stat.%s' % str(name)
+            if 'subtopic' in stat:
+                topic += '.%d' % stat['subtopic']
+
             self.socket.send_multipart([topic, json.dumps(stat)])
 
         except zmq.ZMQError:

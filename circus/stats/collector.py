@@ -17,8 +17,8 @@ class BaseStatsCollector(ioloop.PeriodicCallback):
 
     def _callback(self):
         logger.debug('Publishing stats about {0}'.format(self.name))
-        for process_name, pid, stats in self.collect_stats():
-            self.publisher.publish(self.name, process_name, pid, stats)
+        for stats in self.collect_stats():
+            self.publisher.publish(self.name, stats)
 
     def collect_stats(self):
         raise NotImplementedError()
@@ -53,16 +53,18 @@ class WatcherStatsCollector(BaseStatsCollector):
 
         # sending by pids
         for pid in self.get_pids(self.name):
-            process_name = None
+            name = None
 
             if self.name == 'circus':
                 if pid in self.streamer.circus_pids:
-                    process_name = self.streamer.circus_pids[pid]
+                    name = self.streamer.circus_pids[pid]
 
             try:
                 info = util.get_info(pid)
                 aggregate[pid] = info
-                yield process_name, pid, info
+                info['subtopic'] = pid
+                info['name'] = name
+                yield info
             except util.NoSuchProcess:
                 # the process is gone !
                 pass
@@ -71,4 +73,13 @@ class WatcherStatsCollector(BaseStatsCollector):
                     str(e)))
 
         # now sending the aggregation
-        yield None, None, self._aggregate(aggregate)
+        yield self._aggregate(aggregate)
+
+
+class SocketStatsCollector(BaseStatsCollector):
+    def _aggregate(self, aggregate):
+        raise NotImplementedError()
+
+    def collect_stats(self):
+        aggregate = {}
+        raise NotImplementedError()
