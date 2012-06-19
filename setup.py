@@ -23,7 +23,7 @@ setup(name='circus',
       version=__version__,
       packages=find_packages(),
       description=("Circus is a program that will let you run and watch "
-                   " multiple processes."),
+                   " multiple processes and sockets."),
       long_description=README + '\n' + CHANGES,
       author="Mozilla Foundation & contributors",
       author_email="services-dev@lists.mozila.org",

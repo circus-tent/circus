@@ -2,7 +2,7 @@
 Circus
 ======
 
-Circus is a program that runs and watches several processes.
+Circus is a program that runs and watches processes and sockets.
 
 Circus can be used as a library or through the command line.
 
