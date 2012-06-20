@@ -160,7 +160,6 @@ class SocketStatsCollector(BaseStatsCollector):
         return hits / self.callback_time
 
     def collect_stats(self):
-        aggregate = {}
         # sending hits by fd
         sockets = self.streamer.get_sockets()
 
