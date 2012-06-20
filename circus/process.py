@@ -223,7 +223,7 @@ class Process(object):
         except NoSuchProcess:
             return "No such process (stopped?)"
 
-        info["age"] = self.age
+        info["age"] = self.age()
         info["started"] = self.started
         info["children"] = []
         for child in self._worker.get_children():
