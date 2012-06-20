@@ -82,8 +82,8 @@ class WatcherStatsCollector(BaseStatsCollector):
 class SocketStatsCollector(BaseStatsCollector):
 
     def __init__(self, streamer, name, callback_time=1., io_loop=None):
-        super(SocketStatsCollector, self).__init__(streamer, name, callback_time,
-                                    io_loop)
+        super(SocketStatsCollector, self).__init__(streamer, name,
+                                                   callback_time, io_loop)
         # if gevent is installed, we'll use a greenlet,
         # otherwise we'll use a thread
         try:
