@@ -6,7 +6,7 @@ import unittest
 from psutil import Popen
 
 from circus.util import (get_info, bytes2human, to_bool, parse_env,
-                         env_to_str, to_uid, to_gid)
+                         env_to_str, to_uid, to_gid, replace_gnu_args)
 
 
 class TestUtil(unittest.TestCase):
@@ -87,3 +87,9 @@ class TestUtil(unittest.TestCase):
             self.assertRaises(KeyError, getpwuid, uid_min - 1)
             self.assertRaises(KeyError, getgrgid, gid_max + 1)
             self.assertRaises(KeyError, getgrgid, gid_min - 1)
+
+    def test_replace_gnu_args(self):
+        self.assertEquals('foobar', replace_gnu_args('$(TEST)', test='foobar'))
+        self.assertEquals('foobar', replace_gnu_args('$(TEST)', TEST='foobar'))
+        self.assertEquals('foo, foobar, baz',
+                          replace_gnu_args('foo, $(TEST), baz', TEST='foobar'))
