@@ -5,6 +5,7 @@ import os
 import pwd
 import fcntl
 from functools import wraps
+import re
 import sys
 import shlex
 
@@ -339,3 +340,16 @@ def resolve_name(name):
             raise ImportError(exc)
 
     return ret
+
+
+GNU_VAR_STD = re.compile(r'\$\((?P<variable>.*?)\)')
+
+
+def replace_gnu_args(string, **options):
+    options = dict([(k.upper(), v) for (k, v) in options.items()])
+    return GNU_VAR_STD.sub(r'{\1}', string).format(**options)
+
+
+class ObjectDict(dict):
+    def __getattr__(self, item):
+        return self[item]
