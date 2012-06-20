@@ -9,7 +9,6 @@ from circus import logger
 from zmq.eventloop import ioloop
 
 
-
 class BaseStatsCollector(ioloop.PeriodicCallback):
 
     def __init__(self, streamer, name, callback_time=1., io_loop=None):
@@ -24,6 +23,7 @@ class BaseStatsCollector(ioloop.PeriodicCallback):
             self.streamer.publisher.publish(self.name, stats)
 
     def collect_stats(self):
+        # should be implemented in subclasses
         raise NotImplementedError()
 
 
