@@ -4,12 +4,13 @@ import json
 from itertools import chain
 import os
 import errno
+import socket
 
 from zmq.eventloop import ioloop, zmqstream
 
 from circus.commands import get_commands
 from circus.client import CircusClient
-from circus.stats.collector import WatcherStatsCollector
+from circus.stats.collector import WatcherStatsCollector, SocketStatsCollector
 from circus.stats.publisher import StatsPublisher
 from circus import logger
 
@@ -34,9 +35,13 @@ class StatsStreamer(object):
         self.running = False  # should the streamer be running?
         self.stopped = False  # did the collect started yet?
         self.circus_pids = {}
+        self.sockets = []
 
     def get_watchers(self):
         return self._pids.keys()
+
+    def get_sockets(self):
+        return self.sockets
 
     def get_pids(self, watcher=None):
         if watcher is not None:
@@ -51,9 +56,13 @@ class StatsStreamer(object):
         return {os.getpid(): 'circusd-stats',
                 res['info']['pid']: 'circusd'}
 
-    def _add_callback(self, name, start=True):
-        self._callbacks[name] = WatcherStatsCollector(self, name, self.delay,
-                                                      self.loop)
+    def _add_callback(self, name, start=True, kind='watcher'):
+        if kind == 'watcher':
+            klass = WatcherStatsCollector
+        else:
+            klass = SocketStatsCollector
+
+        self._callbacks[name] = klass(self, name, self.delay, self.loop)
         if start:
             self._callbacks[name].start()
 
@@ -65,6 +74,7 @@ class StatsStreamer(object):
             self._callbacks['circus'].start()
 
         self._pids.clear()
+
         # getting the initial list of watchers/pids
         res = self.client.send_message('list')
 
@@ -72,6 +82,17 @@ class StatsStreamer(object):
             pids = self.client.send_message('list', name=watcher)['pids']
             for pid in pids:
                 self.append_pid(watcher, pid)
+
+        # getting the initial list of sockets
+        res = self.client.send_message('listsockets')
+        for sock in res['sockets']:
+            fd = sock[0]
+            address = sock[1].split()[-1]
+            # XXX type / family ?
+            sock = socket.fromfd(fd, socket.AF_INET, socket.SOCK_STREAM)
+            self.sockets.append((sock, address))
+
+        self._add_callback('sockets', kind='socket')
 
     def remove_pid(self, watcher, pid):
         if pid in self._pids[watcher]:

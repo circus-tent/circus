@@ -73,43 +73,75 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
 
         stdscr.addstr(line, 0, name.replace('-', '.'))
         line += 1
-        addstr(line, 3, 'PID')
-        addstr(line, 28, 'CPU (%)')
-        addstr(line, 48, 'MEMORY (%)')
 
-        line += 1
+        if name == 'sockets':
+            addstr(line, 3, 'ADDRESS')
+            addstr(line, 28, 'READS / S')
+            addstr(line, 48, 'WRITES / S')
+            addstr(line, 68, 'ERRORS / S')
 
-        # sorting by CPU
-        pids = []
-        total = '', 'N/A', 'N/A', None
-        for pid, stat in watchers[name].items():
-            if stat['cpu'] == 'N/A':
-                cpu = 'N/A'
-            else:
-                cpu = "%.2f" % stat['cpu']
-
-            if stat['mem'] == 'N/A':
-                mem = 'N/A'
-            else:
-                mem = "%.2f" % stat['mem']
-
-            if pid == 'all' or isinstance(pid, list):
-                total = (cpu + ' (avg)', mem + ' (sum)', '', None)
-            else:
-                pids.append((cpu, mem, str(stat['pid']), stat['name']))
-
-        pids.sort()
-        pids.reverse()
-        pids = pids[:10] + [total]
-
-        for cpu, mem, pid, name in pids:
-            if name is not None:
-                pid = '%s (%s)' % (pid, name)
-            addstr(line, 2, pid)
-            addstr(line, 29, cpu)
-            addstr(line, 49, mem)
             line += 1
-        line += 1
+
+            total = '', 'N/A', 'N/A', None
+            fds = []
+
+            for __, stats in watchers[name].items():
+                fd = stats['fd']
+                reads = stats['reads']
+                writes = stats['writes']
+                errors = stats['errors']
+                address = stats['address']
+                fds.append((reads, writes, errors, fds, address))
+
+            fds.sort()
+            fds.reverse()
+
+            for reads, writes, errors, fd, address in fds:
+                addstr(line, 2, str(address))
+                addstr(line, 29, str(reads))
+                addstr(line, 49, str(writes))
+                addstr(line, 69, str(errors))
+                line += 1
+
+            line += 1
+
+        else:
+            addstr(line, 3, 'PID')
+            addstr(line, 28, 'CPU (%)')
+            addstr(line, 48, 'MEMORY (%)')
+            line += 1
+
+            # sorting by CPU
+            pids = []
+            total = '', 'N/A', 'N/A', None
+            for pid, stat in watchers[name].items():
+                if stat['cpu'] == 'N/A':
+                    cpu = 'N/A'
+                else:
+                    cpu = "%.2f" % stat['cpu']
+
+                if stat['mem'] == 'N/A':
+                    mem = 'N/A'
+                else:
+                    mem = "%.2f" % stat['mem']
+
+                if pid == 'all' or isinstance(pid, list):
+                    total = (cpu + ' (avg)', mem + ' (sum)', '', None)
+                else:
+                    pids.append((cpu, mem, str(stat['pid']), stat['name']))
+
+            pids.sort()
+            pids.reverse()
+            pids = pids[:10] + [total]
+
+            for cpu, mem, pid, name in pids:
+                if name is not None:
+                    pid = '%s (%s)' % (pid, name)
+                addstr(line, 2, pid)
+                addstr(line, 29, cpu)
+                addstr(line, 49, mem)
+                line += 1
+            line += 1
 
     if line <= current_h and len(watchers) > 0:
         stdscr.addstr(line, 0, '-' * current_w)

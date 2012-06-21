@@ -46,7 +46,6 @@ class TestSocketCollector(unittest.TestCase):
             def publish(self, name, stat):
                 self.stats.append(stat)
 
-
         streamer = FakeStreamer()
 
         # now the stats collector
