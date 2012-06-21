@@ -469,6 +469,11 @@ class Watcher(object):
         return [p.pid for p in self.processes.values()
                 if p.status != DEAD_OR_ZOMBIE]
 
+    @property
+    def pids(self):
+        """Returns a list of PIDs"""
+        return [process.pid for process in self.processes]
+
     @util.debuglog
     def start(self):
         """Start.
