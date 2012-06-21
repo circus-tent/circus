@@ -52,36 +52,34 @@ class Watcher(object):
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
 
-    - **stdout_stream**: a callable that will receive the stream of
+    - **stdout_stream**: a mapping that defines the stream for
       the process stdout. Defaults to None.
 
-      When provided, *stdout_stream* is a mapping containing two keys:
-
-      - **stream**: the callable that will receive the updates
-        streaming. Defaults to :class:`circus.stream.FileStream`
-
+      Optional. When provided, *stdout_stream* is a mapping containing up to three keys:
+      - **class**: the stream class. Defaults to `circus.stream.FileStream`
+      - **filename**: the filename, if using a FileStream
       - **refresh_time**: the delay between two stream checks. Defaults
         to 0.3 seconds.
-
+      
+      This mapping will be used to create a stream callable of the specified class.
       Each entry received by the callable is a mapping containing:
 
       - **pid** - the process pid
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
 
-    - **stderr_stream**: a callable that will receive the stream of
+    - **stderr_stream**: a mapping that defines the stream for
       the process stderr. Defaults to None.
 
-      When provided, *stdout_stream* is a mapping containing two keys:
-
-      - **stream**: the callable that will receive the updates
-        streaming. Defaults to :class:`circus.stream.FileStream`
-
+      Optional. When provided, *stderr_stream* is a mapping containing up to three keys:
+      - **class**: the stream class. Defaults to `circus.stream.FileStream`
+      - **filename**: the filename, if using a FileStream
       - **refresh_time**: the delay between two stream checks. Defaults
         to 0.3 seconds.
 
+      This mapping will be used to create a stream callable of the specified class.
       Each entry received by the callable is a mapping containing:
-
+      
       - **pid** - the process pid
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
