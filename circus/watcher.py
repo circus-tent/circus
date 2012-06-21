@@ -126,8 +126,10 @@ class Watcher(object):
         self.executable = None
         self.stream_backend = stream_backend
         self.priority = priority
-        self.stdout_stream = get_stream(stdout_stream)
-        self.stderr_stream = get_stream(stderr_stream)
+        self.stdout_stream_conf = stdout_stream
+        self.stderr_stream_conf = stderr_stream
+        self.stdout_stream = get_stream(self.stdout_stream_conf)
+        self.stderr_stream = get_stream(self.stderr_stream_conf)
         self.stdout_redirector = self.stderr_redirector = None
         self.max_retry = max_retry
         self._options = options
@@ -140,7 +142,7 @@ class Watcher(object):
                          "uid", "gid", "send_hup", "shell", "env", "max_retry",
                          "cmd", "args", "graceful_timeout", "executable",
                          "use_sockets", "priority",
-                         "singleton") + tuple(options.keys())
+                         "singleton", "stdout_stream_conf", "stderr_stream_conf") + tuple(options.keys())
 
         if not working_dir:
             # working dir hasn't been set
