@@ -1,5 +1,4 @@
 import socket
-import select
 from collections import defaultdict
 from threading import Thread
 
@@ -7,6 +6,8 @@ from circus import util
 from circus import logger
 
 from zmq.eventloop import ioloop
+from iowait import IOWait
+
 
 
 class BaseStatsCollector(ioloop.PeriodicCallback):
@@ -79,6 +80,7 @@ class WatcherStatsCollector(BaseStatsCollector):
         yield self._aggregate(aggregate)
 
 
+
 class SocketStatsCollector(BaseStatsCollector):
 
     def __init__(self, streamer, name, callback_time=1., io_loop=None):
@@ -120,36 +122,27 @@ class SocketStatsCollector(BaseStatsCollector):
 
     def _select(self):
         # collecting hits continuously
-        while self.running:
-            sockets = [sock for sock, address in self.streamer.get_sockets()]
 
-            try:
-                rlist, wlist, xlist = select.select(sockets, sockets, sockets,
-                                                    self.callback_time)
-            except socket.error:
-                # a socket is gone ?
+        poller = IOWait()
+
+        while self.running:
+            for sock, address in self.streamer.get_sockets():
+                poller.watch(sock, read=True, write=True)
+
+            # polling for events
+            events = poller.wait(self.callback_time)
+
+            if len(events) == 0:
                 continue
 
-            for sock in rlist:
-                try:
-                    self._rstats[sock.fileno()] += 1
-                except socket.error:
-                    # gone ?
-                    pass
+            for socket, read, write in events:
+                if read:
+                    self._rstats[socket.fileno()] += 1
 
-            for sock in wlist:
-                try:
-                    self._wstats[sock.fileno()] += 1
-                except socket.error:
-                    # gone ?
-                    pass
+                if write:
+                    self._wstats[socket.fileno()] += 1
 
-            for sock in xlist:
-                try:
-                    self._xstats[sock.fileno()] += 1
-                except socket.error:
-                    # gone ?
-                    pass
+                #self._xstats[fd] += 1
 
     def _aggregate(self, aggregate):
         raise NotImplementedError()

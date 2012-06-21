@@ -71,7 +71,7 @@ class Arbiter(object):
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --pubsub %s' % self.pubsub_endpoint
             cmd += ' --statspoint %s' % self.stats_endpoint
-            stats_watcher = Watcher('circusd-stats', cmd)
+            stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True)
             self.watchers.append(stats_watcher)
 
         # adding each plugin as a watcher
