@@ -23,6 +23,7 @@ class BaseStatsCollector(ioloop.PeriodicCallback):
             self.streamer.publisher.publish(self.name, stats)
 
     def collect_stats(self):
+        # should be implemented in subclasses
         raise NotImplementedError()
 
 
