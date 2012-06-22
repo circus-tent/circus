@@ -76,9 +76,7 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
 
         if name == 'sockets':
             addstr(line, 3, 'ADDRESS')
-            addstr(line, 28, 'READS / S')
-            addstr(line, 48, 'WRITES / S')
-            addstr(line, 68, 'ERRORS / S')
+            addstr(line, 28, 'HITS')
 
             line += 1
 
@@ -86,21 +84,16 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
             fds = []
 
             for __, stats in watchers[name].items():
-                fd = stats['fd']
                 reads = stats['reads']
-                writes = stats['writes']
-                errors = stats['errors']
                 address = stats['address']
-                fds.append((reads, writes, errors, fds, address))
+                fds.append((reads, address))
 
             fds.sort()
             fds.reverse()
 
-            for reads, writes, errors, fd, address in fds:
+            for reads, address in fds:
                 addstr(line, 2, str(address))
-                addstr(line, 29, str(reads))
-                addstr(line, 49, str(writes))
-                addstr(line, 69, str(errors))
+                addstr(line, 29, '%3d' % reads)
                 line += 1
 
             line += 1

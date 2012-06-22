@@ -1,6 +1,7 @@
 import socket
 from collections import defaultdict
 from threading import Thread
+import time
 
 from circus import util
 from circus import logger
@@ -98,8 +99,6 @@ class SocketStatsCollector(BaseStatsCollector):
 
         self.running = False
         self._rstats = defaultdict(int)
-        self._wstats = defaultdict(int)
-        self._xstats = defaultdict(int)
 
     def _init_greenlet(self):
         from gevent import Greenlet
@@ -122,13 +121,13 @@ class SocketStatsCollector(BaseStatsCollector):
 
     def _select(self):
         # collecting hits continuously
-
         poller = IOWait()
+        fds = {}
+
+        for sock, address in self.streamer.get_sockets():
+            poller.watch(sock, read=True, write=False)
 
         while self.running:
-            for sock, address in self.streamer.get_sockets():
-                poller.watch(sock, read=True, write=True)
-
             # polling for events
             events = poller.wait(self.callback_time)
 
@@ -139,18 +138,10 @@ class SocketStatsCollector(BaseStatsCollector):
                 if read:
                     self._rstats[socket.fileno()] += 1
 
-                if write:
-                    self._wstats[socket.fileno()] += 1
-
-                #self._xstats[fd] += 1
+            time.sleep(.001)      # maximum resolution 1 ms
 
     def _aggregate(self, aggregate):
         raise NotImplementedError()
-
-    def _persec(self, hits):
-        if hits == 0:
-            return 0
-        return hits / self.callback_time
 
     def collect_stats(self):
         #aggregate = {}
@@ -162,14 +153,8 @@ class SocketStatsCollector(BaseStatsCollector):
             info = {}
             fd = info['fd'] = sock.fileno()
 
-            info['reads'] = self._persec(self._rstats[fd])
+            info['reads'] = self._rstats[fd]
             self._rstats[fd] = 0
-
-            info['writes'] = self._persec(self._wstats[fd])
-            self._wstats[fd] = 0
-
-            info['errors'] = self._persec(self._xstats[fd])
-            self._xstats[fd] = 0
 
             info['address'] = address
             yield info
