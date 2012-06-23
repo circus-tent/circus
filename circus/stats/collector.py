@@ -144,19 +144,20 @@ class SocketStatsCollector(BaseStatsCollector):
         raise NotImplementedError()
 
     def collect_stats(self):
-        #aggregate = {}
-        # sending hits by fd
+        # sending hits by sockets
         sockets = self.streamer.get_sockets()
+        fds = [(address, sock.fileno()) for sock, address in sockets]
 
+        total = {'addresses': [], 'reads': 0}
         # we might lose a few hits here but it's ok
-        for sock, address in sockets:
+        for address, fd in fds:
             info = {}
-            fd = info['fd'] = sock.fileno()
-
+            info['fd'] = info['subtopic'] = fd
             info['reads'] = self._rstats[fd]
-            self._rstats[fd] = 0
-
+            total['reads'] += info['reads']
+            total['addresses'].append(address)
             info['address'] = address
+            self._rstats[fd] = 0
             yield info
 
-        #raise NotImplementedError()
+        yield total

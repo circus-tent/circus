@@ -18,7 +18,7 @@ class StatsClient(CircusConsumer):
         CircusConsumer.__init__(self, ['stat.'], context, endpoint)
 
     def iter_messages(self):
-        """ Yields tuples of (watcher, pid, stat)"""
+        """ Yields tuples of (watcher, subtopic, stat)"""
         recv = self.pubsub_socket.recv_multipart
 
         with self:
@@ -34,8 +34,8 @@ class StatsClient(CircusConsumer):
 
                 topic = topic.split('.')
                 if len(topic) == 3:
-                    __, watcher, pid = topic
-                    yield watcher, long(pid), json.loads(stat)
+                    __, watcher, subtopic = topic
+                    yield watcher, subtopic, json.loads(stat)
                 elif len(topic) == 2:
                     __, watcher = topic
                     yield watcher, None, json.loads(stat)
@@ -80,10 +80,13 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
 
             line += 1
 
-            total = '', 'N/A', 'N/A', None
             fds = []
 
             for __, stats in watchers[name].items():
+                if 'addresses' in stats:
+                    total = stats['reads']
+                    continue
+
                 reads = stats['reads']
                 address = stats['address']
                 fds.append((reads, address))
@@ -96,7 +99,8 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
                 addstr(line, 29, '%3d' % reads)
                 line += 1
 
-            line += 1
+            addstr(line, 29, '%3d (sum)' % total)
+            line += 2
 
         else:
             addstr(line, 3, 'PID')
@@ -190,14 +194,14 @@ def main():
     try:
         client = StatsClient(args.endpoint)
         try:
-            for watcher, pid, stat in client:
+            for watcher, subtopic, stat in client:
                 # building the line
                 stat['watcher'] = watcher
-                if pid is None:
-                    pid = 'all'
+                if subtopic is None:
+                    subtopic = 'all'
 
                 # adding it to the structure
-                watchers[watcher][pid] = stat
+                watchers[watcher][subtopic] = stat
         except KeyboardInterrupt:
             client.stop()
     finally:
