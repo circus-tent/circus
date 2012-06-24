@@ -9,7 +9,7 @@ We're trying to build a tool that's useful for others, and easily extensible.
 We really are open to any contributions, in the form of code, documentation,
 discussions, feature proposal etc.
 
-You can start a topic in our mailing list : https://lists.mozilla.org/listinfo/dev-services-circus
+You can start a topic in our mailing list : http://tech.groups.yahoo.com/group/circus-dev/
 
 Or add an issue in our `bug tracker <https://github.com/mozilla-services/circus/>`_
 
@@ -59,5 +59,4 @@ you can go and find us on irc at `#mozilla-circus on irc.freenode.org
 use `the webchat
 <http://webchat.freenode.net/?channels=mozilla-circus&uio=d4>`_)
 
-You can also start a thread in our mailing list: https://lists.mozilla.org/listinfo/dev-services-circus
-
+You can also start a thread in our mailing list - http://tech.groups.yahoo.com/group/circus-dev
