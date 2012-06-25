@@ -27,7 +27,7 @@ class TestSocketCollector(unittest.TestCase):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('localhost', 0))
             sock.listen(1)
-            socks.append(sock)
+            socks.append((sock, 'localhost:0'))
             fds.append(sock.fileno())
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client.connect(sock.getsockname())
@@ -79,15 +79,12 @@ class TestSocketCollector(unittest.TestCase):
 
         # stopping
         collector.stop()
-        for s in socks:
+        for s, _ in socks:
             s.close()
 
         # let's see what we got
         self.assertTrue(len(streamer.stats) > 2)
 
         stat = streamer.stats[0]
-
-        self.assertEqual(stat['writes'], 0)
-        self.assertEqual(stat['errors'], 0)
         self.assertTrue(stat['fd'] in fds)
         self.assertTrue(stat['reads'] > 10.)

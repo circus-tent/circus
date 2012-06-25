@@ -146,7 +146,7 @@ class SocketStatsCollector(BaseStatsCollector):
         # sending hits by sockets
         sockets = self.streamer.get_sockets()
 
-        if len(socket) == 0:
+        if len(sockets) == 0:
             yield None
         else:
             fds = [(address, sock.fileno()) for sock, address in sockets]
