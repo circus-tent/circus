@@ -52,36 +52,34 @@ class Watcher(object):
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
 
-    - **stdout_stream**: a callable that will receive the stream of
+    - **stdout_stream**: a mapping that defines the stream for
       the process stdout. Defaults to None.
 
-      When provided, *stdout_stream* is a mapping containing two keys:
-
-      - **stream**: the callable that will receive the updates
-        streaming. Defaults to :class:`circus.stream.FileStream`
-
+      Optional. When provided, *stdout_stream* is a mapping containing up to three keys:
+      - **class**: the stream class. Defaults to `circus.stream.FileStream`
+      - **filename**: the filename, if using a FileStream
       - **refresh_time**: the delay between two stream checks. Defaults
         to 0.3 seconds.
-
+      
+      This mapping will be used to create a stream callable of the specified class.
       Each entry received by the callable is a mapping containing:
 
       - **pid** - the process pid
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
 
-    - **stderr_stream**: a callable that will receive the stream of
+    - **stderr_stream**: a mapping that defines the stream for
       the process stderr. Defaults to None.
 
-      When provided, *stdout_stream* is a mapping containing two keys:
-
-      - **stream**: the callable that will receive the updates
-        streaming. Defaults to :class:`circus.stream.FileStream`
-
+      Optional. When provided, *stderr_stream* is a mapping containing up to three keys:
+      - **class**: the stream class. Defaults to `circus.stream.FileStream`
+      - **filename**: the filename, if using a FileStream
       - **refresh_time**: the delay between two stream checks. Defaults
         to 0.3 seconds.
 
+      This mapping will be used to create a stream callable of the specified class.
       Each entry received by the callable is a mapping containing:
-
+      
       - **pid** - the process pid
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
@@ -126,8 +124,10 @@ class Watcher(object):
         self.executable = None
         self.stream_backend = stream_backend
         self.priority = priority
-        self.stdout_stream = get_stream(stdout_stream)
-        self.stderr_stream = get_stream(stderr_stream)
+        self.stdout_stream_conf = stdout_stream
+        self.stderr_stream_conf = stderr_stream
+        self.stdout_stream = get_stream(self.stdout_stream_conf)
+        self.stderr_stream = get_stream(self.stderr_stream_conf)
         self.stdout_redirector = self.stderr_redirector = None
         self.max_retry = max_retry
         self._options = options
@@ -140,7 +140,7 @@ class Watcher(object):
                          "uid", "gid", "send_hup", "shell", "env", "max_retry",
                          "cmd", "args", "graceful_timeout", "executable",
                          "use_sockets", "priority",
-                         "singleton") + tuple(options.keys())
+                         "singleton", "stdout_stream_conf", "stderr_stream_conf") + tuple(options.keys())
 
         if not working_dir:
             # working dir hasn't been set
@@ -468,6 +468,11 @@ class Watcher(object):
         """return a list of pids of active processes (not already stopped)"""
         return [p.pid for p in self.processes.values()
                 if p.status != DEAD_OR_ZOMBIE]
+
+    @property
+    def pids(self):
+        """Returns a list of PIDs"""
+        return [process.pid for process in self.processes]
 
     @util.debuglog
     def start(self):
