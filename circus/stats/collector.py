@@ -1,14 +1,20 @@
-import socket
 from collections import defaultdict
-from threading import Thread
-import time
+try:
+    import gevent       # NOQA
+    from gevent import monkey
+    monkey.noisy = False
+    monkey.patch_all()
+    from gevent_zeromq import monkey_patch
+    monkey_patch()
+except ImportError:
+    pass
+
 
 from circus import util
 from circus import logger
 
 from zmq.eventloop import ioloop
-from iowait import IOWait
-
+from iowait import IOWait, SelectIOWait
 
 
 class BaseStatsCollector(ioloop.PeriodicCallback):
@@ -81,6 +87,8 @@ class WatcherStatsCollector(BaseStatsCollector):
         yield self._aggregate(aggregate)
 
 
+_RESOLUTION = .1
+
 
 class SocketStatsCollector(BaseStatsCollector):
 
@@ -92,53 +100,38 @@ class SocketStatsCollector(BaseStatsCollector):
         try:
             import gevent       # NOQA
             self.greenlet = True
-            self._init_greenlet()
         except ImportError:
             self.greenlet = False
-            self._init_thread()
 
-        self.running = False
         self._rstats = defaultdict(int)
+        if self.greenlet:
+            self.poller = SelectIOWait()
+        else:
+            self.poller = IOWait()
 
-    def _init_greenlet(self):
-        from gevent import Greenlet
-        self._runner = Greenlet(self._select)
+        for sock, address in self.streamer.get_sockets():
+            self.poller.watch(sock, read=True, write=False)
 
-    def _init_thread(self):
-        self._runner = Thread(target=self._select)
+        self._p = ioloop.PeriodicCallback(self._select, 1, io_loop=io_loop)
 
     def start(self):
         # starting the thread or greenlet
-        self.running = True
-        self._runner.start()
+        self._p.start()
         super(SocketStatsCollector, self).start()
 
     def stop(self):
-        # stopping the thread or greenlet
-        self.running = False
-        self._runner.join()
+        self._p.stop()
         BaseStatsCollector.stop(self)
 
     def _select(self):
-        # collecting hits continuously
-        poller = IOWait()
-        fds = {}
+        # polling for events
+        events = self.poller.wait(_RESOLUTION)
+        if len(events) == 0:
+            return
 
-        for sock, address in self.streamer.get_sockets():
-            poller.watch(sock, read=True, write=False)
-
-        while self.running:
-            # polling for events
-            events = poller.wait(self.callback_time)
-
-            if len(events) == 0:
-                continue
-
-            for socket, read, write in events:
-                if read:
-                    self._rstats[socket.fileno()] += 1
-
-            time.sleep(.001)      # maximum resolution 1 ms
+        for socket, read, write in events:
+            if read:
+                self._rstats[socket.fileno()] += 1
 
     def _aggregate(self, aggregate):
         raise NotImplementedError()
@@ -147,8 +140,8 @@ class SocketStatsCollector(BaseStatsCollector):
         # sending hits by sockets
         sockets = self.streamer.get_sockets()
         fds = [(address, sock.fileno()) for sock, address in sockets]
-
         total = {'addresses': [], 'reads': 0}
+
         # we might lose a few hits here but it's ok
         for address, fd in fds:
             info = {}
