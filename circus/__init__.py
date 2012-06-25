@@ -7,7 +7,7 @@ try:
     from gevent import monkey       # NOQA
     try:
         from gevent_zeromq import monkey_patch, IOLOOP_IS_MONKEYPATCHED  # NOQA
-        monkey()
+        monkey.patch_all()
         monkey_patch()
     except ImportError:
         msg = """We have detected that you have gevent in your

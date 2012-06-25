@@ -7,3 +7,4 @@ gevent-socketio==0.3.5-beta
 gevent-websocket==0.3.6
 greenlet==0.3.4
 beaker==1.6.3
+git+http://github.com/tarekziade/gevent-zeromq.git
