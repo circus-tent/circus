@@ -125,7 +125,11 @@ class SocketStatsCollector(BaseStatsCollector):
 
     def _select(self):
         # polling for events
-        events = self.poller.wait(_RESOLUTION)
+        try:
+            events = self.poller.wait(_RESOLUTION)
+        except ValueError:
+            return
+
         if len(events) == 0:
             return
 
