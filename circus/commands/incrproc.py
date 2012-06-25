@@ -17,7 +17,8 @@ class IncrProc(Command):
             {
                 "command": "incr",
                 "properties": {
-                    "name": "<watchername>"
+                    "name": "<watchername>",
+                    "nb": <nbprocess>
                 }
             }
 
@@ -31,12 +32,13 @@ class IncrProc(Command):
 
         ::
 
-            $ circusctl incr <name>
+            $ circusctl incr <name> [<nbprocess>]
 
         Options
         +++++++
 
-        - <name>: name of the watcher
+        - <name>: name of the watcher.
+        - <nbprocess>: the number of processes to add.
 
     """
 
@@ -53,7 +55,8 @@ class IncrProc(Command):
         if watcher.singleton:
             return {"numprocesses": watcher.numprocesses, "singleton": True}
         else:
-            return {"numprocesses": watcher.incr()}
+            nb = props.get("nb", 1)
+            return {"numprocesses": watcher.incr(nb)}
 
     def console_msg(self, msg):
         if msg.get("status") == "ok":

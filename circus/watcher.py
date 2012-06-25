@@ -526,18 +526,18 @@ class Watcher(object):
         logger.info('%s reloaded', self.name)
 
     @util.debuglog
-    def incr(self):
+    def incr(self, nb=1):
         if self.singleton and self.numprocesses == 1:
             raise ValueError('Singleton watcher has a single process')
 
-        self.numprocesses += 1
+        self.numprocesses += nb
         self.manage_processes()
         return self.numprocesses
 
     @util.debuglog
-    def decr(self):
+    def decr(self, nb=1):
         if self.numprocesses > 0:
-            self.numprocesses -= 1
+            self.numprocesses -= nb
             self.manage_processes()
         return self.numprocesses
 

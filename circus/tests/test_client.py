@@ -49,7 +49,8 @@ class TestClient(TestCircus):
         self.assertEquals(call("list").get('watchers'), ['test'])
         self.assertEquals(numprocesses("incr", name="test"), 2)
         self.assertEquals(numprocesses("numprocesses"), 2)
-        self.assertEquals(numprocesses("decr", name="test"), 1)
+        self.assertEquals(numprocesses("incr", name="test", nb=2), 4)
+        self.assertEquals(numprocesses("decr", name="test", nb=3), 1)
         self.assertEquals(numprocesses("numprocesses"), 1)
         self.assertEquals(set("test", env={"test": 1, "test": 2}), 'error')
         self.assertEquals(set("test", env={"test": '1', "test": '2'}),

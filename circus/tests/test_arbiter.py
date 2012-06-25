@@ -114,6 +114,10 @@ class TestTrainer(TestCircus):
         resp = self.cli.call(msg1)
         self.assertEqual(len(resp.get('pids')), 2)
 
+        self.cli.send_message("incr", name="test", nb=2)
+        resp = self.cli.call(msg1)
+        self.assertEqual(len(resp.get('pids')), 4)
+
     def test_watchers(self):
         resp = self.cli.call(make_message("list"))
         self.assertEqual(resp.get('watchers'), ["test"])
