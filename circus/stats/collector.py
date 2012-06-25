@@ -28,6 +28,8 @@ class BaseStatsCollector(ioloop.PeriodicCallback):
     def _callback(self):
         logger.debug('Publishing stats about {0}'.format(self.name))
         for stats in self.collect_stats():
+            if stats is None:
+                continue
             self.streamer.publisher.publish(self.name, stats)
 
     def collect_stats(self):
@@ -143,18 +145,22 @@ class SocketStatsCollector(BaseStatsCollector):
     def collect_stats(self):
         # sending hits by sockets
         sockets = self.streamer.get_sockets()
-        fds = [(address, sock.fileno()) for sock, address in sockets]
-        total = {'addresses': [], 'reads': 0}
 
-        # we might lose a few hits here but it's ok
-        for address, fd in fds:
-            info = {}
-            info['fd'] = info['subtopic'] = fd
-            info['reads'] = self._rstats[fd]
-            total['reads'] += info['reads']
-            total['addresses'].append(address)
-            info['address'] = address
-            self._rstats[fd] = 0
-            yield info
+        if len(socket) == 0:
+            yield None
+        else:
+            fds = [(address, sock.fileno()) for sock, address in sockets]
+            total = {'addresses': [], 'reads': 0}
 
-        yield total
+            # we might lose a few hits here but it's ok
+            for address, fd in fds:
+                info = {}
+                info['fd'] = info['subtopic'] = fd
+                info['reads'] = self._rstats[fd]
+                total['reads'] += info['reads']
+                total['addresses'].append(address)
+                info['address'] = address
+                self._rstats[fd] = 0
+                yield info
+
+            yield total
