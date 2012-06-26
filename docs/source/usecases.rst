@@ -13,7 +13,7 @@ Running a WGSI application with Circus is quite interesting because you can
 watch & manage your *web workers* using *circus-top*, *circusctl* or
 the Web interface.
 
-Let's take an example with a minimal `Pyramid <http://docs.pylonsproject.org/projects/pyramid/en/latest/>_`
+Let's take an example with a minimal `Pyramid <http://docs.pylonsproject.org/projects/pyramid/en/latest/>`_
 application::
 
 
