@@ -198,6 +198,7 @@ More documentation
    security
    design
    examples
+   usecases
    coverage
    glossary
    contributing
