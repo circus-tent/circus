@@ -78,8 +78,7 @@ class TestProcess(TestCircus):
         # command / process
 
         p1 = Process('1', 'make-me-a-coffee', '$(WID) --type $(ENV.TYPE)',
-                     shell=False, uid=7, gid=6, spawn=False,
-                     env={'TYPE': 'macchiato'})
+                     shell=False, spawn=False, env={'TYPE': 'macchiato'})
 
         self.assertEquals(['make-me-a-coffee', '1', '--type', 'macchiato'],
                           p1.format_args())
