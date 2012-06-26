@@ -304,19 +304,20 @@ class Watcher(object):
             self.spawn_process()
             time.sleep(self.warmup_delay)
 
+    def _get_sockets_fds(self):
+        # XXX should be cached
+        fds = {}
+        for name, sock in self.sockets.items():
+            fds[name] = sock.fileno()
+        return fds
+
     def spawn_process(self):
         """Spawn process.
         """
         if self.stopped:
             return
 
-        def _repl(matchobj):
-            name = matchobj.group(1).lower()
-            if name in self.sockets:
-                return str(self.sockets[name].fileno())
-            return matchobj.string
-
-        cmd = util.SOCKET_VAR.sub(_repl, self.cmd)
+        cmd = util.replace_gnu_args(self.cmd, sockets=self._get_sockets_fds())
         self._process_counter += 1
         nb_tries = 0
         while nb_tries < self.max_retry:

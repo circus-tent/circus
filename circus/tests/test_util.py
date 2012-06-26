@@ -89,7 +89,10 @@ class TestUtil(unittest.TestCase):
             self.assertRaises(KeyError, getgrgid, gid_min - 1)
 
     def test_replace_gnu_args(self):
-        self.assertEquals('foobar', replace_gnu_args('$(TEST)', test='foobar'))
-        self.assertEquals('foobar', replace_gnu_args('$(TEST)', TEST='foobar'))
+        self.assertEquals('foobar', replace_gnu_args('$(circus.test)',
+                          test='foobar'))
+        self.assertEquals('foobar', replace_gnu_args('$(circus.test)',
+                          test='foobar'))
         self.assertEquals('foo, foobar, baz',
-                          replace_gnu_args('foo, $(TEST), baz', TEST='foobar'))
+                          replace_gnu_args('foo, $(circus.test), baz',
+                              test='foobar'))

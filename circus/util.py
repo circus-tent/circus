@@ -342,13 +342,40 @@ def resolve_name(name):
     return ret
 
 
-GNU_VAR_STD = re.compile(r'\$\((?P<variable>.*?)\)')
-SOCKET_VAR = re.compile(r'\$\(circus\.socket\.(?P<fd>\w+)\)', re.I)
+_CIRCUS_VAR = re.compile(r'\$\(circus\.([\w\.]+)\)')
 
 
-def replace_gnu_args(data, **options):
-    options = dict([(k.upper(), v) for (k, v) in options.items()])
-    return GNU_VAR_STD.sub(r'{\1}', data).format(**options)
+def replace_gnu_args(data, prefix='circus', **options):
+    fmt_options = {}
+    for key, value in options.items():
+        if prefix is not None:
+            key = '%s.%s' % (prefix, key)
+
+        if isinstance(value, dict):
+            for subkey, subvalue in value.items():
+                subkey = '%s.%s' % (key, subkey)
+                fmt_options[subkey] = subvalue
+        else:
+            fmt_options[key] = str(value)
+
+    if prefix is None:
+        match = re.compile(r'\$\(([\w\.]+)\)')
+    elif prefix == 'circus':
+        match = _CIRCUS_VAR
+    else:
+        match = re.compile(r'\$\(%s\.([\w\.]+)\)' % prefix)
+
+    def _repl(matchobj):
+        option = matchobj.group(1)
+        if prefix is not None and not option.startswith(prefix):
+            option = '%s.%s' % (prefix, option)
+
+        if option in fmt_options:
+            return fmt_options[option]
+
+        return matchobj.string
+
+    return match.sub(_repl, data)
 
 
 class ObjectDict(dict):
