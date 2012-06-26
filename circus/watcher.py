@@ -74,13 +74,16 @@ class Watcher(object):
     - **stderr_stream**: a mapping that defines the stream for
       the process stderr. Defaults to None.
 
-      Optional. When provided, *stderr_stream* is a mapping containing up to three keys:
+      Optional. When provided, *stderr_stream* is a mapping containing up to
+      three keys:
       - **class**: the stream class. Defaults to `circus.stream.FileStream`
       - **filename**: the filename, if using a FileStream
       - **refresh_time**: the delay between two stream checks. Defaults
         to 0.3 seconds.
 
-      This mapping will be used to create a stream callable of the specified class.
+      This mapping will be used to create a stream callable of the specified
+      class.
+
       Each entry received by the callable is a mapping containing:
 
       - **pid** - the process pid
@@ -139,11 +142,12 @@ class Watcher(object):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
 
-        self.optnames = ("numprocesses", "warmup_delay", "working_dir",
-                         "uid", "gid", "send_hup", "shell", "env", "max_retry",
-                         "cmd", "args", "graceful_timeout", "executable",
-                         "use_sockets", "priority",
-                         "singleton", "stdout_stream_conf", "stderr_stream_conf") + tuple(options.keys())
+        self.optnames = (("numprocesses", "warmup_delay", "working_dir",
+                      "uid", "gid", "send_hup", "shell", "env", "max_retry",
+                      "cmd", "args", "graceful_timeout", "executable",
+                      "use_sockets", "priority",
+                      "singleton", "stdout_stream_conf", "stderr_stream_conf")
+                      + tuple(options.keys()))
 
         if not working_dir:
             # working dir hasn't been set
