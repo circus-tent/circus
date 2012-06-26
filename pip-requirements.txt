@@ -1,4 +1,3 @@
 psutil==0.4.1
-pyzmq==2.1.11
-coverage
-nose
+pyzmq==2.2.0
+iowait==0.1
