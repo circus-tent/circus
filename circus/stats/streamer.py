@@ -59,8 +59,10 @@ class StatsStreamer(object):
     def _add_callback(self, name, start=True, kind='watcher'):
         if kind == 'watcher':
             klass = WatcherStatsCollector
-        else:
+        elif kind == 'socket':
             klass = SocketStatsCollector
+        else:
+            raise ValueError('Unknown callback kind %r' % kind)
 
         self._callbacks[name] = klass(self, name, self.delay, self.loop)
         if start:

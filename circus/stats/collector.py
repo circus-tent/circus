@@ -89,6 +89,16 @@ class WatcherStatsCollector(BaseStatsCollector):
         yield self._aggregate(aggregate)
 
 
+# RESOLUTION is a value in seconds that will be used
+# to determine the poller timeout of the sockets stats collector
+#
+# The PeriodicCallback calls the poller every ms, and block
+# for RESOLUTION seconds unless a read ready event occurs in the
+# socket.
+#
+# This timer is used to limit the number of polls done on the
+# socket, so the circusd-stats process don't eat all your CPU
+# when you have a high-loaded socket.
 _RESOLUTION = .1
 
 
