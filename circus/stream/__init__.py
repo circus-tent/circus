@@ -47,7 +47,6 @@ def get_stream(conf):
 
     # we can have 'stream' or 'class' or 'filename'
     if 'filename' in conf:
-
         inst = FileStream(**conf)
     elif 'stream' in conf:
         inst = conf['stream']

@@ -5,7 +5,7 @@ from circus import __version__
 if not hasattr(sys, 'version_info') or sys.version_info < (2, 6, 0, 'final'):
     raise SystemExit("Circus requires Python 2.6 or later.")
 
-install_requires = ['pyzmq', 'psutil']
+install_requires = ['pyzmq', 'psutil', 'iowait']
 
 try:
     import argparse     # NOQA

@@ -18,7 +18,7 @@ class StatsClient(CircusConsumer):
         CircusConsumer.__init__(self, ['stat.'], context, endpoint)
 
     def iter_messages(self):
-        """ Yields tuples of (watcher, pid, stat)"""
+        """ Yields tuples of (watcher, subtopic, stat)"""
         recv = self.pubsub_socket.recv_multipart
 
         with self:
@@ -34,8 +34,8 @@ class StatsClient(CircusConsumer):
 
                 topic = topic.split('.')
                 if len(topic) == 3:
-                    __, watcher, pid = topic
-                    yield watcher, long(pid), json.loads(stat)
+                    __, watcher, subtopic = topic
+                    yield watcher, subtopic, json.loads(stat)
                 elif len(topic) == 2:
                     __, watcher = topic
                     yield watcher, None, json.loads(stat)
@@ -73,43 +73,72 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
 
         stdscr.addstr(line, 0, name.replace('-', '.'))
         line += 1
-        addstr(line, 3, 'PID')
-        addstr(line, 28, 'CPU (%)')
-        addstr(line, 48, 'MEMORY (%)')
 
-        line += 1
+        if name == 'sockets':
+            addstr(line, 3, 'ADDRESS')
+            addstr(line, 28, 'HITS')
 
-        # sorting by CPU
-        pids = []
-        total = '', 'N/A', 'N/A', None
-        for pid, stat in watchers[name].items():
-            if stat['cpu'] == 'N/A':
-                cpu = 'N/A'
-            else:
-                cpu = "%.2f" % stat['cpu']
-
-            if stat['mem'] == 'N/A':
-                mem = 'N/A'
-            else:
-                mem = "%.2f" % stat['mem']
-
-            if pid == 'all' or isinstance(pid, list):
-                total = (cpu + ' (avg)', mem + ' (sum)', '', None)
-            else:
-                pids.append((cpu, mem, str(stat['pid']), stat['name']))
-
-        pids.sort()
-        pids.reverse()
-        pids = pids[:10] + [total]
-
-        for cpu, mem, pid, name in pids:
-            if name is not None:
-                pid = '%s (%s)' % (pid, name)
-            addstr(line, 2, pid)
-            addstr(line, 29, cpu)
-            addstr(line, 49, mem)
             line += 1
-        line += 1
+
+            fds = []
+
+            for __, stats in watchers[name].items():
+                if 'addresses' in stats:
+                    total = stats['reads']
+                    continue
+
+                reads = stats['reads']
+                address = stats['address']
+                fds.append((reads, address))
+
+            fds.sort()
+            fds.reverse()
+
+            for reads, address in fds:
+                addstr(line, 2, str(address))
+                addstr(line, 29, '%3d' % reads)
+                line += 1
+
+            addstr(line, 29, '%3d (sum)' % total)
+            line += 2
+
+        else:
+            addstr(line, 3, 'PID')
+            addstr(line, 28, 'CPU (%)')
+            addstr(line, 48, 'MEMORY (%)')
+            line += 1
+
+            # sorting by CPU
+            pids = []
+            total = '', 'N/A', 'N/A', None
+            for pid, stat in watchers[name].items():
+                if stat['cpu'] == 'N/A':
+                    cpu = 'N/A'
+                else:
+                    cpu = "%.2f" % stat['cpu']
+
+                if stat['mem'] == 'N/A':
+                    mem = 'N/A'
+                else:
+                    mem = "%.2f" % stat['mem']
+
+                if pid == 'all' or isinstance(pid, list):
+                    total = (cpu + ' (avg)', mem + ' (sum)', '', None)
+                else:
+                    pids.append((cpu, mem, str(stat['pid']), stat['name']))
+
+            pids.sort()
+            pids.reverse()
+            pids = pids[:10] + [total]
+
+            for cpu, mem, pid, name in pids:
+                if name is not None:
+                    pid = '%s (%s)' % (pid, name)
+                addstr(line, 2, pid)
+                addstr(line, 29, cpu)
+                addstr(line, 49, mem)
+                line += 1
+            line += 1
 
     if line <= current_h and len(watchers) > 0:
         stdscr.addstr(line, 0, '-' * current_w)
@@ -165,14 +194,14 @@ def main():
     try:
         client = StatsClient(args.endpoint)
         try:
-            for watcher, pid, stat in client:
+            for watcher, subtopic, stat in client:
                 # building the line
                 stat['watcher'] = watcher
-                if pid is None:
-                    pid = 'all'
+                if subtopic is None:
+                    subtopic = 'all'
 
                 # adding it to the structure
-                watchers[watcher][pid] = stat
+                watchers[watcher][subtopic] = stat
         except KeyboardInterrupt:
             client.stop()
     finally:

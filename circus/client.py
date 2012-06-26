@@ -2,7 +2,6 @@
 
 import errno
 import uuid
-
 import zmq
 
 from circus.exc import CallError
