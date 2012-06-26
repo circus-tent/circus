@@ -74,7 +74,7 @@ Then Circus could run like this:
     stats_endpoint = tcp://127.0.0.1:5557
 
     [watcher:dummy]
-    cmd = mycoolscript ${socket:foo}
+    cmd = mycoolscript $(circus.socket.foo)
     use_sockets = True
     warmup_delay = 0
     numprocesses = 5
@@ -83,7 +83,7 @@ Then Circus could run like this:
     host = 127.0.0.1
     port = 8888
 
-The *${socket:foo}* will be replaced by the FD value once the socket is
+*$(circus.socket.foo)* will be replaced by the FD value once the socket is
 created and bound on the 8888 *port*.
 
 
@@ -104,7 +104,7 @@ socket and calling the **chaussette** command in a worker, like this:
     stats_endpoint = tcp://127.0.0.1:5557
 
     [watcher:web]
-    cmd = chaussette --fd ${socket:web} --backend meinheld mycool.app
+    cmd = chaussette --fd $(circus.socket.web) --backend meinheld mycool.app
     use_sockets = True
     numprocesses = 5
 

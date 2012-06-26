@@ -60,7 +60,7 @@ class Watcher(object):
       - **filename**: the filename, if using a FileStream
       - **refresh_time**: the delay between two stream checks. Defaults
         to 0.3 seconds.
-      
+
       This mapping will be used to create a stream callable of the specified class.
       Each entry received by the callable is a mapping containing:
 
@@ -79,7 +79,7 @@ class Watcher(object):
 
       This mapping will be used to create a stream callable of the specified class.
       Each entry received by the callable is a mapping containing:
-      
+
       - **pid** - the process pid
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
@@ -304,12 +304,12 @@ class Watcher(object):
             return
 
         def _repl(matchobj):
-            name = matchobj.group(1)
+            name = matchobj.group(1).lower()
             if name in self.sockets:
                 return str(self.sockets[name].fileno())
-            return '${socket:%s}' % name
+            return matchobj.string
 
-        cmd = re.sub('\$\{socket\:(\w+)\}', _repl, self.cmd)
+        cmd = util.SOCKET_VAR.sub(_repl, self.cmd)
         self._process_counter += 1
         nb_tries = 0
         while nb_tries < self.max_retry:

@@ -124,7 +124,7 @@ def get_config(config_file):
     for section in cfg.sections():
         if section.startswith("socket:"):
             sock = dict(cfg.items(section))
-            sock['name'] = section.split("socket:")[-1]
+            sock['name'] = section.split("socket:")[-1].lower()
             sockets.append(sock)
 
         if section.startswith("plugin:"):

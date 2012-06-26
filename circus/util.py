@@ -343,11 +343,12 @@ def resolve_name(name):
 
 
 GNU_VAR_STD = re.compile(r'\$\((?P<variable>.*?)\)')
+SOCKET_VAR = re.compile(r'\$\(circus\.socket\.(?P<fd>\w+)\)', re.I)
 
 
-def replace_gnu_args(string, **options):
+def replace_gnu_args(data, **options):
     options = dict([(k.upper(), v) for (k, v) in options.items()])
-    return GNU_VAR_STD.sub(r'{\1}', string).format(**options)
+    return GNU_VAR_STD.sub(r'{\1}', data).format(**options)
 
 
 class ObjectDict(dict):
