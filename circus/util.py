@@ -342,31 +342,35 @@ def resolve_name(name):
     return ret
 
 
-_CIRCUS_VAR = re.compile(r'\$\(circus\.([\w\.]+)\)')
+_CIRCUS_VAR = re.compile(r'\$\(circus\.([\w\.]+)\)', re.I)
 
 
 def replace_gnu_args(data, prefix='circus', **options):
     fmt_options = {}
     for key, value in options.items():
+        key = key.lower()
+
         if prefix is not None:
             key = '%s.%s' % (prefix, key)
 
         if isinstance(value, dict):
             for subkey, subvalue in value.items():
+                subkey = subkey.lower()
                 subkey = '%s.%s' % (key, subkey)
                 fmt_options[subkey] = subvalue
         else:
             fmt_options[key] = str(value)
 
     if prefix is None:
-        match = re.compile(r'\$\(([\w\.]+)\)')
+        match = re.compile(r'\$\(([\w\.]+)\)', re.I)
     elif prefix == 'circus':
         match = _CIRCUS_VAR
     else:
-        match = re.compile(r'\$\(%s\.([\w\.]+)\)' % prefix)
+        match = re.compile(r'\$\(%s\.([\w\.]+)\)' % prefix, re.I)
 
     def _repl(matchobj):
-        option = matchobj.group(1)
+        option = matchobj.group(1).lower()
+
         if prefix is not None and not option.startswith(prefix):
             option = '%s.%s' % (prefix, option)
 

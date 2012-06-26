@@ -77,11 +77,12 @@ class TestProcess(TestCircus):
         # all the options passed to the process should be available by the
         # command / process
 
-        p1 = Process('1', 'make-me-a-coffee', '$(WID) --type $(ENV.TYPE)',
-                     shell=False, spawn=False, env={'TYPE': 'macchiato'})
+        p1 = Process('1', 'make-me-a-coffee',
+                '$(circus.wid) --type $(circus.env.type)',
+                     shell=False, spawn=False, env={'type': 'macchiato'})
 
         self.assertEquals(['make-me-a-coffee', '1', '--type', 'macchiato'],
                           p1.format_args())
 
-        p2 = Process('1', 'yeah $(WID)', spawn=False)
+        p2 = Process('1', 'yeah $(CIRCUS.WID)', spawn=False)
         self.assertEquals(['yeah', '1'], p2.format_args())
