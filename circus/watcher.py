@@ -2,7 +2,6 @@ import errno
 import os
 import signal
 import time
-import re
 
 from psutil import STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
@@ -55,13 +54,17 @@ class Watcher(object):
     - **stdout_stream**: a mapping that defines the stream for
       the process stdout. Defaults to None.
 
-      Optional. When provided, *stdout_stream* is a mapping containing up to three keys:
-      - **class**: the stream class. Defaults to `circus.stream.FileStream`
+      Optional. When provided, *stdout_stream* is a mapping containing up to
+      three keys:
+
+      - **class**: the stream class. Defaults to
+        `circus.stream.FileStream`
       - **filename**: the filename, if using a FileStream
       - **refresh_time**: the delay between two stream checks. Defaults
         to 0.3 seconds.
 
-      This mapping will be used to create a stream callable of the specified class.
+      This mapping will be used to create a stream callable of the specified
+      class.
       Each entry received by the callable is a mapping containing:
 
       - **pid** - the process pid
