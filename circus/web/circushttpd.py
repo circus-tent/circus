@@ -303,19 +303,12 @@ def main():
                      default=False, help='Displays Circus version and exits.')
 
     args = parser.parse_args()
-    old = list(sys.argv)
-    sys.argv = []
-
-    args = parser.parse_args()
 
     if args.version:
         print(__version__)
         sys.exit(0)
 
-    try:
-        run(app, host=args.host, port=args.port, server=args.server)
-    finally:
-        sys.argv = old
+    run(app, host=args.host, port=args.port, server=args.server)
 
 
 if __name__ == '__main__':
