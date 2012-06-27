@@ -2,6 +2,7 @@ import ConfigParser
 import os
 import fnmatch
 import sys
+from circus import logger
 
 
 def watcher_defaults():
@@ -74,6 +75,8 @@ def read_config(config_path):
 
     for include_dir in cfg.dget('circus', 'include_dir', '').split():
         include_filename(os.path.join(include_dir, '*.ini'))
+
+    logger.debug('reading config files: %s' % includes)
 
     cfg_files_read.extend(cfg.read(includes))
 
