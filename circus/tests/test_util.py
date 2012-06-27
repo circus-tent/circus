@@ -89,6 +89,15 @@ class TestUtil(unittest.TestCase):
             self.assertRaises(KeyError, getgrgid, gid_min - 1)
 
     def test_replace_gnu_args(self):
+        repl = replace_gnu_args
+
+        self.assertEquals('dont change --fd $(circus.me) please',
+                          repl('dont change --fd $(circus.me) please'))
+
+        self.assertEquals('thats an int 2',
+                          repl('thats an int $(circus.me)',
+                          me=2))
+
         self.assertEquals('foobar', replace_gnu_args('$(circus.test)',
                           test='foobar'))
         self.assertEquals('foobar', replace_gnu_args('$(circus.test)',
@@ -96,3 +105,14 @@ class TestUtil(unittest.TestCase):
         self.assertEquals('foo, foobar, baz',
                           replace_gnu_args('foo, $(circus.test), baz',
                               test='foobar'))
+
+        self.assertEquals('foobar', replace_gnu_args('$(cir.test)',
+                                                     prefix='cir',
+                                                     test='foobar'))
+        self.assertEquals('thats an int 2',
+                          repl('thats an int $(s.me)', prefix='s',
+                          me=2))
+
+        self.assertEquals('thats an int 2',
+                          repl('thats an int $(me)', prefix=None,
+                          me=2))

@@ -359,7 +359,7 @@ def replace_gnu_args(data, prefix='circus', **options):
                 subkey = '%s.%s' % (key, subkey)
                 fmt_options[subkey] = subvalue
         else:
-            fmt_options[key] = str(value)
+            fmt_options[key] = value
 
     if prefix is None:
         match = re.compile(r'\$\(([\w\.]+)\)', re.I)
@@ -375,9 +375,9 @@ def replace_gnu_args(data, prefix='circus', **options):
             option = '%s.%s' % (prefix, option)
 
         if option in fmt_options:
-            return fmt_options[option]
+            return str(fmt_options[option])
 
-        return matchobj.string
+        return matchobj.group(0)
 
     return match.sub(_repl, data)
 

@@ -54,7 +54,7 @@ configuration file::
     stats_endpoint = tcp://127.0.0.1:5557
 
     [watcher:webworker]
-    cmd = chaussette --fd $(circus.socket.webapp) app.application
+    cmd = chaussette --fd $(circus.sockets.webapp) app.application
     use_sockets = True
     numprocesses = 3
 
