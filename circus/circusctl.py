@@ -25,7 +25,8 @@ globalopts = [
     ('', 'json', False, "output to JSON"),
     ('', 'prettify', False, "prettify output"),
     ('h', 'help', None, "display help and exit"),
-    ('v', 'version', None, "display version and exit")
+    ('v', 'version', None, "display version and exit"),
+    ('', 'ssh=', "", "SSH server")
 ]
 
 
