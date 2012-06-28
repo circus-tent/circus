@@ -26,7 +26,7 @@ globalopts = [
     ('', 'prettify', False, "prettify output"),
     ('h', 'help', None, "display help and exit"),
     ('v', 'version', None, "display version and exit"),
-    ('', 'ssh=', "", "SSH server")
+    ('', 'ssh', "", "SSH server")
 ]
 
 
@@ -110,6 +110,9 @@ class ControllerApp(object):
 
         timeout = globalopts.get("timeout", 5.0)
         msg = cmd.message(*args, **opts)
+
+	server = globalopts.get('ssh')
+
         return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts,
                 msg, endpoint, timeout)
 
