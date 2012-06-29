@@ -1,9 +1,18 @@
 DEFAULT_CONFIG = { width: 290, height: 79, delay: 10, dataSize: 25,
-                   memory_color: 'rgb(93, 170, 204)',
-                   cpu_color: 'rgb(122, 185, 76)'};
+                   colors: {mem: 'rgb(93, 170, 204)',
+                            cpu: 'rgb(122, 185, 76)',
+                            reads: 'rgb(0, 0, 0)' }};
 
-function hookGraph(socket, watcher, config) {
+function hookGraph(socket, watcher, metrics, prefix, capValues, config) {
     if (config == undefined) { config = DEFAULT_CONFIG; }
+    if (metrics == undefined) { metrics = ['cpu', 'mem']; }
+    if (prefix == undefined) { prefix = 'stats-'; }
+    if (capValues == undefined) { capValues = true; }
+
+    var series = [];
+    metrics.forEach(function(metric) {
+        series.push({ name: metric, color: config.colors[metric] });
+    });
 
     var graph = new Rickshaw.Graph({
             element: document.getElementById(watcher),
@@ -12,23 +21,21 @@ function hookGraph(socket, watcher, config) {
             renderer: 'line',
             interpolation: 'basis',
             series: new Rickshaw.Series.FixedDuration(
-                [{ name: 'mem', color: config.memory_color },
-                 { name: 'cpu', color: config.cpu_color }],
-                undefined,
+                series, undefined,
                 { timeInterval: config.delay,
                   maxDataPoints: 25,
                   timeBase: new Date().getTime() / 1000 })
     });
 
-    socket.on('stats-' + watcher, function(data) {
+    socket.on(prefix + watcher, function(data) {
         // cap to 100
-        if (data.cpu > 100) { data.cpu = 100; }
-        if (data.mem > 100) { data.mem = 100; }
+        metrics.forEach(function(metric) {
+            if (data[metric] > 100) { data[metric] = 100; }
+            var value = data[metric].toFixed(1);
+            if (metric != 'reads') { value += '%'; }
 
-        $(document.getElementById(watcher + '_last_mem'))
-            .text(data.mem.toFixed(1) + '%');
-        $(document.getElementById(watcher + '_last_cpu'))
-            .text(data.cpu.toFixed(1) + '%');
+            $('#' + watcher + '_last_' + metric).text(value);
+        });
 
         graph.series.addData(data);
         graph.render();
@@ -41,18 +48,34 @@ function supervise(socket, watchers, watchersWithPids, config) {
     if (watchersWithPids == undefined) { watchersWithPids = []; }
     if (config == undefined) { config = DEFAULT_CONFIG; }
 
+
     watchers.forEach(function(watcher) {
-        hookGraph(socket, watcher, config);
+        // only the aggregation is sent here
+        if (watcher == 'sockets') {
+            hookGraph(socket, 'socket-stats', ['reads'], '', false, config);
+        } else {
+            hookGraph(socket, watcher, ['cpu', 'mem'], 'stats-', true, config);
+        }
     });
 
     watchersWithPids.forEach(function(watcher) {
-        // get the list of processes for this watcher from the server
-        socket.on('stats-' + watcher + '-pids', function(data) {
-            data.pids.forEach(function(pid) {
-                var id = watcher + '-' + pid;
-                hookGraph(socket, id, config);
+        if (watcher == 'sockets') {
+            socket.on('socket-stats-fds', function(data) {
+                data.fds.forEach(function(fd) {
+                    hookGraph(socket, 'sockets-stats', ['reads'],
+                              '', false, config);
+                });
             });
-        });
+        } else {
+            // get the list of processes for this watcher from the server
+            socket.on('stats-' + watcher + '-pids', function(data) {
+                data.pids.forEach(function(pid) {
+                    var id = watcher + '-' + pid;
+                    hookGraph(socket, id, ['cpu', 'mem'], 'stats-', false,
+                              config);
+                });
+            });
+        }
     });
 
     // start the streaming of data, once the callbacks in place.

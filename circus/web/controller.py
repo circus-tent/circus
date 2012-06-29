@@ -90,6 +90,10 @@ class LiveClient(object):
         res = self.client.send_message('list', name=name)
         return res['pids']
 
+    def get_sockets(self):
+        res = self.client.send_message('listsockets')
+        return res['sockets']
+
     def get_series(self, name, pid, field, start=0, end=-1):
         stats = self.get_stats(name, start, end)
         res = []

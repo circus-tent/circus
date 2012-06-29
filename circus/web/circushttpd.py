@@ -171,6 +171,9 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
             - "stats-<watchername>-<pid>" sends the information about
               specific pids for the different watchers (works only if
               "get_processes" is set to True when calling this method)
+            - "socket-stats" send the aggregation information about
+               sockets.
+            - "socket-stats-<fd>" sends information about a particular fd.
         """
 
         # unpack the params
@@ -178,25 +181,43 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         streamsWithPids = msg.get('watchersWithPids', [])
 
         # if we want to supervise the processes of a watcher, then send the
-        # list of pids trough a socket.
+        # list of pids trough a socket. If we asked about sockets, do the same
+        # with their fds
         for watcher in streamsWithPids:
-            pids = [int(pid) for pid in client.get_pids(watcher)]
-            channel = 'stats-{watcher}-pids'.format(watcher=watcher)
-            self.send_data(channel, pids=pids)
+            if watcher == "sockets":
+                fds = client.get_sockets()
+                self.send_data('socket-stats-fds', fds=fds)
+            else:
+                pids = [int(pid) for pid in client.get_pids(watcher)]
+                channel = 'stats-{watcher}-pids'.format(watcher=watcher)
+                self.send_data(channel, pids=pids)
 
         # Get the channels that are interesting to us and send back information
         # there when we got them.
         stats = StatsClient(endpoint=client.stats_endpoint)
         for watcher, pid, stat in stats:
-            if watcher in streams or watcher in streamsWithPids:
-                if pid is None:  # means that it's the aggregation
-                    self.send_data('stats-{watcher}'.format(watcher=watcher),
-                                   mem=stat['mem'], cpu=stat['cpu'])
-                else:
-                    if watcher in streamsWithPids:
-                        self.send_data('stats-{watcher}-{pid}'\
-                                       .format(watcher=watcher, pid=pid),
-                                       mem=stat['mem'], cpu=stat['cpu'])
+
+            if watcher == 'sockets':
+                # if we get information about sockets and we explicitely
+                # requested them, send back the information.
+                if 'sockets' in streamsWithPids and 'fd' in stat:
+                    self.send_data('socket-stats-{fd}'.format(fd=stat['fd']),
+                                   **stat)
+                elif 'sockets' in streams and 'addresses' in stat:
+                    self.send_data('socket-stats', reads=stat['reads'],
+                                   adresses=stat['addresses'])
+            else:
+                # these are not sockets but normal watchers
+                if watcher in streams or watcher in streamsWithPids:
+                    if pid is None:  # means that it's the aggregation
+                        self.send_data(
+                                'stats-{watcher}'.format(watcher=watcher),
+                                mem=stat['mem'], cpu=stat['cpu'])
+                    else:
+                        if watcher in streamsWithPids:
+                            self.send_data('stats-{watcher}-{pid}'\
+                                           .format(watcher=watcher, pid=pid),
+                                           mem=stat['mem'], cpu=stat['cpu'])
 
     def send_data(self, topic, **kwargs):
         """Send the given dict encoded into json to the listening socket on the

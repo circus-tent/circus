@@ -52,7 +52,7 @@
 </div>
 
 <div>
-    <%def name='draw_graph_div(watcher, name=None, display_status=False)'>
+    <%def name='draw_graph_div(watcher, name=None, display_status=False, socket=False)'>
 
    <div class="process" style="margin-bottom: 15px">
     <div>
@@ -64,6 +64,12 @@
 
     <div class="stat">
         <div id="${watcher}" class="graph"></div>
+        %if socket:
+         <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
+            <span class="hits_label">Reads</span>
+            <span class="hits_value" id="${watcher}_last_reads">0</span>
+         </div>
+        %else:
          <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
             <span class="cpu_label">CPU</span>
             <span class="cpu_value" id="${watcher}_last_cpu">0 %</span>
@@ -72,12 +78,17 @@
             <span class="mem_label">Mem</span>
             <span class="mem_value" id="${watcher}_last_mem">0 %</span>
          </div>
+        %endif
     </div>
  </div>
  </%def>
 
  ${draw_graph_div('circus')}
  ${draw_graph_div('circusd-stats')}
+
+ %if client.get_sockets():
+     ${draw_graph_div('socket-stats', 'Socket Activity', socket=True)}
+ %endif
 
  %for plugin in client.plugins:
      ${draw_graph_div(plugin, plugin.split(':')[1].replace('-', '.'), True)}
@@ -133,7 +144,7 @@
 <script type="text/javascript">
 $(document).ready(function () {
     var socket = io.connect('${SERVER}');
-    var watchers = ['circusd-stats', 'circus'];
+    var watchers = ['circusd-stats', 'circus', 'sockets'];
 
     %for plugin in client.plugins:
         watchers.push('${plugin}');
