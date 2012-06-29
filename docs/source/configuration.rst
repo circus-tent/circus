@@ -197,6 +197,11 @@ Additionally, it is possible to access the options passed to the
 For instance, if you want to access some variables that are contained in the
 environment, you would need to do it with a setting like this::
 
-    cmd = "make-me-a-coffee --sugar $(ENV.SUGAR_AMOUNT)"
+    cmd = "make-me-a-coffee --sugar $(CIRCUS.ENV.SUGAR_AMOUNT)"
 
 This works with both `cmd` and `args`.
+
+**Important**:
+
+- All variables are prefixed with `circus.`
+- The replacement is case insensitive.
