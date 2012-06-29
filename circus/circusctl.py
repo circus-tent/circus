@@ -114,7 +114,7 @@ class ControllerApp(object):
 	server = globalopts.get('ssh')
 
         return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts,
-                msg, endpoint, timeout)
+                msg, endpoint, timeout, server)
 
     def display_help(self, *args, **opts):
         if opts.get('version', False):
@@ -152,7 +152,7 @@ class ControllerApp(object):
         print(__version__)
         return 0
 
-    def handle_sub(self, cmd, opts, topics, endpoint, timeout):
+    def handle_sub(self, cmd, opts, topics, endpoint, timeout, server):
         consumer = CircusConsumer(topics, endpoint=endpoint)
         for topic, msg in consumer:
             print("%s: %s" % (topic, msg))
@@ -164,7 +164,7 @@ class ControllerApp(object):
         else:
             return cmd.console_msg(client.call(msg))
 
-    def handle_dealer(self, cmd, opts, msg, endpoint, timeout):
+    def handle_dealer(self, cmd, opts, msg, endpoint, timeout, server):
         client = CircusClient(endpoint=endpoint, timeout=timeout)
         try:
             if isinstance(msg, list):
