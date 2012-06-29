@@ -117,6 +117,8 @@ Running a socket is as simple as adding a *socket* section in the config file::
 
 To learn more about sockets, see :ref:`sockets`.
 
+To understand why it's a killer feature, read :ref:`whycircussockets`.
+
 
 Extending Circus
 ----------------
@@ -137,7 +139,16 @@ See :ref:`plugins`.
 Why should I use Circus instead of X ?
 --------------------------------------
 
-1. **Circus provides pub/sub and poll notifications via ZeroMQ**
+1. **Circus simplifies your web stack process management**
+
+   Circus knows how to manage processes *and* sockets, so you don't
+   have to delegate web workers managment to a WGSI server.
+
+   See :ref:`whycircussockets`
+
+
+
+2. **Circus provides pub/sub and poll notifications via ZeroMQ**
 
   Circus has a :term:`pub/sub` channel you can subscribe to. This channel
   receives all events happening in Circus. For example, you can be
@@ -160,7 +171,7 @@ Why should I use Circus instead of X ?
   See :ref:`examples`.
 
 
-2. **Circus is (Python) developer friendly**
+3. **Circus is (Python) developer friendly**
 
   While Circus can be driven entirely by a config file and the
   *circusctl* / *circusd* commands, it is easy to reuse all or part of
@@ -174,7 +185,7 @@ Why should I use Circus instead of X ?
   - and so on…
 
 
-3. **Circus scales**
+4. **Circus scales**
 
   One of the use cases of Circus is to manage thousands of processes without
   adding overhead -- we're dedicated to focus on this.

@@ -184,6 +184,7 @@ Once a socket is created, the *${socket:NAME}* string can be used in the
 command of a watcher. Circus will replace it by the FD value.
 
 .. _formating_cmd:
+
 Formating the commands and arguments with dynamic variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
