@@ -40,8 +40,8 @@ class Arbiter(object):
 
         - **use** -- Fully qualified name that points to the plugin class
         - every other value is passed to the plugin in the **config** option
-
-    XXX sockets
+    - **sockets** -- a mapping of sockets. Each key is the socket name,
+      and each value a :class:`CircusSocket` class. (default: None)
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
