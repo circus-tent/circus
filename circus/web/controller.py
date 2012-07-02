@@ -91,8 +91,7 @@ class LiveClient(object):
         return res['pids']
 
     def get_sockets(self):
-        res = self.client.send_message('listsockets')
-        return [{'fd': s[0], 'host': s[1]} for s in res['sockets']]
+        return self.client.send_message('listsockets')['sockets']
 
     def get_series(self, name, pid, field, start=0, end=-1):
         stats = self.get_stats(name, start, end)
