@@ -7,6 +7,7 @@ import zmq
 from circus.exc import CallError
 from circus.py3compat import string_types
 from zmq.utils.jsonapi import jsonmod as json
+from zmq import ssh
 
 
 def make_message(command, **props):
@@ -23,14 +24,17 @@ def make_json(command, **props):
 
 class CircusClient(object):
     def __init__(self, context=None, endpoint='tcp://127.0.0.1:5555',
-                 timeout=5.0):
+                 timeout=5.0, server=""):
         self.context = context or zmq.Context.instance()
         self.endpoint = endpoint
         self._id = uuid.uuid4().hex
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)
-        self.socket.connect(endpoint)
+	if server is not "":
+	    ssh.tunnel_connection(self.socket, endpoint, server)
+	else:
+	    self.socket.connect(endpoint)
         self.poller = zmq.Poller()
         self.poller.register(self.socket, zmq.POLLIN)
         self._timeout = timeout
