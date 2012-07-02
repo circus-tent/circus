@@ -58,6 +58,8 @@ circus - single section
     **stream_backend**
         Defines the type of backend to use for the streaming. Possible
         values are **thread** or **gevent**. (default: thread)
+    **warmup_delay**
+        The interval in seconds between two watchers start. (default: 0)
 
 
 .. note::

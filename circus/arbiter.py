@@ -40,12 +40,15 @@ class Arbiter(object):
 
         - **use** -- Fully qualified name that points to the plugin class
         - every other value is passed to the plugin in the **config** option
-
-    XXX sockets
+    - **sockets** -- a mapping of sockets. Each key is the socket name,
+      and each value a :class:`CircusSocket` class. (default: None)
+    - **warmup_delay** -- a delay in seconds between two watchers startup.
+      (default: 0)
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
-                 stats_endpoint=None, plugins=None, sockets=None):
+                 stats_endpoint=None, plugins=None, sockets=None,
+                 warmup_delay=0):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -85,6 +88,7 @@ class Arbiter(object):
                 self.watchers.append(plugin_watcher)
 
         self.sockets = CircusSockets(sockets)
+        self.warmup_delay = warmup_delay
 
     @classmethod
     def load_from_config(cls, config_file):
@@ -106,7 +110,8 @@ class Arbiter(object):
                       check_delay=cfg.get('check_delay', 1.),
                       prereload_fn=cfg.get('prereload_fn'),
                       stats_endpoint=cfg.get('stats_endpoint'),
-                      plugins=cfg.get('plugins'), sockets=sockets)
+                      plugins=cfg.get('plugins'), sockets=sockets,
+                      warmup_delay=cfg.get('warmup_delay', 0))
 
         return arbiter
 
@@ -156,6 +161,7 @@ class Arbiter(object):
         logger.debug('Initializing watchers')
         for watcher in self.iter_watchers():
             watcher.start()
+            time.sleep(self.warmup_delay)
 
         logger.info('Arbiter now waiting for commands')
         while True:
@@ -242,6 +248,7 @@ class Arbiter(object):
         # gracefully reload watchers
         for watcher in self.iter_watchers():
             watcher.reload(graceful=graceful)
+            time.sleep(self.warmup_delay)
 
     def numprocesses(self):
         """Return the number of processes running across all watchers."""
@@ -299,6 +306,7 @@ class Arbiter(object):
     def start_watchers(self):
         for watcher in self.iter_watchers():
             watcher.start()
+            time.sleep(self.warmup_delay)
 
     def stop_watchers(self, stop_alive=False):
         if not self.alive:
