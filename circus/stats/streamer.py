@@ -92,7 +92,7 @@ class StatsStreamer(object):
             address = sock[1].split()[-1]
             # XXX type / family ?
             sock = socket.fromfd(fd, socket.AF_INET, socket.SOCK_STREAM)
-            self.sockets.append((sock, address))
+            self.sockets.append((sock, address, fd))
 
         self._add_callback('sockets', kind='socket')
 

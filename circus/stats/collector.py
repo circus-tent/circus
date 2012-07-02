@@ -121,7 +121,7 @@ class SocketStatsCollector(BaseStatsCollector):
         else:
             self.poller = IOWait()
 
-        for sock, address in self.streamer.get_sockets():
+        for sock, address, fd in self.streamer.get_sockets():
             self.poller.watch(sock, read=True, write=False)
 
         self._p = ioloop.PeriodicCallback(self._select, 1, io_loop=io_loop)
@@ -159,18 +159,19 @@ class SocketStatsCollector(BaseStatsCollector):
         if len(sockets) == 0:
             yield None
         else:
-            fds = [(address, sock.fileno()) for sock, address in sockets]
+            fds = [(address, sock.fileno(), fd)
+                   for sock, address, fd in sockets]
             total = {'addresses': [], 'reads': 0}
 
             # we might lose a few hits here but it's ok
-            for address, fd in fds:
+            for address, monitored_fd, fd in fds:
                 info = {}
                 info['fd'] = info['subtopic'] = fd
-                info['reads'] = self._rstats[fd]
+                info['reads'] = self._rstats[monitored_fd]
                 total['reads'] += info['reads']
                 total['addresses'].append(address)
                 info['address'] = address
-                self._rstats[fd] = 0
+                self._rstats[monitored_fd] = 0
                 yield info
 
             yield total

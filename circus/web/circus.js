@@ -1,7 +1,7 @@
 DEFAULT_CONFIG = { width: 290, height: 79, delay: 10, dataSize: 25,
-                   colors: {mem: 'rgb(93, 170, 204)',
-                            cpu: 'rgb(122, 185, 76)',
-                            reads: 'rgb(0, 0, 0)' }};
+                   colors: { mem: 'rgb(93, 170, 204)',
+                             cpu: 'rgb(122, 185, 76)',
+                             reads: 'rgb(203, 81, 58)' }};
 
 function hookGraph(socket, watcher, metrics, prefix, capValues, config) {
     if (config == undefined) { config = DEFAULT_CONFIG; }
@@ -27,10 +27,18 @@ function hookGraph(socket, watcher, metrics, prefix, capValues, config) {
                   timeBase: new Date().getTime() / 1000 })
     });
 
-    socket.on(prefix + watcher, function(data) {
+    socket.on(prefix + watcher, function(received) {
+
+        var data = {};
+
         // cap to 100
         metrics.forEach(function(metric) {
-            if (data[metric] > 100) { data[metric] = 100; }
+            if (received[metric] > 100) {
+                data[metric] = 100;
+            } else {
+                data[metric] = received[metric];
+            }
+
             var value = data[metric].toFixed(1);
             if (metric != 'reads') { value += '%'; }
 
@@ -62,7 +70,7 @@ function supervise(socket, watchers, watchersWithPids, config) {
         if (watcher == 'sockets') {
             socket.on('socket-stats-fds', function(data) {
                 data.fds.forEach(function(fd) {
-                    hookGraph(socket, 'sockets-stats', ['reads'],
+                    hookGraph(socket, 'socket-stats-' + fd, ['reads'],
                               '', false, config);
                 });
             });

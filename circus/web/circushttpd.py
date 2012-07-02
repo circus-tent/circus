@@ -113,6 +113,11 @@ def watcher(name):
     return render_template('watcher.html', name=name)
 
 
+@route('/sockets', method='GET')
+def sockets():
+    return render_template('sockets.html')
+
+
 @route('/connect', method=['POST', 'GET'], ensure_client=False)
 def connect():
     if request.method == 'GET':
@@ -185,7 +190,7 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         # with their fds
         for watcher in streamsWithPids:
             if watcher == "sockets":
-                fds = client.get_sockets()
+                fds = [s['fd'] for s in client.get_sockets()]
                 self.send_data('socket-stats-fds', fds=fds)
             else:
                 pids = [int(pid) for pid in client.get_pids(watcher)]

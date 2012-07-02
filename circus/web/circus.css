@@ -24,13 +24,13 @@ header {
     text-shadow: 0 1px 0 #333333;
 }
 
- header a {
-     font-size: 12px;
-     color: #fff;
-     text-decoration: none;
- }
+header a {
+    font-size: 12px;
+    color: #fff;
+    text-decoration: none;
+}
 
- header a:hover {    text-decoration: underline }
+header a:hover { text-decoration: underline }
 
 aside {
     background-color: #f7f7f7;
@@ -192,11 +192,11 @@ footer {
  }
 
 .legend {
-    float: right;
     margin-right: 30px;
+    text-align: right;
 }
 
-.legend_cpu, .legend_mem {    display: inline-block }
+.legend_cpu, .legend_mem, .legend_reads { display: inline-block; }
 
  .legend_cpu span.legend_indicator {
      background-color: #7AB94C;
@@ -210,6 +210,16 @@ footer {
 
  .legend_mem span.legend_indicator {
      background-color: #5DAACC;
+     -moz-border-radius: 3px;
+     -webkit-border-radius: 3px;
+     border-radius: 3px;
+     width: 50px;
+     display: inline-block;
+     height: 3px;
+ }
+
+ .legend_reads span.legend_indicator {
+     background-color: rgb(203, 81, 58);
      -moz-border-radius: 3px;
      -webkit-border-radius: 3px;
      border-radius: 3px;
@@ -470,26 +480,13 @@ td.value {
     height: 80px;
 }
 
-.cpu_label {
+.metric_label {
     display: block;
     text-transform: uppercase;
     text-align: center;
 }
 
-.cpu_value {
-    display: block;
-    text-transform: uppercase;
-    text-align: center;
-    font-size: 24px;
-}
-
-.mem_label {
-    display: block;
-    text-transform: uppercase;
-    text-align: center;
-}
-
-.mem_value {
+.metric_value {
     display: block;
     text-transform: uppercase;
     text-align: center;
@@ -499,6 +496,23 @@ td.value {
 .options {
     margin-top: 10px;
     margin-left: 30px;
+}
+
+.metrics {
+    padding-bottom: 10px;
+    padding-top: 5px;
+    border-right: 1px solid #D7DBDE;
+    text-align:center;
+}
+
+.stat .cpu {
+    float: left;
+    width: 50%;
+}
+
+.stat .mem {
+    float: right;
+    width: 50%;
 }
 
 .num_process {
@@ -627,4 +641,4 @@ td.value {
     box-shadow: inset 0 1px 2px rgba(0,0,0,.1);
 }
 
-.graph { width:280px; height:79px; padding: 10px 0;}
+a { color: #000; }
