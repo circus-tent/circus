@@ -128,6 +128,7 @@ class ControllerApp(object):
 
         print("usage: circusctl [--version] [--endpoint=<endpoint>]")
         print("                 [--timeout=<timeout>] [--json]")
+	print("                 [--ssh=<server>]")
         print("                 [--prettify] [--help]")
         print("                 <command> [<args>]")
         print("")
