@@ -24,14 +24,14 @@ def make_json(command, **props):
 
 class CircusClient(object):
     def __init__(self, context=None, endpoint='tcp://127.0.0.1:5555',
-                 timeout=5.0, server=None):
+                 timeout=5.0, server=""):
         self.context = context or zmq.Context.instance()
         self.endpoint = endpoint
         self._id = uuid.uuid4().hex
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)
-	if server is not None:
+	if server is not "":
 	    ssh.tunnel_connection(self.socket, endpoint, server)
 	else:
 	    self.socket.connect(endpoint)

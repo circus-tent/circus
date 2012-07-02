@@ -165,7 +165,7 @@ class ControllerApp(object):
             return cmd.console_msg(client.call(msg))
 
     def handle_dealer(self, cmd, opts, msg, endpoint, timeout, server):
-        client = CircusClient(endpoint=endpoint, timeout=timeout)
+        client = CircusClient(endpoint=endpoint, timeout=timeout, server=server)
         try:
             if isinstance(msg, list):
                 for i, command in enumerate(msg):
