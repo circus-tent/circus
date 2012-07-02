@@ -27,7 +27,7 @@ class TestSocketCollector(unittest.TestCase):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('localhost', 0))
             sock.listen(1)
-            socks.append((sock, 'localhost:0'))
+            socks.append((sock, 'localhost:0', sock.fileno()))
             fds.append(sock.fileno())
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client.connect(sock.getsockname())
@@ -79,7 +79,7 @@ class TestSocketCollector(unittest.TestCase):
 
         # stopping
         collector.stop()
-        for s, _ in socks:
+        for s, _, _ in socks:
             s.close()
 
         # let's see what we got
