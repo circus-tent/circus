@@ -213,6 +213,7 @@ More documentation
    coverage
    glossary
    contributing
+   adding_new_commands
    copyright
 
 
