@@ -21,11 +21,14 @@
 
   $('#countdown-value').text(countdown);
   setInterval(function(){
-    countdown -= 1;
-    $('#countdown-value').text(countdown);
+    if (autoconnect == true) {
+        countdown -= 1;
+        $('#countdown-value').text(countdown);
 
-    if (autoconnect == true && countdown == 0) {
-        $('#connector').submit();
+        if (countdown == 0){
+            $('#countdown').hide();
+            $('#connector').submit();
+        }
     }
   }, 1000);
   
