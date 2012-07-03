@@ -6,6 +6,7 @@ import os
 from circus.client import CircusClient, make_message
 from circus.tests.support import TestCircus
 from circus.stream import QueueStream
+from circus.watcher import Watcher
 
 
 def run_process(test_file):
@@ -76,3 +77,20 @@ class TestWatcher(TestCircus):
         time.sleep(1.)
         # let's see what we got
         self.assertTrue(self.stream.qsize() > 1)
+
+
+class TestWatcherInitialization(TestCircus):
+
+    def test_reproduce_env(self):
+        old_environ = os.environ
+        try:
+            os.environ = {'COCONUTS': 'MIGRATE'}
+            watcher = Watcher("foo", "foobar", reproduce_env=True)
+            self.assertEquals(watcher.env, os.environ)
+
+            watcher = Watcher("foo", "foobar", reproduce_env=True,
+                              env={"AWESOMENESS": "YES"})
+            self.assertEquals(watcher.env,
+                              {'COCONUTS': 'MIGRATE', 'AWESOMENESS': 'YES'})
+        finally:
+            os.environ = old_environ
