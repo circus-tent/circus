@@ -49,10 +49,12 @@
         <span class="legend_indicator"></span>
         <span class="">Memory</span>
     </div>
+    %if client.use_sockets:
     <div class="legend_reads">
         <span class="legend_indicator"></span>
         <span class="">Socket reads</span>
     </div>
+    %endif
 </div>
 
 <div>
@@ -90,7 +92,7 @@
  ${draw_graph_div('circus')}
  ${draw_graph_div('circusd-stats')}
 
- %if client.get_sockets():
+ %if client.use_sockets:
  ${draw_graph_div('socket-stats', 'Socket Activity (<a href="/sockets">see all the sockets</a>)', socket=True)}
  %endif
 
@@ -148,7 +150,12 @@
 <script type="text/javascript">
 $(document).ready(function () {
     var socket = io.connect('${SERVER}');
-    var watchers = ['circusd-stats', 'circus', 'sockets'];
+    var watchers = ['circusd-stats', 'circus'];
+
+    %if client.use_sockets:
+        watchers.push('sockets');
+    %endif
+   
 
     %for plugin in client.plugins:
         watchers.push('${plugin}');

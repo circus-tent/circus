@@ -23,6 +23,8 @@ class LiveClient(object):
         self.plugins = []
         self.stats = defaultdict(list)
         self.dstats = []
+        self.sockets = None
+        self.use_sockets = False
 
     def stop(self):
         self.client.stop()
@@ -39,10 +41,14 @@ class LiveClient(object):
             for watcher in self.client.send_message('list')['watchers']:
                 if watcher == 'circusd-stats':
                     continue
-                options = self.client.send_message('options', name=watcher)
-                self.watchers.append((watcher, options['options']))
+                options = self.client.send_message('options',
+                                                   name=watcher)['options']
+                self.watchers.append((watcher, options))
                 if watcher.startswith('plugin:'):
                     self.plugins.append(watcher)
+
+                if not self.use_sockets and options.get('use_sockets', False):
+                    self.use_sockets = True
 
             self.watchers.sort()
             self.stats_endpoint = self.get_global_options()['stats_endpoint']
@@ -90,9 +96,11 @@ class LiveClient(object):
         res = self.client.send_message('list', name=name)
         return res['pids']
 
-    def get_sockets(self):
-        res = self.client.send_message('listsockets')
-        return [{'fd': s[0], 'host': s[1]} for s in res['sockets']]
+    def get_sockets(self, force_reload=False):
+        if not self.sockets or force_reload:
+            res = self.client.send_message('listsockets')
+            self.sockets = [{'fd': s[0], 'host': s[1]} for s in res['sockets']]
+        return self.sockets
 
     def get_series(self, name, pid, field, start=0, end=-1):
         stats = self.get_stats(name, start, end)
