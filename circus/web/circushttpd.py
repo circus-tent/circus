@@ -128,6 +128,7 @@ def connect():
         session['endpoint'] = request.forms.endpoint
         session.save()
 
+        global client
         client = connect_to_endpoint(request.forms.endpoint)
         if client.connected:
             message = 'You are now connected'
@@ -325,6 +326,9 @@ def main():
     parser.add_argument('--port', help='port', default=8080)
     parser.add_argument('--server', help='web server to use',
                         default=SocketIOServer)
+    parser.add_argument('--endpoint', default=None,
+        help='Circus Endpoint. If not specified, circus will ask you which '
+             'system you want to connect to')
     parser.add_argument('--version', action='store_true',
                      default=False, help='Displays Circus version and exits.')
 
@@ -333,6 +337,10 @@ def main():
     if args.version:
         print(__version__)
         sys.exit(0)
+
+    if args.endpoint is not None:
+        global client
+        client = connect_to_endpoint(args.endpoint)
 
     run(app, host=args.host, port=args.port, server=args.server)
 
