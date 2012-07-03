@@ -12,15 +12,15 @@ Let's say we want to add a command which returns the number of watchers
 actually in use, we would do something like this (extensively commented to
 allow you to follow more easily)::
 
-   class NumWatchers(Command):
-       """It is a good practice to describe what the class does here.
+    class NumWatchers(Command):
+        """It is a good practice to describe what the class does here.
 
-       Have a look at other commands to see how we are used to format this
-       text. It will be used to automatically appear in the documentation of
-       circus, so don't be affraid of being exhaustive, that's what it is made
-       for.
-       """
-       # all the commands need to inherit from `circus.commands.base.Command` 
+        Have a look at other commands to see how we are used to format this
+        text. It will be used to automatically appear in the documentation of
+        circus, so don't be affraid of being exhaustive, that's what it is made
+        for.
+        """
+        # all the commands need to inherit from `circus.commands.base.Command` 
 
         name = "numwatchers"
         # you need to specify a name so we find back the command somehow
