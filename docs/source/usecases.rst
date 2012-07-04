@@ -39,7 +39,7 @@ Save this script into an **app.py** file, then install those projects::
 Next, make sure you can run your Pyramid application using the **chaussette**
 console script::
 
-    $ bin/chaussette app.application
+    $ chaussette app.application
     Application is <pyramid.router.Router object at 0x10a4d4bd0>
     Serving on localhost:8080
     Using <class 'chaussette.backend._waitress.Server'> as a backend
@@ -82,5 +82,31 @@ Congrats ! you have a WSGI application running 3 workers.
 
 You can run the :ref:`circushttpd` or the :ref:`cli`, and enjoy Circus management.
 
+
+
+Running a Django application
+----------------------------
+
+Running a Django application is done exactly like running a WSGI application.
+
+Circus simply uses Chaussette's ability to run Django applications. Instead of
+providing a fully qualified name for a WSGI python, you provide the path to
+the Django application, by prefixing it with **django:**::
+
+    $ chaussette django:path/to/mysite
+    Application is <pyramid.router.Router object at 0x10a4d4bd0>
+    Serving on localhost:8080
+    Using <class 'chaussette.backend._waitress.Server'> as a backend
+
+Chaussette will look for your settings file automatically for you, or you
+can explicitely give it with the **--django-settings** option::
+
+    $ chaussette django:path/to/mysite --backend gevent --django-settings mysite.settings
+    Application is <django.core.handlers.wsgi.WSGIHandler object at 0x10ec3f350>
+    Serving on localhost:8080
+    Using <class 'chaussette.backend._gevent.Server'> as a backend
+
+
+See http://chaussette.readthedocs.org for more info on this.
 
 
