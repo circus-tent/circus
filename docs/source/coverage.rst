@@ -50,7 +50,7 @@ Code coverage
     circus/stream/__init__             50     14    72%   16, 29, 34, 37-38, 41, 50, 53-59, 91
     circus/stream/base                 64     14    78%   22, 39, 51, 58-59, 65, 69-77
     circus/stream/sthread              19      1    95%   25
-    circus/util                       249    105    58%   1-18, 22-57, 61-79, 85-87, 93, 107, 114, 123, 126, 151, 161-162, 167, 171-174, 178-179, 185-186, 191, 193, 203, 212, 225, 233, 245, 253, 255, 259-268, 274-279, 283, 289-299, 316-317, 334, 339, 348, 385-387
+    circus/util                       249    107    57%   1-57, 61-79, 85-87, 93, 107, 114, 123, 126, 151, 161-162, 167, 171-174, 178-179, 185-186, 191, 193, 203, 212, 225, 233, 245, 253, 255, 259-268, 274-279, 283, 289-299, 316-317, 334, 339, 348, 385-387
     circus/watcher                    327     81    75%   142, 170, 180, 204, 230, 234, 244-245, 259-260, 263-264, 268, 285, 295, 311, 318, 347-348, 351-352, 359, 375-377, 389-391, 402-407, 413-418, 424-425, 435-436, 454, 483, 490, 501, 510-513, 520, 523, 526-528, 532-534, 539, 543, 565-566, 570, 573, 575-576, 578-579, 581-582, 584, 586-587, 591-596, 608
     circus/web/__init__                 0      0   100%   
     circus/web/circushttpd            166     89    46%   14-15, 52, 62, 72, 80, 90, 98, 104, 113, 118, 136, 145-152, 157, 186-224, 235-237, 244-260, 274, 280-295, 324-345, 349-352
@@ -59,6 +59,6 @@ Code coverage
     connect_html   NoSource: No source for code: '/Users/tarek/Dev/github.com/circus/docs/connect_html': [Errno 2] No such file or directory: '/Users/tarek/Dev/github.com/circus/docs/connect_html'
     index_html   NoSource: No source for code: '/Users/tarek/Dev/github.com/circus/docs/index_html': [Errno 2] No such file or directory: '/Users/tarek/Dev/github.com/circus/docs/index_html'
     -------------------------------------------------------------
-    TOTAL                            4647   2385    49%   
+    TOTAL                            4647   2387    49%   
 
 
