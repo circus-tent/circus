@@ -155,7 +155,7 @@ $(document).ready(function () {
     %if client.use_sockets:
         watchers.push('sockets');
     %endif
-   
+
 
     %for plugin in client.plugins:
         watchers.push('${plugin}');
