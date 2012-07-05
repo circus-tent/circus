@@ -261,12 +261,6 @@ class SocketIOServer(ServerAdapter):
         namespace = self.options.get('namespace', 'socket.io')
         policy_server = self.options.get('policy_server', False)
 
-        # debug
-        sock1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock1.bind((self.host, self.port))
-        sock1.listen(2048)
-        self.fd = sock1.fileno()
-
         if self.fd is not None:
             sock = socket.fromfd(self.fd, socket.AF_INET, socket.SOCK_STREAM)
         else:

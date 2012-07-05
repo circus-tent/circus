@@ -90,7 +90,6 @@ class Arbiter(object):
 
             httpd_watcher = Watcher('circushttpd', cmd, use_sockets=True)
             self.watchers.append(httpd_watcher)
-
             httpd_socket = CircusSocket(name='circushttpd', host=httpd_host,
                                         port=httpd_port)
 
