@@ -60,6 +60,12 @@ circus - single section
         values are **thread** or **gevent**. (default: thread)
     **warmup_delay**
         The interval in seconds between two watchers start. (default: 0)
+    **httpd**
+        If set to True, Circus runs the circushttpd daemon. (default: False)
+    **httpd_host**
+        The host ran by the circushttpd daemon. (default: localhost)
+    **httpd_port**
+        The port ran by the circushttpd daemon. (default: 8080)
 
 
 .. note::
