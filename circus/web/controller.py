@@ -25,6 +25,7 @@ class LiveClient(object):
         self.dstats = []
         self.sockets = None
         self.use_sockets = False
+        self.embed_httpd = False
 
     def stop(self):
         self.client.stop()
@@ -39,8 +40,11 @@ class LiveClient(object):
         try:
             self.connected = True
             for watcher in self.client.send_message('list')['watchers']:
-                if watcher == 'circusd-stats':
+                if watcher in ('circusd-stats', 'circushttpd'):
+                    if watcher == 'circushttpd':
+                        self.embed_httpd = True
                     continue
+
                 options = self.client.send_message('options',
                                                    name=watcher)['options']
                 self.watchers.append((watcher, options))

@@ -44,11 +44,15 @@ class Arbiter(object):
       and each value a :class:`CircusSocket` class. (default: None)
     - **warmup_delay** -- a delay in seconds between two watchers startup.
       (default: 0)
+    - **httpd** -- If True, a circushttpd process is run (default: False)
+    - **httpd_host** -- the circushttpd host (default: localhost)
+    - **httpd_port** -- the circushttpd port (default: 8080)
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
                  stats_endpoint=None, plugins=None, sockets=None,
-                 warmup_delay=0):
+                 warmup_delay=0, httpd=False, httpd_host='localhost',
+                 httpd_port=8080):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -76,6 +80,25 @@ class Arbiter(object):
             cmd += ' --statspoint %s' % self.stats_endpoint
             stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True)
             self.watchers.append(stats_watcher)
+
+        # adding the httpd
+        if httpd:
+            cmd = ("%s -c 'from circus.web import circushttpd; "
+                   "circushttpd.main()'") % sys.executable
+            cmd += ' --endpoint %s' % self.endpoint
+            cmd += ' --fd $(circus.sockets.circushttpd)'
+
+            httpd_watcher = Watcher('circushttpd', cmd, use_sockets=True)
+            self.watchers.append(httpd_watcher)
+
+            httpd_socket = CircusSocket(name='circushttpd', host=httpd_host,
+                                        port=httpd_port)
+
+            # adding the socket
+            if sockets is None:
+                sockets = [httpd_socket]
+            else:
+                sockets.append(httpd_socket)
 
         # adding each plugin as a watcher
         if plugins is not None:
@@ -111,7 +134,10 @@ class Arbiter(object):
                       prereload_fn=cfg.get('prereload_fn'),
                       stats_endpoint=cfg.get('stats_endpoint'),
                       plugins=cfg.get('plugins'), sockets=sockets,
-                      warmup_delay=cfg.get('warmup_delay', 0))
+                      warmup_delay=cfg.get('warmup_delay', 0),
+                      httpd=cfg.get('httpd', False),
+                      httpd_host=cfg.get('httpd_host', 'localhost'),
+                      httpd_port=cfg.get('httpd_port', 8080))
 
         return arbiter
 
