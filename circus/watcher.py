@@ -129,6 +129,7 @@ class Watcher(object):
         self.args = args
         self._process_counter = 0
         self.stopped = stopped
+        self.running = False
         self.graceful_timeout = graceful_timeout
         self.prereload_fn = prereload_fn
         self.executable = None
@@ -285,35 +286,45 @@ class Watcher(object):
         if self.stopped:
             return
 
-        if len(self.processes) < self.numprocesses:
-            self.spawn_processes()
-
-        processes = self.processes.values()
-        processes.sort()
-        while len(processes) > self.numprocesses:
-            process = processes.pop(0)
-            if process.status == STATUS_DEAD:
-                self.processes.pop(process.pid)
-            else:
-                self.processes.pop(process.pid)
-                self.kill_process(process)
-
+        self.shutdown_excess_processes()
+        self.spawn_needed_processes()
+    
+    @util.debuglog
+    def shutdown_excess_processes(self):
+      """ If there are more running processes than numprocesses, kill the excess
+      """
+      processes = self.processes.values()
+      processes.sort()
+      while len(processes) > self.numprocesses:
+          process = processes.pop(0)
+          if process.status == STATUS_DEAD:
+              self.processes.pop(process.pid)
+          else:
+              self.processes.pop(process.pid)
+              self.kill_process(process)
+    
     @util.debuglog
     def reap_and_manage_processes(self):
         """Reap & manage processes.
         """
         if self.stopped:
             return
+
         self.reap_processes()
         self.manage_processes()
 
     @util.debuglog
-    def spawn_processes(self):
+    def spawn_needed_processes(self):
         """Spawn processes.
         """
-        for i in range(self.numprocesses - len(self.processes)):
-            self.spawn_process()
-            time.sleep(self.warmup_delay)
+        
+        if self.running:
+          return
+
+        if len(self.processes) < self.numprocesses:
+          for i in range(self.numprocesses - len(self.processes)):
+              self.spawn_process()
+              time.sleep(self.warmup_delay)
 
     def _get_sockets_fds(self):
         # XXX should be cached
@@ -439,7 +450,10 @@ class Watcher(object):
     def status(self):
         if self.stopped:
             return "stopped"
-        return "active"
+        elif self.running:
+            return "running"
+        else:
+            return "active"
 
     @util.debuglog
     def process_info(self, pid):
@@ -497,10 +511,11 @@ class Watcher(object):
     def start(self):
         """Start.
         """
-        if not self.stopped:
+        if not self.stopped and not self.running:
             return
 
         self.stopped = False
+        self.running = False
         self._create_redirectors()
         self.reap_processes()
         self.manage_processes()
@@ -513,6 +528,29 @@ class Watcher(object):
 
         logger.info('%s started' % self.name)
         self.notify_event("start", {"time": time.time()})
+
+    @util.debuglog
+    def run(self):
+        """Run.
+        """
+        if not self.stopped and not self.running:
+            return
+
+        self.stopped = False
+        self.running = False
+        self._create_redirectors()
+        self.reap_processes()
+        self.manage_processes()
+        self.running = True
+
+        if self.stdout_redirector is not None:
+            self.stdout_redirector.start()
+
+        if self.stderr_redirector is not None:
+            self.stderr_redirector.start()
+
+        logger.info('%s run' % self.name)
+        self.notify_event("run", {"time": time.time()})
 
     @util.debuglog
     def restart(self):
