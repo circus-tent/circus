@@ -6,7 +6,7 @@ import time
 from psutil import STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
 
-from circus.process import Process, DEAD_OR_ZOMBIE
+from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
@@ -104,6 +104,9 @@ class Watcher(object):
 
     = **use_sockets** -- XXX
 
+    - **copy_env** -- If True, the environment in which circus had been
+      run will be reproduced for the workers.
+
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
       in this mapping -- this can be used by plugins for watcher-specific
@@ -115,7 +118,8 @@ class Watcher(object):
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, stream_backend='thread', priority=0,
-                 singleton=False, use_sockets=False, **options):
+                 singleton=False, use_sockets=False, copy_env=False,
+                 **options):
         self.name = name
         self.use_sockets = use_sockets
         self.res_name = name.lower().replace(" ", "_")
@@ -138,6 +142,7 @@ class Watcher(object):
         self.max_retry = max_retry
         self._options = options
         self.singleton = singleton
+        self.copy_env = copy_env
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
@@ -145,7 +150,7 @@ class Watcher(object):
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
                       "uid", "gid", "send_hup", "shell", "env", "max_retry",
                       "cmd", "args", "graceful_timeout", "executable",
-                      "use_sockets", "priority",
+                      "use_sockets", "priority", "copy_env",
                       "singleton", "stdout_stream_conf", "stderr_stream_conf")
                       + tuple(options.keys()))
 
@@ -158,7 +163,13 @@ class Watcher(object):
         self.shell = shell
         self.uid = uid
         self.gid = gid
-        self.env = env
+        if self.copy_env:
+            self.env = os.environ.copy()
+            if env is not None:
+                self.env.update(env)
+        else:
+            self.env = env
+
         self.rlimits = rlimits
         self.send_hup = send_hup
         self.sockets = self.evpub_socket = None
@@ -475,7 +486,7 @@ class Watcher(object):
     def get_active_pids(self):
         """return a list of pids of active processes (not already stopped)"""
         return [p.pid for p in self.processes.values()
-                if p.status != DEAD_OR_ZOMBIE]
+                if p.status not in (DEAD_OR_ZOMBIE, UNEXISTING)]
 
     @property
     def pids(self):

@@ -8,8 +8,9 @@ circus-top
 ==========
 
 *circus-top* is a top-like console you can run to watch
-live your running Circus system. It will display the CPU and Memory
-usage.
+live your running Circus system. It will display the CPU, Memory
+usage and socket hits if you have some.
+
 
 Example of output::
 

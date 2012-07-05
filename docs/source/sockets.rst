@@ -163,3 +163,18 @@ It provides equivalent features than Supervisord but will also let you
 manage all processes at the same level, wether they are web workers or Redis or
 whatever. Adding a new web worker is done exactly like adding a new Redis
 process.
+
+Benches
+=======
+
+We did a few benches to compare Circus & Chaussette with Gunicorn. To
+summarize, Circus is not adding any overhead and you can pick up many
+different backends for your web workers.
+
+See:
+
+- http://blog.ziade.org/2012/06/28/wgsi-web-servers-bench
+- http://blog.ziade.org/2012/07/03/wsgi-web-servers-bench-part-2
+
+
+

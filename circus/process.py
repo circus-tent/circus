@@ -30,7 +30,8 @@ _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
 
 RUNNING = 0
 DEAD_OR_ZOMBIE = 1
-OTHER = 2
+UNEXISTING = 2
+OTHER = 3
 
 
 class Process(object):
@@ -266,13 +267,14 @@ class Process(object):
 
         - RUNNING
         - DEAD_OR_ZOMBIE
+        - UNEXISTING
         - OTHER
         """
         try:
             if self._worker.status in (STATUS_ZOMBIE, STATUS_DEAD):
                 return DEAD_OR_ZOMBIE
         except NoSuchProcess:
-            return OTHER
+            return UNEXISTING
 
         if self._worker.is_running():
             return RUNNING
