@@ -81,14 +81,14 @@ class TestWatcher(TestCircus):
 
 class TestWatcherInitialization(TestCircus):
 
-    def test_reproduce_env(self):
+    def test_copy_env(self):
         old_environ = os.environ
         try:
             os.environ = {'COCONUTS': 'MIGRATE'}
-            watcher = Watcher("foo", "foobar", reproduce_env=True)
+            watcher = Watcher("foo", "foobar", copy_env=True)
             self.assertEquals(watcher.env, os.environ)
 
-            watcher = Watcher("foo", "foobar", reproduce_env=True,
+            watcher = Watcher("foo", "foobar", copy_env=True,
                               env={"AWESOMENESS": "YES"})
             self.assertEquals(watcher.env,
                               {'COCONUTS': 'MIGRATE', 'AWESOMENESS': 'YES'})

@@ -104,7 +104,7 @@ class Watcher(object):
 
     = **use_sockets** -- XXX
 
-    - **reproduce_env** -- If True, the environment in which circus had been
+    - **copy_env** -- If True, the environment in which circus had been
       run will be reproduced for the workers.
 
     - **options** -- extra options for the worker. All options
@@ -118,7 +118,7 @@ class Watcher(object):
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, stream_backend='thread', priority=0,
-                 singleton=False, use_sockets=False, reproduce_env=False,
+                 singleton=False, use_sockets=False, copy_env=False,
                  **options):
         self.name = name
         self.use_sockets = use_sockets
@@ -142,7 +142,7 @@ class Watcher(object):
         self.max_retry = max_retry
         self._options = options
         self.singleton = singleton
-        self.reproduce_env = reproduce_env
+        self.copy_env = copy_env
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
@@ -150,7 +150,7 @@ class Watcher(object):
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
                       "uid", "gid", "send_hup", "shell", "env", "max_retry",
                       "cmd", "args", "graceful_timeout", "executable",
-                      "use_sockets", "priority", "reproduce_env",
+                      "use_sockets", "priority", "copy_env",
                       "singleton", "stdout_stream_conf", "stderr_stream_conf")
                       + tuple(options.keys()))
 
@@ -163,7 +163,7 @@ class Watcher(object):
         self.shell = shell
         self.uid = uid
         self.gid = gid
-        if self.reproduce_env:
+        if self.copy_env:
             self.env = os.environ.copy()
             if env is not None:
                 self.env.update(env)

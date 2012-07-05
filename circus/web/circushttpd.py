@@ -327,7 +327,7 @@ def main():
     parser.add_argument('--server', help='web server to use',
                         default=SocketIOServer)
     parser.add_argument('--endpoint', default=None,
-        help='Circus Endpoint. If not specified, circus will ask you which '
+        help='Circus Endpoint. If not specified, Circus will ask you which '
              'system you want to connect to')
     parser.add_argument('--version', action='store_true',
                      default=False, help='Displays Circus version and exits.')
