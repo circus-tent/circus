@@ -94,6 +94,9 @@ watcher:NAME - as many sections as you want
         with. (The current gid is the default).
     **env**
         The environment passed to the processes (default: None)
+    **copy_env**
+        If set to true, the local environment variables will be copied and
+        passed to the workers when spawning them. (Default: False)
     **warmup_delay**
         The delay (in seconds) between running processes.
     **numprocesses**
