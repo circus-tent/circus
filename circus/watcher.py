@@ -6,7 +6,7 @@ import time
 from psutil import STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
 
-from circus.process import Process, DEAD_OR_ZOMBIE
+from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
@@ -475,7 +475,7 @@ class Watcher(object):
     def get_active_pids(self):
         """return a list of pids of active processes (not already stopped)"""
         return [p.pid for p in self.processes.values()
-                if p.status != DEAD_OR_ZOMBIE]
+                if p.status not in (DEAD_OR_ZOMBIE, UNEXISTING)]
 
     @property
     def pids(self):
