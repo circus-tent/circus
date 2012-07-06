@@ -28,7 +28,6 @@ function hookGraph(socket, watcher, metrics, prefix, capValues, config) {
     });
 
     socket.on(prefix + watcher, function(received) {
-
         var data = {};
 
         // cap to 100
@@ -55,7 +54,6 @@ function supervise(socket, watchers, watchersWithPids, config) {
 
     if (watchersWithPids == undefined) { watchersWithPids = []; }
     if (config == undefined) { config = DEFAULT_CONFIG; }
-
 
     watchers.forEach(function(watcher) {
         // only the aggregation is sent here

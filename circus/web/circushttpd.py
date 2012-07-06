@@ -214,15 +214,22 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
                     self.send_data('socket-stats', reads=stat['reads'],
                                    adresses=stat['addresses'])
             else:
+                available_watchers = streams + streamsWithPids + ['circus']
                 # these are not sockets but normal watchers
-                if watcher in streams or watcher in streamsWithPids:
-                    if pid is None:  # means that it's the aggregation
+                if watcher in available_watchers:
+                    if (watcher == 'circus'
+                            and stat.get('name', None) in available_watchers):
                         self.send_data(
-                                'stats-{watcher}'.format(watcher=watcher),
+                                'stats-{watcher}'.format(watcher=stat['name']),
                                 mem=stat['mem'], cpu=stat['cpu'])
                     else:
-                        if watcher in streamsWithPids:
-                            self.send_data('stats-{watcher}-{pid}'\
+                        if pid is None:  # means that it's the aggregation
+                            self.send_data(
+                                    'stats-{watcher}'.format(watcher=watcher),
+                                    mem=stat['mem'], cpu=stat['cpu'])
+                        else:
+                            if watcher in streamsWithPids:
+                                self.send_data('stats-{watcher}-{pid}'\
                                            .format(watcher=watcher, pid=pid),
                                            mem=stat['mem'], cpu=stat['cpu'])
 
