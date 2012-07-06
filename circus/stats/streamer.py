@@ -53,16 +53,20 @@ class StatsStreamer(object):
     def get_circus_pids(self):
         # getting the circusd, circusd-stats and circushttpd pids
         res = self.client.send_message('dstats')
-
         pids = {os.getpid(): 'circusd-stats',
                 res['info']['pid']: 'circusd'}
 
-        if 'circushttpd' in self._pids:
-            pids[self._pids['circushttpd'][0]] = 'circushttpd'
+        httpd_pids = self.client.send_message('list', name='circushttpd')
 
+        if 'pids' in httpd_pids:
+            httpd_pids = httpd_pids['pids']
+            if len(httpd_pids) == 1:
+                pids[httpd_pids[0]] = 'circushttpd'
         return pids
 
     def _add_callback(self, name, start=True, kind='watcher'):
+        logger.debug('Callback added for %s' % name)
+
         if kind == 'watcher':
             klass = WatcherStatsCollector
         elif kind == 'socket':
@@ -81,6 +85,10 @@ class StatsStreamer(object):
         res = self.client.send_message('list')
 
         for watcher in res['watchers']:
+            if watcher in ('circusd', 'circushttpd', 'circusd-stats'):
+                # this is dealt by the special 'circus' collector
+                continue
+
             pids = self.client.send_message('list', name=watcher)['pids']
             for pid in pids:
                 self.append_pid(watcher, pid)
