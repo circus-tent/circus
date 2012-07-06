@@ -99,7 +99,7 @@ class LiveClient(object):
     def get_sockets(self, force_reload=False):
         if not self.sockets or force_reload:
             res = self.client.send_message('listsockets')
-            self.sockets = [{'fd': s[0], 'host': s[1]} for s in res['sockets']]
+            self.sockets = res['sockets']
         return self.sockets
 
     def get_series(self, name, pid, field, start=0, end=-1):
