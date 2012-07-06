@@ -44,7 +44,7 @@ class CircusSocket(socket.socket):
     def bind_and_listen(self):
         try:
             self.bind((self.host, self.port))
-        except socket.error, e:
+        except socket.error:
             logger.error('Could not bind %s:%d' % (self.host, self.port))
             raise
 

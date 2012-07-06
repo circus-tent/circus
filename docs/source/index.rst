@@ -87,7 +87,14 @@ To learn more about these, see :ref:`cli`
 Circus also offers a small web application that can connect to a
 running Circus daemon and let you monitor and interact with it.
 
-Running the web application is as simple as running::
+Running the web application is as simple as adding an **httpd**
+option in the ini file::
+
+    [circus]
+    httpd = True
+
+
+Or if you want, you can run it as a standalone process with::
 
     $ circushttpd
 

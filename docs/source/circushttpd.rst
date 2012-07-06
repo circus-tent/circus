@@ -31,13 +31,22 @@ libevent) installed on your system to make this working::
 
     $ bin/pip install -r web-requirements.txt
 
-To enable the console, run the **circushttpd** script::
+To enable the console, add a few options in the Circus ini file::
+
+    [circus]
+    httpd = True
+    httpd_host = localhost
+    httpd_port = 8080
+
+
+*httpd_host* and *httpd_port* are optional, and default to *localhost* and *8080*.
+
+If you want to run the web app on its own, just run the **circushttpd** script::
 
     $ circushttpd
     Bottle server starting up...
     Listening on http://localhost:8080/
     Hit Ctrl-C to quit.
-
 
 By default the script will run the Web Console on port 8080, but the --port option can
 be used to change it.
