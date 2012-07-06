@@ -87,4 +87,4 @@ class TestSocketCollector(unittest.TestCase):
 
         stat = streamer.stats[0]
         self.assertTrue(stat['fd'] in fds)
-        self.assertTrue(stat['reads'] > 10.)
+        self.assertTrue(stat['reads'] > 9)
