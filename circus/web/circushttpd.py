@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import socket
 
 try:
     from beaker.middleware import SessionMiddleware
@@ -213,15 +214,22 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
                     self.send_data('socket-stats', reads=stat['reads'],
                                    adresses=stat['addresses'])
             else:
+                available_watchers = streams + streamsWithPids + ['circus']
                 # these are not sockets but normal watchers
-                if watcher in streams or watcher in streamsWithPids:
-                    if pid is None:  # means that it's the aggregation
+                if watcher in available_watchers:
+                    if (watcher == 'circus'
+                            and stat.get('name', None) in available_watchers):
                         self.send_data(
-                                'stats-{watcher}'.format(watcher=watcher),
+                                'stats-{watcher}'.format(watcher=stat['name']),
                                 mem=stat['mem'], cpu=stat['cpu'])
                     else:
-                        if watcher in streamsWithPids:
-                            self.send_data('stats-{watcher}-{pid}'\
+                        if pid is None:  # means that it's the aggregation
+                            self.send_data(
+                                    'stats-{watcher}'.format(watcher=watcher),
+                                    mem=stat['mem'], cpu=stat['cpu'])
+                        else:
+                            if watcher in streamsWithPids:
+                                self.send_data('stats-{watcher}-{pid}'\
                                            .format(watcher=watcher, pid=pid),
                                            mem=stat['mem'], cpu=stat['cpu'])
 
@@ -240,6 +248,12 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 # Utils
 
 class SocketIOServer(ServerAdapter):
+    def __init__(self, host='127.0.0.1', port=8080, **config):
+        super(SocketIOServer, self).__init__(host, port, **config)
+        self.fd = config.get('fd')
+        if self.fd is not None:
+            self.fd = int(self.fd)
+
     def run(self, handler):
         try:
             from socketio.server import SocketIOServer
@@ -253,7 +267,13 @@ class SocketIOServer(ServerAdapter):
 
         namespace = self.options.get('namespace', 'socket.io')
         policy_server = self.options.get('policy_server', False)
-        socket_server = SocketIOServer((self.host, self.port), handler,
+
+        if self.fd is not None:
+            sock = socket.fromfd(self.fd, socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            sock = (self.host, self.port)
+
+        socket_server = SocketIOServer(sock, handler,
                                        namespace=namespace,
                                        policy_server=policy_server)
         handler.socket_server = socket_server
@@ -322,6 +342,8 @@ def render_template(template, **data):
 
 def main():
     parser = argparse.ArgumentParser(description='Run the Web Console')
+
+    parser.add_argument('--fd', help='FD', default=None)
     parser.add_argument('--host', help='Host', default='0.0.0.0')
     parser.add_argument('--port', help='port', default=8080)
     parser.add_argument('--server', help='web server to use',
@@ -342,7 +364,7 @@ def main():
         global client
         client = connect_to_endpoint(args.endpoint)
 
-    run(app, host=args.host, port=args.port, server=args.server)
+    run(app, host=args.host, port=args.port, server=args.server, fd=args.fd)
 
 
 if __name__ == '__main__':

@@ -101,6 +101,10 @@ def get_config(config_file):
                                      'tcp://127.0.0.1:5556')
     config['stats_endpoint'] = dget('circus', 'stats_endpoint', None, str)
     config['warmup_delay'] = dget('circus', 'warmup_delay', 0, int)
+    config['httpd'] = dget('circus', 'httpd', False, bool)
+    config['httpd_host'] = dget('circus', 'httpd_host', 'localhost', str)
+    config['httpd_port'] = dget('circus', 'httpd_port', 8080, int)
+
     stream_backend = dget('circus', 'stream_backend', 'thread')
 
     if stream_backend == 'gevent':

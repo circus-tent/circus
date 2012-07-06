@@ -68,7 +68,7 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
     names.sort()
     line = 2
     for name in names:
-        if name == 'circusd-stats':
+        if name in ('circusd-stats', 'circushttpd'):
             continue
 
         stdscr.addstr(line, 0, name.replace('-', '.'))
@@ -106,6 +106,7 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
             addstr(line, 3, 'PID')
             addstr(line, 28, 'CPU (%)')
             addstr(line, 48, 'MEMORY (%)')
+            addstr(line, 68, 'AGE (s)')
             line += 1
 
             # sorting by CPU
@@ -122,21 +123,29 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
                 else:
                     mem = "%.2f" % stat['mem']
 
-                if pid == 'all' or isinstance(pid, list):
-                    total = (cpu + ' (avg)', mem + ' (sum)', '', None)
+                if stat['age'] == 'N/A':
+                    age = 'N/A'
                 else:
-                    pids.append((cpu, mem, str(stat['pid']), stat['name']))
+                    age = "%.2f" % stat['age']
+
+                if pid == 'all' or isinstance(pid, list):
+                    total = (cpu + ' (avg)', mem + ' (sum)', age + ' (older)',
+                             '', None)
+                else:
+                    pids.append((cpu, mem, age, str(stat['pid']),
+                                 stat['name']))
 
             pids.sort()
             pids.reverse()
             pids = pids[:10] + [total]
 
-            for cpu, mem, pid, name in pids:
+            for cpu, mem, age, pid, name in pids:
                 if name is not None:
                     pid = '%s (%s)' % (pid, name)
                 addstr(line, 2, pid)
                 addstr(line, 29, cpu)
                 addstr(line, 49, mem)
+                addstr(line, 69, age)
                 line += 1
             line += 1
 

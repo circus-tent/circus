@@ -51,12 +51,22 @@ class StatsStreamer(object):
         return chain(self._pid.values())
 
     def get_circus_pids(self):
-        # getting the circusd pid
+        # getting the circusd, circusd-stats and circushttpd pids
         res = self.client.send_message('dstats')
-        return {os.getpid(): 'circusd-stats',
+        pids = {os.getpid(): 'circusd-stats',
                 res['info']['pid']: 'circusd'}
 
+        httpd_pids = self.client.send_message('list', name='circushttpd')
+
+        if 'pids' in httpd_pids:
+            httpd_pids = httpd_pids['pids']
+            if len(httpd_pids) == 1:
+                pids[httpd_pids[0]] = 'circushttpd'
+        return pids
+
     def _add_callback(self, name, start=True, kind='watcher'):
+        logger.debug('Callback added for %s' % name)
+
         if kind == 'watcher':
             klass = WatcherStatsCollector
         elif kind == 'socket':
@@ -69,21 +79,26 @@ class StatsStreamer(object):
             self._callbacks[name].start()
 
     def _init(self):
-        self.circus_pids = self.get_circus_pids()
-        if 'circus' not in self._callbacks:
-            self._add_callback('circus')
-        else:
-            self._callbacks['circus'].start()
-
         self._pids.clear()
 
         # getting the initial list of watchers/pids
         res = self.client.send_message('list')
 
         for watcher in res['watchers']:
+            if watcher in ('circusd', 'circushttpd', 'circusd-stats'):
+                # this is dealt by the special 'circus' collector
+                continue
+
             pids = self.client.send_message('list', name=watcher)['pids']
             for pid in pids:
                 self.append_pid(watcher, pid)
+
+        # getting the circus pids
+        self.circus_pids = self.get_circus_pids()
+        if 'circus' not in self._callbacks:
+            self._add_callback('circus')
+        else:
+            self._callbacks['circus'].start()
 
         # getting the initial list of sockets
         res = self.client.send_message('listsockets')

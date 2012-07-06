@@ -92,6 +92,10 @@
  ${draw_graph_div('circus')}
  ${draw_graph_div('circusd-stats')}
 
+ %if client.embed_httpd:
+ ${draw_graph_div('circushttpd', 'circushttpd')}
+ %endif
+
  %if client.use_sockets:
  ${draw_graph_div('socket-stats', 'Socket Activity (<a href="/sockets">see all the sockets</a>)', socket=True)}
  %endif
@@ -154,6 +158,10 @@ $(document).ready(function () {
 
     %if client.use_sockets:
         watchers.push('sockets');
+    %endif
+
+    %if client.embed_httpd:
+        watchers.push('circushttpd');
     %endif
 
 
