@@ -34,13 +34,13 @@
 
         <div class="stat">
              <div id="${name}-${pid}" class="graph"></div>
-             <div style="padding-bottom: 10px;padding-top: 5px;float:left;  width: 50%; border-right: 1px solid #D7DBDE;text-align:center;">
-                <span class="cpu_label">CPU</span>
-                <span class="cpu_value" id="${name}-${pid}_last_cpu">0.0 %</span>
+             <div class="metrics cpu">
+                <span class="metric_label">CPU</span>
+                <span class="metric_value" id="${name}-${pid}_last_cpu">0.0 %</span>
              </div>
-             <div style="padding-bottom: 10px;padding-top: 5px;float:right; width: 49%; text-align:center;">
-                <span class="mem_label">Mem</span>
-                <span class="mem_value" id="${name}-${pid}_last_mem">0.0 %</span>
+             <div class="metrics mem">
+                <span class="metric_label">Mem</span>
+                <span class="metric_value" id="${name}-${pid}_last_mem">0.0 %</span>
              </div>
         </div>
     </div>

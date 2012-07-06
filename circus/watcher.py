@@ -394,7 +394,7 @@ class Watcher(object):
         """Kill all the processes of this watcher.
         """
 
-        for process in self.processes.values():
+        for process in self.get_active_processes():
             try:
                 self.kill_process(process, sig)
             except OSError as e:
@@ -469,7 +469,7 @@ class Watcher(object):
         logger.debug('gracefully stopping processes [%s] for %ss' % (
                      self.name, self.graceful_timeout))
 
-        while self.get_active_pids() and time.time() < limit:
+        while self.get_active_processes() and time.time() < limit:
             self.kill_processes(signal.SIGTERM)
             time.sleep(0.1)
             self.reap_processes()
@@ -483,9 +483,9 @@ class Watcher(object):
 
         logger.info('%s stopped', self.name)
 
-    def get_active_pids(self):
+    def get_active_processes(self):
         """return a list of pids of active processes (not already stopped)"""
-        return [p.pid for p in self.processes.values()
+        return [p for p in self.processes.values()
                 if p.status not in (DEAD_OR_ZOMBIE, UNEXISTING)]
 
     @property

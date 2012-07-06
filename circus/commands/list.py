@@ -55,10 +55,10 @@ class List(Command):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
 
-            pids = watcher.get_active_pids()
-            status = [(p, watcher.processes[p].status) for p in pids]
+            processes = watcher.get_active_processes()
+            status = [(p.pid, p.status) for p in processes]
             logger.debug('here is the status of the processes %s' % status)
-            return {"pids":  pids}
+            return {"pids":  [p.pid for p in processes]}
         else:
             watchers = sorted(arbiter._watchers_names)
             return {"watchers": [name for name in watchers]}
