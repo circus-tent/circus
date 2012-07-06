@@ -8,6 +8,7 @@ from functools import wraps
 import re
 import sys
 import shlex
+import time
 
 from psutil.error import AccessDenied, NoSuchProcess
 from psutil import Process
@@ -177,6 +178,16 @@ def get_info(process=None, interval=0, with_childs=False):
         cmdline = os.path.basename(shlex.split(process.cmdline[0])[0])
     except (AccessDenied, IndexError):
         cmdline = "N/A"
+
+    try:
+        info['create_time'] = process.create_time
+    except AccessDenied:
+        info['create_time'] = 'N/A'
+
+    try:
+        info['age'] = time.time() - process.create_time
+    except AccessDenied:
+        info['age'] = 'N/A'
 
     info['cmdline'] = cmdline
 

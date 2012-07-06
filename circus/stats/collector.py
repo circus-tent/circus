@@ -59,6 +59,14 @@ class WatcherStatsCollector(BaseStatsCollector):
             res['mem'] = 'N/A'
         else:
             res['mem'] = sum(mem)
+
+        # finding out the older process
+        ages = [stat['age'] for stat in stats if stat['age'] != 'N/A']
+        if len(ages) == 0:
+            res['age'] = 'N/A'
+        else:
+            res['age'] = max(ages)
+
         return res
 
     def collect_stats(self):
