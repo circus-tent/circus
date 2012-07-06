@@ -15,7 +15,7 @@ It shares some of the goals of `Supervisord <http://supervisord.org>`_,
 `Daemontools <http://cr.yp.to/daemontools.html>`_. If you are curious about
 what Circus brings compared to other projects, read :ref:`why`.
 
-Circus is designed using `ZeroMQ <http://www.zeromq.org/>`. See :ref:`design` for more details.
+Circus is designed using `ZeroMQ <http://www.zeromq.org/>`_. See :ref:`design` for more details.
 
 .. note::
 
