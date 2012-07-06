@@ -507,12 +507,12 @@ td.value {
 
 .stat .cpu {
     float: left;
-    width: 50%;
+    width: 49%;
 }
 
 .stat .mem {
     float: right;
-    width: 50%;
+    width: 49%;
 }
 
 .num_process {
