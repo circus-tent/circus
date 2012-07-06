@@ -92,14 +92,16 @@ class WatcherStatsCollector(BaseStatsCollector):
 # RESOLUTION is a value in seconds that will be used
 # to determine the poller timeout of the sockets stats collector
 #
-# The PeriodicCallback calls the poller every ms, and block
+# The PeriodicCallback calls the poller every LOOP_RES ms, and block
 # for RESOLUTION seconds unless a read ready event occurs in the
 # socket.
 #
 # This timer is used to limit the number of polls done on the
 # socket, so the circusd-stats process don't eat all your CPU
 # when you have a high-loaded socket.
+#
 _RESOLUTION = .1
+_LOOP_RES = 10
 
 
 class SocketStatsCollector(BaseStatsCollector):
@@ -124,7 +126,8 @@ class SocketStatsCollector(BaseStatsCollector):
         for sock, address, fd in self.streamer.get_sockets():
             self.poller.watch(sock, read=True, write=False)
 
-        self._p = ioloop.PeriodicCallback(self._select, 1, io_loop=io_loop)
+        self._p = ioloop.PeriodicCallback(self._select, _LOOP_RES,
+                                          io_loop=io_loop)
 
     def start(self):
         # starting the thread or greenlet
