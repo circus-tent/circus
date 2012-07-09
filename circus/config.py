@@ -3,6 +3,7 @@ import os
 import fnmatch
 import sys
 from circus import logger
+from util import parse_env
 
 
 def watcher_defaults():
@@ -191,6 +192,8 @@ def get_config(config_file):
                 elif opt == 'singleton':
                     watcher['singleton'] = dget(section, "singleton", False,
                                                 bool)
+                elif opt == 'env':
+                    watcher['env'] = parse_env(val)
                 else:
                     # freeform
                     watcher[opt] = val
