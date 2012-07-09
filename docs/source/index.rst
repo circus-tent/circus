@@ -27,6 +27,9 @@ The documentation is split in the following sections:
 * Extending Circus via plugins :ref:`plugins`
 * Developping for Circus (Internals) :ref:`design`
 
+In any case, you might be interested by the configuration options of Circus.
+You can find a list of them at :ref:`configuration`.
+
 You can also go trough all the sections of the documentation that are listed
 here:
 
