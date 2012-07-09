@@ -3,9 +3,11 @@
 Design
 ======
 
+This is the internal design of Circus. It's useful to understand how Circus is
+built if you want to use it as a library or if you want to contribute features.
+
 .. image:: images/circus-architecture.png
    :align: center
-
 
 Circus is composed of a main process called **circusd** which takes
 care of running all the processes. Each process managed by Circus
