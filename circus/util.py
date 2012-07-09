@@ -168,7 +168,7 @@ def get_info(process=None, interval=0, with_childs=False):
         info['username'] = 'N/A'
 
     try:
-        info['nice'] = process.nice
+        info['nice'] = process.get_nice()
     except AccessDenied:
         info['nice'] = 'N/A'
     except NoSuchProcess:
