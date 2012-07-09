@@ -40,6 +40,7 @@ class TestUtil(unittest.TestCase):
     def test_parse_env(self):
         env = 'test=1,booo=2'
         parsed = parse_env(env)
+        self.assertEqual(parsed, {'test': '1', 'booo': '2'})
         self.assertEqual(env_to_str(parsed), env)
 
     def test_to_uidgid(self):
