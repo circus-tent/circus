@@ -10,7 +10,7 @@ import zmq
 from zmq.eventloop import ioloop, zmqstream
 from zmq.utils.jsonapi import jsonmod as json
 
-from circus.commands import get_commands, ok, error
+from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError
 from circus.py3compat import string_types
@@ -83,7 +83,8 @@ class Controller(object):
         try:
             json_msg = json.loads(msg)
         except ValueError:
-            return self.send_error(cid, msg, "json invalid")
+            return self.send_error(cid, msg, "json invalid",
+                                   errno=errors.INVALID_JSON)
 
         cmd_name = json_msg.get('command')
         properties = json_msg.get('properties', {})
@@ -93,21 +94,25 @@ class Controller(object):
             cmd = self.commands[cmd_name.lower()]
         except KeyError:
             error = "unknown command: %r" % cmd_name
-            return self.send_error(cid, msg, error, cast=cast)
+            return self.send_error(cid, msg, error, cast=cast,
+                        errno=errors.UNKNOWN_COMMAND)
 
         try:
             cmd.validate(properties)
             resp = cmd.execute(self.arbiter, properties)
         except MessageError as e:
-            return self.send_error(cid, msg, str(e), cast=cast)
+            return self.send_error(cid, msg, str(e), cast=cast,
+                    errno=errors.MESSAGE_ERROR)
         except OSError as e:
-            return self.send_error(cid, msg, str(e), cast=cast)
+            return self.send_error(cid, msg, str(e), cast=cast,
+                    errno=errors.OS_ERROR)
         except:
             exctype, value = sys.exc_info()[:2]
             tb = traceback.format_exc()
             reason = "command %r: %s" % (msg, value)
             logger.debug("error: command %r: %s\n\n%s", msg, value, tb)
-            return self.send_error(cid, msg, reason, tb, cast=cast)
+            return self.send_error(cid, msg, reason, tb, cast=cast,
+                    errno=errors.COMMAND_ERROR)
 
         if resp is None:
             resp = ok()
@@ -116,7 +121,8 @@ class Controller(object):
             msg = "msg %r tried to send a non-dict: %s" % (msg,
                     str(resp))
             logger.error("msg %r tried to send a non-dict: %s", msg, str(resp))
-            return self.send_error(cid, msg, "server error", cast=cast)
+            return self.send_error(cid, msg, "server error", cast=cast,
+                    errno=errors.BAD_MSG_DATA_ERROR)
 
         if isinstance(resp, list):
             resp = {"results": resp}
@@ -129,8 +135,9 @@ class Controller(object):
 
             self.arbiter.stop()
 
-    def send_error(self, cid, msg, reason="unknown", tb=None, cast=False):
-        resp = error(reason=reason, tb=tb)
+    def send_error(self, cid, msg, reason="unknown", tb=None, cast=False,
+                   errno=errors.NOT_SPECIFIED):
+        resp = error(reason=reason, tb=tb, errno=errno)
         self.send_response(cid, msg, resp, cast=cast)
 
     def send_ok(self, cid, msg, props=None, cast=False):

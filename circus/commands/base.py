@@ -4,6 +4,8 @@ import textwrap
 import time
 
 from circus.exc import MessageError, ArgumentError
+from circus.commands import errors
+
 
 KNOWN_COMMANDS = []
 
@@ -23,12 +25,13 @@ def ok(props=None):
     return resp
 
 
-def error(reason="unknown", tb=None):
+def error(reason="unknown", tb=None, errno=errors.NOT_SPECIFIED):
     return {
         "status": "error",
         "reason": reason,
         "tb": tb,
-        "time": time.time()
+        "time": time.time(),
+        "errno": errno
     }
 
 
