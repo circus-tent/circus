@@ -13,17 +13,17 @@ its python API.
 It shares some of the goals of `Supervisord <http://supervisord.org>`_,
 `BluePill <https://github.com/arya/bluepill>`_ and
 `Daemontools <http://cr.yp.to/daemontools.html>`_. If you are curious about
-what Circus brings compared to other projects, read :ref:`why`.
+what Circus brings compared to other projects, read the :ref:`why`.
 
-Circus is designed using `ZeroMQ <http://www.zeromq.org/>`_. See :ref:`design` for more details.
+If you want some information about Circus internals, you can refer to
+:ref:`design` for more details.
 
 .. note::
 
-   Circus doesn't secure its messages when sending information through
-   ZeroMQ. Before running Circus, make sure you read the :ref:`Security` page.
+   Before using Circus on a real system, please make sure to read the
+   :ref:`Security` page.
 
 To install it, check out :ref:`installation`
-
 
 Running Circus
 --------------
