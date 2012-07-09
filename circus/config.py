@@ -104,7 +104,7 @@ def get_config(config_file):
     config['httpd'] = dget('circus', 'httpd', False, bool)
     config['httpd_host'] = dget('circus', 'httpd_host', 'localhost', str)
     config['httpd_port'] = dget('circus', 'httpd_port', 8080, int)
-
+    config['debug'] = dget('circus', 'debug', False, bool)
     stream_backend = dget('circus', 'stream_backend', 'thread')
 
     if stream_backend == 'gevent':

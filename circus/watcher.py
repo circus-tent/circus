@@ -1,3 +1,4 @@
+import copy
 import errno
 import os
 import signal
@@ -134,8 +135,8 @@ class Watcher(object):
         self.executable = None
         self.stream_backend = stream_backend
         self.priority = priority
-        self.stdout_stream_conf = stdout_stream
-        self.stderr_stream_conf = stderr_stream
+        self.stdout_stream_conf = copy.copy(stdout_stream)
+        self.stderr_stream_conf = copy.copy(stderr_stream)
         self.stdout_stream = get_stream(self.stdout_stream_conf)
         self.stderr_stream = get_stream(self.stderr_stream_conf)
         self.stdout_redirector = self.stderr_redirector = None

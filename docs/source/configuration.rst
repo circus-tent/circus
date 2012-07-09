@@ -66,7 +66,9 @@ circus - single section
         The host ran by the circushttpd daemon. (default: localhost)
     **httpd_port**
         The port ran by the circushttpd daemon. (default: 8080)
-
+    **debug**
+        If set to True, all Circus stout/stderr daemons are redirected to circusd
+        stdout/stderr (default: False)
 
 .. note::
 
