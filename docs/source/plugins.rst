@@ -3,12 +3,17 @@
 The Plugin System
 =================
 
+It's easy to extend Circus to create a more complex system, by listening to all
+the **circusd** events via its pub/sub channel, and driving it via commands.
+
+That's how the flapping feature works for instance: it listens to all the
+processes dying, measures how often it happens, and stops the incriminated
+watchers after too many restarts attempts.
+
+Circus comes with a plugin system to help you write such extensions, and
+a few built-in plugins you can reuse.
+
 Circus comes with a plugin system which let you interact with **circusd**.
-
-.. note::
-
-   We might add circusd-stats support to plugins later on
-
 
 A Plugin is composed of two parts:
 

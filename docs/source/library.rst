@@ -1,7 +1,25 @@
 .. _library:
 
-Circus Library
---------------
+Developing with Circus
+----------------------
+
+Circus provides high-level classes and functions that will let you manage
+processes in your own applications.
+
+For example, if you want to run four processes forever, you could write:
+
+.. code-block:: python
+
+    from circus import get_arbiter
+
+    arbiter = get_arbiter("myprogram", 4)
+    try:
+        arbiter.start()
+    finally:
+        arbiter.stop()
+
+This snippet will run four instances of *myprogram* and watch them for you,
+restarting them if they die unexpectedly.
 
 The Circus package is composed of a high-level :func:`get_arbiter`
 function and many classes. In most cases, using the high-level function
