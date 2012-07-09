@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 
@@ -73,7 +74,6 @@ class TestProcess(TestCircus):
         p2.stop()
 
     def test_process_parameters(self):
-
         # all the options passed to the process should be available by the
         # command / process
 
@@ -86,3 +86,9 @@ class TestProcess(TestCircus):
 
         p2 = Process('1', 'yeah $(CIRCUS.WID)', spawn=False)
         self.assertEquals(['yeah', '1'], p2.format_args())
+
+        os.environ['coffee_type'] = 'american'
+        p3 = Process('1', 'yeah $(circus.env.type)', shell=False, spawn=False,
+                env={'type': 'macchiato'})
+        self.assertEquals(['yeah', 'macchiato'], p3.format_args())
+        os.environ.pop('coffee_type')
