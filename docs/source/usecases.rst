@@ -108,5 +108,3 @@ can explicitely give it with the **--django-settings** option::
 
 
 See http://chaussette.readthedocs.org for more info on this.
-
-
