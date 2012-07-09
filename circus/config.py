@@ -23,7 +23,6 @@ def watcher_defaults():
         'rlimits': dict(),
         'stderr_stream': dict(),
         'stdout_stream': dict(),
-        'stream_backend': 'thread',
         'priority': 0,
         'use_sockets': False,
         'singleton': False}
@@ -106,7 +105,6 @@ def get_config(config_file):
     config['httpd_port'] = dget('circus', 'httpd_port', 8080, int)
     config['debug'] = dget('circus', 'debug', False, bool)
     stream_backend = dget('circus', 'stream_backend', 'thread')
-
     if stream_backend == 'gevent':
         try:
             import gevent           # NOQA
@@ -191,13 +189,15 @@ def get_config(config_file):
                 elif opt == 'singleton':
                     watcher['singleton'] = dget(section, "singleton", False,
                                                 bool)
+                elif opt == 'stream_backend':
+                    watcher['stream_backend'] = val
                 else:
                     # freeform
                     watcher[opt] = val
 
             # set the stream backend
-            watcher['stream_backend'] = stream_backend
-
+            if 'stream_backend' not in watcher:
+                watcher['stream_backend'] = stream_backend
             watchers.append(watcher)
 
     config['watchers'] = watchers

@@ -180,7 +180,6 @@ class Watcher(object):
             if (self.stdout_redirector is not None and
                 self.stdout_redirector.running):
                 self.stdout_redirector.kill()
-
             self.stdout_redirector = get_pipe_redirector(self.stdout_stream,
                     backend=self.stream_backend)
         else:
@@ -472,7 +471,10 @@ class Watcher(object):
 
         while self.get_active_processes() and time.time() < limit:
             self.kill_processes(signal.SIGTERM)
-            time.sleep(0.1)
+            try:
+                time.sleep(0.1)
+            except KeyboardInterrupt:
+                pass
             self.reap_processes()
 
         self.kill_processes(signal.SIGKILL)
