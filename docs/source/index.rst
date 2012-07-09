@@ -7,7 +7,7 @@ Circus: A Process & Socket Manager
 Circus is a process & socket manager. It can be used to monitor and control
 processes and sockets.
 
-Circus can be driven via a command-line interface or programmatically trough
+Circus can be driven via a command-line interface or programmatically through
 its python API.
 
 It shares some of the goals of `Supervisord <http://supervisord.org>`_,
@@ -19,7 +19,7 @@ Circus is designed using `ZeroMQ <http://www.zeromq.org/>`_. See :ref:`design` f
 
 .. note::
 
-   Circus doesn't secure its messages when sending information trough
+   Circus doesn't secure its messages when sending information through
    ZeroMQ. Before running Circus, make sure you read the :ref:`Security` page.
 
 To install it, check out :ref:`installation`
