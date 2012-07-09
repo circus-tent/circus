@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -
 
+import argparse
 import getopt
 import json
 import sys
@@ -86,6 +87,28 @@ class ControllerApp(object):
             sys.exit(1)
 
     def dispatch(self, args):
+        parser = argparse.ArgumentParser()
+        
+        parser.add_argument('command')
+        parser.add_argument('--endpoint', default=None, help='connection endpoint')
+        parser.add_argument('--timeout', default=5, help='connection timeout')
+        parser.add_argument('--json', default=False, action='store_true', help='output to JSON')
+        parser.add_argument('--prettify', default=False, action='store_true', help='prettify output')
+#        parser.add_argument('--help', default=False, action='store_true', help='display help and exit')
+        parser.add_argument('--version', default=False, action='store_true', help='display version and exit')
+
+        args = parser.parse_args()
+
+#        if args.help:
+#            return self.display_help(*args, **globalopts)
+        if args.version:
+            return self.display_version()
+        else:
+            if args.endpoint is None:
+                args.endpoint = "tcp://127.0.0.1:5555"
+            print args.command
+
+        '''
         cmd, globalopts, opts, args = self._parse(args)
 
         if globalopts['help'] or cmd == "help":
@@ -111,6 +134,7 @@ class ControllerApp(object):
         msg = cmd.message(*args, **opts)
         return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts,
                 msg, endpoint, timeout)
+        '''
 
     def display_help(self, *args, **opts):
         if opts.get('version', False):
