@@ -13,9 +13,11 @@ try:
     from socketio.namespace import BaseNamespace
 
 except ImportError, e:
+    reqs = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                        'web-requirements.txt')
     raise ImportError('You need to install dependencies to run the webui. '\
                     + 'You can do so by using "pip install -r '
-                    + 'web-requirements.txt"\nInitial error: %s' % str(e))
+                    + '%s"\nInitial error: %s' % (reqs, str(e)))
 
 from circus.web.controller import LiveClient, CallError
 from circus.stats.client import StatsClient
