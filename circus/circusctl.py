@@ -86,6 +86,20 @@ class ControllerApp(object):
             sys.stderr.write(traceback.format_exc())
             sys.exit(1)
 
+
+    def get_globalopts(args):
+        globalopts = {}
+        globalopts['endpoint'] = args.endpoint
+        globalopts['timeout'] = args.timeout
+        globalopts['json'] = args.json
+        globalopts['prettify'] = args.prettify
+        globalopts['version'] = args.version
+
+        return globalopts
+
+    def get_opts():
+        return {}
+
     def dispatch(self, args):
         parser = argparse.ArgumentParser()
     
@@ -99,6 +113,10 @@ class ControllerApp(object):
         parser.add_argument('more', nargs="*")
 
         args = parser.parse_args()
+
+        print args
+        globalopts = get_globalopts(args)
+        opts = get_opts()
 
         if args.version:
             return self.display_version()
