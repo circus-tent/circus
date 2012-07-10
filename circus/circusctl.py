@@ -118,9 +118,12 @@ class ControllerApp(object):
             if args.command not in self.commands:
                 raise ArgumentError('Unknown command %r' % args.command)
             else:
-                if args.endpoint is None:
-                    args.endpoint = "tcp://127.0.0.1:5555"
                 cmd = self.commands[args.command]
+                if args.endpoint is None:
+                    if cmd.msg_type == 'sub':
+                        args.endpoint = "tcp://127.0.0.1:5556"
+                    else:
+                        args.endpoint = "tcp://127.0.0.1:5555"
                 msg = cmd.message(*args.args, **opts)
                 return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts,
                     msg, args.endpoint, int(args.timeout))
