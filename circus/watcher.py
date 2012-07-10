@@ -131,7 +131,7 @@ class Watcher(object):
         self.args = args
         self._process_counter = 0
         self.stopped = stopped
-        self.graceful_timeout = graceful_timeout
+        self.graceful_timeout = float(graceful_timeout)
         self.prereload_fn = prereload_fn
         self.executable = None
         self.stream_backend = stream_backend
