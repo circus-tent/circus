@@ -19,16 +19,6 @@ from circus.consumer import CircusConsumer
 from circus.commands import get_commands
 from circus.exc import CallError, ArgumentError
 
-'''
-globalopts = [
-    ('', 'endpoint', "", "connection endpoint"),
-    ('', 'timeout', 5, "connection timeout"),
-    ('', 'json', False, "output to JSON"),
-    ('', 'prettify', False, "prettify output"),
-    ('h', 'help', None, "display help and exit"),
-    ('v', 'version', None, "display version and exit")
-]
-'''
 
 
 def prettify(jsonobj, prettify=True):
@@ -106,13 +96,6 @@ class ControllerApp(object):
 
     def dispatch(self, args):
         parser = argparse.ArgumentParser()
-        '''
-        parser.add_argument('--endpoint', default=None, help='connection endpoint')
-        parser.add_argument('--timeout', default=5, help='connection timeout')
-        parser.add_argument('--json', default=False, action='store_true', help='output to JSON')
-        parser.add_argument('--prettify', default=False, action='store_true', help='prettify output')
-        parser.add_argument('--version', default=False, action='store_true', help='display version and exit')
-        '''
         for option in self.options:
             parser.add_argument('--' + option, **self.options[option])
         parser.add_argument('command', nargs="?")
