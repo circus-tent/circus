@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -
 
 import argparse
-import getopt
 import json
 import sys
 import traceback
