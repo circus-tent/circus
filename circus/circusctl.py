@@ -87,7 +87,7 @@ class ControllerApp(object):
             sys.exit(1)
 
 
-    def get_globalopts(args):
+    def get_globalopts(self, args):
         globalopts = {}
         globalopts['endpoint'] = args.endpoint
         globalopts['timeout'] = args.timeout
@@ -97,7 +97,7 @@ class ControllerApp(object):
 
         return globalopts
 
-    def get_opts():
+    def get_opts(self):
         return {}
 
     def dispatch(self, args):
@@ -114,9 +114,9 @@ class ControllerApp(object):
 
         args = parser.parse_args()
 
-        print args
-        globalopts = get_globalopts(args)
-        opts = get_opts()
+        print args.more
+        globalopts = self.get_globalopts(args)
+        opts = self.get_opts()
 
         if args.version:
             return self.display_version()
@@ -127,7 +127,7 @@ class ControllerApp(object):
                 if args.endpoint is None:
                     args.endpoint = "tcp://127.0.0.1:5555"
                 cmd = self.commands[args.command]
-#                msg = cmd.message(*args, **opts)  ### figure out what this statement should be
+                msg = cmd.message(*(args.more), **opts)  ### figure out what this statement should be
                 return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts, ### initialize globalopts
                     msg, args.endpoint, args.timeout)
 
