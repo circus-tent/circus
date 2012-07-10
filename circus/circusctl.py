@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -
 
 import argparse
+import getopt
 import json
 import sys
 import traceback
@@ -18,7 +19,7 @@ from circus.consumer import CircusConsumer
 from circus.commands import get_commands
 from circus.exc import CallError, ArgumentError
 
-
+'''
 globalopts = [
     ('', 'endpoint', "", "connection endpoint"),
     ('', 'timeout', 5, "connection timeout"),
@@ -27,6 +28,7 @@ globalopts = [
     ('h', 'help', None, "display help and exit"),
     ('v', 'version', None, "display version and exit")
 ]
+'''
 
 
 def prettify(jsonobj, prettify=True):
@@ -65,6 +67,13 @@ class ControllerApp(object):
 
     def __init__(self):
         self.commands = get_commands()
+        self.options = {
+            'endpoint' : {'default' : None, 'help' : 'connection endpoint'},
+            'timeout': {'default' : 5, 'help' : 'connection timeout'},
+            'json': {'default' : False, 'action' : 'store_true', 'help' : 'output to JSON'},
+            'prettify': {'default' : False, 'action' : 'store_true', 'help' : 'prettify output'},
+            'version': {'default': False, 'action' : 'store_true', 'help' : 'display version and exit'}
+        }
 
     def run(self, args):
         try:
@@ -88,11 +97,8 @@ class ControllerApp(object):
 
     def get_globalopts(self, args):
         globalopts = {}
-        globalopts['endpoint'] = args.endpoint
-        globalopts['timeout'] = args.timeout
-        globalopts['json'] = args.json
-        globalopts['prettify'] = args.prettify
-        globalopts['version'] = args.version
+        for option in self.options:
+            globalopts[option] = getattr(args, option)
         return globalopts
 
     def get_opts(self):
@@ -100,11 +106,15 @@ class ControllerApp(object):
 
     def dispatch(self, args):
         parser = argparse.ArgumentParser()
+        '''
         parser.add_argument('--endpoint', default=None, help='connection endpoint')
         parser.add_argument('--timeout', default=5, help='connection timeout')
         parser.add_argument('--json', default=False, action='store_true', help='output to JSON')
         parser.add_argument('--prettify', default=False, action='store_true', help='prettify output')
         parser.add_argument('--version', default=False, action='store_true', help='display version and exit')
+        '''
+        for option in self.options:
+            parser.add_argument('--' + option, **self.options[option])
         parser.add_argument('command', nargs="?")
         parser.add_argument('args', nargs="*")
 
