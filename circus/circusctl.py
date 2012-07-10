@@ -84,15 +84,11 @@ class ControllerApp(object):
             sys.stderr.write(traceback.format_exc())
             sys.exit(1)
 
-
     def get_globalopts(self, args):
         globalopts = {}
         for option in self.options:
             globalopts[option] = getattr(args, option)
         return globalopts
-
-    def get_opts(self):
-        return {}
 
     def dispatch(self, args):
         parser = argparse.ArgumentParser()
@@ -103,7 +99,7 @@ class ControllerApp(object):
 
         args = parser.parse_args()
         globalopts = self.get_globalopts(args)
-        opts = self.get_opts()
+        opts = {}
 
         if args.version:
             return self.display_version()
