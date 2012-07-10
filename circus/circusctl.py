@@ -88,25 +88,30 @@ class ControllerApp(object):
 
     def dispatch(self, args):
         parser = argparse.ArgumentParser()
-        
-        parser.add_argument('command')
+    
         parser.add_argument('--endpoint', default=None, help='connection endpoint')
         parser.add_argument('--timeout', default=5, help='connection timeout')
         parser.add_argument('--json', default=False, action='store_true', help='output to JSON')
         parser.add_argument('--prettify', default=False, action='store_true', help='prettify output')
 #        parser.add_argument('--help', default=False, action='store_true', help='display help and exit')
         parser.add_argument('--version', default=False, action='store_true', help='display version and exit')
+        parser.add_argument('command', nargs="?")
+        parser.add_argument('more', nargs="*")
 
         args = parser.parse_args()
 
-#        if args.help:
-#            return self.display_help(*args, **globalopts)
         if args.version:
             return self.display_version()
         else:
-            if args.endpoint is None:
-                args.endpoint = "tcp://127.0.0.1:5555"
-            print args.command
+            if args.command not in self.commands:
+                raise ArgumentError('Unknown command %r' % args.command)
+            else:
+                if args.endpoint is None:
+                    args.endpoint = "tcp://127.0.0.1:5555"
+                cmd = self.commands[args.command]
+#                msg = cmd.message(*args, **opts)  ### figure out what this statement should be
+                return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts, ### initialize globalopts
+                    msg, args.endpoint, args.timeout)
 
         '''
         cmd, globalopts, opts, args = self._parse(args)
