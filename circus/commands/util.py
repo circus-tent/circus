@@ -32,7 +32,7 @@ def convert_option(key, val):
         return int(val)
     elif key == "graceful_timeout":
         return float(val)
-    raise ArgumentError("unkown key %r" % key)
+    raise ArgumentError("unknown key %r" % key)
 
 
 def validate_option(key, val):
@@ -40,7 +40,7 @@ def validate_option(key, val):
             'gid', 'send_hup', 'shell', 'env', 'cmd', 'flapping_attempts',
             'flapping_window', 'retry_in', 'max_retry',
             'graceful_timeout', 'stdout_stream', 'stderr_stream'):
-        raise MessageError('unkown key %r' % key)
+        raise MessageError('unknown key %r' % key)
 
     if key in ('numprocesses', 'flapping_attempts', 'max_retry',):
         if not isinstance(val, int):
