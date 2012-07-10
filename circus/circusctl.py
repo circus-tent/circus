@@ -20,6 +20,18 @@ from circus.commands import get_commands
 from circus.exc import CallError, ArgumentError
 
 
+# string constants
+ARGS = 'args'
+COMMAND = 'command'
+ENDPOINT = 'endpoint'
+JSON = 'json'
+PRETTIFY = 'prettify'
+TIMEOUT = 'timeout'
+VERSION = 'version'
+
+DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
+DEFAULT_ENDPOINT_NOT_SUB = "tcp://127.0.0.1:5555"
+
 
 def prettify(jsonobj, prettify=True):
     """ prettiffy JSON output """
@@ -58,11 +70,11 @@ class ControllerApp(object):
     def __init__(self):
         self.commands = get_commands()
         self.options = {
-            'endpoint' : {'default' : None, 'help' : 'connection endpoint'},
-            'timeout': {'default' : 5, 'help' : 'connection timeout'},
-            'json': {'default' : False, 'action' : 'store_true', 'help' : 'output to JSON'},
-            'prettify': {'default' : False, 'action' : 'store_true', 'help' : 'prettify output'},
-            'version': {'default': False, 'action' : 'store_true', 'help' : 'display version and exit'}
+            ENDPOINT : {'default' : None, 'help' : 'connection endpoint'},
+            TIMEOUT : {'default' : 5, 'help' : 'connection timeout'},
+            JSON : {'default' : False, 'action' : 'store_true', 'help' : 'output to JSON'},
+            PRETTIFY : {'default' : False, 'action' : 'store_true', 'help' : 'prettify output'},
+            VERSION : {'default': False, 'action' : 'store_true', 'help' : 'display version and exit'}
         }
 
     def run(self, args):
@@ -94,8 +106,8 @@ class ControllerApp(object):
         parser = argparse.ArgumentParser()
         for option in self.options:
             parser.add_argument('--' + option, **self.options[option])
-        parser.add_argument('command', nargs="?")
-        parser.add_argument('args', nargs="*")
+        parser.add_argument(COMMAND, nargs="?")
+        parser.add_argument(ARGS, nargs="*")
 
         args = parser.parse_args()
         globalopts = self.get_globalopts(args)
@@ -110,9 +122,9 @@ class ControllerApp(object):
                 cmd = self.commands[args.command]
                 if args.endpoint is None:
                     if cmd.msg_type == 'sub':
-                        args.endpoint = "tcp://127.0.0.1:5556"
+                        args.endpoint = DEFAULT_ENDPOINT_SUB
                     else:
-                        args.endpoint = "tcp://127.0.0.1:5555"
+                        args.endpoint = DEFAULT_ENDPOINT_NOT_SUB
                 msg = cmd.message(*args.args, **opts)
                 return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts,
                     msg, args.endpoint, int(args.timeout))
@@ -129,8 +141,8 @@ class ControllerApp(object):
         return 0
 
     def _console(self, client, cmd, opts, msg):
-        if opts['json']:
-            return prettify(client.call(msg), prettify=opts['prettify'])
+        if opts[JSON]:
+            return prettify(client.call(msg), prettify=opts[PRETTIFY])
         else:
             return cmd.console_msg(client.call(msg))
 
