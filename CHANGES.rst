@@ -1,10 +1,13 @@
 CHANGES
 =======
 
-0.6
----
+0.5.1 - 2012-07-11
+------------------
 
-?
+* Fixed a bunch of typos in the documentation
+* Added the debug option
+* Package web-requirements.txt properly
+* Added a errno error code in the messages - fixes #111
 
 0.5 - 2012-07-06
 ----------------
