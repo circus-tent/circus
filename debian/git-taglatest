@@ -1,0 +1,9 @@
+#!/bin/bash
+version=$1
+
+read -a res <<<$(git log upstream -n1 --pretty=format:'%h %at')
+commit=${res[0]}
+timestamp=${res[1]}
+time=$(date -u -d @"$timestamp" +'%Y%m%d%H%M%S')
+
+git tag -a "upstream/$version+git$time" $commit -m "$version+git$time"

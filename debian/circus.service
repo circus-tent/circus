@@ -1,0 +1,10 @@
+[Unit]
+Description=The Circus Server
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/circusd
+
+[Install]
+WantedBy=multi-user.target

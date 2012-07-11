@@ -1,0 +1,5 @@
+circus (0.5.1+git20120712092247-0ppa1) precise; urgency=low
+
+  * Initial release. (Closes: #XXXXXX)
+
+ -- Roman Imankulov <roman.imankulov@gmail.com>  Wed, 11 Jul 2012 18:18:23 +0000

@@ -1,0 +1,7 @@
+circus.debhelper.log
+circus.*.debhelper
+circus.substvars
+circus/*
+files
+python-module-stampdir
+.*.swp

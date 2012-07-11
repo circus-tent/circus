@@ -1,0 +1,11 @@
+description "circusd"
+
+start on (net-device-up
+          and local-filesystems
+          and runlevel [2345])
+stop on runlevel [!2345]
+
+expect daemon
+respawn
+
+exec /usr/bin/circusd --daemon /etc/circus/circusd.ini
