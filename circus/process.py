@@ -139,7 +139,6 @@ class Process(object):
         logger.debug('args: ' + str(self.args))
 
         current_env = ObjectDict(self.env.copy())
-        current_env.update(os.environ)
 
         format_kwargs = {
             'wid': self.wid, 'shell': self.shell, 'args': self.args,

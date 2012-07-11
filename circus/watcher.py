@@ -11,6 +11,7 @@ from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
+from circus.util import parse_env
 
 
 class Watcher(object):
@@ -130,7 +131,7 @@ class Watcher(object):
         self.args = args
         self._process_counter = 0
         self.stopped = stopped
-        self.graceful_timeout = graceful_timeout
+        self.graceful_timeout = float(graceful_timeout)
         self.prereload_fn = prereload_fn
         self.executable = None
         self.stream_backend = stream_backend
@@ -164,6 +165,7 @@ class Watcher(object):
         self.shell = shell
         self.uid = uid
         self.gid = gid
+
         if self.copy_env:
             self.env = os.environ.copy()
             if env is not None:
@@ -197,6 +199,8 @@ class Watcher(object):
 
     @classmethod
     def load_from_config(cls, config):
+        if 'env' in config:
+            config['env'] = parse_env(config['env'])
         return cls(name=config.pop('name'), cmd=config.pop('cmd'), **config)
 
     @util.debuglog
