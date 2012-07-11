@@ -248,6 +248,11 @@ class Watcher(object):
         """ensure that the process is killed (and not a zombie)"""
         process = self.processes.pop(pid)
 
+        # disable kill timer
+        if process in self.kill_timers:
+            timer = self.kill_timers.pop(process)
+            timer.cancel()
+
         # get return code
         if os.WIFSIGNALED(status):
             retcode = os.WTERMSIG(status)
@@ -411,10 +416,6 @@ class Watcher(object):
 
         if self.stderr_redirector is not None:
             self.stderr_redirector.remove_redirection('stderr', process)
-
-        if process in self.kill_timers:
-            timer = self.kill_timers.pop(process)
-            timer.cancel()
 
         logger.debug("%s: kill process %s", self.name, process.pid)
         try:
