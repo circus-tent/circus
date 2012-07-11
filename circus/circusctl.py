@@ -22,7 +22,7 @@ from circus.exc import CallError, ArgumentError
 
 # string constants
 DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
-DEFAULT_ENDPOINT_NOT_SUB = "tcp://127.0.0.1:5555"
+DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
 
 
 def prettify(jsonobj, prettify=True):
@@ -116,7 +116,7 @@ class ControllerApp(object):
                     if cmd.msg_type == 'sub':
                         args.endpoint = DEFAULT_ENDPOINT_SUB
                     else:
-                        args.endpoint = DEFAULT_ENDPOINT_NOT_SUB
+                        args.endpoint = DEFAULT_ENDPOINT_DEALER
                 msg = cmd.message(*args.args, **opts)
                 return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts,
                     msg, args.endpoint, int(args.timeout))
