@@ -18,11 +18,9 @@ from circus.client import CircusClient
 from circus.consumer import CircusConsumer
 from circus.commands import get_commands
 from circus.exc import CallError, ArgumentError
+from circus.util import DEFAULT_ENDPOINT_SUB, DEFAULT_ENDPOINT_DEALER
 
 
-# string constants
-DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
-DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
 
 
 def prettify(jsonobj, prettify=True):
