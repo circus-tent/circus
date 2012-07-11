@@ -19,18 +19,15 @@ class Options(Command):
                 "command": "options",
                 "properties": {
                     "name": "nameofwatcher",
-                    "key1": "val1",
-                    ..
                 }
             }
 
-        A message contains 2 properties:
+        A message contains 1 property:
 
-        - keys: list, The option keys for which you want to get the values
         - name: name of watcher
 
         The response return an object with a property "options"
-        containing the list of key/value returned by circus.
+        containing a dictionary of key/value returned by circus.
 
         eg::
 
