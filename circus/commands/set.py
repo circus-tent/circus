@@ -17,7 +17,9 @@ class Set(Command):
                 "command": "set",
                 "properties": {
                     "name": "nameofwatcher",
-                    "key1": "val1",
+                    "options": {
+                        "key1": "val1",
+                    }
                     ..
                 }
             }
