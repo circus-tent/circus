@@ -45,6 +45,7 @@
         </div>
     </div>
     %endfor
+    %if not client.get_option(name, 'singleton'):
     <div class="process">
         <div>
             <span class="label">Add process</span>
@@ -53,6 +54,7 @@
              <a class="add_process" title="Add process" href="/watchers/${name}/process/incr?redirect=/watchers/${name}">+</a>
         </div>
     </div>
+    %endif
 
     </div>
 
