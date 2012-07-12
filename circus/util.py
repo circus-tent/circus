@@ -396,3 +396,7 @@ def replace_gnu_args(data, prefix='circus', **options):
 class ObjectDict(dict):
     def __getattr__(self, item):
         return self[item]
+
+# string constants
+DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
+DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
