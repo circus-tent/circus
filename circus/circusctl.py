@@ -21,8 +21,6 @@ from circus.exc import CallError, ArgumentError
 from circus.util import DEFAULT_ENDPOINT_SUB, DEFAULT_ENDPOINT_DEALER
 
 
-
-
 def prettify(jsonobj, prettify=True):
     """ prettiffy JSON output """
     if not prettify:
@@ -60,11 +58,14 @@ class ControllerApp(object):
     def __init__(self):
         self.commands = get_commands()
         self.options = {
-            'endpoint' : {'default' : None, 'help' : 'connection endpoint'},
-            'timeout' : {'default' : 5, 'help' : 'connection timeout'},
-            'json' : {'default' : False, 'action' : 'store_true', 'help' : 'output to JSON'},
-            'prettify' : {'default' : False, 'action' : 'store_true', 'help' : 'prettify output'},
-            'version' : {'default': False, 'action' : 'store_true', 'help' : 'display version and exit'}
+            'endpoint': {'default': None, 'help': 'connection endpoint'},
+            'timeout': {'default': 5, 'help': 'connection timeout'},
+            'json': {'default': False, 'action': 'store_true',
+                     'help': 'output to JSON'},
+            'prettify': {'default': False, 'action': 'store_true',
+                         'help': 'prettify output'},
+            'version': {'default': False, 'action': 'store_true',
+                        'help': 'display version and exit'}
         }
 
     def run(self, args):
@@ -116,8 +117,9 @@ class ControllerApp(object):
                     else:
                         args.endpoint = DEFAULT_ENDPOINT_DEALER
                 msg = cmd.message(*args.args, **opts)
-                return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts,
-                    msg, args.endpoint, int(args.timeout))
+                handler = getattr(self, "handle_%s" % cmd.msg_type)
+                return handler(cmd, globalopts, msg, args.endpoint,
+                               int(args.timeout))
 
     def display_version(self, *args, **opts):
         from circus import __version__
@@ -152,6 +154,7 @@ class ControllerApp(object):
         finally:
             client.stop()
         return 0
+
 
 def main():
     controller = ControllerApp()
