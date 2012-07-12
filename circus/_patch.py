@@ -6,7 +6,7 @@ from threading import (_active_limbo_lock, _limbo, _active, _sys, _trace_hook,
 def _bootstrap_inner(self):
     try:
         self._set_ident()
-        self._started.set()
+        self._Thread__started.set()
         with _active_limbo_lock:
             _active[self._Thread__ident] = self
             del _limbo[self]
@@ -49,7 +49,7 @@ def _bootstrap_inner(self):
             pass
     finally:
         with _active_limbo_lock:
-            self._stop()
+            self._Thread__stop()
             try:
                 del _active[self._Thread__ident]
             except:
