@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -
-
 import argparse
 import getopt
 import json
@@ -37,6 +36,35 @@ def prettify(jsonobj, prettify=True):
     return json_str
 
 
+class _Help(argparse.HelpFormatter):
+
+    commands = None
+
+    def _metavar_formatter(self, action, default_metavar):
+        if action.dest != 'command':
+            return super(_Help, self)._metavar_formatter(action,
+                       default_metavar)
+
+        commands = self.commands.items()
+        commands.sort()
+        max_len = max([len(name) for name, help in commands])
+
+        output = []
+        for name, cmd in commands:
+            output.append('\t%-*s\t%s' % (max_len, name, cmd.short))
+
+        def format(tuple_size):
+            res = '\n'.join(output)
+            return (res, ) * tuple_size
+
+        return format
+
+    def start_section(self, heading):
+        if heading == 'positional arguments':
+            heading = 'Commands'
+        super(_Help, self).start_section(heading)
+
+
 def _get_switch_str(opt):
     """
     Output just the '-r, --rev [VAL]' part of the option string.
@@ -57,6 +85,7 @@ class ControllerApp(object):
 
     def __init__(self):
         self.commands = get_commands()
+        _Help.commands = self.commands
         self.options = {
             'endpoint': {'default': None, 'help': 'connection endpoint'},
             'timeout': {'default': 5, 'help': 'connection timeout'},
@@ -94,12 +123,16 @@ class ControllerApp(object):
         return globalopts
 
     def dispatch(self, args):
-        parser = argparse.ArgumentParser()
+        usage = '%(prog)s [options] command [args]'
+        parser = argparse.ArgumentParser(
+                description="Controls a Circus daemon",
+                formatter_class=_Help, usage=usage)
+
         for option in self.options:
             parser.add_argument('--' + option, **self.options[option])
 
         parser.add_argument('command', nargs="?", choices=self.commands)
-        parser.add_argument('args', nargs="*")
+        parser.add_argument('args', nargs="*", help=argparse.SUPPRESS)
 
         args = parser.parse_args()
         globalopts = self.get_globalopts(args)
@@ -111,7 +144,8 @@ class ControllerApp(object):
             if args.command not in self.commands:
                 msg = 'Unknown command %r' % args.command
                 msg += '\nPossible values: %s' % ', '.join(self.commands)
-                raise ArgumentError(msg)
+                parser.print_help()
+                sys.exit(0)
             else:
                 cmd = self.commands[args.command]
                 if args.endpoint is None:
