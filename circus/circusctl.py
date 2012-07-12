@@ -97,7 +97,8 @@ class ControllerApp(object):
         parser = argparse.ArgumentParser()
         for option in self.options:
             parser.add_argument('--' + option, **self.options[option])
-        parser.add_argument('command', nargs="?")
+
+        parser.add_argument('command', nargs="?", choices=self.commands)
         parser.add_argument('args', nargs="*")
 
         args = parser.parse_args()
@@ -108,7 +109,9 @@ class ControllerApp(object):
             return self.display_version()
         else:
             if args.command not in self.commands:
-                raise ArgumentError('Unknown command %r' % args.command)
+                msg = 'Unknown command %r' % args.command
+                msg += '\nPossible values: %s' % ', '.join(self.commands)
+                raise ArgumentError(msg)
             else:
                 cmd = self.commands[args.command]
                 if args.endpoint is None:
