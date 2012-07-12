@@ -1,3 +1,4 @@
+import _patch       # NOQA
 import logging
 import os
 import sys
@@ -26,7 +27,7 @@ except ImportError:
     pass
 
 
-version_info = (0, 6)
+version_info = (0, 6, 0)
 __version__ = ".".join(map(str, version_info))
 
 

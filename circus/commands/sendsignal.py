@@ -35,7 +35,7 @@ class Signal(Command):
                     "signum": <signum>
             }
 
-        An optionnal property "children" can be used to send the signal
+        An optional property "children" can be used to send the signal
         to all the children rather than the process itself::
 
             {

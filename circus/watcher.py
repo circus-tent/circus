@@ -384,9 +384,17 @@ class Watcher(object):
             self.stderr_redirector.remove_redirection('stderr', process)
 
         try:
+            # sending the same signal to all the children
+            for child_pid in process.children():
+                process.send_signal_child(child_pid, sig)
+                self.notify_event("kill", {"process_pid": child_pid,
+                                  "time": time.time()})
+
+            # now sending the signal to the process itself
             self.send_signal(process.pid, sig)
             self.notify_event("kill", {"process_pid": process.pid,
                                    "time": time.time()})
+
         except NoSuchProcess:
             # already dead !
             return
