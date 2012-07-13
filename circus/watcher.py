@@ -388,11 +388,10 @@ class Watcher(object):
             else:
                 if self.max_age:
                     def _kill():
-                        logger.debug('%s: expired, restarting %s',
-                                    self.name, process.pid)
-                        self.notify_event("restart",
-                                            {"process_pid": process.pid,
-                                             "time": time.time()})
+                        logger.debug('%s: expired, respawning', self.name)
+                        self.notify_event("expired",
+                                          {"process_pid": process.pid,
+                                           "time": time.time()})
                         self.kill_process(process)
                         self.spawn_process()
 
