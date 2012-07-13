@@ -52,7 +52,6 @@ class TestWatcher(TestCircus):
     def test_signal(self):
         self.assertEquals(self.numprocesses('incr', name='test'), 2)
 
-
         pids = self.pids()
         self.assertEquals(len(pids), 2)
         to_kill = pids[0]
@@ -81,7 +80,7 @@ class TestWatcher(TestCircus):
 
     def test_max_age(self):
         result = self.call('set', name='test',
-                           options={'max_age':1, 'max_age_variance':0})
+                           options={'max_age': 1, 'max_age_variance': 0})
         self.assertEquals(result.get('status'), 'ok')
         initial_pids = self.pids()
         time.sleep(1.5)  # allow process to reach max_age and restart

@@ -387,7 +387,6 @@ class Watcher(object):
                 continue
             else:
                 if self.max_age:
-                    timeout = self.max_age + random.randint(0, self.max_age_variance)
                     def _kill():
                         logger.debug('%s: expired, restarting %s',
                                     self.name, process.pid)
@@ -396,6 +395,9 @@ class Watcher(object):
                                              "time": time.time()})
                         self.kill_process(process)
                         self.spawn_process()
+
+                    variance = random.randint(0, self.max_age_variance)
+                    timeout = self.max_age + variance
                     timer = Timer(timeout, _kill)
                     self.kill_timers[process] = timer
                     timer.start()
