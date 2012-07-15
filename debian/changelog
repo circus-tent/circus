@@ -1,3 +1,9 @@
+circus (0.5.1+git20120712092247-0ppa4) precise; urgency=low
+
+  * Add python-pkg-resources dependency
+
+ --  Roman Imankulov <roman.imankulov@gmail.com>  Sun, 15 Jul 2012 16:02:15 +0000
+
 circus (0.5.1+git20120712092247-0ppa3) precise; urgency=low
 
   * Remove Makefile on cleanup
