@@ -6,3 +6,7 @@ include /usr/share/python/python.mk
 
 %:
 	dh $@
+
+override_dh_auto_clean:
+	rm -f Makefile
+	dh_auto_clean

@@ -1,3 +1,15 @@
+circus (0.5.1+git20120712092247-0ppa3) precise; urgency=low
+
+  * Remove Makefile on cleanup
+
+ --  Roman Imankulov <roman.imankulov@gmail.com>  Sun, 15 Jul 2012 15:33:04 +0000
+
+circus (0.5.1+git20120712092247-0ppa2) precise; urgency=low
+
+  * Fixed upstart and systemd init scripts
+
+ --  Roman Imankulov <roman.imankulov@gmail.com>  Sun, 15 Jul 2012 14:31:50 +0000
+
 circus (0.5.1+git20120712092247-0ppa1) precise; urgency=low
 
   * Initial release. (Closes: #XXXXXX)
