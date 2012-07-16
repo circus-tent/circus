@@ -3,6 +3,7 @@ import errno
 import os
 import signal
 import time
+import sys
 
 from psutil import STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
@@ -108,8 +109,12 @@ class Watcher(object):
       descriptors, thus can reuse the sockets opened by circusd.
       (default: False)
 
-    - **copy_env** -- If True, the environment in which circus had been
+    - **copy_env** -- If True, the environment in which circus is running
       run will be reproduced for the workers. (default: False)
+
+    - **copy_path** -- If True, circusd *sys.path* is sent to the
+      process through *PYTHONPATH*. You must activate **copy_env** for
+      **copy_path** to work. (default: False)
 
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
@@ -123,7 +128,7 @@ class Watcher(object):
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, stream_backend='thread', priority=0,
                  singleton=False, use_sockets=False, copy_env=False,
-                 **options):
+                 copy_path=False, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.res_name = name.lower().replace(" ", "_")
@@ -147,6 +152,8 @@ class Watcher(object):
         self._options = options
         self.singleton = singleton
         self.copy_env = copy_env
+        self.copy_path = copy_path
+
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
@@ -154,7 +161,7 @@ class Watcher(object):
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
                       "uid", "gid", "send_hup", "shell", "env", "max_retry",
                       "cmd", "args", "graceful_timeout", "executable",
-                      "use_sockets", "priority", "copy_env",
+                      "use_sockets", "priority", "copy_env", "copy_path",
                       "singleton", "stdout_stream_conf", "stderr_stream_conf")
                       + tuple(options.keys()))
 
@@ -170,9 +177,15 @@ class Watcher(object):
 
         if self.copy_env:
             self.env = os.environ.copy()
+            if self.copy_path:
+                path = os.pathsep.join(sys.path)
+                self.env['PYTHONPATH'] = path
             if env is not None:
                 self.env.update(env)
         else:
+            if self.copy_path:
+                raise ValueError(('copy_env and copy_path must have the '
+                                  'same value'))
             self.env = env
 
         self.rlimits = rlimits
@@ -227,7 +240,7 @@ class Watcher(object):
 
         multipart_msg = ["watcher.%s.%s" % (name, topic), json.dumps(msg)]
 
-        if not self.evpub_socket.closed:
+        if self.evpub_socket is not None and not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
@@ -323,6 +336,8 @@ class Watcher(object):
 
     def _get_sockets_fds(self):
         # XXX should be cached
+        if self.sockets is None:
+            return {}
         fds = {}
         for name, sock in self.sockets.items():
             fds[name] = sock.fileno()

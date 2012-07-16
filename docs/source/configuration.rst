@@ -105,6 +105,10 @@ watcher:NAME - as many sections as you want
     **copy_env**
         If set to true, the local environment variables will be copied and
         passed to the workers when spawning them. (Default: False)
+    **copy_path**
+        If set to true, **sys.path** is passed in the subprocess environ
+        using *PYTHONPATH*. **copy_env** has to be true.
+        (Default: False)
     **warmup_delay**
         The delay (in seconds) between running processes.
     **numprocesses**

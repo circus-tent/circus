@@ -104,3 +104,26 @@ class TestWatcherInitialization(TestCircus):
                               {'COCONUTS': 'MIGRATE', 'AWESOMENESS': 'YES'})
         finally:
             os.environ = old_environ
+
+    def test_copy_path(self):
+        stream = QueueStream()
+        qstream = {'stream': stream}
+        old_environ = os.environ
+        old_paths = sys.path[:]
+        try:
+            sys.path = ['KEUKEUNEUT']
+            os.environ = {'COCONUTS': 'MIGRATE'}
+            cmd = ('%s -c "import sys; '
+                   'sys.stdout.write(\':\'.join(sys.path)); '
+                   ' sys.stdout.flush()"') % sys.executable
+            watcher = Watcher('xx', cmd, copy_env=True, copy_path=True,
+                              stdout_stream=qstream)
+            watcher.start()
+            time.sleep(2.)
+            watcher.stop()
+            data = [v for k, v in stream.get().items()][1]
+            data = ''.join(data)
+            self.assertTrue('KEUKEUNEUT' in data, data)
+        finally:
+            os.environ = old_environ
+            sys.path[:] = old_paths
