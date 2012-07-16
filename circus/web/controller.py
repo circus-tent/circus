@@ -36,6 +36,8 @@ class LiveClient(object):
         If circus is not connected raises an error.
         """
         self.watchers = []
+        self.plugins = []
+
         # trying to list the watchers
         try:
             self.connected = True
