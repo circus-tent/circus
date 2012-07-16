@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import socket
+import logging
 
 try:
     from beaker.middleware import SessionMiddleware
@@ -21,7 +22,8 @@ except ImportError, e:
 
 from circus.web.controller import LiveClient, CallError
 from circus.stats.client import StatsClient
-from circus import __version__
+from circus import __version__, logger
+from circus.util import configure_logger, LOG_LEVELS
 
 
 _DIR = os.path.dirname(__file__)
@@ -305,7 +307,10 @@ def run_command(func, message, redirect_url, redirect_on_error=None,
     kwargs = kwargs or {}
 
     try:
+        logger.debug('Running %r' % func)
         res = func(*args, **kwargs)
+        logger.debug('Result : %r' % res)
+
         if res['status'] != 'ok':
             message = "An error happened: %s" % res['reason']
     except CallError, e:
@@ -355,12 +360,21 @@ def main():
              'system you want to connect to')
     parser.add_argument('--version', action='store_true',
                      default=False, help='Displays Circus version and exits.')
+    parser.add_argument('--log-level', dest='loglevel', default='info',
+            choices=LOG_LEVELS.keys() + [key.upper() for key in
+                LOG_LEVELS.keys()],
+            help="log level")
+    parser.add_argument('--log-output', dest='logoutput', default='-',
+            help="log output")
 
     args = parser.parse_args()
 
     if args.version:
         print(__version__)
         sys.exit(0)
+
+    # configure the logger
+    configure_logger(logger, args.loglevel, args.logoutput)
 
     if args.endpoint is not None:
         global client

@@ -403,3 +403,16 @@ class ObjectDict(dict):
 # string constants
 DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
 DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
+
+
+def configure_logger(logger, level='INFO', output="-"):
+    loglevel = LOG_LEVELS.get(level.lower(), logging.INFO)
+    logger.setLevel(loglevel)
+    if output == "-":
+        h = logging.StreamHandler()
+    else:
+        h = logging.FileHandler(output)
+        util.close_on_exec(h.stream.fileno())
+    fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
+    h.setFormatter(fmt)
+    logger.addHandler(h)
