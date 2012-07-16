@@ -173,6 +173,17 @@ watcher:NAME - as many sections as you want
         via their file descriptors. If False, all parent fds are closed
         when the child process is forked. Defaults to False.
 
+    **max_age**
+        If set then the process will be restarted sometime after max_age
+        seconds. This is useful when processes deal with pool of connectors:
+        restarting processes improves the load balancing. Defaults to being
+        disabled.
+
+    **max_age_variance**
+        If max_age is set then the process will live between max_age and
+        max_age + random(0, max_age_variance) seconds. This avoids restarting
+        all processes for a watcher at once. Defaults to 30 seconds.
+
 
 plugin:NAME - as many sections as you want
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
