@@ -3,8 +3,7 @@ import errno
 import os
 import signal
 import time
-import random
-from threading import Timer
+from random import randint
 
 from psutil import STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
@@ -112,7 +111,7 @@ class Watcher(object):
       run will be reproduced for the workers.
 
     - **max_age**: If set after around max_age seconds, the process is
-      replaced with a new one.  (default: Disabled)
+      replaced with a new one.  (default: 0, Disabled)
 
     - **max_age_variance**: The maximum number of seconds that can be added to
       max_age. This extra value is to avoid restarting all processes at the
@@ -190,7 +189,6 @@ class Watcher(object):
         self.rlimits = rlimits
         self.send_hup = send_hup
         self.sockets = self.evpub_socket = None
-        self.kill_timers = {}
 
     def _create_redirectors(self):
         if self.stdout_stream:
@@ -248,11 +246,6 @@ class Watcher(object):
         """ensure that the process is killed (and not a zombie)"""
         process = self.processes.pop(pid)
 
-        # disable kill timer
-        if process in self.kill_timers:
-            timer = self.kill_timers.pop(process)
-            timer.cancel()
-
         # get return code
         if os.WIFSIGNALED(status):
             retcode = os.WTERMSIG(status)
@@ -308,6 +301,16 @@ class Watcher(object):
         """
         if self.stopped:
             return
+
+        if self.max_age:
+            for process in self.processes.itervalues():
+                max_age = self.max_age + randint(0, self.max_age_variance)
+                if process.age() > max_age:
+                    logger.debug('%s: expired, respawning', self.name)
+                    self.notify_event("expired",
+                                      {"process_pid": process.pid,
+                                       "time": time.time()})
+                    self.kill_process(process)
 
         if len(self.processes) < self.numprocesses:
             self.spawn_processes()
@@ -386,21 +389,6 @@ class Watcher(object):
                 nb_tries += 1
                 continue
             else:
-                if self.max_age:
-                    def _kill():
-                        logger.debug('%s: expired, respawning', self.name)
-                        self.notify_event("expired",
-                                          {"process_pid": process.pid,
-                                           "time": time.time()})
-                        self.kill_process(process)
-                        self.spawn_process()
-
-                    variance = random.randint(0, self.max_age_variance)
-                    timeout = self.max_age + variance
-                    timer = Timer(timeout, _kill)
-                    self.kill_timers[process] = timer
-                    timer.start()
-
                 self.notify_event("spawn", {"process_pid": process.pid,
                                             "time": time.time()})
                 time.sleep(self.warmup_delay)

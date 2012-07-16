@@ -83,7 +83,7 @@ class TestWatcher(TestCircus):
                            options={'max_age': 1, 'max_age_variance': 0})
         self.assertEquals(result.get('status'), 'ok')
         initial_pids = self.pids()
-        time.sleep(1.5)  # allow process to reach max_age and restart
+        time.sleep(3.0)  # allow process to reach max_age and restart
         current_pids = self.pids()
         self.assertEqual(len(current_pids), 1)
         self.assertNotEqual(initial_pids, current_pids)
