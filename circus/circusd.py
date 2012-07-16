@@ -1,13 +1,11 @@
 import sys
 import argparse
 import os
-import logging
 import resource
 
 from circus import logger
 from circus.arbiter import Arbiter
 from circus.pidfile import Pidfile
-from circus import util
 from circus import __version__
 from circus.util import MAXFD, REDIRECT_TO, configure_logger, LOG_LEVELS
 

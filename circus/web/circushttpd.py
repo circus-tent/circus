@@ -2,7 +2,6 @@ import argparse
 import os
 import sys
 import socket
-import logging
 
 try:
     from beaker.middleware import SessionMiddleware

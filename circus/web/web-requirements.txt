@@ -3,8 +3,8 @@ MarkupSafe==0.15
 bottle==0.10.9
 anyjson==0.3.1
 gevent==0.13.7
-gevent-socketio==0.3.5-beta
+gevent-socketio
 gevent-websocket==0.3.6
-greenlet==0.3.4
+greenlet
 beaker==1.6.3
 git+http://github.com/mozilla-services/gevent-zeromq.git
