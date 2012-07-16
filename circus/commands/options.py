@@ -83,6 +83,9 @@ class Options(Command):
           definitely kill a process.
         - priority: used to sort watchers in the arbiter
         - singleton: if True, a singleton watcher.
+        - max_age: time a process can live before being restarted
+        - max_age_variance: variable additional time to live, avoids
+          stampeding herd.
     """
 
     name = "options"
