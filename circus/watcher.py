@@ -104,10 +104,12 @@ class Watcher(object):
     - **singleton** -- If True, this watcher has a single process.
       (default:False)
 
-    = **use_sockets** -- XXX
+    - **use_sockets** -- If True, the processes will inherit the file
+      descriptors, thus can reuse the sockets opened by circusd.
+      (default: False)
 
     - **copy_env** -- If True, the environment in which circus had been
-      run will be reproduced for the workers.
+      run will be reproduced for the workers. (default: False)
 
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
