@@ -87,7 +87,8 @@ class Signal(Command):
 
         ::
 
-            $ circusctl signal <name> [<process>] [<pid>] [--children] [recursive] <signum>
+            $ circusctl signal <name> [<process>] [<pid>] [--children]
+                    [recursive] <signum>
 
         Options:
         ++++++++
