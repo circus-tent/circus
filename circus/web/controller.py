@@ -62,8 +62,9 @@ class LiveClient(object):
             self.connected = False
 
     def killproc(self, name, pid):
+        # killing a proc and its children
         res = self.client.send_message('signal', name=name, pid=int(pid),
-                                       signum=9, children=True)
+                                       signum=9, recursive=True)
         self.update_watchers()  # will do better later
         return res
 
