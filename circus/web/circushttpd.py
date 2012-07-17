@@ -162,6 +162,11 @@ def socketio(someid, socket_id):
 
 
 class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
+
+    def __init__(self, *args, **kwargs):
+        super(StatsNamespace, self).__init__(*args, **kwargs)
+        self._running = True
+
     def on_get_stats(self, msg):
         """This method is the one way to start a conversation with the socket.
         When sending a message here, the parameters are packt into the msg
@@ -206,6 +211,8 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         # there when we got them.
         stats = StatsClient(endpoint=client.stats_endpoint)
         for watcher, pid, stat in stats:
+            if self._running == False:
+                return
 
             if watcher == 'sockets':
                 # if we get information about sockets and we explicitely
@@ -246,6 +253,12 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         pkt = dict(type="event", name=topic, args=kwargs,
                    endpoint=self.ns_name)
         self.socket.send_packet(pkt)
+
+    def recv_disconnect(self):
+        """When we receive a disconnect from the client, we want to make sure
+        that we close the socket we just opened at the begining of the stat
+        exchange."""
+        self._running = False
 
 
 # Utils
