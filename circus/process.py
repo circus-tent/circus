@@ -75,7 +75,8 @@ class Process(object):
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
 
-    - use_fds XXX
+    - **use_fds**: if True, will not close the fds in the subprocess.
+      default: False.
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
                  uid=None, gid=None, env=None, rlimits=None, executable=None,

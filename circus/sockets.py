@@ -34,6 +34,7 @@ class CircusSocket(socket.socket):
         super(CircusSocket, self).__init__(family=family, type=type,
                                            proto=proto)
         self.name = name
+        self.socktype = type
         self.host, self.port = addrinfo(host, port)
         self.backlog = backlog
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -49,7 +50,8 @@ class CircusSocket(socket.socket):
             raise
 
         self.setblocking(0)
-        self.listen(self.backlog)
+        if self.socktype in (socket.SOCK_STREAM, socket.SOCK_SEQPACKET):
+            self.listen(self.backlog)
         self.host, self.port = self.getsockname()
         logger.debug('Socket bound at %s:%d - fd: %d' % (self.host, self.port,
                                                          self.fileno()))

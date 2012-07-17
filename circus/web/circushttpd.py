@@ -21,7 +21,8 @@ except ImportError, e:
 
 from circus.web.controller import LiveClient, CallError
 from circus.stats.client import StatsClient
-from circus import __version__
+from circus import __version__, logger
+from circus.util import configure_logger, LOG_LEVELS
 
 
 _DIR = os.path.dirname(__file__)
@@ -51,7 +52,7 @@ def route(*args, **kwargs):
                 global client
                 if client is None:
                     session = get_session()
-                    if 'endpoint' in session:
+                    if session.get('endpoint', None) is not None:
                         client = connect_to_endpoint(session['endpoint'])
                     else:
                         return redirect('/connect')
@@ -123,21 +124,33 @@ def sockets():
 
 @route('/connect', method=['POST', 'GET'], ensure_client=False)
 def connect():
-    if request.method == 'GET':
+    """Connects to the stats client, using the endpoint that's passed in the
+    POST body.
+    """
+    def _ask_connection():
         return render_template('connect.html')
 
+    if request.method == 'GET':
+        return _ask_connection()
+
     elif request.method == 'POST':
+        # if we got an endpoint in the POST body, store it.
+        if request.forms.endpoint is None:
+            return _ask_connection()
+
+        endpoint = request.forms.endpoint
+
+        tmp_client = connect_to_endpoint(endpoint)
+        if not tmp_client.connected:
+            set_message('Impossible to connect')
+
         session = get_session()
-        session['endpoint'] = request.forms.endpoint
+        session['endpoint'] = endpoint
         session.save()
 
         global client
-        client = connect_to_endpoint(request.forms.endpoint)
-        if client.connected:
-            message = 'You are now connected'
-        else:
-            message = 'Impossible to connect'
-        set_message(message)
+        client = tmp_client
+
         redirect('/')
 
 
@@ -161,6 +174,11 @@ def socketio(someid, socket_id):
 
 
 class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
+
+    def __init__(self, *args, **kwargs):
+        super(StatsNamespace, self).__init__(*args, **kwargs)
+        self._running = True
+
     def on_get_stats(self, msg):
         """This method is the one way to start a conversation with the socket.
         When sending a message here, the parameters are packt into the msg
@@ -205,6 +223,8 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         # there when we got them.
         stats = StatsClient(endpoint=client.stats_endpoint)
         for watcher, pid, stat in stats:
+            if self._running == False:
+                return
 
             if watcher == 'sockets':
                 # if we get information about sockets and we explicitely
@@ -245,6 +265,12 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         pkt = dict(type="event", name=topic, args=kwargs,
                    endpoint=self.ns_name)
         self.socket.send_packet(pkt)
+
+    def recv_disconnect(self):
+        """When we receive a disconnect from the client, we want to make sure
+        that we close the socket we just opened at the begining of the stat
+        exchange."""
+        self._running = False
 
 
 # Utils
@@ -305,7 +331,10 @@ def run_command(func, message, redirect_url, redirect_on_error=None,
     kwargs = kwargs or {}
 
     try:
+        logger.debug('Running %r' % func)
         res = func(*args, **kwargs)
+        logger.debug('Result : %r' % res)
+
         if res['status'] != 'ok':
             message = "An error happened: %s" % res['reason']
     except CallError, e:
@@ -355,12 +384,21 @@ def main():
              'system you want to connect to')
     parser.add_argument('--version', action='store_true',
                      default=False, help='Displays Circus version and exits.')
+    parser.add_argument('--log-level', dest='loglevel', default='info',
+            choices=LOG_LEVELS.keys() + [key.upper() for key in
+                LOG_LEVELS.keys()],
+            help="log level")
+    parser.add_argument('--log-output', dest='logoutput', default='-',
+            help="log output")
 
     args = parser.parse_args()
 
     if args.version:
         print(__version__)
         sys.exit(0)
+
+    # configure the logger
+    configure_logger(logger, args.loglevel, args.logoutput)
 
     if args.endpoint is not None:
         global client

@@ -95,7 +95,8 @@ class Arbiter(object):
                                     singleton=True,
                                     stdout_stream=stdout_stream,
                                     stderr_stream=stderr_stream,
-                                    stream_backend=self.stream_backend)
+                                    stream_backend=self.stream_backend,
+                                    copy_env=True, copy_path=True)
             self.watchers.append(stats_watcher)
 
         # adding the httpd
@@ -108,7 +109,8 @@ class Arbiter(object):
                                     singleton=True,
                                     stdout_stream=stdout_stream,
                                     stderr_stream=stderr_stream,
-                                    stream_backend=self.stream_backend)
+                                    stream_backend=self.stream_backend,
+                                    copy_env=True, copy_path=True)
             self.watchers.append(httpd_watcher)
             httpd_socket = CircusSocket(name='circushttpd', host=httpd_host,
                                         port=httpd_port)
@@ -129,7 +131,8 @@ class Arbiter(object):
                 plugin_watcher = Watcher(name, cmd, priority=1, singleton=True,
                                          stdout_stream=stdout_stream,
                                          stderr_stream=stderr_stream,
-                                         stream_backend=self.stream_backend)
+                                         stream_backend=self.stream_backend,
+                                         copy_env=True, copy_path=True)
                 self.watchers.append(plugin_watcher)
 
         self.sockets = CircusSockets(sockets)

@@ -25,7 +25,9 @@ def watcher_defaults():
         'stdout_stream': dict(),
         'priority': 0,
         'use_sockets': False,
-        'singleton': False}
+        'singleton': False,
+        'copy_env': False,
+        'copy_path': False}
 
 
 class DefaultConfigParser(ConfigParser.ConfigParser):
@@ -191,6 +193,13 @@ def get_config(config_file):
                                                 bool)
                 elif opt == 'stream_backend':
                     watcher['stream_backend'] = val
+                elif opt == 'copy_env':
+                    watcher['copy_env'] = dget(section, "copy_env", False,
+                                                bool)
+                elif opt == 'copy_path':
+                    watcher['copy_path'] = dget(section, "copy_path", False,
+                                                bool)
+
                 else:
                     # freeform
                     watcher[opt] = val

@@ -3,6 +3,8 @@ import errno
 import os
 import signal
 import time
+import sys
+from random import randint
 
 from psutil import STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
@@ -104,10 +106,24 @@ class Watcher(object):
     - **singleton** -- If True, this watcher has a single process.
       (default:False)
 
-    = **use_sockets** -- XXX
+    - **use_sockets** -- If True, the processes will inherit the file
+      descriptors, thus can reuse the sockets opened by circusd.
+      (default: False)
 
-    - **copy_env** -- If True, the environment in which circus had been
-      run will be reproduced for the workers.
+    - **copy_env** -- If True, the environment in which circus is running
+      run will be reproduced for the workers. (default: False)
+
+    - **copy_path** -- If True, circusd *sys.path* is sent to the
+      process through *PYTHONPATH*. You must activate **copy_env** for
+      **copy_path** to work. (default: False)
+
+    - **max_age**: If set after around max_age seconds, the process is
+      replaced with a new one.  (default: 0, Disabled)
+
+    - **max_age_variance**: The maximum number of seconds that can be added to
+      max_age. This extra value is to avoid restarting all processes at the
+      same time.  A process will live between max_age and
+      max_age + max_age_variance seconds.
 
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
@@ -121,6 +137,7 @@ class Watcher(object):
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, stream_backend='thread', priority=0,
                  singleton=False, use_sockets=False, copy_env=False,
+                 copy_path=False, max_age=0, max_age_variance=30,
                  **options):
         self.name = name
         self.use_sockets = use_sockets
@@ -145,6 +162,9 @@ class Watcher(object):
         self._options = options
         self.singleton = singleton
         self.copy_env = copy_env
+        self.copy_path = copy_path
+        self.max_age = int(max_age)
+        self.max_age_variance = int(max_age_variance)
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
@@ -153,7 +173,8 @@ class Watcher(object):
                       "uid", "gid", "send_hup", "shell", "env", "max_retry",
                       "cmd", "args", "graceful_timeout", "executable",
                       "use_sockets", "priority", "copy_env",
-                      "singleton", "stdout_stream_conf", "stderr_stream_conf")
+                      "singleton", "stdout_stream_conf", "stderr_stream_conf",
+                      "max_age", "max_age_variance")
                       + tuple(options.keys()))
 
         if not working_dir:
@@ -168,9 +189,15 @@ class Watcher(object):
 
         if self.copy_env:
             self.env = os.environ.copy()
+            if self.copy_path:
+                path = os.pathsep.join(sys.path)
+                self.env['PYTHONPATH'] = path
             if env is not None:
                 self.env.update(env)
         else:
+            if self.copy_path:
+                raise ValueError(('copy_env and copy_path must have the '
+                                  'same value'))
             self.env = env
 
         self.rlimits = rlimits
@@ -225,7 +252,7 @@ class Watcher(object):
 
         multipart_msg = ["watcher.%s.%s" % (name, topic), json.dumps(msg)]
 
-        if not self.evpub_socket.closed:
+        if self.evpub_socket is not None and not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
@@ -289,6 +316,16 @@ class Watcher(object):
         if self.stopped:
             return
 
+        if self.max_age:
+            for process in self.processes.itervalues():
+                max_age = self.max_age + randint(0, self.max_age_variance)
+                if process.age() > max_age:
+                    logger.debug('%s: expired, respawning', self.name)
+                    self.notify_event("expired",
+                                      {"process_pid": process.pid,
+                                       "time": time.time()})
+                    self.kill_process(process)
+
         if len(self.processes) < self.numprocesses:
             self.spawn_processes()
 
@@ -321,6 +358,8 @@ class Watcher(object):
 
     def _get_sockets_fds(self):
         # XXX should be cached
+        if self.sockets is None:
+            return {}
         fds = {}
         for name, sock in self.sockets.items():
             fds[name] = sock.fileno()
@@ -383,6 +422,7 @@ class Watcher(object):
         if self.stderr_redirector is not None:
             self.stderr_redirector.remove_redirection('stderr', process)
 
+        logger.debug("%s: kill process %s", self.name, process.pid)
         try:
             # sending the same signal to all the children
             for child_pid in process.children():
@@ -620,6 +660,12 @@ class Watcher(object):
         elif key == "graceful_timeout":
             self.graceful_timeout = float(val)
             action = -1
+        elif key == "max_age":
+            self.max_age = int(val)
+            action = 1
+        elif key == "max_age_variance":
+            self.max_age_variance = int(val)
+            action = 1
 
         # send update event
         self.notify_event("updated", {"time": time.time()})

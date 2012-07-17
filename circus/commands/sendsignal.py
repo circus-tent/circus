@@ -69,13 +69,26 @@ class Signal(Command):
                     "children": True
             }
 
+        Last, you can send a signal to the process *and* its children, with
+        the *recursive* option::
+
+            {
+                "command": "signal",
+                "property": {
+                    "name": <name>,
+                    "signum": <signum>,
+                    "recursive": True
+            }
+
+
 
         Command line
         ------------
 
         ::
 
-            $ circusctl signal <name> [<process>] [<pid>] [--children] <signum>
+            $ circusctl signal <name> [<process>] [<pid>] [--children]
+                    [recursive] <signum>
 
         Options:
         ++++++++
@@ -85,6 +98,7 @@ class Signal(Command):
         - <signum>: the signal number to send.
         - <childpid>: the pid of a child, if any
         - <children>: boolean, send the signal to all the children
+        - <recursive>: boolean, send the signal to the process and its children
 
         Allowed signals are:
 
@@ -127,6 +141,7 @@ class Signal(Command):
         pid = props.get('pid', None)
         childpid = props.get('childpid', None)
         children = props.get('children', False)
+        recursive = props.get('recursive', False)
 
         if pid:
             if childpid:
@@ -136,6 +151,10 @@ class Signal(Command):
             else:
                 # send to the given pid
                 watcher.send_signal(pid, signum)
+
+                if recursive:
+                    # also send to the children
+                    watcher.send_signal_children(pid, signum)
         else:
             # send to all the pids for this watcher
             watcher.send_signal_processes(signum)

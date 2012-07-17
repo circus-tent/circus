@@ -1,6 +1,8 @@
 
 
 def setUp():
+    from circus import _patch   # NOQA
+
     try:
         from gevent import monkey       # NOQA
         try:
