@@ -14,7 +14,7 @@ from circus import __version__
 
 
 class StatsClient(CircusConsumer):
-    def __init__(self, endpoint='tcp://127.0.0.1:5557', context=None):
+    def __init__(self, endpoint=None, context=None):
         CircusConsumer.__init__(self, ['stat.'], context, endpoint)
 
     def iter_messages(self):

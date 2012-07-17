@@ -52,7 +52,7 @@ def route(*args, **kwargs):
                 global client
                 if client is None:
                     session = get_session()
-                    if 'endpoint' in session:
+                    if session.get('endpoint', None) is not None:
                         client = connect_to_endpoint(session['endpoint'])
                     else:
                         return redirect('/connect')
@@ -124,21 +124,33 @@ def sockets():
 
 @route('/connect', method=['POST', 'GET'], ensure_client=False)
 def connect():
-    if request.method == 'GET':
+    """Connects to the stats client, using the endpoint that's passed in the
+    POST body.
+    """
+    def _ask_connection():
         return render_template('connect.html')
 
+    if request.method == 'GET':
+        return _ask_connection()
+
     elif request.method == 'POST':
+        # if we got an endpoint in the POST body, store it.
+        if request.forms.endpoint is None:
+            return _ask_connection()
+
+        endpoint = request.forms.endpoint
+
+        tmp_client = connect_to_endpoint(endpoint)
+        if not tmp_client.connected:
+            set_message('Impossible to connect')
+
         session = get_session()
-        session['endpoint'] = request.forms.endpoint
+        session['endpoint'] = endpoint
         session.save()
 
         global client
-        client = connect_to_endpoint(request.forms.endpoint)
-        if client.connected:
-            message = 'You are now connected'
-        else:
-            message = 'Impossible to connect'
-        set_message(message)
+        client = tmp_client
+
         redirect('/')
 
 
