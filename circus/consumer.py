@@ -1,13 +1,13 @@
 import errno
 import zmq
 
-DEFAULT_ENDPOINT = 'tcp://127.0.0.1:5556'
+from circus.util import DEFAULT_ENDPOINT_DEALER
 
 
 class CircusConsumer(object):
     def __init__(self, topics, context=None, endpoint=None):
         if endpoint is None:
-            endpoint = DEFAULT_ENDPOINT
+            endpoint = DEFAULT_ENDPOINT_DEALER
 
         self.topics = topics
         self.keep_context = context is not None

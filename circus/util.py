@@ -14,6 +14,10 @@ from psutil.error import AccessDenied, NoSuchProcess
 from psutil import Process
 from circus import logger
 
+# string constants
+DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
+DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
+
 
 try:
     from importlib import import_module         # NOQA
@@ -399,10 +403,6 @@ def replace_gnu_args(data, prefix='circus', **options):
 class ObjectDict(dict):
     def __getattr__(self, item):
         return self[item]
-
-# string constants
-DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
-DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
 
 
 def configure_logger(logger, level='INFO', output="-"):
