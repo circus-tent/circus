@@ -146,7 +146,9 @@ class Arbiter(object):
         reload(ioloop)
 
         watchers = []
+        watcher_names = []
         for watcher in cfg.get('watchers', []):
+            if watcher in watchers
             watchers.append(Watcher.load_from_config(watcher))
 
         sockets = []

@@ -1,13 +1,13 @@
 import errno
 import zmq
 
-from circus.util import DEFAULT_ENDPOINT_DEALER
+from circus.util import DEFAULT_ENDPOINT_SUB
 
 
 class CircusConsumer(object):
     def __init__(self, topics, context=None, endpoint=None):
         if endpoint is None:
-            endpoint = DEFAULT_ENDPOINT_DEALER
+            endpoint = DEFAULT_ENDPOINT_SUB
 
         self.topics = topics
         self.keep_context = context is not None
