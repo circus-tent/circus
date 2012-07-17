@@ -72,11 +72,10 @@ def _stop(self):
     # notify anyway (join() is forbidden on them).
     if not hasattr(self, '_Thread__block'):
         return
-    self._Thread__block.acquire()
-    self._Thread__stopped = True
-    self._Thread__block.notify_all()
+    self._Thread__stop_old()
 
 
 threading.Thread._Thread__bootstrap_inner = _bootstrap_inner
 threading.Thread._Thread__delete = _delete
+threading.Thread._Thread__stop_old = threading.Thread._Thread__stop
 threading.Thread._Thread__stop = _stop
