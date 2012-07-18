@@ -75,7 +75,7 @@ def main():
     h.setFormatter(fmt)
     logger.addHandler(h)
 
-    stats = StatsStreamer(args.endpoint, args.pubsub, args.statspoint)
+    stats = StatsStreamer(args.endpoint, args.pubsub, args.statspoint, args.ssh)
     try:
         stats.start()
     finally:
