@@ -168,7 +168,10 @@ def get_info(process=None, interval=0, with_childs=False):
         info['username'] = 'N/A'
 
     try:
-        info['nice'] = process.nice
+        try:
+            info['nice'] = process.get_nice()
+        except AttributeError:
+            info['nice'] = process.nice
     except AccessDenied:
         info['nice'] = 'N/A'
     except NoSuchProcess:
@@ -396,3 +399,7 @@ def replace_gnu_args(data, prefix='circus', **options):
 class ObjectDict(dict):
     def __getattr__(self, item):
         return self[item]
+
+# string constants
+DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
+DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"

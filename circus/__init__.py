@@ -1,3 +1,4 @@
+import _patch       # NOQA
 import logging
 import os
 import sys

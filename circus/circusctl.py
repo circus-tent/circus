@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -
-
+import argparse
 import getopt
 import json
 import sys
@@ -17,16 +17,7 @@ from circus.client import CircusClient
 from circus.consumer import CircusConsumer
 from circus.commands import get_commands
 from circus.exc import CallError, ArgumentError
-
-
-globalopts = [
-    ('', 'endpoint', "", "connection endpoint"),
-    ('', 'timeout', 5, "connection timeout"),
-    ('', 'json', False, "output to JSON"),
-    ('', 'prettify', False, "prettify output"),
-    ('h', 'help', None, "display help and exit"),
-    ('v', 'version', None, "display version and exit")
-]
+from circus.util import DEFAULT_ENDPOINT_SUB, DEFAULT_ENDPOINT_DEALER
 
 
 def prettify(jsonobj, prettify=True):
@@ -43,6 +34,35 @@ def prettify(jsonobj, prettify=True):
             pass
 
     return json_str
+
+
+class _Help(argparse.HelpFormatter):
+
+    commands = None
+
+    def _metavar_formatter(self, action, default_metavar):
+        if action.dest != 'command':
+            return super(_Help, self)._metavar_formatter(action,
+                       default_metavar)
+
+        commands = self.commands.items()
+        commands.sort()
+        max_len = max([len(name) for name, help in commands])
+
+        output = []
+        for name, cmd in commands:
+            output.append('\t%-*s\t%s' % (max_len, name, cmd.short))
+
+        def format(tuple_size):
+            res = '\n'.join(output)
+            return (res, ) * tuple_size
+
+        return format
+
+    def start_section(self, heading):
+        if heading == 'positional arguments':
+            heading = 'Commands'
+        super(_Help, self).start_section(heading)
 
 
 def _get_switch_str(opt):
@@ -65,6 +85,17 @@ class ControllerApp(object):
 
     def __init__(self):
         self.commands = get_commands()
+        _Help.commands = self.commands
+        self.options = {
+            'endpoint': {'default': None, 'help': 'connection endpoint'},
+            'timeout': {'default': 5, 'help': 'connection timeout'},
+            'json': {'default': False, 'action': 'store_true',
+                     'help': 'output to JSON'},
+            'prettify': {'default': False, 'action': 'store_true',
+                         'help': 'prettify output'},
+            'version': {'default': False, 'action': 'store_true',
+                        'help': 'display version and exit'}
+        }
 
     def run(self, args):
         try:
@@ -85,63 +116,47 @@ class ControllerApp(object):
             sys.stderr.write(traceback.format_exc())
             sys.exit(1)
 
+    def get_globalopts(self, args):
+        globalopts = {}
+        for option in self.options:
+            globalopts[option] = getattr(args, option)
+        return globalopts
+
     def dispatch(self, args):
-        cmd, globalopts, opts, args = self._parse(args)
+        usage = '%(prog)s [options] command [args]'
+        parser = argparse.ArgumentParser(
+                description="Controls a Circus daemon",
+                formatter_class=_Help, usage=usage)
 
-        if globalopts['help'] or cmd == "help":
-            del globalopts["help"]
-            return self.display_help(*args, **globalopts)
-        elif globalopts['version'] or cmd == "version":
+        for option in self.options:
+            parser.add_argument('--' + option, **self.options[option])
+
+        parser.add_argument('command', nargs="?", choices=self.commands)
+        parser.add_argument('args', nargs="*", help=argparse.SUPPRESS)
+
+        args = parser.parse_args()
+        globalopts = self.get_globalopts(args)
+        opts = {}
+
+        if args.version:
             return self.display_version()
-
         else:
-            if cmd not in self.commands:
-                raise ArgumentError('Unknown command %r' % cmd)
-
-            cmd = self.commands[cmd]
-
-        endpoint = globalopts.get('endpoint')
-        if not endpoint:
-            if cmd.msg_type == "sub":
-                endpoint = "tcp://127.0.0.1:5556"
+            if args.command not in self.commands:
+                msg = 'Unknown command %r' % args.command
+                msg += '\nPossible values: %s' % ', '.join(self.commands)
+                parser.print_help()
+                sys.exit(0)
             else:
-                endpoint = "tcp://127.0.0.1:5555"
-
-        timeout = globalopts.get("timeout", 5.0)
-        msg = cmd.message(*args, **opts)
-        return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts,
-                msg, endpoint, timeout)
-
-    def display_help(self, *args, **opts):
-        if opts.get('version', False):
-            self.display_version(*args, **opts)
-
-        if len(args) >= 1:
-            if args[0] in  self.commands:
-                cmd = self.commands[args[0]]
-                print(cmd.desc)
-            return 0
-
-        print("usage: circusctl [--version] [--endpoint=<endpoint>]")
-        print("                 [--timeout=<timeout>] [--json]")
-        print("                 [--prettify] [--help]")
-        print("                 <command> [<args>]")
-        print("")
-        print("Commands:")
-        commands = sorted([name for name in self.commands] + ["help"])
-
-        max_len = len(max(commands, key=len))
-        for name in commands:
-            if name == "help":
-                desc = "Get help on a command"
-                print("\t%-*s\t%s" % (max_len, name, desc))
-            else:
-                cmd = self.commands[name]
-                # Command name is max_len characters.
-                # Used by the %-*s formatting code
-                print("\t%-*s\t%s" % (max_len, name, cmd.short))
-
-        return 0
+                cmd = self.commands[args.command]
+                if args.endpoint is None:
+                    if cmd.msg_type == 'sub':
+                        args.endpoint = DEFAULT_ENDPOINT_SUB
+                    else:
+                        args.endpoint = DEFAULT_ENDPOINT_DEALER
+                msg = cmd.message(*args.args, **opts)
+                handler = getattr(self, "handle_%s" % cmd.msg_type)
+                return handler(cmd, globalopts, msg, args.endpoint,
+                               int(args.timeout))
 
     def display_version(self, *args, **opts):
         from circus import __version__
@@ -176,82 +191,6 @@ class ControllerApp(object):
         finally:
             client.stop()
         return 0
-
-    def _parse(self, args):
-        options = {}
-        cmdoptions = {}
-
-        # placeholder so "circusctl --version" works
-        if args == ['--version']:
-            args.append('XX')
-
-        args = self._parseopts(args, globalopts, options)
-
-        if args:
-            cmd, args = args[0], args[1:]
-            cmd = cmd.lower()
-
-            if cmd in self.commands:
-                cmdopts = self.commands[cmd].options
-            else:
-                cmdopts = []
-        else:
-            cmd = "help"
-            cmdopts = []
-
-        for opt in globalopts:
-            cmdopts.append((opt[0], opt[1], options[opt[1]], opt[3]))
-
-        args = self._parseopts(args, cmdopts, cmdoptions)
-
-        for opt, val in cmdoptions.items():
-            if opt in options:
-                options[opt] = val
-                del cmdoptions[opt]
-
-        return cmd, options, cmdoptions, args
-
-    def _parseopts(self, args, options, state):
-        namelist = []
-        shortlist = ''
-        argmap = {}
-        defmap = {}
-
-        for short, name, default, comment in options:
-            oname = name
-            name = name.replace('-', '_')
-            argmap['-' + short] = argmap['--' + oname] = name
-            defmap[name] = default
-
-            if isinstance(default, list):
-                state[name] = default[:]
-            else:
-                state[name] = default
-
-            if not (default is None or default is True or default is False):
-                if short:
-                    short += ':'
-                if oname:
-                    oname += '='
-            if short:
-                shortlist += short
-            if name:
-                namelist.append(oname)
-
-        opts, args = getopt.getopt(args, shortlist, namelist)
-        for opt, val in opts:
-            name = argmap[opt]
-            t = type(defmap[name])
-            if t is type(1):
-                state[name] = int(val)
-            elif t is type(''):
-                state[name] = val
-            elif t is type([]):
-                state[name].append(val)
-            elif t is type(None) or t is type(False):
-                state[name] = True
-
-        return args
 
 
 def main():
