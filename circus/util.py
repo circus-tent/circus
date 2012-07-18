@@ -14,9 +14,10 @@ from psutil.error import AccessDenied, NoSuchProcess
 from psutil import Process
 from circus import logger
 
-# string constants
-DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
+# default endpoints
 DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
+DEFAULT_ENDPOINT_STATS = "tcp://127.0.0.1:5557"
+DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
 
 
 try:

@@ -47,7 +47,7 @@ class Arbiter(object):
     - **httpd** -- If True, a circushttpd process is run (default: False)
     - **httpd_host** -- the circushttpd host (default: localhost)
     - **httpd_port** -- the circushttpd port (default: 8080)
-    - **debug** -- if True, adds a lot of debug info in teh stdout (default:
+    - **debug** -- if True, adds a lot of debug info in the stdout (default:
       False)
     - **stream_backend** -- the backend that will be used for the streaming
       process. Can be *thread* or *gevent*. When set to *gevent* you need
@@ -91,6 +91,8 @@ class Arbiter(object):
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --pubsub %s' % self.pubsub_endpoint
             cmd += ' --statspoint %s' % self.stats_endpoint
+            if debug:
+                cmd += ' --log-level DEBUG'
             stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=stdout_stream,
@@ -127,7 +129,8 @@ class Arbiter(object):
                 fqnd = plugin['use']
                 name = 'plugin:%s' % fqnd.replace('.', '-')
                 cmd = get_plugin_cmd(plugin, self.endpoint,
-                                     self.pubsub_endpoint, self.check_delay)
+                                     self.pubsub_endpoint, self.check_delay,
+                                     debug=self.debug)
                 plugin_watcher = Watcher(name, cmd, priority=1, singleton=True,
                                          stdout_stream=stdout_stream,
                                          stderr_stream=stderr_stream,
@@ -379,13 +382,9 @@ class Arbiter(object):
 
 class ThreadedArbiter(Arbiter, Thread):
 
-    def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
-                 prereload_fn=None, context=None, loop=None,
-                 stats_endpoint=None, plugins=None):
+    def __init__(self, *args, **kw):
         Thread.__init__(self)
-        Arbiter.__init__(self, watchers, endpoint, pubsub_endpoint,
-                         check_delay, prereload_fn, context, loop,
-                         stats_endpoint, plugins)
+        Arbiter.__init__(self, *args, **kw)
 
     def start(self):
         return Thread.start(self)

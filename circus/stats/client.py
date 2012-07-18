@@ -11,10 +11,11 @@ import zmq
 
 from circus.consumer import CircusConsumer
 from circus import __version__
+from circus.util import DEFAULT_ENDPOINT_STATS
 
 
 class StatsClient(CircusConsumer):
-    def __init__(self, endpoint=None, context=None):
+    def __init__(self, endpoint=DEFAULT_ENDPOINT_STATS, context=None):
         CircusConsumer.__init__(self, ['stat.'], context, endpoint)
 
     def iter_messages(self):
@@ -23,6 +24,16 @@ class StatsClient(CircusConsumer):
 
         with self:
             while True:
+                try:
+                    events = dict(self.poller.poll(self.timeout * 1000))
+                except zmq.ZMQError as e:
+                    if e.errno == errno.EINTR:
+                        continue
+
+                if len(events) == 0:
+                    print 'nothing'
+                    continue
+
                 try:
                     topic, stat = recv()
                 except zmq.core.error.ZMQError, e:
@@ -181,7 +192,7 @@ def main():
 
     parser.add_argument('--endpoint',
             help='The circusd-stats ZeroMQ socket to connect to',
-            default='tcp://127.0.0.1:5557')
+            default=DEFAULT_ENDPOINT_STATS)
 
     parser.add_argument('--version', action='store_true',
                      default=False, help='Displays Circus version and exits.')

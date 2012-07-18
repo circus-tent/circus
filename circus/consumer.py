@@ -5,10 +5,8 @@ from circus.util import DEFAULT_ENDPOINT_SUB
 
 
 class CircusConsumer(object):
-    def __init__(self, topics, context=None, endpoint=None):
-        if endpoint is None:
-            endpoint = DEFAULT_ENDPOINT_SUB
-
+    def __init__(self, topics, context=None, endpoint=DEFAULT_ENDPOINT_SUB,
+                 timeout=1.):
         self.topics = topics
         self.keep_context = context is not None
         self.context = context or zmq.Context()
@@ -17,6 +15,9 @@ class CircusConsumer(object):
         self.pubsub_socket.connect(self.endpoint)
         for topic in self.topics:
             self.pubsub_socket.setsockopt(zmq.SUBSCRIBE, topic)
+        self.poller = zmq.Poller()
+        self.poller.register(self.pubsub_socket, zmq.POLLIN)
+        self.timeout = timeout
 
     def __enter__(self):
         return self
@@ -32,6 +33,15 @@ class CircusConsumer(object):
         """ Yields tuples of (topic, message) """
         with self:
             while True:
+                try:
+                    events = dict(self.poller.poll(self.timeout * 1000))
+                except zmq.ZMQError as e:
+                    if e.errno == errno.EINTR:
+                        continue
+
+                if len(events) == 0:
+                    continue
+
                 topic, message = self.pubsub_socket.recv_multipart()
                 yield topic, message
 

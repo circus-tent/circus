@@ -83,9 +83,11 @@ class TestCircus(unittest.TestCase):
         worker.update(kw)
         if stats:
             arbiter = get_arbiter([worker], background=True, plugins=plugins,
-                                  stats_endpoint='tcp://127.0.0.1:5557')
+                                  stats_endpoint='tcp://127.0.0.1:5557',
+                                  debug=kw.get('debug', False))
         else:
-            arbiter = get_arbiter([worker], background=True, plugins=plugins)
+            arbiter = get_arbiter([worker], background=True, plugins=plugins,
+                    debug=kw.get('debug', False))
 
         arbiter.start()
         time.sleep(.3)

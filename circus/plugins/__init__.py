@@ -160,7 +160,7 @@ def _str2cfg(data):
     return cfg
 
 
-def get_plugin_cmd(config, endpoint, pubsub, check_delay):
+def get_plugin_cmd(config, endpoint, pubsub, check_delay, debug=False):
     fqn = config['use']
     # makes sure the name exists
     resolve_name(fqn)
@@ -173,6 +173,8 @@ def get_plugin_cmd(config, endpoint, pubsub, check_delay):
     cmd += ' --pubsub %s' % pubsub
     if len(config) > 0:
         cmd += ' --config %s' % config
+    if debug:
+        cmd += ' --log-level DEBUG'
     cmd += ' %s' % fqn
     return cmd
 
