@@ -14,7 +14,8 @@ from zmq import ssh
 from circus import logger, __version__
 from circus.client import make_message, cast_message
 from circus.util import (debuglog, to_bool, resolve_name, close_on_exec,
-                         LOG_LEVELS, LOG_FMT, LOG_DATE_FMT)
+                         LOG_LEVELS, LOG_FMT, LOG_DATE_FMT,
+                         DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 
 
 class CircusPlugin(object):
@@ -165,7 +166,7 @@ def _str2cfg(data):
     return cfg
 
 
-def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server):
+def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server, debug=False):
     fqn = config['use']
     # makes sure the name exists
     resolve_name(fqn)
@@ -180,6 +181,8 @@ def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server):
         cmd += ' --ssh %s' % ssh_server
     if len(config) > 0:
         cmd += ' --config %s' % config
+    if debug:
+        cmd += ' --log-level DEBUG'
     cmd += ' %s' % fqn
     return cmd
 
@@ -189,11 +192,11 @@ def main():
 
     parser.add_argument('--endpoint',
             help='The circusd ZeroMQ socket to connect to',
-            default='tcp://127.0.0.1:5555')
+            default=DEFAULT_ENDPOINT_DEALER)
 
     parser.add_argument('--pubsub',
             help='The circusd ZeroMQ pub/sub socket to connect to',
-            default='tcp://127.0.0.1:5556')
+            default=DEFAULT_ENDPOINT_SUB)
 
     parser.add_argument('--config', help='The plugin configuration',
             default=None)

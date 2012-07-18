@@ -1,8 +1,10 @@
-import ConfigParser
 import os
 import fnmatch
 import sys
+
 from circus import logger
+from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
+                         StrictConfigParser)
 
 
 def watcher_defaults():
@@ -30,7 +32,7 @@ def watcher_defaults():
         'copy_path': False}
 
 
-class DefaultConfigParser(ConfigParser.ConfigParser):
+class DefaultConfigParser(StrictConfigParser):
     def dget(self, section, option, default=None, type=str):
         if not self.has_option(section, option):
             return default
@@ -97,9 +99,9 @@ def get_config(config_file):
 
     # main circus options
     config['check'] = dget('circus', 'check_delay', 5, int)
-    config['endpoint'] = dget('circus', 'endpoint', 'tcp://127.0.0.1:5555')
+    config['endpoint'] = dget('circus', 'endpoint', DEFAULT_ENDPOINT_DEALER)
     config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
-                                     'tcp://127.0.0.1:5556')
+                                     DEFAULT_ENDPOINT_SUB)
     config['stats_endpoint'] = dget('circus', 'stats_endpoint', None, str)
     config['warmup_delay'] = dget('circus', 'warmup_delay', 0, int)
     config['httpd'] = dget('circus', 'httpd', False, bool)

@@ -47,7 +47,7 @@ class TestStatsClient(TestCircus):
 
         self._run_circus('circus.tests.test_stats_client.run_process',
                          stdout_stream=stream, stderr_stream=stream,
-                         debug=True, stats=True)
+                         stats=True)
         time.sleep(.5)
 
         # checking that our system is live and running
