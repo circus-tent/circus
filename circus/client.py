@@ -5,8 +5,7 @@ import zmq
 
 from circus.exc import CallError
 from circus.py3compat import string_types
-from circus.util import DEFAULT_ENDPOINT_DEALER
-from zmq import ssh
+from circus.util import DEFAULT_ENDPOINT_DEALER, obtain_connection
 from zmq.utils.jsonapi import jsonmod as json
 
 
@@ -31,10 +30,7 @@ class CircusClient(object):
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)
-        if ssh_server is None:
-            self.socket.connect(endpoint)
-        else:
-            ssh.tunnel_connection(self.socket, endpoint, ssh_server)
+        obtain_connection(self.socket, endpoint, ssh_server)
         self.poller = zmq.Poller()
         self.poller.register(self.socket, zmq.POLLIN)
         self._timeout = timeout
