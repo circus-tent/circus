@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 
+from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
 
 try:
     from gevent import monkey       # NOQA
@@ -34,8 +35,8 @@ __version__ = ".".join(map(str, version_info))
 logger = logging.getLogger('circus')
 
 
-def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
-                pubsub_endpoint='tcp://127.0.0.1:5556',
+def get_arbiter(watchers, controller=DEFAULT_ENDPOINT_DEALER,
+                pubsub_endpoint=DEFAULT_ENDPOINT_SUB,
                 stats_endpoint=None,
                 env=None, name=None, context=None,
                 background=False, stream_backend="thread",

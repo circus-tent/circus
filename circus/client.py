@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -
-
 import errno
 import uuid
+
 import zmq
+from zmq.utils.jsonapi import jsonmod as json
 
 from circus.exc import CallError
 from circus.py3compat import string_types
-from zmq.utils.jsonapi import jsonmod as json
+from circus.util import DEFAULT_ENDPOINT_DEALER
 
 
 def make_message(command, **props):
@@ -22,7 +23,7 @@ def make_json(command, **props):
 
 
 class CircusClient(object):
-    def __init__(self, context=None, endpoint='tcp://127.0.0.1:5555',
+    def __init__(self, context=None, endpoint=DEFAULT_ENDPOINT_DEALER,
                  timeout=5.0):
         self.context = context or zmq.Context.instance()
         self.endpoint = endpoint

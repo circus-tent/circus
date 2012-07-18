@@ -11,6 +11,7 @@ import cProfile
 import pstats
 
 from circus import get_arbiter
+from circus.util import DEFAULT_ENDPOINT_STATS
 
 
 def resolve_name(name):
@@ -83,7 +84,7 @@ class TestCircus(unittest.TestCase):
         worker.update(kw)
         if stats:
             arbiter = get_arbiter([worker], background=True, plugins=plugins,
-                                  stats_endpoint='tcp://127.0.0.1:5557',
+                                  stats_endpoint=DEFAULT_ENDPOINT_STATS,
                                   debug=kw.get('debug', False))
         else:
             arbiter = get_arbiter([worker], background=True, plugins=plugins,

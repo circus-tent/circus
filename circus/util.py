@@ -12,12 +12,12 @@ import time
 
 from psutil.error import AccessDenied, NoSuchProcess
 from psutil import Process
-from circus import logger
+
 
 # default endpoints
 DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
-DEFAULT_ENDPOINT_STATS = "tcp://127.0.0.1:5557"
 DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
+DEFAULT_ENDPOINT_STATS = "tcp://127.0.0.1:5557"
 
 
 try:
@@ -287,6 +287,8 @@ INDENTATION_LEVEL = 0
 def debuglog(func):
     @wraps(func)
     def _log(self, *args, **kw):
+        from circus import logger
+
         if os.environ.get('DEBUG') is None:
             return func(self, *args, **kw)
 
