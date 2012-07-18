@@ -9,6 +9,7 @@ import argparse
 import zmq
 from zmq.eventloop import ioloop, zmqstream
 from zmq.utils.jsonapi import jsonmod as json
+from zmq import ssh
 
 from circus import logger, __version__
 from circus.client import make_message, cast_message
@@ -29,7 +30,7 @@ class CircusPlugin(object):
     """
     name = ''
 
-    def __init__(self, endpoint, pubsub_endpoint, check_delay,
+    def __init__(self, endpoint, pubsub_endpoint, check_delay, ssh_server=None,
                  **config):
         self.daemon = True
         self.config = config
@@ -38,6 +39,7 @@ class CircusPlugin(object):
         self.pubsub_endpoint = pubsub_endpoint
         self.endpoint = endpoint
         self.check_delay = check_delay
+        self.ssh_server = ssh_server
         self.loop = ioloop.IOLoop()
         self._id = uuid.uuid4().hex    # XXX os.getpid()+thread id is enough...
         self.running = False
@@ -46,7 +48,10 @@ class CircusPlugin(object):
     def initialize(self):
         self.client = self.context.socket(zmq.DEALER)
         self.client.setsockopt(zmq.IDENTITY, self._id)
-        self.client.connect(self.endpoint)
+        if self.ssh_server is None:
+            self.client.connect(self.endpoint)
+        else:
+            ssh.tunnel_connection(self.client, self.endpoint, self.ssh_server)
         self.client.linger = 0
         self.sub_socket = self.context.socket(zmq.SUB)
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, b'watcher.')
@@ -207,6 +212,8 @@ def main():
     parser.add_argument('--log-output', dest='logoutput', default='-',
                         help="log output")
 
+    parser.add_argument('--ssh', default=None, help='SSH Server')
+
     args = parser.parse_args()
 
     if args.version:
@@ -234,7 +241,7 @@ def main():
     logger.info('Endpoint: %r' % args.endpoint)
     logger.info('Pub/sub: %r' % args.pubsub)
     plugin = resolve_name(args.plugin)(args.endpoint, args.pubsub,
-                                       args.check_delay,
+                                       args.check_delay, args.ssh,
                                        **_str2cfg(args.config))
     logger.info('Starting')
     try:

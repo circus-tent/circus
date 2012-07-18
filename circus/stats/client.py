@@ -186,6 +186,8 @@ def main():
     parser.add_argument('--version', action='store_true',
                      default=False, help='Displays Circus version and exits.')
 
+    parser.add_argument('--ssh', default=None, help='SSH Server')
+
     args = parser.parse_args()
 
     if args.version:

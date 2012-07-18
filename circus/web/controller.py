@@ -14,10 +14,10 @@ cmds = get_commands()
 
 
 class LiveClient(object):
-    def __init__(self, endpoint):
+    def __init__(self, endpoint, ssh_server=None):
         self.endpoint = str(endpoint)
         self.stats_endpoint = None
-        self.client = CircusClient(endpoint=self.endpoint)
+        self.client = CircusClient(endpoint=self.endpoint, ssh_server=ssh_server)
         self.connected = False
         self.watchers = []
         self.plugins = []
