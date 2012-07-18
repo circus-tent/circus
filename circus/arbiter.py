@@ -168,7 +168,8 @@ class Arbiter(object):
                       httpd_host=cfg.get('httpd_host', 'localhost'),
                       httpd_port=cfg.get('httpd_port', 8080),
                       debug=cfg.get('debug', False),
-                      stream_backend=cfg.get('stream_backend', 'thread'))
+                      stream_backend=cfg.get('stream_backend', 'thread'),
+                      ssh_server=cfg.get('ssh_server', None))
 
         return arbiter
 
