@@ -14,8 +14,8 @@ from circus import __version__
 
 
 class StatsClient(CircusConsumer):
-    def __init__(self, endpoint=None, context=None):
-        CircusConsumer.__init__(self, ['stat.'], context, endpoint)
+    def __init__(self, endpoint=None, ssh_server=None, context=None):
+        CircusConsumer.__init__(self, ['stat.'], context, endpoint, ssh_server)
 
     def iter_messages(self):
         """ Yields tuples of (watcher, subtopic, stat)"""
@@ -203,7 +203,7 @@ def main():
     painter.start()
 
     try:
-        client = StatsClient(args.endpoint)
+        client = StatsClient(args.endpoint, args.ssh)
         try:
             for watcher, subtopic, stat in client:
                 # building the line
