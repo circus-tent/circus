@@ -167,7 +167,7 @@ def _str2cfg(data):
 
 
 def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server,
-                    debug=False):
+                   debug=False):
     fqn = config['use']
     # makes sure the name exists
     resolve_name(fqn)
