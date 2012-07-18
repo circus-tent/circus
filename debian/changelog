@@ -1,3 +1,9 @@
+circus (0.5.1+git20120718111259-0ppa1) precise; urgency=low
+
+  * New upstream release 
+
+ -- Roman Imankulov <roman.imankulov@gmail.com>  Wed, 18 Jul 2012 13:22:53 +0000
+
 circus (0.5.1+git20120716141141-0ppa1) precise; urgency=low
 
   * New upstream release
