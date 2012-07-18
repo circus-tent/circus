@@ -165,7 +165,7 @@ def _str2cfg(data):
     return cfg
 
 
-def get_plugin_cmd(config, endpoint, pubsub, check_delay):
+def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server):
     fqn = config['use']
     # makes sure the name exists
     resolve_name(fqn)
@@ -176,6 +176,8 @@ def get_plugin_cmd(config, endpoint, pubsub, check_delay):
     cmd = "%s -c 'from circus import plugins;plugins.main()'" % sys.executable
     cmd += ' --endpoint %s' % endpoint
     cmd += ' --pubsub %s' % pubsub
+    if ssh_server is not None:
+        cmd += ' --ssh %s' % ssh_server
     if len(config) > 0:
         cmd += ' --config %s' % config
     cmd += ' %s' % fqn
