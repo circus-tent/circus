@@ -31,7 +31,8 @@ class Flapping(CircusPlugin):
     def __init__(self, endpoint, pubsub_endpoint, check_delay, ssh_server,
                  **config):
         super(Flapping, self).__init__(endpoint, pubsub_endpoint,
-                                       check_delay, ssh_server=ssh_server, **config)
+                                       check_delay, ssh_server=ssh_server,
+                                       **config)
         self.timelines = {}
         self.timers = {}
         self.configs = {}

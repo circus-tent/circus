@@ -6,7 +6,6 @@ from zmq import ssh
 
 
 class CircusConsumer(object):
-
     def __init__(self, topics, context=None, endpoint=DEFAULT_ENDPOINT_SUB,
                  ssh_server=None, timeout=1.):
         self.topics = topics

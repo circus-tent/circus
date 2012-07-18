@@ -15,8 +15,8 @@ from circus.util import DEFAULT_ENDPOINT_STATS
 
 
 class StatsClient(CircusConsumer):
-
-    def __init__(self, endpoint=DEFAULT_ENDPOINT_STATS, ssh_server=None, context=None):
+    def __init__(self, endpoint=DEFAULT_ENDPOINT_STATS, ssh_server=None,
+                    context=None):
         CircusConsumer.__init__(self, ['stat.'], context, endpoint, ssh_server)
 
     def iter_messages(self):

@@ -13,8 +13,8 @@ class StatsdEmitter(CircusPlugin):
 
     def __init__(self, endpoint, pubsub_endpoint, check_delay, ssh_server,
                  **config):
-        super(StatsdEmitter, self).__init__(endpoint, pubsub_endpoint, ssh_server=ssh_server,
-                                            check_delay)
+        super(StatsdEmitter, self).__init__(endpoint, pubsub_endpoint,
+                                            check_delay, ssh_server=ssh_server)
         self.app = config.get('application_name', 'app')
         self.prefix = 'circus.%s.watcher' % self.app
 

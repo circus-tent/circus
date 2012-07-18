@@ -59,7 +59,8 @@ class Arbiter(object):
                  prereload_fn=None, context=None, loop=None,
                  stats_endpoint=None, plugins=None, sockets=None,
                  warmup_delay=0, httpd=False, httpd_host='localhost',
-                 httpd_port=8080, debug=False, stream_backend='thread', ssh_server=None):
+                 httpd_port=8080, debug=False, stream_backend='thread',
+                 ssh_server=None):
         self.stream_backend = stream_backend
         self.watchers = watchers
         self.endpoint = endpoint
@@ -133,8 +134,8 @@ class Arbiter(object):
                 fqnd = plugin['use']
                 name = 'plugin:%s' % fqnd.replace('.', '-')
                 cmd = get_plugin_cmd(plugin, self.endpoint,
-                                     self.pubsub_endpoint, self.check_delay, ssh_server,
-                                     debug=self.debug)
+                                     self.pubsub_endpoint, self.check_delay,
+                                     ssh_server, debug=self.debug)
                 plugin_watcher = Watcher(name, cmd, priority=1, singleton=True,
                                          stdout_stream=stdout_stream,
                                          stderr_stream=stderr_stream,

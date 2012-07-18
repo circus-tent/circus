@@ -7,9 +7,9 @@ import uuid
 import argparse
 
 import zmq
+from zmq import ssh
 from zmq.eventloop import ioloop, zmqstream
 from zmq.utils.jsonapi import jsonmod as json
-from zmq import ssh
 
 from circus import logger, __version__
 from circus.client import make_message, cast_message
@@ -166,7 +166,8 @@ def _str2cfg(data):
     return cfg
 
 
-def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server, debug=False):
+def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server,
+                    debug=False):
     fqn = config['use']
     # makes sure the name exists
     resolve_name(fqn)
