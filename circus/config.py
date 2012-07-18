@@ -1,10 +1,10 @@
-import ConfigParser
 import os
 import fnmatch
 import sys
 
 from circus import logger
-from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
+from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
+                         StrictConfigParser)
 
 
 def watcher_defaults():
@@ -32,7 +32,7 @@ def watcher_defaults():
         'copy_path': False}
 
 
-class DefaultConfigParser(ConfigParser.ConfigParser):
+class DefaultConfigParser(StrictConfigParser):
     def dget(self, section, option, default=None, type=str):
         if not self.has_option(section, option):
             return default
