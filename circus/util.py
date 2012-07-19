@@ -9,6 +9,8 @@ import re
 import sys
 import shlex
 import time
+import zmq
+from zmq import ssh
 from ConfigParser import (ConfigParser, MissingSectionHeaderError,
                           ParsingError, DEFAULTSECT)
 
@@ -511,3 +513,10 @@ class StrictConfigParser(ConfigParser):
             for name, val in options.items():
                 if isinstance(val, list):
                     options[name] = '\n'.join(val)
+
+
+def get_connection(socket, endpoint, ssh_server):
+    if ssh_server is None:
+        socket.connect(endpoint)
+    else:
+        ssh.tunnel_connection(socket, endpoint, ssh_server)

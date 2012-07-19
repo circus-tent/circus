@@ -59,7 +59,8 @@ class Arbiter(object):
                  prereload_fn=None, context=None, loop=None,
                  stats_endpoint=None, plugins=None, sockets=None,
                  warmup_delay=0, httpd=False, httpd_host='localhost',
-                 httpd_port=8080, debug=False, stream_backend='thread'):
+                 httpd_port=8080, debug=False, stream_backend='thread',
+                 ssh_server=None):
         self.stream_backend = stream_backend
         self.watchers = watchers
         self.endpoint = endpoint
@@ -91,6 +92,8 @@ class Arbiter(object):
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --pubsub %s' % self.pubsub_endpoint
             cmd += ' --statspoint %s' % self.stats_endpoint
+            if ssh_server is not None:
+                cmd += ' --ssh %s' % ssh_server
             if debug:
                 cmd += ' --log-level DEBUG'
             stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True,
@@ -107,6 +110,8 @@ class Arbiter(object):
                    "circushttpd.main()'") % sys.executable
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --fd $(circus.sockets.circushttpd)'
+            if ssh_server is not None:
+                cmd += ' --ssh %s' % ssh_server
             httpd_watcher = Watcher('circushttpd', cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=stdout_stream,
@@ -130,7 +135,7 @@ class Arbiter(object):
                 name = 'plugin:%s' % fqnd.replace('.', '-')
                 cmd = get_plugin_cmd(plugin, self.endpoint,
                                      self.pubsub_endpoint, self.check_delay,
-                                     debug=self.debug)
+                                     ssh_server, debug=self.debug)
                 plugin_watcher = Watcher(name, cmd, priority=1, singleton=True,
                                          stdout_stream=stdout_stream,
                                          stderr_stream=stderr_stream,
@@ -167,7 +172,8 @@ class Arbiter(object):
                       httpd_host=cfg.get('httpd_host', 'localhost'),
                       httpd_port=cfg.get('httpd_port', 8080),
                       debug=cfg.get('debug', False),
-                      stream_backend=cfg.get('stream_backend', 'thread'))
+                      stream_backend=cfg.get('stream_backend', 'thread'),
+                      ssh_server=cfg.get('ssh_server', None))
 
         return arbiter
 

@@ -346,8 +346,8 @@ def run_command(func, message, redirect_url, redirect_on_error=None,
     redirect(redirect_url)
 
 
-def connect_to_endpoint(endpoint):
-    client = LiveClient(endpoint=endpoint)
+def connect_to_endpoint(endpoint, ssh_server):
+    client = LiveClient(endpoint=endpoint, ssh_server=ssh_server)
     client.update_watchers()
     return client
 
@@ -390,6 +390,7 @@ def main():
             help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
             help="log output")
+    parser.add_argument('--ssh', default=None, help='SSH Server')
 
     args = parser.parse_args()
 
@@ -402,7 +403,7 @@ def main():
 
     if args.endpoint is not None:
         global client
-        client = connect_to_endpoint(args.endpoint)
+        client = connect_to_endpoint(args.endpoint, args.ssh)
 
     run(app, host=args.host, port=args.port, server=args.server, fd=args.fd)
 

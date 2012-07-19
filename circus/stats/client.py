@@ -15,8 +15,9 @@ from circus.util import DEFAULT_ENDPOINT_STATS
 
 
 class StatsClient(CircusConsumer):
-    def __init__(self, endpoint=DEFAULT_ENDPOINT_STATS, context=None):
-        CircusConsumer.__init__(self, ['stat.'], context, endpoint)
+    def __init__(self, endpoint=DEFAULT_ENDPOINT_STATS, ssh_server=None,
+                 context=None):
+        CircusConsumer.__init__(self, ['stat.'], context, endpoint, ssh_server)
 
     def iter_messages(self):
         """ Yields tuples of (watcher, subtopic, stat)"""
@@ -197,6 +198,8 @@ def main():
     parser.add_argument('--version', action='store_true',
                      default=False, help='Displays Circus version and exits.')
 
+    parser.add_argument('--ssh', default=None, help='SSH Server')
+
     args = parser.parse_args()
 
     if args.version:
@@ -212,7 +215,7 @@ def main():
     painter.start()
 
     try:
-        client = StatsClient(args.endpoint)
+        client = StatsClient(args.endpoint, args.ssh)
         try:
             for watcher, subtopic, stat in client:
                 # building the line

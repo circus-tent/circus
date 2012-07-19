@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -
 import errno
 import uuid
-
 import zmq
-from zmq.utils.jsonapi import jsonmod as json
 
 from circus.exc import CallError
 from circus.py3compat import string_types
-from circus.util import DEFAULT_ENDPOINT_DEALER
+from circus.util import DEFAULT_ENDPOINT_DEALER, get_connection
+from zmq.utils.jsonapi import jsonmod as json
 
 
 def make_message(command, **props):
@@ -24,14 +23,14 @@ def make_json(command, **props):
 
 class CircusClient(object):
     def __init__(self, context=None, endpoint=DEFAULT_ENDPOINT_DEALER,
-                 timeout=5.0):
+                 timeout=5.0, ssh_server=None):
         self.context = context or zmq.Context.instance()
         self.endpoint = endpoint
         self._id = uuid.uuid4().hex
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)
-        self.socket.connect(endpoint)
+        get_connection(self.socket, endpoint, ssh_server)
         self.poller = zmq.Poller()
         self.poller.register(self.socket, zmq.POLLIN)
         self._timeout = timeout
