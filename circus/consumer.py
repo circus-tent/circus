@@ -1,18 +1,18 @@
 import errno
 import zmq
 
-from circus.util import DEFAULT_ENDPOINT_SUB
+from circus.util import DEFAULT_ENDPOINT_SUB, get_connection
 
 
 class CircusConsumer(object):
     def __init__(self, topics, context=None, endpoint=DEFAULT_ENDPOINT_SUB,
-                 timeout=1.):
+                 ssh_server=None, timeout=1.):
         self.topics = topics
         self.keep_context = context is not None
         self.context = context or zmq.Context()
         self.endpoint = endpoint
         self.pubsub_socket = self.context.socket(zmq.SUB)
-        self.pubsub_socket.connect(self.endpoint)
+        get_connection(self.pubsub_socket, self.endpoint, ssh_server)
         for topic in self.topics:
             self.pubsub_socket.setsockopt(zmq.SUBSCRIBE, topic)
         self.poller = zmq.Poller()

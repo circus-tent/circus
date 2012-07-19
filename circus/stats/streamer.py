@@ -16,7 +16,8 @@ from circus import logger
 
 
 class StatsStreamer(object):
-    def __init__(self, endpoint, pubsub_endoint, stats_endpoint, delay=1.):
+    def __init__(self, endpoint, pubsub_endoint, stats_endpoint, ssh_server,
+                 delay=1.):
         self.topic = 'watcher.'
         self.delay = delay
         self.ctx = zmq.Context()
@@ -27,7 +28,8 @@ class StatsStreamer(object):
         self.loop = ioloop.IOLoop.instance()  # events coming from circusd
         self.substream = zmqstream.ZMQStream(self.sub_socket, self.loop)
         self.substream.on_recv(self.handle_recv)
-        self.client = CircusClient(context=self.ctx, endpoint=endpoint)
+        self.client = CircusClient(context=self.ctx, endpoint=endpoint,
+                                   ssh_server=ssh_server)
         self.cmds = get_commands()
         self._pids = defaultdict(list)
         self._callbacks = dict()
