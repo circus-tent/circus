@@ -15,7 +15,7 @@ from circus.client import make_message, cast_message
 from circus.util import (debuglog, to_bool, resolve_name, close_on_exec,
                          LOG_LEVELS, LOG_FMT, LOG_DATE_FMT,
                          DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                         obtain_connection)
+                         get_connection)
 
 
 class CircusPlugin(object):
@@ -49,7 +49,7 @@ class CircusPlugin(object):
     def initialize(self):
         self.client = self.context.socket(zmq.DEALER)
         self.client.setsockopt(zmq.IDENTITY, self._id)
-        obtain_connection(self.client, self.endpoint, self.ssh_server)
+        get_connection(self.client, self.endpoint, self.ssh_server)
         self.client.linger = 0
         self.sub_socket = self.context.socket(zmq.SUB)
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, b'watcher.')
