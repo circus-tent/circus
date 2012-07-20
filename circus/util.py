@@ -526,4 +526,4 @@ def get_connection(socket, endpoint, ssh_server):
                                       paramiko=True)
         except ImportError:
             raise ImportError("pexpect was not found, and failed to use "
-                              + "Paramiko.  You need to install Paramiko")
+                              "Paramiko.  You need to install Paramiko")
