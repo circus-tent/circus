@@ -4,14 +4,11 @@ Security
 ========
 
 Circus is built on the top of the ZeroMQ library and comes with no security
-at all.
-
-There is no focus yet on protecting the Circus system from attacks on its 
-ports, and depending on how you run it, you are creating a potential security
-hole in the system.
+at all in its protocols. However, you can run a Circus system on
+a server and set up an SSH tunnel to access it from another machine.
 
 This section explains what Circus does on your system when you run it, and
-gives a few recommendations if you want to protect your server.
+ends up describing how to use an SSH tunnel.
 
 You can also read http://www.zeromq.org/area:faq#toc5
 
@@ -23,13 +20,16 @@ By default, Circus opens the following TCP ports on the local host:
 
 - **5555** -- the port used to control circus via **circusctl**
 - **5556** -- the port used for the Publisher/Subscriber channel.
+- **5557** -- the port used for the statitics channel -- if activated.
+- **8080** -- the port used by the Web UI -- if activated.
 
 These ports allow client apps to interact with your Circus system, and
 depending on how your infrastructure is organized, you may want to protect
 these ports via firewalls **or** configure Circus to run using **IPC**
-ports. When Configured using IPC, the commands must be run from the same
-box, but no one can access them from outside, unlike using TCP.
+ports.
 
+When Configured using IPC, the commands must be run from the same
+box, but no one can access them from outside, unlike using TCP.
 
 uid and gid
 -----------
@@ -39,8 +39,8 @@ same user and group **circusd**. Depending on the privileges the user has on
 the system, you may not have access to all the features Circus provides.
 
 For instance, some statistics features on a running processes require
-privileges. Typically, if the CPU usage numbers you get using
-the **stats** command are *0*, it means your user can't access the proc
+extended privileges. Typically, if the CPU usage numbers you get using
+the **stats** command are *N/A*, it means your user can't access the proc
 files.
 
 You may run **circusd** as root, to fix this, and set the **uid** and **gid**
@@ -59,14 +59,15 @@ a controlled user.
 circushttpd
 -----------
 
-The web application is not secured at all and once connected on a running
-Circus, it can do anything and everything.
+The web application running by default on port *8080* is not secured
+at all and once connected on a running Circus, it can do anything and
+everything.
 
 **Do not make it publicly available**
 
 If you want to protect the access to the web panel, you can serve it
 behind Nginx or Apache or any proxy-capable web server, than can
-set up security.
+take care of the security.
 
 
 SSH tunneling
@@ -80,4 +81,20 @@ credentials to complete the login.
 
 If **circusd** as seen by the SSH server is not at the default endpoint
 address **localhost:5555** then specify the **circusd** address using the
-option **--endpoint**.  
+option **--endpoint**
+
+
+Secured setup example
+---------------------
+
+Setting up a secured Circus server can be done by:
+
+- Running an SSH Server
+- Running Apache or Nginx on the *80* port, and doing a
+  reverse-proxy on the *8080* port.
+- Blocking the *8080* port from outside access.
+- Running all ZMQ Circusd ports using IPC files instead of TCP ports, and
+  tunneling all calls via SSH.
+
+.. image:: images/circus-security.png
+

@@ -195,7 +195,7 @@ plugin:NAME - as many sections as you want
 
 
 socket:NAME - as many sections as you want
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     **host**
         The host of the socket. Defaults to 'localhost'
     **port**
