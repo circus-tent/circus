@@ -18,7 +18,7 @@ from circus import __version__, logger
 from circus.util import configure_logger, LOG_LEVELS
 from circus.web.util import (run_command, render_template, set_message, route,
                              CURDIR)
-from circus.web.session import connect as connect_, disconnect as disconnect_
+from circus.web.session import connect_to_circus, disconnect_from_circus
 from circus.web.server import SocketIOServer
 
 
@@ -112,7 +112,7 @@ def connect():
             return _ask_connection()
 
         endpoint = request.forms.endpoint
-        client = connect_(endpoint)
+        client = connect_to_circus(endpoint)
         if not client.connected:
             set_message('Impossible to connect')
 
@@ -121,7 +121,7 @@ def connect():
 
 @route('/disconnect')
 def disconnect():
-    if disconnect_():
+    if disconnect_from_circus():
         set_message('You are now disconnected')
     redirect('/')
 
@@ -162,7 +162,7 @@ def main():
     configure_logger(logger, args.loglevel, args.logoutput)
 
     if args.endpoint is not None:
-        connect_(args.endpoint, args.ssh)
+        connect_to_circus(args.endpoint, args.ssh)
 
     run(app, host=args.host, port=args.port, server=args.server, fd=args.fd)
 
