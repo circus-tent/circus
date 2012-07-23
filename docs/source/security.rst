@@ -39,6 +39,36 @@ Here's an example of running Circus using only IPC entry points::
 When Configured using IPC, the commands must be run from the same
 box, but no one can access them from outside, unlike using TCP.
 
+Of course, if you activate the Web UI, the **8080** port will still
+be open.
+
+circushttpd
+-----------
+
+When you run **circushttpd** manually, or when you use the **httpd**
+option in the ini file like this::
+
+    [circus]
+    check_delay = 5
+    endpoint = ipc:///var/circus/endpoint
+    pubsub_endpoint = ipc:///var/circus/pubsub
+    stats_endpoint = ipc:///var/circus/stats
+    httpd = 1
+
+
+The web application will run on port *8080* and will let anyone
+accessing the web page manage the **circusd** daemon.
+
+That includes creating new watchers that can run any command
+on your system !
+
+**Do not make it publicly available**
+
+If you want to protect the access to the web panel, you can serve it
+behind Nginx or Apache or any proxy-capable web server, than can
+take care of the security.
+
+
 User and Group Permissions
 --------------------------
 
@@ -63,20 +93,6 @@ system may dangerous.
 The best way to prevent this is to make sure that the system running
 Circus is completely isolated (like a VM) **or** to run the whole system
 under a controlled user.
-
-
-circushttpd
------------
-
-The web application running by default on port *8080* is not secured
-at all and once connected on a running Circus, it can do anything and
-everything.
-
-**Do not make it publicly available**
-
-If you want to protect the access to the web panel, you can serve it
-behind Nginx or Apache or any proxy-capable web server, than can
-take care of the security.
 
 
 SSH tunneling
