@@ -28,6 +28,14 @@ depending on how your infrastructure is organized, you may want to protect
 these ports via firewalls **or** configure Circus to run using **IPC**
 ports.
 
+Here's an example of running Circus using only IPC entry points::
+
+    [circus]
+    check_delay = 5
+    endpoint = ipc:///var/circus/endpoint
+    pubsub_endpoint = ipc:///var/circus/pubsub
+    stats_endpoint = ipc:///var/circus/stats
+
 When Configured using IPC, the commands must be run from the same
 box, but no one can access them from outside, unlike using TCP.
 
