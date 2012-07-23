@@ -112,9 +112,9 @@ class TestClient(TestCircus):
     def XXX_test_handler_ssh(self):
         try:
             try:
-                import pexpect
+                import pexpect    # NOQA
             except ImportError:
-                import paramiko
+                import paramiko   # NOQA
         except ImportError:
             return
         self._client_test('localhost')
