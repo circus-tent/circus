@@ -39,29 +39,30 @@ Here's an example of running Circus using only IPC entry points::
 When Configured using IPC, the commands must be run from the same
 box, but no one can access them from outside, unlike using TCP.
 
-uid and gid
------------
+User and Group Permissions
+--------------------------
 
 By default, all processes started with Circus will be running with the
-same user and group **circusd**. Depending on the privileges the user has on
-the system, you may not have access to all the features Circus provides.
+same user and group than **circusd**. Depending on the privileges the user
+has on the system, you may not have access to all the features Circus
+provides.
 
 For instance, some statistics features on a running processes require
 extended privileges. Typically, if the CPU usage numbers you get using
 the **stats** command are *N/A*, it means your user can't access the proc
-files.
+files. This will be the case by default under Mac OS X.
 
-You may run **circusd** as root, to fix this, and set the **uid** and **gid**
-values for each watcher to get all features.
+You may run **circusd** as root to fix this, and set the **uid** and **gid**
+values for each watcher to get all the features.
 
 But beware that running **circusd** as root exposes you to potential
 privilege escalation bugs. While we're doing our best to avoid any bugs,
 running as root and facing a bug that performs unwanted actions on your
-system may be an issue.
+system may dangerous.
 
 The best way to prevent this is to make sure that the system running
-Circus is isolated (like a VM) **or** to run the whole system under
-a controlled user.
+Circus is completely isolated (like a VM) **or** to run the whole system
+under a controlled user.
 
 
 circushttpd
