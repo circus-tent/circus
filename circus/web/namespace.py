@@ -54,7 +54,7 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 
         # Get the channels that are interesting to us and send back information
         # there when we got them.
-        stats = StatsClient(endpoint=client.stats_endpoint)
+        stats = StatsClient(endpoint=client.stats_endpoint, ssh_server=msg.get('ssh', None))
         for watcher, pid, stat in stats:
             if self._running == False:
                 return
