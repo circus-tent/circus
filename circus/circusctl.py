@@ -4,6 +4,7 @@ import getopt
 import json
 import sys
 import traceback
+import textwrap
 
 # import pygments if here
 try:
@@ -127,11 +128,13 @@ class ControllerApp(object):
         usage = '%(prog)s [options] command [args]'
         parser = argparse.ArgumentParser(
                 description="Controls a Circus daemon",
-                formatter_class=_Help, usage=usage)
+                formatter_class=_Help, usage=usage, add_help=False)
 
         for option in self.options:
             parser.add_argument('--' + option, **self.options[option])
 
+        parser.add_argument('--help', action='store_true',
+                            help='Show help and exit')
         parser.add_argument('command', nargs="?", choices=self.commands)
         parser.add_argument('args', nargs="*", help=argparse.SUPPRESS)
 
@@ -141,23 +144,24 @@ class ControllerApp(object):
 
         if args.version:
             return self.display_version()
+        elif args.command is None:
+            parser.print_help()
+            return 0
         else:
-            if args.command not in self.commands:
-                msg = 'Unknown command %r' % args.command
-                msg += '\nPossible values: %s' % ', '.join(self.commands)
-                parser.print_help()
-                sys.exit(0)
-            else:
-                cmd = self.commands[args.command]
-                if args.endpoint is None:
-                    if cmd.msg_type == 'sub':
-                        args.endpoint = DEFAULT_ENDPOINT_SUB
-                    else:
-                        args.endpoint = DEFAULT_ENDPOINT_DEALER
-                msg = cmd.message(*args.args, **opts)
-                handler = getattr(self, "handle_%s" % cmd.msg_type)
-                return handler(cmd, globalopts, msg, args.endpoint,
-                               int(args.timeout), args.ssh)
+            cmd = self.commands[args.command]
+            if args.help:
+                print textwrap.dedent(cmd.__doc__)
+                return 0
+
+            if args.endpoint is None:
+                if cmd.msg_type == 'sub':
+                    args.endpoint = DEFAULT_ENDPOINT_SUB
+                else:
+                    args.endpoint = DEFAULT_ENDPOINT_DEALER
+            msg = cmd.message(*args.args, **opts)
+            handler = getattr(self, "handle_%s" % cmd.msg_type)
+            return handler(cmd, globalopts, msg, args.endpoint,
+                           int(args.timeout), args.ssh)
 
     def display_version(self, *args, **opts):
         from circus import __version__

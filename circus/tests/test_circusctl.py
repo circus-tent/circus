@@ -1,13 +1,12 @@
 import subprocess
-import sys
 import time
 
 from circus.tests.support import TestCircus
 
+USAGE = 'usage: circusctl [options] command [args]'
 
 
 class TestCommandline(TestCircus):
-
     def setUp(self):
         super(TestCommandline, self).setUp()
         self.dummy_process = 'circus.tests.test_arbiter.run_dummy'
@@ -25,22 +24,20 @@ class TestCommandline(TestCircus):
 
     def test_help_no_command(self):
         output = self.run_ctl('').splitlines()
-        self.assertEqual(output[0], 'usage: circusctl [options] command [args]')
+        self.assertEqual(output[0], USAGE)
         self.assertEqual(output[2], 'Controls a Circus daemon')
         self.assertEqual(output[4], 'Commands:')
 
     def test_help_switch_no_command(self):
         output = self.run_ctl('--help').splitlines()
-        self.assertEqual(output[0], 'usage: circusctl [options] command [args]')
+        self.assertEqual(output[0], USAGE)
         self.assertEqual(output[2], 'Controls a Circus daemon')
         self.assertEqual(output[4], 'Commands:')
 
     def test_help_invalid_command(self):
         output = self.run_ctl('').splitlines()
-        self.assertEqual(output[0], 'usage: circusctl [options] command [args]')
+        self.assertEqual(output[0], USAGE)
 
-    def test_help_for_command(self):
+    def test_help_for_add_command(self):
         output = self.run_ctl('add --help').splitlines()
-        self.assertEqual(output[0], 'usage: circusctl [options] command [args]')
-        self.assertEqual(output[2], 'Controls a Circus daemon')
-        self.assertEqual(output[4], 'Commands:')
+        self.assertEqual(output[0], 'Add a watcher')
