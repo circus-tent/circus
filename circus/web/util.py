@@ -5,7 +5,7 @@ from bottle import request, route as route_, redirect
 
 from circus import logger, __version__
 from circus.web.controller import CallError
-from circus.web.session import get_session, connect, get_client
+from circus.web.session import get_session, connect_to_circus, get_client
 
 
 def set_message(message):
@@ -84,7 +84,7 @@ def route(*args, **kwargs):
                     session = get_session()
                     if session.get('endpoint', None) is not None:
                         # XXX we need to pass SSH too here
-                        connect(session['endpoint'])
+                        connect_to_circus(session['endpoint'])
                     else:
                         return redirect('/connect')
 
