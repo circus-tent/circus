@@ -173,8 +173,8 @@ class Arbiter(object):
                       httpd_port=cfg.get('httpd_port', 8080),
                       debug=cfg.get('debug', False),
                       stream_backend=cfg.get('stream_backend', 'thread'),
-                      ssh_server=cfg.get('ssh_server', None))
-
+                      ssh_server=cfg['ssh_server'])
+        
         return arbiter
 
     def iter_watchers(self, reverse=True):
