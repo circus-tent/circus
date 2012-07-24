@@ -111,7 +111,11 @@ def connect():
             return _ask_connection()
 
         endpoint = request.forms.endpoint
-        ssh_server = request.forms.ssh
+        if request.forms.ssh == "":
+            ssh_server = None
+        else:
+            ssh_server = request.forms.ssh
+        
         client = connect_to_circus(endpoint, ssh_server=ssh_server)
         if not client.connected:
             set_message('Impossible to connect')
