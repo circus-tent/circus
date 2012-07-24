@@ -58,7 +58,9 @@ class GlobalOptions(Command):
 
         - endpoint: the controller ZMQ endpoint
         - pubsub_endpoint: the pubsub endpoint
+        - stats_endpont: the stats endpoint
         - check_delay: the delay between two controller points
+        - ssh_server: SSH server in format [user@]address[:port]
     """
 
     name = "globaloptions"
@@ -81,7 +83,7 @@ class GlobalOptions(Command):
             options = (wanted,)
         else:
             options = ('endpoint', 'pubsub_endpoint', 'stats_endpoint',
-                       'check_delay')
+                       'check_delay', 'ssh_server')
 
         res = {}
 

@@ -94,7 +94,6 @@ def sockets():
     return render_template('sockets.html')
 
 
-# XXX we need to add the ssh server option in the form
 @route('/connect', method=['POST', 'GET'], ensure_client=False)
 def connect():
     """Connects to the stats client, using the endpoint that's passed in the
@@ -112,7 +111,12 @@ def connect():
             return _ask_connection()
 
         endpoint = request.forms.endpoint
-        client = connect_to_circus(endpoint)
+        if request.forms.ssh == "":
+            ssh_server = None
+        else:
+            ssh_server = request.forms.ssh
+        
+        client = connect_to_circus(endpoint, ssh_server=ssh_server)
         if not client.connected:
             set_message('Impossible to connect')
 

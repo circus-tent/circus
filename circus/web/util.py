@@ -83,8 +83,8 @@ def route(*args, **kwargs):
                 if client is None:
                     session = get_session()
                     if session.get('endpoint', None) is not None:
-                        # XXX we need to pass SSH too here
-                        connect_to_circus(session['endpoint'])
+                        connect_to_circus(session['endpoint'],
+                                          ssh_server=session.get('ssh', None))
                     else:
                         return redirect('/connect')
 

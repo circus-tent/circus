@@ -3,7 +3,12 @@
 <h1>Connect to a Circus system</h1>
 <p id="countdown">Autoconnect in <strong id="countdown-value"></strong>s</p>
 <form id='connector' action="/connect" method="POST">
+<p>Endpoint:</p>
 <input id="endpoint" type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
+<p>SSH Server as [username[:password]@]host[:port]<br />
+(leave blank to connect without SSH tunneling)</p>
+<input id="ssh" type="text" name="ssh" value=""/>
+<p> </p>
 <input type="submit" class="connect" value="Connect"/>
 </form>
 
@@ -13,6 +18,11 @@
   var autoconnect = true;
 
   $('#endpoint').focus(function(){
+    autoconnect = false;
+    $('#countdown').hide();
+  });
+
+  $('#ssh').focus(function(){
     autoconnect = false;
     $('#countdown').hide();
   });
