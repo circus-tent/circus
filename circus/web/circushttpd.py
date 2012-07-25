@@ -150,7 +150,7 @@ def main():
             help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
             help="log output")
-    parser.add_argument('--ssh', default=None, help='SSH Server')
+    #parser.add_argument('--ssh', default=None, help='SSH Server') XXX
 
     args = parser.parse_args()
 
@@ -162,7 +162,7 @@ def main():
     configure_logger(logger, args.loglevel, args.logoutput)
 
     if args.endpoint is not None:
-        connect_to_circus(args.endpoint, args.ssh)
+        connect_to_circus(args.endpoint)   # args.ssh
 
     run(app, host=args.host, port=args.port, server=args.server, fd=args.fd)
 

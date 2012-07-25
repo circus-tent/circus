@@ -93,7 +93,7 @@ class ControllerApp(object):
                      'help': 'output to JSON'},
             'prettify': {'default': False, 'action': 'store_true',
                          'help': 'prettify output'},
-            'ssh': {'default': None, 'help': 'SSH Server'},
+            #'ssh': {'default': None, 'help': 'SSH Server'},   XXX deactivated
             'version': {'default': False, 'action': 'store_true',
                         'help': 'display version and exit'}
         }
@@ -157,14 +157,14 @@ class ControllerApp(object):
                 msg = cmd.message(*args.args, **opts)
                 handler = getattr(self, "handle_%s" % cmd.msg_type)
                 return handler(cmd, globalopts, msg, args.endpoint,
-                               int(args.timeout), args.ssh)
+                               int(args.timeout))  # args.ssh) XXX
 
     def display_version(self, *args, **opts):
         from circus import __version__
         print(__version__)
         return 0
 
-    def handle_sub(self, cmd, opts, topics, endpoint, timeout, ssh_server):
+    def handle_sub(self, cmd, opts, topics, endpoint, timeout):  # ssh_server
         consumer = CircusConsumer(topics, endpoint=endpoint)
         for topic, msg in consumer:
             print("%s: %s" % (topic, msg))
@@ -176,9 +176,9 @@ class ControllerApp(object):
         else:
             return cmd.console_msg(client.call(msg))
 
-    def handle_dealer(self, cmd, opts, msg, endpoint, timeout, ssh_server):
-        client = CircusClient(endpoint=endpoint, timeout=timeout,
-                                ssh_server=ssh_server)
+    def handle_dealer(self, cmd, opts, msg, endpoint, timeout):  # ssh_server
+        client = CircusClient(endpoint=endpoint, timeout=timeout)
+                              #ssh_server=ssh_server)
         try:
             if isinstance(msg, list):
                 for i, command in enumerate(msg):

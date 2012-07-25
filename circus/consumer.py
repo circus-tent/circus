@@ -7,6 +7,7 @@ from circus.util import DEFAULT_ENDPOINT_SUB, get_connection
 class CircusConsumer(object):
     def __init__(self, topics, context=None, endpoint=DEFAULT_ENDPOINT_SUB,
                  ssh_server=None, timeout=1.):
+        ssh_server = None   # deactivated for 0.5.3 XXX
         self.topics = topics
         self.keep_context = context is not None
         self.context = context or zmq.Context()
