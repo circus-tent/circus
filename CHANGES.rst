@@ -1,8 +1,23 @@
 CHANGES
 =======
 
-0.6.0 - XXX
------------
+0.5.2 - 2012-07-26
+------------------
+
+* now patching the thread module from the stdlib
+  to avoid some Python bugs - #203
+* better looking circusctl help screen
+* uses pustil get_nice() when available (nice was deprecated) - #208
+* added max_age support - #221
+* only call listen() on SOCK_STREAM or SOCK_SEQPACKET sockets
+* make sure the controller empties the plugins list in update_watchers() - #220
+* added --log-level and --log-output to circushttpd
+* fix the process killing via the web UI - #219
+* now circus is zc.buildout compatible for scripts.
+* cleanup the websocket when the client disconnect - #225
+* fixed the default value for the endpoint - #199
+* splitted circushttpd in logical modules
+
 
 0.5.1 - 2012-07-11
 ------------------
