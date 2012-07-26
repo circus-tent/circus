@@ -129,7 +129,7 @@ class TestWatcherInitialization(TestCircus):
             watcher = Watcher('xx', cmd, copy_env=True, copy_path=True,
                               stdout_stream=qstream)
             watcher.start()
-            time.sleep(2.)
+            time.sleep(3.)
             watcher.stop()
             data = [v for k, v in stream.get().items()][1]
             data = ''.join(data)
