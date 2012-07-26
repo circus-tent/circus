@@ -61,7 +61,6 @@ class Arbiter(object):
                  warmup_delay=0, httpd=False, httpd_host='localhost',
                  httpd_port=8080, debug=False, stream_backend='thread',
                  ssh_server=None):
-        ssh_server = None   # XXX deactivated ssh for 0.5.2
         self.stream_backend = stream_backend
         self.watchers = watchers
         self.endpoint = endpoint
