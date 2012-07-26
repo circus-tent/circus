@@ -121,7 +121,7 @@ class TestWatcherInitialization(TestCircus):
         old_environ = os.environ
         old_paths = sys.path[:]
         try:
-            sys.path = ['KEUKEUNEUT']
+            sys.path = ['XYZ']
             os.environ = {'COCONUTS': 'MIGRATE'}
             cmd = ('%s -c "import sys; '
                    'sys.stdout.write(\':\'.join(sys.path)); '
@@ -133,7 +133,7 @@ class TestWatcherInitialization(TestCircus):
             watcher.stop()
             data = [v for k, v in stream.get().items()][1]
             data = ''.join(data)
-            self.assertTrue('KEUKEUNEUT' in data, data)
+            self.assertTrue('XYZ' in data, data)
         finally:
             os.environ = old_environ
             sys.path[:] = old_paths
