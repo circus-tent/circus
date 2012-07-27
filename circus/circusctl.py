@@ -178,7 +178,7 @@ class ControllerApp(object):
 
     def handle_dealer(self, cmd, opts, msg, endpoint, timeout, ssh_server):
         client = CircusClient(endpoint=endpoint, timeout=timeout,
-                                ssh_server=ssh_server)
+                              ssh_server=ssh_server)
         try:
             if isinstance(msg, list):
                 for i, command in enumerate(msg):

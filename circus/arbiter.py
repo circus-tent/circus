@@ -177,10 +177,9 @@ class Arbiter(object):
 
         return arbiter
 
-    def iter_watchers(self):
+    def iter_watchers(self, reverse=True):
         watchers = [(watcher.priority, watcher) for watcher in self.watchers]
-        watchers.sort()
-        watchers.reverse()
+        watchers.sort(reverse=reverse)
         for __, watcher in watchers:
             yield watcher
 
@@ -378,7 +377,7 @@ class Arbiter(object):
             logger.info('Arbiter exiting')
             self.alive = False
 
-        for watcher in self.iter_watchers():
+        for watcher in self.iter_watchers(reverse=False):
             watcher.stop()
 
     def restart(self):

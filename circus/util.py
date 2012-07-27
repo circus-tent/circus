@@ -515,7 +515,7 @@ class StrictConfigParser(ConfigParser):
                     options[name] = '\n'.join(val)
 
 
-def get_connection(socket, endpoint, ssh_server):
+def get_connection(socket, endpoint, ssh_server=None):
     if ssh_server is None:
         socket.connect(endpoint)
     else:

@@ -3,7 +3,6 @@ import logging
 import os
 import sys
 
-from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
 
 try:
     from gevent import monkey       # NOQA
@@ -35,8 +34,8 @@ __version__ = ".".join(map(str, version_info))
 logger = logging.getLogger('circus')
 
 
-def get_arbiter(watchers, controller=DEFAULT_ENDPOINT_DEALER,
-                pubsub_endpoint=DEFAULT_ENDPOINT_SUB,
+def get_arbiter(watchers, controller=None,
+                pubsub_endpoint=None,
                 stats_endpoint=None,
                 env=None, name=None, context=None,
                 background=False, stream_backend="thread",
@@ -106,6 +105,12 @@ def get_arbiter(watchers, controller=DEFAULT_ENDPOINT_DEALER,
     - **debug** -- If True the arbiter is launched in debug mode
       (default: False)
     """
+    from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
+    if controller is None:
+        controller = DEFAULT_ENDPOINT_DEALER
+    if pubsub_endpoint is None:
+        pubsub_endpoint = DEFAULT_ENDPOINT_SUB
+
     if stream_backend == 'gevent':
         try:
             import gevent           # NOQA

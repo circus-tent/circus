@@ -50,6 +50,28 @@ Before proposing your changes, double check that they are not breaking
 anything! You can use the `tox` command to ensure this, it will run the
 testsuite under the different supported python versions.
 
+Avoiding merge commits
+======================
+
+Avoiding merge commits allows to have a clean and readable history. To do so,
+instead of doing "git pull" and letting git handling the merges for you, using
+git pull --rebase will put your changes after the changes that are commited in
+the branch, or when working on master.
+
+That is, for us core developers, it's not possible anymore to use the handy
+github green button on pull requests if developers didn't rebased their work
+themselves or if we wait too much time between the request and the actual
+merge. Instead, the flow looks like this::
+
+    git remote add name repo-url
+    git fetch name
+    git checkout feature-branch
+    git rebase master
+
+    # check that everything is working properly and then merge on master
+    git checkout master
+    git merge feature-branch
+
 Discussing
 ==========
 
