@@ -13,16 +13,10 @@ from zmq.utils.jsonapi import jsonmod as json
 
 class ClusterController(Controller):
     def handle_message(self, raw_msg):
-        #print 'received raw_msg='
-        #print raw_msg
         client = CircusClient()
-        #print 'json='
-        #print json.loads(raw_msg[1])
         response = client.call(json.loads(raw_msg[1]))
-        resp = json.dumps(response)
-        print 'resp=' + resp
         self.stream.send(raw_msg[0], zmq.SNDMORE)
-        self.stream.send(resp)
+        self.stream.send(json.dumps(response))
 
 
 class CircusCluster(object):
