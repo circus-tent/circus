@@ -64,7 +64,7 @@ class CircusCluster(object):
                 break
 
     def stop(self):
-        pass
+        self.ctrl.stop()
 
     def manage_watchers(self):
         pass
