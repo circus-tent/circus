@@ -184,6 +184,11 @@ watcher:NAME - as many sections as you want
         max_age + random(0, max_age_variance) seconds. This avoids restarting
         all processes for a watcher at once. Defaults to 30 seconds.
 
+    **hooks.***
+        Available hooks: **before_start**, **after_start**, **before_stop**, **after_stop**
+
+        Define callback functions that hook into the watcher startup/shutdown process.
+
 
 plugin:NAME - as many sections as you want
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -9,6 +9,7 @@ _CONF = {
     'issue137': os.path.join(HERE, 'issue137.ini'),
     'include': os.path.join(HERE, 'include.ini'),
     'issue210': os.path.join(HERE, 'issue210.ini'),
+    'hooks': os.path.join(HERE, 'hooks.ini'),
 }
 
 
@@ -28,3 +29,8 @@ class TestConfig(unittest.TestCase):
         conf = get_config(_CONF['issue210'])
         watcher = Watcher.load_from_config(conf['watchers'][0])
         watcher.stop()
+
+    def test_hooks(self):
+        conf = get_config(_CONF['hooks'])
+        watcher = Watcher.load_from_config(conf['watchers'][0])
+        self.assertEqual(watcher.hooks['before_start'], 'foo.bar.before_start')
