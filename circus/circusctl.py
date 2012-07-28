@@ -139,6 +139,7 @@ class ControllerApp(object):
         args = parser.parse_args()
         globalopts = self.get_globalopts(args)
         opts = {}
+        self.node = args.node
 
         if args.version:
             return self.display_version()
@@ -173,9 +174,9 @@ class ControllerApp(object):
 
     def _console(self, client, cmd, opts, msg):
         if opts['json']:
-            return prettify(client.call(msg), prettify=opts['prettify'])
+            return prettify(client.call(msg, node=self.node), prettify=opts['prettify'])
         else:
-            return cmd.console_msg(client.call(msg))
+            return cmd.console_msg(client.call(msg, node=self.node))
 
     def handle_dealer(self, cmd, opts, msg, endpoint, timeout, ssh_server):
         client = CircusClient(endpoint=endpoint, timeout=timeout,
