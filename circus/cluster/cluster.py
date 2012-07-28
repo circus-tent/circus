@@ -4,7 +4,7 @@ import sys
 import zmq
 
 from circus.client import CircusClient
-from circus.config import read_config
+from circus.config import get_config
 from circus.controller import Controller
 from circus.util import _setproctitle, DEFAULT_CLUSTER_DEALER
 from zmq.eventloop import ioloop
@@ -13,20 +13,21 @@ from zmq.utils.jsonapi import jsonmod as json
 
 class ClusterController(Controller):
     def handle_message(self, raw_msg):
-        print raw_msg
         node, msg = json.loads(raw_msg[1])
-        print node
-        print msg
-        print self.node_endpoints[node]
-        client = CircusClient(endpoint=self.node_endpoints[node])
+        endpoint = None
+        for n in self.arbiter.nodes:
+            if n['name'] == node:
+                endpoint = n['endpoint']
+        client = CircusClient(endpoint=endpoint)
         response = client.call(msg)
         self.stream.send(raw_msg[0], zmq.SNDMORE)
         self.stream.send(json.dumps(response))
 
 
 class CircusCluster(object):
-    def __init__(self, endpoint=DEFAULT_CLUSTER_DEALER, loop=None,
+    def __init__(self, nodes, endpoint=DEFAULT_CLUSTER_DEALER, loop=None,
                  context=None, check_delay=1.):
+        self.nodes = nodes
         self.endpoint = endpoint
 
         # initialize zmq context
@@ -43,15 +44,8 @@ class CircusCluster(object):
             sys.stderr.write("Exiting...\n")
             sys.exit(1)
 
-        cfg, cfg_files_read = read_config(config_file)
-        dget = cfg.dget
-        config = {}
-
-        # main circus options
-        config['endpoint'] = dget('circusd-cluster', 'endpoint',
-                                  DEFAULT_CLUSTER_DEALER, str)
-
-        return cls(endpoint=config['endpoint'])
+        config = get_config(config_file)
+        return cls(config['nodes'])
 
     def start(self):
         _setproctitle('circusd-cluster')
@@ -70,7 +64,8 @@ class CircusCluster(object):
                 break
 
     def stop(self):
-        self.ctrl.stop()
+        print 'stopping'
+        #self.ctrl.stop()
 
     def manage_watchers(self):
         pass

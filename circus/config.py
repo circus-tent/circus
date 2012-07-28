@@ -130,6 +130,7 @@ def get_config(config_file):
     watchers = []
     plugins = []
     sockets = []
+    nodes = []
 
     for section in cfg.sections():
         if section.startswith("socket:"):
@@ -139,6 +140,14 @@ def get_config(config_file):
 
         if section.startswith("plugin:"):
             plugins.append(dict(cfg.items(section)))
+
+        if section.startswith("node:"):
+            node = {}
+            node['name'] = section.split("node:", 1)[1]
+            for opt, val in cfg.items(section):
+                if opt == 'endpoint':
+                    node['endpoint'] = val
+            nodes.append(node)
 
         if section.startswith("watcher:"):
             watcher = watcher_defaults()
@@ -214,4 +223,5 @@ def get_config(config_file):
     config['watchers'] = watchers
     config['plugins'] = plugins
     config['sockets'] = sockets
+    config['nodes'] = nodes
     return config
