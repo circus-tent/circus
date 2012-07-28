@@ -20,8 +20,8 @@ class ClusterController(Controller):
 
 
 class CircusCluster(object):
-    def __init__(self, endpoint=DEFAULT_CLUSTER_DEALER, loop=None, context=None,
-                 check_delay=1.):
+    def __init__(self, endpoint=DEFAULT_CLUSTER_DEALER, loop=None,
+                 context=None, check_delay=1.):
         self.endpoint = endpoint
 
         # initialize zmq context
@@ -43,7 +43,8 @@ class CircusCluster(object):
         config = {}
 
         # main circus options
-        config['endpoint'] = dget('circusd-cluster', 'endpoint', DEFAULT_CLUSTER_DEALER, str)
+        config['endpoint'] = dget('circusd-cluster', 'endpoint',
+                                  DEFAULT_CLUSTER_DEALER, str)
 
         return cls(endpoint=config['endpoint'])
 

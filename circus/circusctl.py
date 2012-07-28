@@ -91,6 +91,7 @@ class ControllerApp(object):
             'timeout': {'default': 5, 'help': 'connection timeout'},
             'json': {'default': False, 'action': 'store_true',
                      'help': 'output to JSON'},
+            'node': {'default': None, 'help': 'worker node'},
             'prettify': {'default': False, 'action': 'store_true',
                          'help': 'prettify output'},
             'ssh': {'default': None, 'help': 'SSH Server'},
