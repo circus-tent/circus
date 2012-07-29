@@ -137,3 +137,22 @@ class TestWatcherInitialization(TestCircus):
         finally:
             os.environ = old_environ
             sys.path[:] = old_paths
+
+
+class TestWatcherHooks(TestCircus):
+
+    def test_before_start(self):
+
+        self.before_start_called = False
+
+        def hook(watcher, action='before_startup'):
+            self.before_start_called = True
+
+        hooks = {'before_start': hook}
+
+        self.stream = QueueStream()
+        dummy_process = 'circus.tests.test_watcher.run_process'
+        self._run_circus(dummy_process,
+                stdout_stream={'stream': self.stream},
+                hooks=hooks)
+        self.assertTrue(self.before_startup_called)

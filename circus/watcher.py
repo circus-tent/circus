@@ -13,7 +13,7 @@ from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
-from circus.util import parse_env
+from circus.util import parse_env, resolve_name
 
 
 class Watcher(object):
@@ -138,6 +138,7 @@ class Watcher(object):
                  stderr_stream=None, stream_backend='thread', priority=0,
                  singleton=False, use_sockets=False, copy_env=False,
                  copy_path=False, max_age=0, max_age_variance=30,
+                 hooks=None,
                  **options):
         self.name = name
         self.use_sockets = use_sockets
@@ -165,6 +166,7 @@ class Watcher(object):
         self.copy_path = copy_path
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
+        self.hooks = hooks or {}
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
@@ -521,6 +523,7 @@ class Watcher(object):
         logger.debug('gracefully stopping processes [%s] for %ss' % (
                      self.name, self.graceful_timeout))
 
+        self.call_hook('before_stop')
         while self.get_active_processes() and time.time() < limit:
             self.kill_processes(signal.SIGTERM)
             try:
@@ -536,6 +539,7 @@ class Watcher(object):
 
         self.stopped = True
 
+        self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
 
     def get_active_processes(self):
@@ -548,6 +552,14 @@ class Watcher(object):
         """Returns a list of PIDs"""
         return [process.pid for process in self.processes]
 
+    def call_hook(self, hook_name):
+        """Call a hook function"""
+        if hook_name in self.hooks:
+            hook = self.hooks[hook_name]
+            if not callable(hook):
+                hook = resolve_name(hook)
+            hook(watcher=self, action=hook_name)
+
     @util.debuglog
     def start(self):
         """Start.
@@ -557,8 +569,11 @@ class Watcher(object):
 
         self.stopped = False
         self._create_redirectors()
+
+        self.call_hook('before_start')
         self.reap_processes()
         self.manage_processes()
+        self.call_hook('after_start')
 
         if self.stdout_redirector is not None:
             self.stdout_redirector.start()

@@ -29,7 +29,8 @@ def watcher_defaults():
         'use_sockets': False,
         'singleton': False,
         'copy_env': False,
-        'copy_path': False}
+        'copy_path': False,
+        'hooks': dict()}
 
 
 class DefaultConfigParser(StrictConfigParser):
@@ -201,6 +202,9 @@ def get_config(config_file):
                 elif opt == 'copy_path':
                     watcher['copy_path'] = dget(section, "copy_path", False,
                                                 bool)
+                elif opt.startswith('hooks'):
+                    hook_name = opt[6:]
+                    watcher['hooks'][hook_name] = val
 
                 else:
                     # freeform
