@@ -558,7 +558,7 @@ class Watcher(object):
             hook = self.hooks[hook_name]
             if not callable(hook):
                 hook = resolve_name(hook)
-            hook(watcher=self, action=hook_name)
+            hook(watcher=self, hook_name=hook_name)
 
     @util.debuglog
     def start(self):

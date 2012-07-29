@@ -145,7 +145,7 @@ class TestWatcherHooks(TestCircus):
 
         self.before_start_called = False
 
-        def hook(watcher, action='before_startup'):
+        def hook(watcher, hook_name):
             self.before_start_called = True
 
         hooks = {'before_start': hook}
