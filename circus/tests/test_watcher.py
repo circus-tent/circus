@@ -155,4 +155,4 @@ class TestWatcherHooks(TestCircus):
         self._run_circus(dummy_process,
                 stdout_stream={'stream': self.stream},
                 hooks=hooks)
-        self.assertTrue(self.before_startup_called)
+        self.assertTrue(self.before_start_called)
