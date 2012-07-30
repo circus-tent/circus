@@ -4,6 +4,7 @@ import sys
 import zmq
 
 from circus.client import CircusClient
+from circus.commands.base import ok
 from circus.config import get_config
 from circus.controller import Controller
 from circus.util import _setproctitle, DEFAULT_CLUSTER_DEALER
@@ -14,12 +15,16 @@ from zmq.utils.jsonapi import jsonmod as json
 class ClusterController(Controller):
     def handle_message(self, raw_msg):
         node, msg = json.loads(raw_msg[1])
-        endpoint = None
-        for n in self.arbiter.nodes:
-            if n['name'] == node:
-                endpoint = n['endpoint']
-        client = CircusClient(endpoint=endpoint)
-        response = client.call(msg)
+        print msg
+        if msg.get('command') == 'nodelist':
+            response = ok(self.commands['nodelist'].execute(self.arbiter, None))
+        else: 
+            endpoint = None
+            for n in self.arbiter.nodes:
+                if n['name'] == node:
+                    endpoint = n['endpoint']
+            client = CircusClient(endpoint=endpoint)
+            response = client.call(msg)
         self.stream.send(raw_msg[0], zmq.SNDMORE)
         self.stream.send(json.dumps(response))
 
