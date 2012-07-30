@@ -43,7 +43,7 @@ class CircusClient(object):
         return self.call(make_message(command, **props))
 
     def call(self, cmd, node=None):
-        if node is not None:
+        if node is not None or cmd['command'] == 'nodelist':
             cmd = [node, cmd]
         if not isinstance(cmd, string_types):
             try:

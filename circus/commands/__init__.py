@@ -9,6 +9,7 @@ from circus.commands import (   # NOQA
     list,
     listen,
     listsockets,
+    nodelist,
     numprocesses,
     numwatchers,
     options,
