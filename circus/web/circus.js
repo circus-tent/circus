@@ -16,6 +16,8 @@ function hookGraph(socket, watcher, metrics, prefix, capValues, config) {
 
     var graph = new Rickshaw.Graph({
             element: document.getElementById(watcher),
+            min: 0,
+            max: 100,
             width: config.width,
             height: config.height,
             renderer: 'line',
