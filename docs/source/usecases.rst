@@ -94,7 +94,7 @@ providing a fully qualified name for a WSGI python, you provide the path to
 the Django application, by prefixing it with **django:**::
 
     $ chaussette django:path/to/mysite
-    Application is <pyramid.router.Router object at 0x10a4d4bd0>
+    Application is <django.core.handlers.wsgi.WSGIHandler object at 0x...>
     Serving on localhost:8080
     Using <class 'chaussette.backend._waitress.Server'> as a backend
 
