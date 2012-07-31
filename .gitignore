@@ -3,6 +3,8 @@
 *.pyo
 circus.egg-info
 bin
+build
+dist
 lib
 lib64
 include
