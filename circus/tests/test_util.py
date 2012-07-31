@@ -6,7 +6,8 @@ import unittest
 from psutil import Popen
 
 from circus.util import (get_info, bytes2human, to_bool, parse_env,
-                         env_to_str, to_uid, to_gid, replace_gnu_args)
+                         env_to_str, to_uid, to_gid, replace_gnu_args,
+                         StrictConfigParser)
 
 
 class TestUtil(unittest.TestCase):
@@ -117,3 +118,8 @@ class TestUtil(unittest.TestCase):
         self.assertEquals('thats an int 2',
                           repl('thats an int $(me)', prefix=None,
                           me=2))
+
+    def test_strict_parser(self):
+        cp = StrictConfigParser()
+        bad_ini = os.path.join(os.path.dirname(__file__), 'bad.ini')
+        self.assertRaises(ValueError, cp.read, bad_ini)

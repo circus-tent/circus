@@ -14,10 +14,11 @@ cmds = get_commands()
 
 
 class LiveClient(object):
-    def __init__(self, endpoint):
+    def __init__(self, endpoint, ssh_server=None):
         self.endpoint = str(endpoint)
         self.stats_endpoint = None
-        self.client = CircusClient(endpoint=self.endpoint)
+        self.client = CircusClient(endpoint=self.endpoint,
+                                   ssh_server=ssh_server)
         self.connected = False
         self.watchers = []
         self.plugins = []
@@ -36,6 +37,8 @@ class LiveClient(object):
         If circus is not connected raises an error.
         """
         self.watchers = []
+        self.plugins = []
+
         # trying to list the watchers
         try:
             self.connected = True
@@ -60,8 +63,9 @@ class LiveClient(object):
             self.connected = False
 
     def killproc(self, name, pid):
+        # killing a proc and its children
         res = self.client.send_message('signal', name=name, pid=int(pid),
-                                       signum=9, children=True)
+                                       signum=9, recursive=True)
         self.update_watchers()  # will do better later
         return res
 

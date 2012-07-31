@@ -19,7 +19,9 @@ class StatsPublisher(object):
             if 'subtopic' in stat:
                 topic += '.%d' % stat['subtopic']
 
-            self.socket.send_multipart([topic, json.dumps(stat)])
+            stat = json.dumps(stat)
+            logger.debug('Sending %s' % stat)
+            self.socket.send_multipart([topic, stat])
 
         except zmq.ZMQError:
             if self.socket.closed:

@@ -1,17 +1,23 @@
 import errno
 import zmq
 
+from circus.util import DEFAULT_ENDPOINT_SUB, get_connection
+
 
 class CircusConsumer(object):
-    def __init__(self, topics, context=None, endpoint='tcp://127.0.0.1:5556'):
+    def __init__(self, topics, context=None, endpoint=DEFAULT_ENDPOINT_SUB,
+                 ssh_server=None, timeout=1.):
         self.topics = topics
         self.keep_context = context is not None
         self.context = context or zmq.Context()
         self.endpoint = endpoint
         self.pubsub_socket = self.context.socket(zmq.SUB)
-        self.pubsub_socket.connect(self.endpoint)
+        get_connection(self.pubsub_socket, self.endpoint, ssh_server)
         for topic in self.topics:
             self.pubsub_socket.setsockopt(zmq.SUBSCRIBE, topic)
+        self.poller = zmq.Poller()
+        self.poller.register(self.pubsub_socket, zmq.POLLIN)
+        self.timeout = timeout
 
     def __enter__(self):
         return self
@@ -27,6 +33,15 @@ class CircusConsumer(object):
         """ Yields tuples of (topic, message) """
         with self:
             while True:
+                try:
+                    events = dict(self.poller.poll(self.timeout * 1000))
+                except zmq.ZMQError as e:
+                    if e.errno == errno.EINTR:
+                        continue
+
+                if len(events) == 0:
+                    continue
+
                 topic, message = self.pubsub_socket.recv_multipart()
                 yield topic, message
 

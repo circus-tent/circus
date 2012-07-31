@@ -36,15 +36,15 @@ def main():
 
     parser.add_argument('--endpoint',
             help='The circusd ZeroMQ socket to connect to',
-            default='tcp://127.0.0.1:5555')
+            default=util.DEFAULT_ENDPOINT_DEALER)
 
     parser.add_argument('--pubsub',
             help='The circusd ZeroMQ pub/sub socket to connect to',
-            default='tcp://127.0.0.1:5556')
+            default=util.DEFAULT_ENDPOINT_SUB)
 
     parser.add_argument('--statspoint',
             help='The ZeroMQ pub/sub socket to send data to',
-            default='tcp://127.0.0.1:5557')
+            default=util.DEFAULT_ENDPOINT_STATS)
 
     parser.add_argument('--log-level', dest='loglevel', default='info',
             help="log level")
@@ -54,6 +54,8 @@ def main():
 
     parser.add_argument('--version', action='store_true',
                       default=False, help='Displays Circus version and exits.')
+
+    parser.add_argument('--ssh', default=None, help='SSH Server')
 
     args = parser.parse_args()
 
@@ -73,7 +75,8 @@ def main():
     h.setFormatter(fmt)
     logger.addHandler(h)
 
-    stats = StatsStreamer(args.endpoint, args.pubsub, args.statspoint)
+    stats = StatsStreamer(args.endpoint, args.pubsub, args.statspoint,
+                          args.ssh)
     try:
         stats.start()
     finally:

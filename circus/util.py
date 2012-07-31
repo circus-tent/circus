@@ -9,10 +9,18 @@ import re
 import sys
 import shlex
 import time
+from zmq import ssh
+from ConfigParser import (ConfigParser, MissingSectionHeaderError,
+                          ParsingError, DEFAULTSECT)
 
 from psutil.error import AccessDenied, NoSuchProcess
 from psutil import Process
-from circus import logger
+
+
+# default endpoints
+DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
+DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
+DEFAULT_ENDPOINT_STATS = "tcp://127.0.0.1:5557"
 
 
 try:
@@ -282,6 +290,8 @@ INDENTATION_LEVEL = 0
 def debuglog(func):
     @wraps(func)
     def _log(self, *args, **kw):
+        from circus import logger
+
         if os.environ.get('DEBUG') is None:
             return func(self, *args, **kw)
 
@@ -400,6 +410,120 @@ class ObjectDict(dict):
     def __getattr__(self, item):
         return self[item]
 
-# string constants
-DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
-DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
+
+def configure_logger(logger, level='INFO', output="-"):
+    loglevel = LOG_LEVELS.get(level.lower(), logging.INFO)
+    logger.setLevel(loglevel)
+    if output == "-":
+        h = logging.StreamHandler()
+    else:
+        h = logging.FileHandler(output)
+        close_on_exec(h.stream.fileno())
+    fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
+    h.setFormatter(fmt)
+    logger.addHandler(h)
+
+
+class StrictConfigParser(ConfigParser):
+
+    def _read(self, fp, fpname):
+        cursect = None                        # None, or a dictionary
+        optname = None
+        lineno = 0
+        e = None                              # None, or an exception
+        while True:
+            line = fp.readline()
+            if not line:
+                break
+            lineno = lineno + 1
+            # comment or blank line?
+            if line.strip() == '' or line[0] in '#;':
+                continue
+            if line.split(None, 1)[0].lower() == 'rem' and line[0] in "rR":
+                # no leading whitespace
+                continue
+            # continuation line?
+            if line[0].isspace() and cursect is not None and optname:
+                value = line.strip()
+                if value:
+                    cursect[optname].append(value)
+            # a section header or option header?
+            else:
+                # is it a section header?
+                mo = self.SECTCRE.match(line)
+                if mo:
+                    sectname = mo.group('header')
+                    if sectname in self._sections:
+                        raise ValueError('Duplicate section %r' %
+                                        sectname)
+                    elif sectname == DEFAULTSECT:
+                        cursect = self._defaults
+                    else:
+                        cursect = self._dict()
+                        cursect['__name__'] = sectname
+                        self._sections[sectname] = cursect
+                    # So sections can't start with a continuation line
+                    optname = None
+                # no section header in the file?
+                elif cursect is None:
+                    raise MissingSectionHeaderError(fpname, lineno, line)
+                # an option line?
+                else:
+                    try:
+                        mo = self._optcre.match(line)   # 2.7
+                    except AttributeError:
+                        mo = self.OPTCRE.match(line)    # 2.6
+                    if mo:
+                        optname, vi, optval = mo.group('option', 'vi', 'value')
+                        optname = self.optionxform(optname.rstrip())
+                        # This check is fine because the OPTCRE cannot
+                        # match if it would set optval to None
+                        if optval is not None:
+                            if vi in ('=', ':') and ';' in optval:
+                                # ';' is a comment delimiter only if it follows
+                                # a spacing character
+                                pos = optval.find(';')
+                                if pos != -1 and optval[pos - 1].isspace():
+                                    optval = optval[:pos]
+                            optval = optval.strip()
+                            # allow empty values
+                            if optval == '""':
+                                optval = ''
+                            cursect[optname] = [optval]
+                        else:
+                            # valueless option handling
+                            cursect[optname] = optval
+                    else:
+                        # a non-fatal parsing error occurred.  set up the
+                        # exception but keep going. the exception will be
+                        # raised at the end of the file and will contain a
+                        # list of all bogus lines
+                        if not e:
+                            e = ParsingError(fpname)
+                        e.append(lineno, repr(line))
+        # if any parsing errors occurred, raise an exception
+        if e:
+            raise e
+
+        # join the multi-line values collected while reading
+        all_sections = [self._defaults]
+        all_sections.extend(self._sections.values())
+        for options in all_sections:
+            for name, val in options.items():
+                if isinstance(val, list):
+                    options[name] = '\n'.join(val)
+
+
+def get_connection(socket, endpoint, ssh_server=None):
+    if ssh_server is None:
+        socket.connect(endpoint)
+    else:
+        try:
+            try:
+                ssh.tunnel_connection(socket, endpoint, ssh_server)
+            except ImportError:
+                ssh.tunnel_connection(socket, endpoint, ssh_server,
+                                      paramiko=True)
+        except ImportError:
+            raise ImportError("pexpect was not found, and failed to use "
+                              "Paramiko.  You need to install Paramiko")

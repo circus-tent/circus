@@ -1,15 +1,13 @@
 import sys
 import argparse
 import os
-import logging
 import resource
 
 from circus import logger
 from circus.arbiter import Arbiter
 from circus.pidfile import Pidfile
-from circus import util
 from circus import __version__
-from circus.util import MAXFD, REDIRECT_TO, LOG_LEVELS, LOG_FMT, LOG_DATE_FMT
+from circus.util import MAXFD, REDIRECT_TO, configure_logger, LOG_LEVELS
 
 
 def get_maxfd():
@@ -93,16 +91,7 @@ def main():
             sys.exit(1)
 
     # configure the logger
-    loglevel = LOG_LEVELS.get(args.loglevel.lower(), logging.INFO)
-    logger.setLevel(loglevel)
-    if args.logoutput == "-":
-        h = logging.StreamHandler()
-    else:
-        h = logging.FileHandler(args.logoutput)
-        util.close_on_exec(h.stream.fileno())
-    fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
-    h.setFormatter(fmt)
-    logger.addHandler(h)
+    configure_logger(logger, args.loglevel, args.logoutput)
 
     # load the arbiter from config
     arbiter = Arbiter.load_from_config(args.config)

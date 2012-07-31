@@ -34,12 +34,12 @@ __version__ = ".".join(map(str, version_info))
 logger = logging.getLogger('circus')
 
 
-def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
-                pubsub_endpoint='tcp://127.0.0.1:5556',
+def get_arbiter(watchers, controller=None,
+                pubsub_endpoint=None,
                 stats_endpoint=None,
                 env=None, name=None, context=None,
                 background=False, stream_backend="thread",
-                plugins=None):
+                plugins=None, debug=False):
     """Creates a Arbiter and a single watcher in it.
 
     Options:
@@ -102,7 +102,15 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
         - **use** -- Fully qualified name that points to the plugin class
         - every other value is passed to the plugin in the **config** option
 
+    - **debug** -- If True the arbiter is launched in debug mode
+      (default: False)
     """
+    from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
+    if controller is None:
+        controller = DEFAULT_ENDPOINT_DEALER
+    if pubsub_endpoint is None:
+        pubsub_endpoint = DEFAULT_ENDPOINT_SUB
+
     if stream_backend == 'gevent':
         try:
             import gevent           # NOQA
@@ -134,4 +142,4 @@ def get_arbiter(watchers, controller='tcp://127.0.0.1:5555',
 
     return Arbiter(_watchers, controller, pubsub_endpoint,
                    stats_endpoint=stats_endpoint,
-                   context=context, plugins=plugins)
+                   context=context, plugins=plugins, debug=debug)

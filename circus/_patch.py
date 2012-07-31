@@ -3,6 +3,7 @@ from threading import (_active_limbo_lock, _limbo, _active, _sys, _trace_hook,
         _profile_hook, _format_exc)
 
 
+# see http://bugs.python.org/issue1596321
 def _bootstrap_inner(self):
     try:
         self._set_ident()
@@ -65,5 +66,16 @@ def _delete(self):
             raise
 
 
+# http://bugs.python.org/issue14308
+def _stop(self):
+    # DummyThreads delete self.__block, but they have no waiters to
+    # notify anyway (join() is forbidden on them).
+    if not hasattr(self, '_Thread__block'):
+        return
+    self._Thread__stop_old()
+
+
 threading.Thread._Thread__bootstrap_inner = _bootstrap_inner
 threading.Thread._Thread__delete = _delete
+threading.Thread._Thread__stop_old = threading.Thread._Thread__stop
+threading.Thread._Thread__stop = _stop
