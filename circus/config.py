@@ -85,6 +85,17 @@ def read_config(config_path):
 
     return cfg, cfg_files_read
 
+def load_circus_options(config, section, dget):
+    config['check'] = dget(section, 'check_delay', 5, int)
+    config['endpoint'] = dget(section, 'endpoint', DEFAULT_ENDPOINT_DEALER)
+    config['pubsub_endpoint'] = dget(section, 'pubsub_endpoint',
+                                     DEFAULT_ENDPOINT_SUB)
+    config['stats_endpoint'] = dget(section, 'stats_endpoint', None, str)
+    config['warmup_delay'] = dget(section, 'warmup_delay', 0, int)
+    config['httpd'] = dget(section, 'httpd', False, bool)
+    config['httpd_host'] = dget(section, 'httpd_host', 'localhost', str)
+    config['httpd_port'] = dget(section, 'httpd_port', 8080, int)
+    config['debug'] = dget(section, 'debug', False, bool)
 
 def get_config(config_file):
     if not os.path.exists(config_file):
@@ -98,16 +109,7 @@ def get_config(config_file):
     config = {}
 
     # main circus options
-    config['check'] = dget('circus', 'check_delay', 5, int)
-    config['endpoint'] = dget('circus', 'endpoint', DEFAULT_ENDPOINT_DEALER)
-    config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
-                                     DEFAULT_ENDPOINT_SUB)
-    config['stats_endpoint'] = dget('circus', 'stats_endpoint', None, str)
-    config['warmup_delay'] = dget('circus', 'warmup_delay', 0, int)
-    config['httpd'] = dget('circus', 'httpd', False, bool)
-    config['httpd_host'] = dget('circus', 'httpd_host', 'localhost', str)
-    config['httpd_port'] = dget('circus', 'httpd_port', 8080, int)
-    config['debug'] = dget('circus', 'debug', False, bool)
+    load_circus_options(config, 'circus', dget)
     stream_backend = dget('circus', 'stream_backend', 'thread')
     if stream_backend == 'gevent':
         try:
@@ -147,6 +149,8 @@ def get_config(config_file):
             for opt, val in cfg.items(section):
                 if opt == 'endpoint':
                     node['endpoint'] = val
+                elif opt == 'stats_endpoint':
+                    node['stats_endpoint'] = val
             nodes.append(node)
 
         if section.startswith("watcher:"):
