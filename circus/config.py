@@ -87,9 +87,9 @@ def read_config(config_path):
 
 def load_circus_options(config, section, dget):
     config['check'] = dget(section, 'check_delay', 5, int)
-    config['endpoint'] = dget(section, 'endpoint', DEFAULT_ENDPOINT_DEALER)
+    config['endpoint'] = dget(section, 'endpoint', DEFAULT_ENDPOINT_DEALER) #TODO
     config['pubsub_endpoint'] = dget(section, 'pubsub_endpoint',
-                                     DEFAULT_ENDPOINT_SUB)
+                                     DEFAULT_ENDPOINT_SUB) # TODO
     config['stats_endpoint'] = dget(section, 'stats_endpoint', None, str)
     config['warmup_delay'] = dget(section, 'warmup_delay', 0, int)
     config['httpd'] = dget(section, 'httpd', False, bool)
@@ -114,7 +114,7 @@ def get_config(config_file):
     # main circus cluster options
     config['cluster'] = {}
     load_circus_options(config['cluster'], 'circusd-cluster', dget)
-    
+    print config
     stream_backend = dget('circus', 'stream_backend', 'thread')
     if stream_backend == 'gevent':
         try:

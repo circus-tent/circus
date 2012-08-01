@@ -50,7 +50,7 @@ class CircusCluster(object):
             sys.exit(1)
 
         config = get_config(config_file)
-        return cls(config['nodes'])
+        return cls(config['nodes'], endpoint=config['cluster']['endpoint'])
 
     def start(self):
         _setproctitle('circusd-cluster')
