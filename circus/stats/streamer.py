@@ -24,7 +24,7 @@ class StatsStreamer(object):
         self.pubsub_endpoint = pubsub_endoint
         self.sub_socket = self.ctx.socket(zmq.SUB)
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, self.topic)
-        self.sub_socket.connect(self.pubsub_endpoint)
+        self.sub_socket.connect(self.pubsub_endpoint) # TODO
         self.loop = ioloop.IOLoop.instance()  # events coming from circusd
         self.substream = zmqstream.ZMQStream(self.sub_socket, self.loop)
         self.substream.on_recv(self.handle_recv)
