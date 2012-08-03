@@ -177,6 +177,7 @@ class ControllerApp(object):
 
     def get_formatted_response(self, response, opts, cmd):
         if opts['json']:
+            response.pop('node')
             return prettify(response, prettify=opts['prettify'])
         else:
             return cmd.console_msg(response)
@@ -184,8 +185,8 @@ class ControllerApp(object):
     def _console(self, client, cmd, opts, msg):
         received = client.call(msg, node=self.node, broadcast=self.broadcast)
         if type(received) is list:          
-            response = ['\n' + self.get_formatted_response(resp, opts, cmd) for resp in received]
-            return 'Node: response' + ''.join(response)
+            response = ['\n' + resp['node'] + ": " + self.get_formatted_response(resp, opts, cmd) for resp in received]
+            return 'NODE: RESPONSE' + ''.join(response)
         else:
             return self.get_formatted_response(received, opts, cmd)
 
