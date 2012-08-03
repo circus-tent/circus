@@ -176,11 +176,14 @@ class ControllerApp(object):
         return 0
 
     def get_formatted_response(self, response, opts, cmd):
-        if opts['json']:
-            response.pop('node')
-            return prettify(response, prettify=opts['prettify'])
+        if 'err' in response:
+            return response['err']
         else:
-            return cmd.console_msg(response)
+            if opts['json']:
+                response.pop('node')
+                return prettify(response, prettify=opts['prettify'])
+            else:
+                return cmd.console_msg(response)
 
     def _console(self, client, cmd, opts, msg):
         received = client.call(msg, node=self.node, broadcast=self.broadcast)

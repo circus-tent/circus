@@ -7,6 +7,7 @@ from circus.client import CircusClient
 from circus.commands.base import ok
 from circus.config import get_config
 from circus.controller import Controller
+from circus.exc import CallError
 from circus.util import _setproctitle, DEFAULT_CLUSTER_DEALER
 from zmq.eventloop import ioloop
 from zmq.utils.jsonapi import jsonmod as json
@@ -23,8 +24,11 @@ class ClusterController(Controller):
             for n in self.arbiter.nodes:
                 if n['name'] == node or broadcast:
                     endpoint = n['endpoint']
-                    client = CircusClient(endpoint=endpoint)
-                    resp = client.call(msg)
+                    client = CircusClient(endpoint=endpoint, timeout=2.)
+                    try:
+                        resp = client.call(msg)
+                    except CallError as e:
+                        resp = {'err': str(e) + " Try to raise the --timeout value"}
                     resp['node'] = n['name']
                     response += [resp]
             if len(response) == 1:
