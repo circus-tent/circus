@@ -78,6 +78,9 @@ class CircusClient(object):
             else:
                 response += [json.loads(socket.recv())]
             try:
-                return response
+                if len(response) == 1:
+                    return response[0]
+                else:
+                    return response
             except ValueError as e:
                 raise CallError(str(e))

@@ -25,7 +25,7 @@ class ClusterController(Controller):
                 if n['name'] == node or broadcast:
                     endpoint = n['endpoint']
                     client = CircusClient(endpoint=endpoint)
-                    response = client.call(msg)[0]
+                    response = client.call(msg)
                     self.stream.send(raw_msg[0], zmq.SNDMORE)
                     self.stream.send(json.dumps(response))
 

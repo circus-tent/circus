@@ -175,15 +175,19 @@ class ControllerApp(object):
             print("%s: %s" % (topic, msg))
         return 0
 
-    def _console(self, client, cmd, opts, msg):
+    def get_formatted_response(self, response, opts, cmd):
         if opts['json']:
-            return prettify(client.call(msg, node=self.node, broadcast=self.broadcast), prettify=opts['prettify'])
+            return prettify(response, prettify=opts['prettify'])
         else:
-            response = []
-            for resp in client.call(msg, node=self.node, broadcast=self.broadcast):
-                response.append(cmd.console_msg(resp))
-            #print response
-            return str(response)
+            return cmd.console_msg(response)
+
+    def _console(self, client, cmd, opts, msg):
+        received = client.call(msg, node=self.node, broadcast=self.broadcast)
+        if type(received) is list:          
+            response = ['\n' + self.get_formatted_response(resp, opts, cmd) for resp in received]
+            return 'Node: response' + ''.join(response)
+        else:
+            return self.get_formatted_response(received, opts, cmd)
 
     def handle_dealer(self, cmd, opts, msg, endpoint, timeout, ssh_server):
         client = CircusClient(endpoint=endpoint, timeout=timeout,
