@@ -71,16 +71,7 @@ class CircusClient(object):
             raise CallError("Timed out.")
 
         for socket in events:
-            response = []
-            if broadcast:
-                response += [json.loads(socket.recv())]
-                response += [json.loads(socket.recv())]
-            else:
-                response += [json.loads(socket.recv())]
             try:
-                if len(response) == 1:
-                    return response[0]
-                else:
-                    return response
+                return json.loads(socket.recv())
             except ValueError as e:
                 raise CallError(str(e))

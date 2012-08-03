@@ -18,17 +18,19 @@ class ClusterController(Controller):
         print msg
         if msg.get('command') == 'nodelist':
             response = ok(self.commands['nodelist'].execute(self.arbiter, None))
-            self.stream.send(raw_msg[0], zmq.SNDMORE)
-            self.stream.send(json.dumps(response))
-        else: 
+        else:
+            response = []
             for n in self.arbiter.nodes:
                 if n['name'] == node or broadcast:
                     endpoint = n['endpoint']
                     client = CircusClient(endpoint=endpoint)
-                    response = client.call(msg)
-                    response['node'] = n['name']
-                    self.stream.send(raw_msg[0], zmq.SNDMORE)
-                    self.stream.send(json.dumps(response))
+                    resp = client.call(msg)
+                    resp['node'] = n['name']
+                    response += [resp]
+            if len(response) == 1:
+                response = response[0]
+        self.stream.send(raw_msg[0], zmq.SNDMORE)
+        self.stream.send(json.dumps(response))
 
 
 class CircusCluster(object):
