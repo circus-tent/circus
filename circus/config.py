@@ -4,7 +4,7 @@ import sys
 
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                         StrictConfigParser)
+                         DEFAULT_CLUSTER_DEALER, StrictConfigParser)
 
 
 def watcher_defaults():
@@ -87,7 +87,10 @@ def read_config(config_path):
 
 def load_circus_options(config, section, dget):
     config['check'] = dget(section, 'check_delay', 5, int)
-    config['endpoint'] = dget(section, 'endpoint', DEFAULT_ENDPOINT_DEALER) #TODO
+    config['endpoint'] = dget(section, 'endpoint',
+                              DEFAULT_ENDPOINT_DEALER
+                              if section == 'circus'
+                              else DEFAULT_CLUSTER_DEALER)
     config['pubsub_endpoint'] = dget(section, 'pubsub_endpoint',
                                      DEFAULT_ENDPOINT_SUB) # TODO
     config['stats_endpoint'] = dget(section, 'stats_endpoint', None, str)
@@ -113,7 +116,7 @@ def get_config(config_file):
     
     # main circus cluster options
     config['cluster'] = {}
-    load_circus_options(config['cluster'], 'circusd-cluster', dget)
+    load_circus_options(config['cluster'], 'circus-cluster', dget)
     print config
     stream_backend = dget('circus', 'stream_backend', 'thread')
     if stream_backend == 'gevent':
