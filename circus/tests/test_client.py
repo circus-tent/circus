@@ -110,6 +110,7 @@ class TestClient(TestCircus):
         self._client_test(None)
 
     def XXX_test_handler_ssh(self):
+        return
         try:
             try:
                 import pexpect    # NOQA
