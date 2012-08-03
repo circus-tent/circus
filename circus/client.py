@@ -44,7 +44,8 @@ class CircusClient(object):
 
     def call(self, cmd, node=None, broadcast=False, cluster_timeout=4):
         if node is not None or cmd['command'] == 'nodelist' or broadcast:
-            cmd = [node, broadcast, cmd, cluster_timeout]
+            cmd = {'node': node, 'broadcast': broadcast, 'cmd': cmd,
+                   'cluster_timeout': cluster_timeout}
         if not isinstance(cmd, string_types):
             try:
                 cmd = json.dumps(cmd)

@@ -15,9 +15,13 @@ from zmq.utils.jsonapi import jsonmod as json
 
 class ClusterController(Controller):
     def handle_message(self, raw_msg):
-        node, broadcast, msg, cluster_timeout = json.loads(raw_msg[1])
-        print msg
-        if msg.get('command') == 'nodelist':
+        msg = json.loads(raw_msg[1])
+        node = msg['node']
+        broadcast = msg['broadcast']
+        cmd = msg['cmd']
+        cluster_timeout = msg['cluster_timeout']
+        print cmd
+        if cmd.get('command') == 'nodelist':
             response = ok(self.commands['nodelist'].execute(self.arbiter, None))
         else:
             response = []
@@ -25,7 +29,7 @@ class ClusterController(Controller):
                 if n['name'] == node or broadcast:
                     client = CircusClient(endpoint=n['endpoint'], timeout=cluster_timeout)
                     try:
-                        resp = client.call(msg)
+                        resp = client.call(cmd)
                     except CallError as e:
                         resp = {'err': str(e) + " Try to raise the --timeout value"}
                     resp['node'] = n['name']
