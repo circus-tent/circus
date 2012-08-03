@@ -14,19 +14,20 @@ from zmq.utils.jsonapi import jsonmod as json
 
 class ClusterController(Controller):
     def handle_message(self, raw_msg):
-        node, msg = json.loads(raw_msg[1])
+        node, broadcast, msg = json.loads(raw_msg[1])
         print msg
         if msg.get('command') == 'nodelist':
             response = ok(self.commands['nodelist'].execute(self.arbiter, None))
+            self.stream.send(raw_msg[0], zmq.SNDMORE)
+            self.stream.send(json.dumps(response))
         else: 
-            endpoint = None
             for n in self.arbiter.nodes:
-                if n['name'] == node:
+                if n['name'] == node or broadcast:
                     endpoint = n['endpoint']
-            client = CircusClient(endpoint=endpoint)
-            response = client.call(msg)
-        self.stream.send(raw_msg[0], zmq.SNDMORE)
-        self.stream.send(json.dumps(response))
+                    client = CircusClient(endpoint=endpoint)
+                    response = client.call(msg)[0]
+                    self.stream.send(raw_msg[0], zmq.SNDMORE)
+                    self.stream.send(json.dumps(response))
 
 
 class CircusCluster(object):

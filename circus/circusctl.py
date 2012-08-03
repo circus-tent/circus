@@ -87,6 +87,8 @@ class ControllerApp(object):
         self.commands = get_commands()
         _Help.commands = self.commands
         self.options = {
+            'broadcast': {'default': False, 'action': 'store_true',
+                          'help': 'send command to all nodes'},
             'endpoint': {'default': None, 'help': 'connection endpoint'},
             'timeout': {'default': 5, 'help': 'connection timeout'},
             'json': {'default': False, 'action': 'store_true',
@@ -140,6 +142,7 @@ class ControllerApp(object):
         globalopts = self.get_globalopts(args)
         opts = {}
         self.node = args.node
+        self.broadcast = args.broadcast
 
         if args.version:
             return self.display_version()
@@ -174,9 +177,13 @@ class ControllerApp(object):
 
     def _console(self, client, cmd, opts, msg):
         if opts['json']:
-            return prettify(client.call(msg, node=self.node), prettify=opts['prettify'])
+            return prettify(client.call(msg, node=self.node, broadcast=self.broadcast), prettify=opts['prettify'])
         else:
-            return cmd.console_msg(client.call(msg, node=self.node))
+            response = []
+            for resp in client.call(msg, node=self.node, broadcast=self.broadcast):
+                response.append(cmd.console_msg(resp))
+            #print response
+            return str(response)
 
     def handle_dealer(self, cmd, opts, msg, endpoint, timeout, ssh_server):
         client = CircusClient(endpoint=endpoint, timeout=timeout,

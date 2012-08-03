@@ -42,9 +42,9 @@ class CircusClient(object):
     def send_message(self, command, **props):
         return self.call(make_message(command, **props))
 
-    def call(self, cmd, node=None):
-        if node is not None or cmd['command'] == 'nodelist':
-            cmd = [node, cmd]
+    def call(self, cmd, node=None, broadcast=False):
+        if node is not None or cmd['command'] == 'nodelist' or broadcast:
+            cmd = [node, broadcast, cmd]
         if not isinstance(cmd, string_types):
             try:
                 cmd = json.dumps(cmd)
@@ -71,8 +71,13 @@ class CircusClient(object):
             raise CallError("Timed out.")
 
         for socket in events:
-            msg = socket.recv()
+            response = []
+            if broadcast:
+                response += [json.loads(socket.recv())]
+                response += [json.loads(socket.recv())]
+            else:
+                response += [json.loads(socket.recv())]
             try:
-                return json.loads(msg)
+                return response
             except ValueError as e:
                 raise CallError(str(e))
