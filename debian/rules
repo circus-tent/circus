@@ -1,25 +1,4 @@
 #!/usr/bin/make -f
-
 export DH_VERBOSE=1
-
-include /usr/share/python/python.mk
-
 %:
-	dh $@
-
-# Ignore Makefile and makefile-based build rule
-
-override_dh_auto_build:
-	dh_auto_build --buildsystem=python_distutils
-
-override_dh_auto_clean:
-	dh_auto_clean --buildsystem=python_distutils
-
-override_dh_auto_configure:
-	dh_auto_configure --buildsystem=python_distutils
-
-override_dh_auto_install:
-	dh_auto_install --buildsystem=python_distutils
-
-override_dh_auto_test:
-	dh_auto_test --buildsystem=python_distutils
+	dh $@ --with python2 --buildsystem=python_distutils
