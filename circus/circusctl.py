@@ -89,6 +89,8 @@ class ControllerApp(object):
         self.options = {
             'broadcast': {'default': False, 'action': 'store_true',
                           'help': 'send command to all nodes'},
+            'cluster_timeout': {'default': 4, 'help':
+                                'connection timeout for master to node'},
             'endpoint': {'default': None, 'help': 'connection endpoint'},
             'timeout': {'default': 5, 'help': 'connection timeout'},
             'json': {'default': False, 'action': 'store_true',
@@ -143,6 +145,7 @@ class ControllerApp(object):
         opts = {}
         self.node = args.node
         self.broadcast = args.broadcast
+        self.cluster_timeout = int(args.cluster_timeout)
 
         if args.version:
             return self.display_version()
@@ -186,7 +189,7 @@ class ControllerApp(object):
                 return cmd.console_msg(response)
 
     def _console(self, client, cmd, opts, msg):
-        received = client.call(msg, node=self.node, broadcast=self.broadcast)
+        received = client.call(msg, node=self.node, broadcast=self.broadcast, cluster_timeout=self.cluster_timeout)
         if type(received) is list:          
             response = ['\n' + resp['node'] + ": " + self.get_formatted_response(resp, opts, cmd) for resp in received]
             return 'NODE: RESPONSE' + ''.join(response)
