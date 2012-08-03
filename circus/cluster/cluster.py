@@ -23,8 +23,7 @@ class ClusterController(Controller):
             response = []
             for n in self.arbiter.nodes:
                 if n['name'] == node or broadcast:
-                    endpoint = n['endpoint']
-                    client = CircusClient(endpoint=endpoint, timeout=cluster_timeout)
+                    client = CircusClient(endpoint=n['endpoint'], timeout=cluster_timeout)
                     try:
                         resp = client.call(msg)
                     except CallError as e:
