@@ -13,6 +13,9 @@ Or download the archive on PyPI, extract and install it manually with::
 
 If you want to try out Circus, see the :ref:`examples`.
 
+If you are using debian or any debian based distributoin, you also can use the
+ppa to install circus, it's at
+https://launchpad.net/~roman-imankulov/+archive/circus
 
 More on Requirements
 --------------------
