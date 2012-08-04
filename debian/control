@@ -23,6 +23,16 @@ Depends: ${python:Depends},
          python-zmq (>= 2.1.9),
          python-iowait (>= 0.1),
          python-psutil (>= 0.4),
+Recommends: python-mako (>=0.5),
+            python-markupsafe (>=0.15),
+            python-bottle (>=0.10),
+            python-anyjson (>=0.3.1),
+            python-gevent (>=0.13),
+            python-gevent-socketio,
+            python-gevent-websocket,
+            python-gevent-zeromq,
+            python-greenlet,
+            python-beaker,
 Description: process & socket manager. It can be used to monitor and control
  processes and sockets.
  .
