@@ -1,3 +1,9 @@
+circus (0.5.2.1+git201208041142-0ppa1) precise; urgency=low
+
+  * New package snapshot
+
+ -- Roman Imankulov <roman.imankulov@gmail.com>  Sat, 04 Aug 2012 11:42:49 +0000
+
 circus (0.5.2.1+git201207311738-0ppa1) precise; urgency=low
 
   * New package snapshot
