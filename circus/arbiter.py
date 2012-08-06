@@ -248,6 +248,12 @@ class Arbiter(object):
         # close sockets
         self.sockets.close_all()
 
+    def set_cluster_properties(self, node_name, master_endpoint):
+        if node_name is not None:
+            self.node_name = node_name
+        if master_endpoint is not None:
+            self.master_endpoint = master_endpoint
+
     def reap_processes(self):
         # map watcher to pids
         watchers_pids = {}

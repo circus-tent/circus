@@ -53,6 +53,8 @@ def daemonize():
 def main():
     parser = argparse.ArgumentParser(description='Run some watchers.')
     parser.add_argument('config', help='configuration file', nargs='?')
+    parser.add_argument('node', help='unique node name', nargs='?')
+    parser.add_argument('master', help='master endpoint', nargs='?')
 
     # XXX we should be able to add all these options in the config file as well
     parser.add_argument('--log-level', dest='loglevel', default='info',
@@ -95,6 +97,7 @@ def main():
 
     # load the arbiter from config
     arbiter = Arbiter.load_from_config(args.config)
+    arbiter.set_cluster_properties(args.node, args.master)
     try:
         arbiter.start()
     except KeyboardInterrupt:
