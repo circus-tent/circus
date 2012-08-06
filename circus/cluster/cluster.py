@@ -34,7 +34,7 @@ class ClusterController(Controller):
                         resp = {'err': str(e) + " Try to raise the --timeout value"}
                     resp['node'] = node['name']
                     response += [resp]
-            if len(response) == 1:
+            if len(response) == 1 and not broadcast:
                 response = response[0]
         self.stream.send(raw_msg[0], zmq.SNDMORE)
         self.stream.send(json.dumps(response))
