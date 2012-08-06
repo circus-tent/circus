@@ -15,11 +15,15 @@ from zmq.utils.jsonapi import jsonmod as json
 
 class ClusterController(Controller):
     def handle_message(self, raw_msg):
-        msg = json.loads(raw_msg[1])
-        node_name = msg['node']
-        broadcast = msg['broadcast']
-        cmd = msg['cmd']
-        cluster_timeout = msg['cluster_timeout']
+        cid, msg = raw_msg[0], json.loads(raw_msg[1])
+        try:
+            cmd = msg['cmd']
+            broadcast = msg['broadcast']
+            cluster_timeout = msg['cluster_timeout']
+            node_name = msg['node']
+        except KeyError as e:
+            self.send_error(cid, msg, reason="message has no '" + e.message + "' field")
+            return
         print cmd
         if cmd.get('command') == 'nodelist':
             response = ok(self.commands['nodelist'].execute(self.arbiter, None))
@@ -36,7 +40,7 @@ class ClusterController(Controller):
                     response += [resp]
             if len(response) == 1 and not broadcast:
                 response = response[0]
-        self.stream.send(raw_msg[0], zmq.SNDMORE)
+        self.stream.send(cid, zmq.SNDMORE)
         self.stream.send(json.dumps(response))
 
 
