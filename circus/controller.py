@@ -89,7 +89,7 @@ class Controller(object):
         try:
             cmd_name = json_msg['command']
         except KeyError as e:
-            self.send_error(cid, msg, reason="message has no '" + e.message + "' field")
+            self.send_error(cid, msg, reason="message has no '" + e.message + "' field", errno=errors.MESSAGE_ERROR)
             return
         properties = json_msg.get('properties', {})
         cast = json_msg.get('msg_type') == "cast"

@@ -4,6 +4,7 @@ import sys
 import zmq
 
 from circus.client import CircusClient
+from circus.commands import errors
 from circus.commands.base import ok
 from circus.config import get_config
 from circus.controller import Controller
@@ -22,7 +23,7 @@ class ClusterController(Controller):
             cluster_timeout = msg['cluster_timeout']
             node_name = msg['node']
         except KeyError as e:
-            self.send_error(cid, msg, reason="message has no '" + e.message + "' field")
+            self.send_error(cid, msg, reason="message has no '" + e.message + "' field", errno=errors.MESSAGE_ERROR)
             return
         print cmd
         if cmd.get('command') == 'nodelist':
