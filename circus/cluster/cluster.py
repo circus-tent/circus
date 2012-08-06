@@ -40,8 +40,7 @@ class ClusterController(Controller):
                     response += [resp]
             if len(response) == 1 and not broadcast:
                 response = response[0]
-        self.stream.send(cid, zmq.SNDMORE)
-        self.stream.send(json.dumps(response))
+        self.send_response(cid, msg, response)
 
 
 class CircusCluster(object):
