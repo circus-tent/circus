@@ -1,6 +1,7 @@
 import os
 import subprocess
 import time
+import zmq
 
 from circus.tests.support import TestCircus
 from circus.client import CircusClient, make_message
@@ -111,6 +112,8 @@ class TestClient(TestCircus):
         self._client_test()
 
     def test_handler_ssh(self):
+        def get_test_directory():
+            return os.path.join(os.getcwd(), 'circus/tests/')
         try:
             try:
                 import pexpect    # NOQA
@@ -119,6 +122,7 @@ class TestClient(TestCircus):
         except ImportError:
             return
         port = zmq.ssh.tunnel.select_random_ports(1)[0]
-        keyfile = os.path.join(os.getcwd(), 'circus/tests/id_dsa')
-        os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ~/Desktop/sshd_config')
+        keyfile = get_test_directory() + 'id_dsa'
+        config = get_test_directory() + 'sshd_config'
+        os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
         self._client_test(ssh_server='localhost:' + str(port), keyfile=keyfile)
