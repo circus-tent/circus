@@ -117,4 +117,4 @@ class TestClient(TestCircus):
                 import paramiko   # NOQA
         except ImportError:
             return
-        self._client_test(ssh_server='localhost:8990', keyfile='/home/nick/Desktop/id_dsa')
+        self._client_test(ssh_server='localhost:8990', keyfile=os.path.join(os.getcwd(), 'circus/tests/id_dsa'))
