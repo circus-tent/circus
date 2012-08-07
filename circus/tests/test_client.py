@@ -40,6 +40,7 @@ class TestClient(TestCircus):
 
     def tearDown(self):
         TestCircus.tearDown(self)
+        self.client.stop()
 
         return
 
@@ -52,16 +53,16 @@ class TestClient(TestCircus):
         subprocess.call(['mv', COPY_AUTHORIZED_KEYS, SSH_AUTHORIZED_KEYS])
         subprocess.call(['ssh-add'])
 
-    def _client_test(self, ssh_server):
+    def _client_test(self, ssh_server=None, keyfile=None):
         self._run_circus('circus.tests.test_client.run_process')
         time.sleep(.5)
 
         # playing around with the watcher
-        client = CircusClient(ssh_server=ssh_server)
+        self.client = CircusClient(ssh_server=ssh_server, keyfile=keyfile)
 
         def call(cmd, **props):
             msg = make_message(cmd, **props)
-            return client.call(msg)
+            return self.client.call(msg)
 
         def status(cmd, **props):
             resp = call(cmd, **props)
@@ -104,12 +105,11 @@ class TestClient(TestCircus):
         resp = call('globaloptions', name='test')
         self.assertEqual(resp['options']['pubsub_endpoint'],
                         'tcp://127.0.0.1:5556')
-        client.stop()
 
-    def XXX_test_handler(self):
-        self._client_test(None)
+    def test_handler(self):
+        self._client_test()
 
-    def XXX_test_handler_ssh(self):
+    def test_handler_ssh(self):
         try:
             try:
                 import pexpect    # NOQA
@@ -117,4 +117,4 @@ class TestClient(TestCircus):
                 import paramiko   # NOQA
         except ImportError:
             return
-        self._client_test('localhost')
+        self._client_test(ssh_server='localhost:8990', keyfile='/home/nick/Desktop/id_dsa')
