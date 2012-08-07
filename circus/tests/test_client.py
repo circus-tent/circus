@@ -40,7 +40,8 @@ class TestClient(TestCircus):
 
     def tearDown(self):
         TestCircus.tearDown(self)
-        self.client.stop()
+        if hasattr(self, 'client'):
+            self.client.stop()
 
         return
 
@@ -117,4 +118,7 @@ class TestClient(TestCircus):
                 import paramiko   # NOQA
         except ImportError:
             return
-        self._client_test(ssh_server='localhost:8990', keyfile=os.path.join(os.getcwd(), 'circus/tests/id_dsa'))
+        port = zmq.ssh.tunnel.select_random_ports(1)[0]
+        keyfile = os.path.join(os.getcwd(), 'circus/tests/id_dsa')
+        os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ~/Desktop/sshd_config')
+        self._client_test(ssh_server='localhost:' + str(port), keyfile=keyfile)
