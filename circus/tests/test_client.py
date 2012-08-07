@@ -122,7 +122,7 @@ class TestClient(TestCircus):
         except ImportError:
             return
         port = zmq.ssh.tunnel.select_random_ports(1)[0]
-        keyfile = get_test_directory() + 'id_dsa'
         config = get_test_directory() + 'sshd_config'
         os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
+        keyfile = get_test_directory() + 'id_dsa'
         self._client_test(ssh_server='localhost:' + str(port), keyfile=keyfile)
