@@ -55,18 +55,20 @@ class Arbiter(object):
       All watchers will use this setup unless stated otherwise in the
       watcher configuration. (default: thread)
     """
-    def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
+    def __init__(self, watchers, endpoint, pubsub_endpoint, master, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
                  stats_endpoint=None, plugins=None, sockets=None,
                  warmup_delay=0, httpd=False, httpd_host='localhost',
                  httpd_port=8080, debug=False, stream_backend='thread',
-                 ssh_server=None):
+                 ssh_server=None, node_name=None):
         self.stream_backend = stream_backend
         self.watchers = watchers
         self.endpoint = endpoint
+        self.master = master
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
         self.pubsub_endpoint = pubsub_endpoint
+        self.node_name = node_name
 
         # initialize zmq context
         self.context = context or zmq.Context.instance()
@@ -162,7 +164,7 @@ class Arbiter(object):
             sockets.append(CircusSocket.load_from_config(socket))
 
         # creating arbiter
-        arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
+        arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'], cfg['master'],
                       check_delay=cfg.get('check_delay', 1.),
                       prereload_fn=cfg.get('prereload_fn'),
                       stats_endpoint=cfg.get('stats_endpoint'),
@@ -173,7 +175,8 @@ class Arbiter(object):
                       httpd_port=cfg.get('httpd_port', 8080),
                       debug=cfg.get('debug', False),
                       stream_backend=cfg.get('stream_backend', 'thread'),
-                      ssh_server=cfg.get('ssh_server', None))
+                      ssh_server=cfg.get('ssh_server', None),
+                      node_name=cfg.get('node'))
 
         return arbiter
 

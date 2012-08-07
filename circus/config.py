@@ -99,6 +99,8 @@ def load_circus_options(config, section, dget):
     config['httpd_host'] = dget(section, 'httpd_host', 'localhost', str)
     config['httpd_port'] = dget(section, 'httpd_port', 8080, int)
     config['debug'] = dget(section, 'debug', False, bool)
+    config['node'] = dget(section, 'node', None, str)
+    config['master'] = dget(section, 'master', DEFAULT_CLUSTER_DEALER, str)
 
 def get_config(config_file):
     if not os.path.exists(config_file):
