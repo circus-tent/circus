@@ -29,7 +29,6 @@ StrictModes yes
 
 RSAAuthentication yes
 PubkeyAuthentication yes
-#AuthorizedKeysFile	%hFOLDERid_dsa.pub
 
 # Don't read the user's ~/.rhosts and ~/.shosts files
 IgnoreRhosts yes
