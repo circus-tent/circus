@@ -43,6 +43,8 @@ class TestClient(TestCircus):
         TestCircus.tearDown(self)
         if hasattr(self, 'client'):
             self.client.stop()
+        if hasattr(self, 'config'):
+            os.remove(self.config)
 
         return
 
@@ -123,6 +125,14 @@ class TestClient(TestCircus):
             return
         port = zmq.ssh.tunnel.select_random_ports(1)[0]
         config = get_test_directory() + 'sshd_config'
+        self.config = config
+        config_template = config + '_template'
+        config_file = open(config, 'w')
+        config_template_file = open(config_template)
+        for line in config_template_file:
+            config_file.write(line.replace('FOLDER', get_test_directory()))
+        config_file.close()
+        config_template_file.close()
         os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
         keyfile = get_test_directory() + 'id_dsa'
         self._client_test(ssh_server='localhost:' + str(port), keyfile=keyfile)
