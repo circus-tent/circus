@@ -8,7 +8,6 @@ Port 22
 #ListenAddress 0.0.0.0
 Protocol 2
 # HostKeys for protocol version 2
-HostKey FOLDERssh_host_rsa_key
 HostKey FOLDERid_dsa
 HostKey FOLDERssh_host_ecdsa_key
 #Privilege Separation is turned on for security
