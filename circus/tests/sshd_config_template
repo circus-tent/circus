@@ -6,6 +6,7 @@ Port 22
 # Use these options to restrict which interfaces/protocols sshd will bind to
 #ListenAddress ::
 #ListenAddress 0.0.0.0
+ListenAddress 127.0.0.1
 Protocol 2
 # HostKeys for protocol version 2
 HostKey FOLDERid_dsa
