@@ -1,5 +1,4 @@
 import os
-import subprocess
 import time
 import zmq
 
@@ -114,4 +113,6 @@ class TestClient(TestCircus):
         # Running SSH server
         os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
 
-        self._client_test(ssh_server='localhost -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no:' + str(port), keyfile=keyfile)
+        opts = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+        self._client_test(ssh_server='localhost ' + opts + ':' + str(port),
+                          keyfile=keyfile)

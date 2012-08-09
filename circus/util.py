@@ -523,10 +523,11 @@ def get_connection(socket, endpoint, ssh_server=None, keyfile=None):
     else:
         try:
             try:
-                tunnel_connection(socket, endpoint, ssh_server, keyfile=keyfile)
+                tunnel_connection(socket, endpoint, ssh_server,
+                                  keyfile=keyfile)
             except ImportError:
-                tunnel_connection(socket, endpoint, ssh_server, keyfile=keyfile,
-                                  paramiko=True)
+                tunnel_connection(socket, endpoint, ssh_server,
+                                  keyfile=keyfile, paramiko=True)
         except ImportError:
             raise ImportError("pexpect was not found, and failed to use "
                               "Paramiko.  You need to install Paramiko")
