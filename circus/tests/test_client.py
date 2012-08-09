@@ -94,8 +94,8 @@ class TestClient(TestCircus):
         except ImportError:
             return
         port = zmq.ssh.tunnel.select_random_ports(1)[0]
-        config = get_test_directory() + 'sshd_config'
-        self.config = config
+        self.config = get_test_directory() + 'sshd_config'
+        config = self.config
         config_template = config + '_template'
         config_file = open(config, 'w')
         config_template_file = open(config_template)
