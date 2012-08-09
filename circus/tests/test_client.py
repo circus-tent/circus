@@ -124,7 +124,6 @@ class TestClient(TestCircus):
         except ImportError:
             return
         port = zmq.ssh.tunnel.select_random_ports(1)[0]
-        print 'port ', port
         config = get_test_directory() + 'sshd_config'
         self.config = config
         config_template = config + '_template'
