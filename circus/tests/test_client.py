@@ -135,5 +135,5 @@ class TestClient(TestCircus):
         config_file.close()
         config_template_file.close()
         os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
-        keyfile = get_test_directory() + 'id_dsa'
+        keyfile = get_test_directory() + 'key_dsa'
         self._client_test(ssh_server='localhost -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no:' + str(port), keyfile=keyfile)
