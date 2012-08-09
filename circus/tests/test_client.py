@@ -84,8 +84,6 @@ class TestClient(TestCircus):
         self._client_test()
 
     def test_handler_ssh(self):
-        def get_test_directory():
-            return os.path.join(os.getcwd(), 'circus/tests/')
         try:
             try:
                 import pexpect    # NOQA
@@ -94,20 +92,22 @@ class TestClient(TestCircus):
         except ImportError:
             return
 
+        test_directory = os.path.join(os.getcwd(), 'circus/tests/')
+
         port = zmq.ssh.tunnel.select_random_ports(1)[0]
 
-        self.config = get_test_directory() + 'sshd_config'
+        self.config = test_directory + 'sshd_config'
         config = self.config
         config_template = config + '_template'
         config_file = open(config, 'w')
         config_template_file = open(config_template)
         for line in config_template_file:
-            config_file.write(line.replace('FOLDER', get_test_directory()))
+            config_file.write(line.replace('FOLDER', test_directory))
         config_file.close()
         config_template_file.close()
 
-        keyfile = get_test_directory() + 'key_dsa'
+        keyfile = test_directory + 'key_dsa'
         os.system('chmod 600 ' + keyfile)
-        os.system('chmod 600 ' + get_test_directory() + 'key_ecdsa')
+        os.system('chmod 600 ' + test_directory + 'key_ecdsa')
         os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
         self._client_test(ssh_server='localhost -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no:' + str(port), keyfile=keyfile)
