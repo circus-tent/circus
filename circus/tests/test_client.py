@@ -93,7 +93,9 @@ class TestClient(TestCircus):
                 import paramiko   # NOQA
         except ImportError:
             return
+
         port = zmq.ssh.tunnel.select_random_ports(1)[0]
+
         self.config = get_test_directory() + 'sshd_config'
         config = self.config
         config_template = config + '_template'
@@ -103,6 +105,9 @@ class TestClient(TestCircus):
             config_file.write(line.replace('FOLDER', get_test_directory()))
         config_file.close()
         config_template_file.close()
-        os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
+
         keyfile = get_test_directory() + 'key_dsa'
+        os.system('chmod 600 ' + keyfile)
+        os.system('chmod 600 ' + get_test_directory() + 'key_ecdsa')
+        os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
         self._client_test(ssh_server='localhost -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no:' + str(port), keyfile=keyfile)
