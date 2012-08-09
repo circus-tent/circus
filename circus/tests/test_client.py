@@ -93,9 +93,9 @@ class TestClient(TestCircus):
             return
 
         test_directory = os.path.join(os.getcwd(), 'circus/tests/')
-
         port = zmq.ssh.tunnel.select_random_ports(1)[0]
 
+        # Creating a sshd config file based on the template
         self.config = test_directory + 'sshd_config'
         config = self.config
         config_template = config + '_template'
@@ -106,8 +106,12 @@ class TestClient(TestCircus):
         config_file.close()
         config_template_file.close()
 
+        # Setting file permissions
         keyfile = test_directory + 'key_dsa'
         os.system('chmod 600 ' + keyfile)
         os.system('chmod 600 ' + test_directory + 'key_ecdsa')
+
+        # Running SSH server
         os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
+
         self._client_test(ssh_server='localhost -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no:' + str(port), keyfile=keyfile)
