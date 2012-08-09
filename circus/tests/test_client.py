@@ -14,30 +14,11 @@ def run_process(test_file):
     except:
         return 1
 
-SSH_PATH = '/home/' + os.getlogin() + '/.ssh/'
-SSH_ID_DSA = SSH_PATH + 'id_dsa'
-SSH_ID_DSA_PUB = SSH_PATH + 'id_dsa.pub'
-SSH_AUTHORIZED_KEYS = SSH_PATH + 'authorized_keys'
-COPY_ID_DSA = 'circus/tests/id_dsa'
-COPY_ID_DSA_PUB = 'circus/tests/id_dsa.pub'
-COPY_AUTHORIZED_KEYS = 'circus/tests/authorized_keys'
-
 
 class TestClient(TestCircus):
 
     def setUp(self):
         TestCircus.setUp(self)
-
-        return
-        # XXX to be fixed
-        subprocess.call(['mv', SSH_ID_DSA, COPY_ID_DSA])
-        subprocess.call(['mv', SSH_ID_DSA_PUB, COPY_ID_DSA_PUB])
-        subprocess.call(['mv', SSH_AUTHORIZED_KEYS, COPY_AUTHORIZED_KEYS])
-        subprocess.call(['cp', 'circus/tests/test_dsa', SSH_ID_DSA])
-        subprocess.call(['cp', 'circus/tests/test_dsa.pub', SSH_ID_DSA_PUB])
-        subprocess.call(['cp', 'circus/tests/test_dsa.pub',
-                            SSH_AUTHORIZED_KEYS])
-        subprocess.call(['ssh-add'])
 
     def tearDown(self):
         TestCircus.tearDown(self)
@@ -45,17 +26,6 @@ class TestClient(TestCircus):
             self.client.stop()
         if hasattr(self, 'config'):
             os.remove(self.config)
-
-        return
-
-        # XXX to be fixed
-        subprocess.call(['rm', SSH_ID_DSA])
-        subprocess.call(['rm', SSH_ID_DSA_PUB])
-        subprocess.call(['rm', SSH_AUTHORIZED_KEYS])
-        subprocess.call(['mv', COPY_ID_DSA, SSH_ID_DSA])
-        subprocess.call(['mv', COPY_ID_DSA_PUB, SSH_ID_DSA_PUB])
-        subprocess.call(['mv', COPY_AUTHORIZED_KEYS, SSH_AUTHORIZED_KEYS])
-        subprocess.call(['ssh-add'])
 
     def _client_test(self, ssh_server=None, keyfile=None):
         self._run_circus('circus.tests.test_client.run_process')
