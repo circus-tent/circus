@@ -207,30 +207,27 @@ def openssh_tunnel(lport, rport, server, remoteip='127.0.0.1', keyfile=None, pas
     cmd = ssh + " -f -p %i -L 127.0.0.1:%i:%s:%i %s sleep %i"%(port, lport, remoteip, rport, server, timeout)
     tunnel = pexpect.spawn(cmd)
     failed = False
-    try:
-        while True:
-            try:
-                tunnel.expect('[Pp]assword:', timeout=.1)
-            except pexpect.TIMEOUT:
-                continue
-            except pexpect.EOF:
-                if tunnel.exitstatus:
-                    print(tunnel.exitstatus)
-                    print(tunnel.before)
-                    print(tunnel.after)
-                    raise RuntimeError("tunnel '%s' failed to start"%(cmd))
-                else:
-                    return tunnel.pid
+    while True:
+        try:
+            tunnel.expect('[Pp]assword:', timeout=.1)
+        except pexpect.TIMEOUT:
+            continue
+        except pexpect.EOF:
+            if tunnel.exitstatus:
+                print(tunnel.exitstatus)
+                print(tunnel.before)
+                print(tunnel.after)
+                raise RuntimeError("tunnel '%s' failed to start"%(cmd))
             else:
-                if failed:
-                    print("Password rejected, try again")
-                    password=None
-                if password is None:
-                    password = getpass("%s's password: "%(server))
-                tunnel.sendline(password)
-                failed = True
-    except Exception as e:
-        print(e.message)    
+                return tunnel.pid
+        else:
+            if failed:
+                print("Password rejected, try again")
+                password=None
+            if password is None:
+                password = getpass("%s's password: "%(server))
+            tunnel.sendline(password)
+            failed = True   
     
 def _split_server(server):
     if '@' in server:
