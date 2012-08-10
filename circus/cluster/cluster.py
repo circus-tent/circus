@@ -38,7 +38,7 @@ class ClusterController(Controller):
             response = []
             for node in self.arbiter.nodes:
                 if node == node_name or broadcast:
-                    client = CircusClient(endpoint=self.arbiter.nodes[node]['endpoint'], timeout=cluster_timeout)
+                    client = CircusClient(endpoint=self.arbiter.nodes[node]['endpoint'], timeout=cluster_timeout, ssh_server=self.arbiter.ssh_server)
                     try:
                         resp = client.call(cmd)
                     except CallError as e:
@@ -52,7 +52,7 @@ class ClusterController(Controller):
 
 class CircusCluster(object):
     def __init__(self, nodes, endpoint=DEFAULT_CLUSTER_DEALER, loop=None,
-                 context=None, check_delay=1.):
+                 context=None, check_delay=1., ssh_server=None):
         self.nodes = {}
         for node in nodes:
             self.nodes[node['name']] = {}
@@ -60,6 +60,7 @@ class CircusCluster(object):
                 if not key == 'name':
                     self.nodes[node['name']][key] = node[key]
         self.endpoint = endpoint
+        self.ssh_server = ssh_server
 
         # initialize zmq context
         self.context = context or zmq.Context.instance()
@@ -76,7 +77,9 @@ class CircusCluster(object):
             sys.exit(1)
 
         config = get_config(config_file)
-        return cls(config['nodes'], endpoint=config['cluster']['endpoint'])
+        # XXX ssh server requires changes in branch issue233
+        return cls(config['nodes'], endpoint=config['cluster']['endpoint'],
+                   ssh_server=config['cluster'].get('ssh_server', None))
 
     def start(self):
         _setproctitle('circusd-cluster')
