@@ -143,10 +143,15 @@ class ControllerApp(object):
         for command in self.commands:
             subparser = subparsers.add_parser(command)
             subparser.add_argument('args', nargs="*", help=argparse.SUPPRESS)
+            if command == 'add':
+                subparser.add_argument('--start', action='store_true',
+                                       default=False)
 
         args = parser.parse_args()
         globalopts = self.get_globalopts(args)
         opts = {}
+        if hasattr(args, 'start'):
+            opts['start'] = args.start
 
         if args.command is None:
             parser.print_help()
