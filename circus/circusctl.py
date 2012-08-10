@@ -123,7 +123,8 @@ class ControllerApp(object):
     def get_globalopts(self, args):
         globalopts = {}
         for option in self.options:
-            globalopts[option] = getattr(args, option)
+            if hasattr(args, option):
+                globalopts[option] = getattr(args, option)
         return globalopts
 
     def dispatch(self, args):
