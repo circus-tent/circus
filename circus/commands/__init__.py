@@ -14,6 +14,7 @@ from circus.commands import (   # NOQA
     numwatchers,
     options,
     quit,
+    registernode,
     reload,
     restart,
     rmwatcher,

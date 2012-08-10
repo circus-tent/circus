@@ -39,7 +39,7 @@ class NodeList(Command):
     def execute(self, arbiter, props):
         nodes_list = {}
         for node in arbiter.nodes:
-            nodes_list[node['name']] = node['endpoint']
+            nodes_list[node] = arbiter.nodes[node]['endpoint']
         return {'nodelist': nodes_list}
 
     def console_msg(self, msg):

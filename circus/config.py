@@ -119,7 +119,6 @@ def get_config(config_file):
     # main circus cluster options
     config['cluster'] = {}
     load_circus_options(config['cluster'], 'circus-cluster', dget)
-    print config
     stream_backend = dget('circus', 'stream_backend', 'thread')
     if stream_backend == 'gevent':
         try:

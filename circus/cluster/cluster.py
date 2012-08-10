@@ -5,7 +5,7 @@ import zmq
 
 from circus.client import CircusClient
 from circus.commands import errors
-from circus.commands.base import ok
+from circus.commands.base import ok, error
 from circus.config import get_config
 from circus.controller import Controller
 from circus.exc import CallError
@@ -27,17 +27,23 @@ class ClusterController(Controller):
             return
         print cmd
         if cmd.get('command') == 'nodelist':
-            response = ok(self.commands['nodelist'].execute(self.arbiter, None))
+            response = ok(self.commands['nodelist'].execute(self.arbiter, cmd.get('properties', {})))
+        elif cmd.get('command') == 'register_node':
+            result = self.commands['register_node'].execute(self.arbiter, cmd.get('properties', {}))
+            if result['success']:
+                response = ok(result)
+            else:
+                response = error(reason="node name '" + result['node_name'] + "' is already registered")
         else:
             response = []
             for node in self.arbiter.nodes:
-                if node['name'] == node_name or broadcast:
-                    client = CircusClient(endpoint=node['endpoint'], timeout=cluster_timeout)
+                if node == node_name or broadcast:
+                    client = CircusClient(endpoint=self.arbiter.nodes[node]['endpoint'], timeout=cluster_timeout)
                     try:
                         resp = client.call(cmd)
                     except CallError as e:
                         resp = {'err': str(e) + " Try to raise the --timeout value"}
-                    resp['node'] = node['name']
+                    resp['node'] = node
                     response += [resp]
             if len(response) == 1 and not broadcast:
                 response = response[0]
@@ -47,7 +53,12 @@ class ClusterController(Controller):
 class CircusCluster(object):
     def __init__(self, nodes, endpoint=DEFAULT_CLUSTER_DEALER, loop=None,
                  context=None, check_delay=1.):
-        self.nodes = nodes
+        self.nodes = {}
+        for node in nodes:
+            self.nodes[node['name']] = {}
+            for key in node:
+                if not key == 'name':
+                    self.nodes[node['name']][key] = node[key]
         self.endpoint = endpoint
 
         # initialize zmq context

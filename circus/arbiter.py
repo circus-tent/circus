@@ -8,11 +8,13 @@ import sys
 import zmq
 from zmq.eventloop import ioloop
 
+from circus.client import CircusClient
+from circus.commands import get_commands
 from circus.controller import Controller
-from circus.exc import AlreadyExist
+from circus.exc import AlreadyExist, CallError
 from circus import logger
 from circus.watcher import Watcher
-from circus.util import debuglog, _setproctitle
+from circus.util import debuglog, _setproctitle, DEFAULT_CLUSTER_DEALER
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
@@ -55,20 +57,21 @@ class Arbiter(object):
       All watchers will use this setup unless stated otherwise in the
       watcher configuration. (default: thread)
     """
-    def __init__(self, watchers, endpoint, pubsub_endpoint, master, check_delay=1.,
+    def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
                  stats_endpoint=None, plugins=None, sockets=None,
                  warmup_delay=0, httpd=False, httpd_host='localhost',
                  httpd_port=8080, debug=False, stream_backend='thread',
-                 ssh_server=None, node_name=None):
+                 ssh_server=None, node_name=None, master=DEFAULT_CLUSTER_DEALER):
         self.stream_backend = stream_backend
         self.watchers = watchers
         self.endpoint = endpoint
-        self.master = master
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
         self.pubsub_endpoint = pubsub_endpoint
+        self.ssh_server = ssh_server
         self.node_name = node_name
+        self.master = master
 
         # initialize zmq context
         self.context = context or zmq.Context.instance()
@@ -94,8 +97,8 @@ class Arbiter(object):
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --pubsub %s' % self.pubsub_endpoint
             cmd += ' --statspoint %s' % self.stats_endpoint
-            if ssh_server is not None:
-                cmd += ' --ssh %s' % ssh_server
+            if self.ssh_server is not None:
+                cmd += ' --ssh %s' % self.ssh_server
             if debug:
                 cmd += ' --log-level DEBUG'
             stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True,
@@ -112,8 +115,8 @@ class Arbiter(object):
                    "circushttpd.main()'") % sys.executable
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --fd $(circus.sockets.circushttpd)'
-            if ssh_server is not None:
-                cmd += ' --ssh %s' % ssh_server
+            if self.ssh_server is not None:
+                cmd += ' --ssh %s' % self.ssh_server
             httpd_watcher = Watcher('circushttpd', cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=stdout_stream,
@@ -137,7 +140,7 @@ class Arbiter(object):
                 name = 'plugin:%s' % fqnd.replace('.', '-')
                 cmd = get_plugin_cmd(plugin, self.endpoint,
                                      self.pubsub_endpoint, self.check_delay,
-                                     ssh_server, debug=self.debug)
+                                     self.ssh_server, debug=self.debug)
                 plugin_watcher = Watcher(name, cmd, priority=1, singleton=True,
                                          stdout_stream=stdout_stream,
                                          stderr_stream=stderr_stream,
@@ -164,7 +167,7 @@ class Arbiter(object):
             sockets.append(CircusSocket.load_from_config(socket))
 
         # creating arbiter
-        arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'], cfg['master'],
+        arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
                       check_delay=cfg.get('check_delay', 1.),
                       prereload_fn=cfg.get('prereload_fn'),
                       stats_endpoint=cfg.get('stats_endpoint'),
@@ -176,7 +179,8 @@ class Arbiter(object):
                       debug=cfg.get('debug', False),
                       stream_backend=cfg.get('stream_backend', 'thread'),
                       ssh_server=cfg.get('ssh_server', None),
-                      node_name=cfg.get('node'))
+                      node_name=cfg.get('node', None),
+                      master=cfg.get('master', DEFAULT_CLUSTER_DEALER))
 
         return arbiter
 
@@ -220,6 +224,15 @@ class Arbiter(object):
 
         # start controller
         self.ctrl.start()
+
+        # register node with master
+        if self.node_name is not None:
+            reg_cmd = get_commands()['register_node']
+            msg = reg_cmd.message(self.node_name, self.endpoint)
+            try:
+                print reg_cmd.console_msg(CircusClient(endpoint=self.master, ssh_server=self.ssh_server).call(msg))
+            except CallError as e:
+                print "Unable to register node '" + self.node_name + "' with master at " + self.master + ' because: ' + e.message
 
         # initialize processes
         logger.debug('Initializing watchers')
