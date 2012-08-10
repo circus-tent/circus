@@ -138,8 +138,11 @@ class ControllerApp(object):
 
         parser.add_argument('--help', action='store_true',
                             help='Show help and exit')
-        parser.add_argument('command', nargs="?", choices=self.commands)
-        parser.add_argument('args', nargs="*", help=argparse.SUPPRESS)
+
+        subparsers = parser.add_subparsers(dest='command')
+        for command in self.commands:
+            subparser = subparsers.add_parser(command)
+            subparser.add_argument('args', nargs="*", help=argparse.SUPPRESS)
 
         args = parser.parse_args()
         globalopts = self.get_globalopts(args)
