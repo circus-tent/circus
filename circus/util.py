@@ -516,11 +516,14 @@ class StrictConfigParser(ConfigParser):
                 if isinstance(val, list):
                     options[name] = '\n'.join(val)
 
+def parse_ssh_server(ssh_server):
+    return ssh_server, None
 
 def get_connection(socket, endpoint, ssh_server=None, keyfile=None):
     if ssh_server is None:
         socket.connect(endpoint)
     else:
+        server, password = parse_ssh_server(ssh_server)
         try:
             try:
                 tunnel_connection(socket, endpoint, ssh_server,
