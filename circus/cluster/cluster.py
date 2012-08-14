@@ -60,7 +60,8 @@ class ClusterController(Controller):
         super(ClusterController, self).start()
 
     def stop_stats_forwarder(self):
-        self.stats_forwarder.stop()
+        if hasattr(self, 'stats_forwarder'):
+            self.stats_forwarder.stop()
 
 
 class CircusCluster(object):
