@@ -54,6 +54,7 @@ class RegisterNode(Command):
         node_name = props['node_name']
         if not node_name in arbiter.nodes:
             arbiter.nodes[node_name] = {'endpoint': props['node_endpoint'], 'stats_endpoint': props['node_stats_endpoint']}
+            arbiter.ctrl.stats_forwarder.add_connection(props['node_stats_endpoint'])
             success = True
         else:
             success = False

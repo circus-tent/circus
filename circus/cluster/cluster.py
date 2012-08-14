@@ -7,9 +7,11 @@ from circus.client import CircusClient
 from circus.commands import errors
 from circus.commands.base import ok, error
 from circus.config import get_config
+from circus.consumer import CircusConsumer
 from circus.controller import Controller
 from circus.exc import CallError
-from circus.util import _setproctitle, DEFAULT_CLUSTER_DEALER
+from circus.util import _setproctitle, DEFAULT_CLUSTER_DEALER, DEFAULT_CLUSTER_STATS
+from threading import Lock, Thread
 from zmq.eventloop import ioloop
 from zmq.utils.jsonapi import jsonmod as json
 
@@ -49,9 +51,20 @@ class ClusterController(Controller):
                 response = response[0]
         self.send_response(cid, msg, response)
 
+    def start(self):
+        lock = Lock()
+        lock.acquire()
+        self.stats_forwarder = StatsForwarder(self.arbiter.nodes, cluster_stats_endpoint=self.arbiter.stats_endpoint, lock=lock)
+        self.stats_forwarder.start()
+        lock.acquire()
+        super(ClusterController, self).start()
+
+    def stop_stats_forwarder(self):
+        self.stats_forwarder.stop()
+
 
 class CircusCluster(object):
-    def __init__(self, nodes, endpoint=DEFAULT_CLUSTER_DEALER, loop=None,
+    def __init__(self, nodes, endpoint=DEFAULT_CLUSTER_DEALER, stats_endpoint=None, loop=None,
                  context=None, check_delay=1., ssh_server=None):
         self.nodes = {}
         for node in nodes:
@@ -60,6 +73,7 @@ class CircusCluster(object):
                 if not key == 'name':
                     self.nodes[node['name']][key] = node[key]
         self.endpoint = endpoint
+        self.stats_endpoint = stats_endpoint
         self.ssh_server = ssh_server
 
         # initialize zmq context
@@ -79,6 +93,7 @@ class CircusCluster(object):
         config = get_config(config_file)
         # XXX ssh server requires changes in branch issue233
         return cls(config['nodes'], endpoint=config['cluster']['endpoint'],
+                   stats_endpoint=config['cluster'].get('stats_endpoint', None),
                    ssh_server=config['cluster'].get('ssh_server', None))
 
     def start(self):
@@ -99,6 +114,7 @@ class CircusCluster(object):
 
     def stop(self):
         print 'stopping'
+        self.ctrl.stop_stats_forwarder()
         #self.ctrl.stop()
 
     def manage_watchers(self):
@@ -108,6 +124,36 @@ class CircusCluster(object):
         print 'get watcher'
         print arg
         return None
+
+
+class StatsForwarder(Thread):
+    def __init__(self, nodes, cluster_stats_endpoint=DEFAULT_CLUSTER_STATS, lock=None):
+        super(StatsForwarder, self).__init__()
+        self.nodes = nodes
+        self.cluster_stats_endpoint = cluster_stats_endpoint
+        self.lock = lock
+
+    def run(self):
+        context = zmq.Context()
+        sender = context.socket(zmq.PUB)
+        sender.bind(self.cluster_stats_endpoint)
+
+        self.consumer = CircusConsumer(['stat.'], endpoint=None)
+
+        for node in self.nodes:
+            self.add_connection(self.nodes[node].get('stats_endpoint', None))
+        
+        if self.lock is not None:
+            self.lock.release()
+
+        for topic, msg in self.consumer:
+            sender.send_multipart([topic, msg])
+
+    def stop(self):
+        self.consumer.stop()
+
+    def add_connection(self, stats_endpoint):
+        self.consumer.add_connection(stats_endpoint)
 
 
 def main():
