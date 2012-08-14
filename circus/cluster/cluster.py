@@ -52,11 +52,12 @@ class ClusterController(Controller):
         self.send_response(cid, msg, response)
 
     def start(self):
-        lock = Lock()
-        lock.acquire()
-        self.stats_forwarder = StatsForwarder(self.arbiter.nodes, cluster_stats_endpoint=self.arbiter.stats_endpoint, lock=lock)
-        self.stats_forwarder.start()
-        lock.acquire()
+        if self.arbiter.stats_endpoint is not None:
+            lock = Lock()
+            lock.acquire()
+            self.stats_forwarder = StatsForwarder(self.arbiter.nodes, cluster_stats_endpoint=self.arbiter.stats_endpoint, lock=lock)
+            self.stats_forwarder.start()
+            lock.acquire()
         super(ClusterController, self).start()
 
     def stop_stats_forwarder(self):
