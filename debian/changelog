@@ -1,3 +1,9 @@
+circus (0.5.2.1+git201208140642-0ppa1) precise; urgency=low
+
+  * New package snapshot
+
+ -- roman <roman@roman.netangels.ru>  Tue, 14 Aug 2012 12:42:37 +0600
+
 circus (0.5.2.1+git201208041142-0ppa1) precise; urgency=low
 
   * New package snapshot
