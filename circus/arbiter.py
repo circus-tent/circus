@@ -228,7 +228,7 @@ class Arbiter(object):
         # register node with master
         if self.node_name is not None:
             reg_cmd = get_commands()['register_node']
-            msg = reg_cmd.message(self.node_name, self.endpoint)
+            msg = reg_cmd.message(self.node_name, self.endpoint, self.stats_endpoint)
             try:
                 print reg_cmd.console_msg(CircusClient(endpoint=self.master, ssh_server=self.ssh_server).call(msg))
             except CallError as e:
