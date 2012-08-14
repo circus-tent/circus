@@ -58,4 +58,5 @@ class CircusConsumer(object):
                 raise
 
     def add_connection(self, endpoint):
-        get_connection(self.pubsub_socket, endpoint, self.ssh_server)
+        if endpoint is not None:
+            get_connection(self.pubsub_socket, endpoint, self.ssh_server)
