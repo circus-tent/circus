@@ -162,6 +162,9 @@ class StatsStreamer(object):
                 break
         self.stop()
 
+    def set_node_name(self, node_name):
+        self.publisher.node_name = node_name
+
     def handle_recv(self, data):
         """called each time circusd sends an event"""
         # maintains a periodic callback to compute mem and cpu consumption for
@@ -186,6 +189,8 @@ class StatsStreamer(object):
                 self._init()
             elif action == 'stop':
                 self.stop()
+            elif action == 'set':
+                self.set_node_name(msg['node_name'])
             else:
                 logger.debug('Unknown action: %r' % action)
                 logger.debug(msg)
