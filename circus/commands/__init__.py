@@ -6,6 +6,7 @@ from circus.commands import (   # NOQA
     get,
     globaloptions,
     incrproc,
+    joincluster,
     list,
     listen,
     listsockets,
