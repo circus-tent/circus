@@ -13,6 +13,10 @@ _CONF = {
 }
 
 
+def hook(watcher, hook_name):
+    pass
+
+
 class TestConfig(unittest.TestCase):
 
     def test_issue137(self):
@@ -33,4 +37,4 @@ class TestConfig(unittest.TestCase):
     def test_hooks(self):
         conf = get_config(_CONF['hooks'])
         watcher = Watcher.load_from_config(conf['watchers'][0])
-        self.assertEqual(watcher.hooks['before_start'], 'foo.bar.before_start')
+        self.assertEqual(watcher.hooks['before_start'], hook)
