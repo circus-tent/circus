@@ -166,7 +166,7 @@ class Watcher(object):
         self.copy_path = copy_path
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
-        self.hooks = hooks or {}
+        self.hooks = self._resolve_hooks(hooks)
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
@@ -225,6 +225,23 @@ class Watcher(object):
                     backend=self.stream_backend)
         else:
             self.stderr_redirector = None
+
+    def _resolve_hooks(self, hooks):
+        """Check the supplied hooks argument to make sure we can find callables"""
+        if not hooks:
+            return {}
+
+        resolved_hooks = {}
+
+        for hook_name, callable_or_name in hooks.items():
+            if callable(callable_or_name):
+                resolved_hooks[hook_name] = callable_or_name
+            else:
+                # will raise ImportError on failure
+                resolved_hook = resolve_name(callable_or_name)
+                resolved_hooks[hook_name] = resolved_hook
+
+        return resolved_hooks
 
     @classmethod
     def load_from_config(cls, config):
@@ -555,10 +572,7 @@ class Watcher(object):
     def call_hook(self, hook_name):
         """Call a hook function"""
         if hook_name in self.hooks:
-            hook = self.hooks[hook_name]
-            if not callable(hook):
-                hook = resolve_name(hook)
-            hook(watcher=self, hook_name=hook_name)
+            self.hooks[hook_name](watcher=self, hook_name=hook_name)
 
     @util.debuglog
     def start(self):

@@ -141,6 +141,18 @@ class TestWatcherInitialization(TestCircus):
 
 class TestWatcherHooks(TestCircus):
 
+    def run_with_hooks(self, hooks):
+        self.stream = QueueStream()
+        dummy_process = 'circus.tests.test_watcher.run_process'
+        self._run_circus(dummy_process,
+                stdout_stream={'stream': self.stream},
+                hooks=hooks)
+
+    def test_missing_hook(self):
+        hooks = {'before_start': 'fake.hook.path'}
+        self.assertRaises(ImportError, self.run_with_hooks, hooks)
+
+
     def test_before_start(self):
 
         self.before_start_called = False
@@ -149,10 +161,5 @@ class TestWatcherHooks(TestCircus):
             self.before_start_called = True
 
         hooks = {'before_start': hook}
-
-        self.stream = QueueStream()
-        dummy_process = 'circus.tests.test_watcher.run_process'
-        self._run_circus(dummy_process,
-                stdout_stream={'stream': self.stream},
-                hooks=hooks)
+        self.run_with_hooks(hooks)
         self.assertTrue(self.before_start_called)
