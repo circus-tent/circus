@@ -101,6 +101,8 @@ class Arbiter(object):
                 cmd += ' --ssh %s' % self.ssh_server
             if debug:
                 cmd += ' --log-level DEBUG'
+            if self.node_name is not None:
+                cmd += ' --node_name ' + self.node_name
             stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=stdout_stream,
@@ -152,7 +154,7 @@ class Arbiter(object):
         self.warmup_delay = warmup_delay
 
     @classmethod
-    def load_from_config(cls, config_file):
+    def load_from_config(cls, config_file, **props):
         cfg = get_config(config_file)
 
         # hack reload ioloop to use the monkey patched version
@@ -179,7 +181,7 @@ class Arbiter(object):
                       debug=cfg.get('debug', False),
                       stream_backend=cfg.get('stream_backend', 'thread'),
                       ssh_server=cfg.get('ssh_server', None),
-                      node_name=cfg.get('node', None),
+                      node_name=props.get('node_name', None) or cfg.get('node', None),
                       master=cfg.get('master', DEFAULT_CLUSTER_DEALER))
 
         return arbiter

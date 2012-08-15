@@ -57,6 +57,8 @@ def main():
 
     parser.add_argument('--ssh', default=None, help='SSH Server')
 
+    parser.add_argument('--node_name', default=None, help='name of node, if running in cluster')
+
     args = parser.parse_args()
 
     if args.version:
@@ -76,7 +78,7 @@ def main():
     logger.addHandler(h)
 
     stats = StatsStreamer(args.endpoint, args.pubsub, args.statspoint,
-                          args.ssh)
+                          args.ssh, node_name=args.node_name)
     try:
         stats.start()
     finally:

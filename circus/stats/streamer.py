@@ -18,7 +18,7 @@ from circus import logger
 
 class StatsStreamer(object):
     def __init__(self, endpoint, pubsub_endoint, stats_endpoint, ssh_server,
-                 delay=1.):
+                 delay=1., node_name=None):
         self.topic = 'watcher.'
         self.delay = delay
         self.ctx = zmq.Context()
@@ -34,7 +34,7 @@ class StatsStreamer(object):
         self.cmds = get_commands()
         self._pids = defaultdict(list)
         self._callbacks = dict()
-        self.publisher = StatsPublisher(stats_endpoint, self.ctx)
+        self.publisher = StatsPublisher(stats_endpoint, self.ctx, node_name=node_name)
         self.running = False  # should the streamer be running?
         self.stopped = False  # did the collect started yet?
         self.circus_pids = {}
