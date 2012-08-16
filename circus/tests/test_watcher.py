@@ -88,6 +88,10 @@ class TestWatcher(TestCircus):
         self.assertEqual(len(current_pids), 1)
         self.assertNotEqual(initial_pids, current_pids)
 
+    def test_arbiter_reference(self):
+        self.assertEqual(self.arbiters[0].watchers[0].arbiter,
+                         self.arbiters[0])
+
 
 class TestWatcherFromConfiguration(TestCircus):
 
@@ -157,9 +161,11 @@ class TestWatcherHooks(TestCircus):
 
         self.before_start_called = False
 
-        def hook(watcher, hook_name):
+        def hook(watcher, arbiter, hook_name):
             self.before_start_called = True
+            self.arbiter_in_hook = arbiter
 
         hooks = {'before_start': hook}
         self.run_with_hooks(hooks)
         self.assertTrue(self.before_start_called)
+        self.assertEqual(self.arbiter_in_hook, self.arbiters[0])

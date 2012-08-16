@@ -205,6 +205,7 @@ class Watcher(object):
         self.rlimits = rlimits
         self.send_hup = send_hup
         self.sockets = self.evpub_socket = None
+        self.arbiter = None
 
     def _create_redirectors(self):
         if self.stdout_stream:
@@ -250,9 +251,10 @@ class Watcher(object):
         return cls(name=config.pop('name'), cmd=config.pop('cmd'), **config)
 
     @util.debuglog
-    def initialize(self, evpub_socket, sockets):
+    def initialize(self, evpub_socket, sockets, arbiter):
         self.evpub_socket = evpub_socket
         self.sockets = sockets
+        self.arbiter = arbiter
 
     def __len__(self):
         return len(self.processes)
@@ -572,7 +574,7 @@ class Watcher(object):
     def call_hook(self, hook_name):
         """Call a hook function"""
         if hook_name in self.hooks:
-            self.hooks[hook_name](watcher=self, hook_name=hook_name)
+            self.hooks[hook_name](watcher=self, arbiter=self.arbiter, hook_name=hook_name)
 
     @util.debuglog
     def start(self):
