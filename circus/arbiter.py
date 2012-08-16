@@ -102,8 +102,6 @@ class Arbiter(object):
                 cmd += ' --ssh %s' % self.ssh_server
             if debug:
                 cmd += ' --log-level DEBUG'
-            if self.node_name is not None:
-                cmd += ' --node_name ' + self.node_name
             stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=stdout_stream,
@@ -155,7 +153,7 @@ class Arbiter(object):
         self.warmup_delay = warmup_delay
 
     @classmethod
-    def load_from_config(cls, config_file, **props):
+    def load_from_config(cls, config_file):
         cfg = get_config(config_file)
 
         # hack reload ioloop to use the monkey patched version
@@ -182,7 +180,7 @@ class Arbiter(object):
                       debug=cfg.get('debug', False),
                       stream_backend=cfg.get('stream_backend', 'thread'),
                       ssh_server=cfg.get('ssh_server', None),
-                      node_name=props.get('node_name', None) or cfg.get('node', None),
+                      node_name=cfg.get('node', None),
                       master=cfg.get('master', DEFAULT_CLUSTER_DEALER))
 
         return arbiter
@@ -225,11 +223,8 @@ class Arbiter(object):
 
         self.initialize()
 
-        # start controller
-        self.ctrl.start()
-
         # register node with master
-        if self.node_name is not None:
+        if self.node_name is not None and self.master is not None:
             reg_cmd = get_commands()['register_node']
             msg = reg_cmd.message(self.node_name, self.endpoint, self.stats_endpoint)
             try:
@@ -237,11 +232,17 @@ class Arbiter(object):
             except CallError as e:
                 print "Unable to register node '" + self.node_name + "' with master at " + self.master + ' because: ' + e.message
 
+        # start controller
+        self.ctrl.start()
+
         # initialize processes
         logger.debug('Initializing watchers')
         for watcher in self.iter_watchers():
             watcher.start()
             time.sleep(self.warmup_delay)
+
+        time.sleep(3) # XXX do something safer to make sure that stats is ready for evpubsub
+        self.set_publisher_name()
 
         logger.info('Arbiter now waiting for commands')
         while True:
@@ -270,9 +271,12 @@ class Arbiter(object):
     def set_cluster_properties(self, node_name, master_endpoint):
         if node_name is not None:
             self.node_name = node_name
-            self.evpub_socket.send_multipart(['watcher..set', json.dumps({'node_name': node_name})])
         if master_endpoint is not None:
             self.master = master_endpoint
+
+    def set_publisher_name(self):
+        print 'set publisher name:', self.node_name
+        self.evpub_socket.send_multipart(['watcher..set', json.dumps({'node_name': self.node_name})])
 
     def reap_processes(self):
         # map watcher to pids

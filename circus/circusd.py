@@ -96,7 +96,7 @@ def main():
     configure_logger(logger, args.loglevel, args.logoutput)
 
     # load the arbiter from config
-    arbiter = Arbiter.load_from_config(args.config, node_name=args.node)
+    arbiter = Arbiter.load_from_config(args.config)
     arbiter.set_cluster_properties(args.node, args.master)
     try:
         arbiter.start()
