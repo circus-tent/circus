@@ -53,11 +53,8 @@ class ClusterController(Controller):
 
     def start(self):
         if self.arbiter.stats_endpoint is not None:
-            lock = Lock()
-            lock.acquire()
-            self.stats_forwarder = StatsForwarder(self.arbiter.nodes, cluster_stats_endpoint=self.arbiter.stats_endpoint, lock=lock)
+            self.stats_forwarder = StatsForwarder(self.arbiter.nodes, cluster_stats_endpoint=self.arbiter.stats_endpoint)
             self.stats_forwarder.start()
-            lock.acquire()
         super(ClusterController, self).start()
 
     def stop_stats_forwarder(self):
@@ -129,11 +126,10 @@ class CircusCluster(object):
 
 
 class StatsForwarder(Thread):
-    def __init__(self, nodes, cluster_stats_endpoint=DEFAULT_CLUSTER_STATS, lock=None):
+    def __init__(self, nodes, cluster_stats_endpoint=DEFAULT_CLUSTER_STATS):
         super(StatsForwarder, self).__init__()
         self.nodes = nodes
         self.cluster_stats_endpoint = cluster_stats_endpoint
-        self.lock = lock
 
     def run(self):
         context = zmq.Context()
@@ -144,9 +140,6 @@ class StatsForwarder(Thread):
 
         for node in self.nodes:
             self.add_connection(self.nodes[node].get('stats_endpoint', None))
-        
-        if self.lock is not None:
-            self.lock.release()
 
         for topic, msg in self.consumer:
             sender.send_multipart([topic, msg])
