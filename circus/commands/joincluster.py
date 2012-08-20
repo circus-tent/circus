@@ -40,7 +40,7 @@ class JoinCluster(Command):
 
     """
 
-    name = "joincluster"
+    name = "join_cluster"
     properties = ['node_name', 'master_endpoint']
 
     def message(self, *args, **opts):
@@ -50,6 +50,7 @@ class JoinCluster(Command):
 
     def execute(self, arbiter, props):
         arbiter.set_cluster_properties(props['node_name'], props['master_endpoint'])
+        arbiter.set_publisher_name()
         return {'node_name': props['node_name']}
 
     def console_msg(self, msg):

@@ -1,3 +1,4 @@
+from circus.client import CircusClient
 from circus.commands.base import Command
 from circus.exc import ArgumentError
 
@@ -56,6 +57,9 @@ class RegisterNode(Command):
             arbiter.nodes[node_name] = {'endpoint': props['node_endpoint'], 'stats_endpoint': props['node_stats_endpoint']}
             if hasattr(arbiter.ctrl, 'stats_forwarder'):
                 arbiter.ctrl.stats_forwarder.add_connection(props['node_stats_endpoint'])
+            # XXX start beat
+            # call join_cluster - XXX handle when this fails
+            CircusClient(endpoint=props['node_endpoint'], ssh_server=arbiter.ssh_server).call(arbiter.ctrl.commands['join_cluster'].message(props['node_name'], arbiter.endpoint))
             success = True
         else:
             success = False

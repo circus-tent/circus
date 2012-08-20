@@ -223,15 +223,6 @@ class Arbiter(object):
 
         self.initialize()
 
-        # register node with master
-        if self.node_name is not None and self.master is not None:
-            reg_cmd = get_commands()['register_node']
-            msg = reg_cmd.message(self.node_name, self.endpoint, self.stats_endpoint)
-            try:
-                print reg_cmd.console_msg(CircusClient(endpoint=self.master, ssh_server=self.ssh_server).call(msg))
-            except CallError as e:
-                print "Unable to register node '" + self.node_name + "' with master at " + self.master + ' because: ' + e.message
-
         # start controller
         self.ctrl.start()
 
@@ -242,7 +233,16 @@ class Arbiter(object):
             time.sleep(self.warmup_delay)
 
         time.sleep(3) # XXX do something safer to make sure that stats is ready for evpubsub
-        self.set_publisher_name()
+        # register node with master
+        def reg(self, commands):
+            if self.node_name is not None and self.master is not None:
+                reg_cmd = commands['register_node']
+                msg = reg_cmd.message(self.node_name, self.endpoint, self.stats_endpoint)
+                try:
+                    print reg_cmd.console_msg(CircusClient(endpoint=self.master, ssh_server=self.ssh_server).call(msg))
+                except CallError as e:
+                    print "Unable to register node '" + self.node_name + "' with master at " + self.master + ' because: ' + e.message
+        Thread(target=reg, args=(self, get_commands(),)).start()
 
         logger.info('Arbiter now waiting for commands')
         while True:
