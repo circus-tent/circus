@@ -4,14 +4,14 @@ import sys
 import zmq
 
 from circus.client import CircusClient
-from circus.commands import errors
+from circus.commands import errors, get_commands
 from circus.commands.base import ok, error
 from circus.config import get_config
 from circus.consumer import CircusConsumer
 from circus.controller import Controller
 from circus.exc import CallError
 from circus.util import _setproctitle, DEFAULT_CLUSTER_DEALER, DEFAULT_CLUSTER_STATS
-from threading import Lock, Thread
+from threading import Thread
 from zmq.eventloop import ioloop
 from zmq.utils.jsonapi import jsonmod as json
 
@@ -97,6 +97,17 @@ class CircusCluster(object):
 
     def start(self):
         _setproctitle('circusd-cluster')
+        
+        # XXX need to start the beat for each node since register_node is skipped
+
+        cmd = get_commands()['join_cluster']
+        def execute_join_cluster(node_name, node_endpoint, master_endpoint):
+            msg = cmd.message(node_name, master_endpoint)
+            CircusClient(endpoint=node_endpoint, ssh_server=self.ssh_server).call(msg)
+            
+        for node in self.nodes:
+            Thread(target=execute_join_cluster,
+                   args=(node, self.nodes[node]['endpoint'], self.endpoint)).start()
 
         self.ctrl.start()
 
