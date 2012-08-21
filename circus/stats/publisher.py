@@ -5,14 +5,13 @@ from circus import logger
 
 
 class StatsPublisher(object):
-    def __init__(self, stats_endpoint='tcp://127.0.0.1:5557', context=None, node_name=None):
+    def __init__(self, stats_endpoint='tcp://127.0.0.1:5557', context=None):
         self.ctx = context or zmq.Context()
         self.destroy_context = context is None
         self.stats_endpoint = stats_endpoint
         self.socket = self.ctx.socket(zmq.PUB)
         self.socket.bind(self.stats_endpoint)
         self.socket.linger = 0
-        self.node_name = node_name
 
     def publish(self, name, stat):
         try:
