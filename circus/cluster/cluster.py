@@ -158,7 +158,7 @@ class StatsForwarder(Thread):
                 topic = topic.split('.')
                 topic[1] = stat['node_name'] + '-' + topic[1]
                 topic = '.'.join(topic)
-            sender.send_multipart([topic, msg])
+                sender.send_multipart([topic, msg])
 
     def stop(self):
         self.consumer.stop()
