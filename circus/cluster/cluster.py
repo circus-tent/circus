@@ -153,6 +153,11 @@ class StatsForwarder(Thread):
             self.add_connection(self.nodes[node].get('stats_endpoint', None))
 
         for topic, msg in self.consumer:
+            stat = json.loads(msg)
+            if 'node_name' in stat:
+                topic = topic.split('.')
+                topic[1] = stat['node_name'] + '-' + topic[1]
+                topic = '.'.join(topic)
             sender.send_multipart([topic, msg])
 
     def stop(self):

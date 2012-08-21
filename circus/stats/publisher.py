@@ -17,7 +17,7 @@ class StatsPublisher(object):
     def publish(self, name, stat):
         try:
             if self.node_name is not None:
-                name = self.node_name + '-' + name
+                stat['node_name'] = self.node_name
             topic = b'stat.%s' % str(name)
             if 'subtopic' in stat:
                 topic += '.%d' % stat['subtopic']
