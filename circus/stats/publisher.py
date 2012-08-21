@@ -12,6 +12,7 @@ class StatsPublisher(object):
         self.socket = self.ctx.socket(zmq.PUB)
         self.socket.bind(self.stats_endpoint)
         self.socket.linger = 0
+        self.node_name = None
 
     def publish(self, name, stat):
         try:
