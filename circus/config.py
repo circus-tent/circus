@@ -92,7 +92,9 @@ def load_circus_options(config, section, dget):
                               if section == 'circus'
                               else DEFAULT_CLUSTER_DEALER)
     config['pubsub_endpoint'] = dget(section, 'pubsub_endpoint',
-                                     DEFAULT_ENDPOINT_SUB) # TODO
+                                     DEFAULT_ENDPOINT_SUB
+                                     if section == 'circus'
+                                     else None)
     config['stats_endpoint'] = dget(section, 'stats_endpoint', None, str)
     config['warmup_delay'] = dget(section, 'warmup_delay', 0, int)
     config['httpd'] = dget(section, 'httpd', False, bool)
