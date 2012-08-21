@@ -11,12 +11,24 @@ from circus.consumer import CircusConsumer
 from circus.controller import Controller
 from circus.exc import CallError
 from circus.util import _setproctitle, DEFAULT_CLUSTER_DEALER, DEFAULT_CLUSTER_STATS
-from threading import Thread
+from threading import Lock, Thread
 from zmq.eventloop import ioloop
 from zmq.utils.jsonapi import jsonmod as json
 
 
 class ClusterController(Controller):
+    def handle_node(self, nodes, ssh_server, node, response, response_lock, cluster_timeout, cmd, lock):
+        client = CircusClient(endpoint=nodes[node]['endpoint'], timeout=cluster_timeout, ssh_server=ssh_server)
+        try:
+            resp = client.call(cmd)
+        except CallError as e:
+            resp = {'err': str(e) + " Try to raise the --timeout value"}
+        resp['node'] = node
+        response_lock.acquire()
+        response.append(resp)
+        response_lock.release()
+        lock.release()
+
     def handle_message(self, raw_msg):
         cid, msg = raw_msg[0], json.loads(raw_msg[1])
         try:
@@ -38,15 +50,19 @@ class ClusterController(Controller):
                 response = error(reason="node name '" + result['node_name'] + "' is already registered")
         else:
             response = []
+            response_lock = Lock()
+            locks = []
             for node in self.arbiter.nodes:
                 if node == node_name or broadcast:
-                    client = CircusClient(endpoint=self.arbiter.nodes[node]['endpoint'], timeout=cluster_timeout, ssh_server=self.arbiter.ssh_server)
-                    try:
-                        resp = client.call(cmd)
-                    except CallError as e:
-                        resp = {'err': str(e) + " Try to raise the --timeout value"}
-                    resp['node'] = node
-                    response += [resp]
+                    lock = Lock()
+                    lock.acquire()
+                    locks.append(lock)
+                    Thread(target=self.handle_node,
+                           args=(self.arbiter.nodes, self.arbiter.ssh_server,
+                                 node, response, response_lock,
+                                 cluster_timeout, cmd, lock)).start()
+            for lock in locks:
+                lock.acquire()
             if len(response) == 1 and not broadcast:
                 response = response[0]
             elif len(response) == 0:
