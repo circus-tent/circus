@@ -49,6 +49,8 @@ class ClusterController(Controller):
                     response += [resp]
             if len(response) == 1 and not broadcast:
                 response = response[0]
+            elif len(response) == 0:
+                response = {'err': 'No matching node'}
         self.send_response(cid, msg, response)
 
     def start(self):
