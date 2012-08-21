@@ -45,5 +45,6 @@ class NodeList(Command):
     def console_msg(self, msg):
         if msg.get("status") == "ok":
             nodelist = msg.get("nodelist")
-            return '\n'.join([name + ': ' + nodelist[name] for name in sorted(nodelist)])                
+            return '\n'.join([name + ': ' + nodelist[name]
+                              for name in sorted(nodelist)])
         return self.console_error(msg)

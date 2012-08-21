@@ -85,6 +85,7 @@ def read_config(config_path):
 
     return cfg, cfg_files_read
 
+
 def load_circus_options(config, section, dget):
     config['check'] = dget(section, 'check_delay', 5, int)
     config['endpoint'] = dget(section, 'endpoint',
@@ -104,6 +105,7 @@ def load_circus_options(config, section, dget):
     config['node'] = dget(section, 'node', None, str)
     config['master'] = dget(section, 'master', DEFAULT_CLUSTER_DEALER, str)
 
+
 def get_config(config_file):
     if not os.path.exists(config_file):
         sys.stderr.write("the configuration file %r does not exist\n" %
@@ -117,7 +119,7 @@ def get_config(config_file):
 
     # main circus options
     load_circus_options(config, 'circus', dget)
-    
+
     # main circus cluster options
     config['cluster'] = {}
     load_circus_options(config['cluster'], 'circus-cluster', dget)

@@ -63,7 +63,8 @@ class Arbiter(object):
                  stats_endpoint=None, plugins=None, sockets=None,
                  warmup_delay=0, httpd=False, httpd_host='localhost',
                  httpd_port=8080, debug=False, stream_backend='thread',
-                 ssh_server=None, node_name=None, master=DEFAULT_CLUSTER_DEALER):
+                 ssh_server=None, node_name=None,
+                 master=DEFAULT_CLUSTER_DEALER):
         self.stream_backend = stream_backend
         self.watchers = watchers
         self.endpoint = endpoint
@@ -232,16 +233,24 @@ class Arbiter(object):
             watcher.start()
             time.sleep(self.warmup_delay)
 
-        time.sleep(3) # XXX do something safer to make sure that stats is ready for evpubsub
+        time.sleep(3)
+        #XXX do something safer than sleep to make sure
+        #that stats is ready for evpubsub event
+
         # register node with master
+
         def reg(self, commands):
             if self.node_name is not None and self.master is not None:
                 reg_cmd = commands['register_node']
-                msg = reg_cmd.message(self.node_name, self.endpoint, self.stats_endpoint)
+                msg = reg_cmd.message(self.node_name, self.endpoint,
+                                      self.stats_endpoint)
                 try:
                     print reg_cmd.console_msg(CircusClient(endpoint=self.master, ssh_server=self.ssh_server).call(msg))
                 except CallError as e:
-                    print "Unable to register node '" + self.node_name + "' with master at " + self.master + ' because: ' + e.message
+                    print ("Unable to register node '" + self.node_name +
+                           "' with master at " + self.master + ' because: ' +
+                           e.message)
+
         Thread(target=reg, args=(self, get_commands(),)).start()
 
         logger.info('Arbiter now waiting for commands')
@@ -276,7 +285,8 @@ class Arbiter(object):
 
     def set_publisher_name(self):
         print 'set publisher name:', self.node_name
-        self.evpub_socket.send_multipart(['watcher..set', json.dumps({'node_name': self.node_name})])
+        self.evpub_socket.send_multipart(
+            ['watcher..set', json.dumps({'node_name': self.node_name})])
 
     def reap_processes(self):
         # map watcher to pids

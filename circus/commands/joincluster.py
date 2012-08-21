@@ -49,11 +49,13 @@ class JoinCluster(Command):
         return self.make_message(node_name=args[0], master_endpoint=args[1])
 
     def execute(self, arbiter, props):
-        arbiter.set_cluster_properties(props['node_name'], props['master_endpoint'])
+        arbiter.set_cluster_properties(props['node_name'],
+                                       props['master_endpoint'])
         arbiter.set_publisher_name()
         return {'node_name': props['node_name']}
 
     def console_msg(self, msg):
         if msg.get("status") == "ok":
-            return "node '" + msg.get('node_name') + "' successfully joined cluster"
+            return ("node '" + msg.get('node_name') +
+                    "' successfully joined cluster")
         return self.console_error(msg)

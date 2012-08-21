@@ -32,7 +32,8 @@ class RegisterNode(Command):
 
         ::
 
-            $ circusctl register_node <node_name> <node_endpoint> <node_stats_endpoint>
+            $ circusctl register_node <node_name> <node_endpoint>
+                                      <node_stats_endpoint>
 
         Options
         +++++++
@@ -49,17 +50,21 @@ class RegisterNode(Command):
     def message(self, *args, **opts):
         if len(args) < 3:
             raise ArgumentError("number of arguments invalid")
-        return self.make_message(node_name=args[0], node_endpoint=args[1], node_stats_endpoint=args[2])
+        return self.make_message(node_name=args[0], node_endpoint=args[1],
+                                 node_stats_endpoint=args[2])
 
     def execute(self, arbiter, props):
         node_name = props['node_name']
         if not node_name in arbiter.nodes:
-            arbiter.nodes[node_name] = {'endpoint': props['node_endpoint'], 'stats_endpoint': props['node_stats_endpoint']}
+            arbiter.nodes[node_name] = {'endpoint': props['node_endpoint'],
+                                        'stats_endpoint': props['node_stats_endpoint']}
             if hasattr(arbiter.ctrl, 'stats_forwarder'):
-                arbiter.ctrl.stats_forwarder.add_connection(props['node_stats_endpoint'])
+                arbiter.ctrl.stats_forwarder.add_connection(
+                    props['node_stats_endpoint'])
             # XXX start beat
             # call join_cluster - XXX handle when this fails
-            CircusClient(endpoint=props['node_endpoint'], ssh_server=arbiter.ssh_server).call(arbiter.ctrl.commands['join_cluster'].message(props['node_name'], arbiter.endpoint))
+            CircusClient(endpoint=props['node_endpoint'],
+                         ssh_server=arbiter.ssh_server).call(arbiter.ctrl.commands['join_cluster'].message(props['node_name'], arbiter.endpoint))
             success = True
         else:
             success = False
@@ -67,5 +72,6 @@ class RegisterNode(Command):
 
     def console_msg(self, msg):
         if msg.get("status") == "ok":
-            return "node '" + msg.get('node_name') + "' successfully registered"
+            return ("node '" + msg.get('node_name') +
+                    "' successfully registered")
         return self.console_error(msg)

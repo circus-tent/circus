@@ -10,15 +10,18 @@ from circus.config import get_config
 from circus.consumer import CircusConsumer
 from circus.controller import Controller
 from circus.exc import CallError
-from circus.util import _setproctitle, DEFAULT_CLUSTER_DEALER, DEFAULT_CLUSTER_STATS
+from circus.util import (_setproctitle, DEFAULT_CLUSTER_DEALER,
+                         DEFAULT_CLUSTER_STATS)
 from threading import Lock, Thread
 from zmq.eventloop import ioloop
 from zmq.utils.jsonapi import jsonmod as json
 
 
 class ClusterController(Controller):
-    def handle_node(self, nodes, ssh_server, node, response, response_lock, cluster_timeout, cmd, lock):
-        client = CircusClient(endpoint=nodes[node]['endpoint'], timeout=cluster_timeout, ssh_server=ssh_server)
+    def handle_node(self, nodes, ssh_server, node, response, response_lock,
+                    cluster_timeout, cmd, lock):
+        client = CircusClient(endpoint=nodes[node]['endpoint'],
+                              timeout=cluster_timeout, ssh_server=ssh_server)
         try:
             resp = client.call(cmd)
         except CallError as e:
@@ -37,7 +40,9 @@ class ClusterController(Controller):
             cluster_timeout = msg['cluster_timeout']
             node_name = msg['node']
         except KeyError as e:
-            self.send_error(cid, msg, reason="message has no '" + e.message + "' field", errno=errors.MESSAGE_ERROR)
+            self.send_error(cid, msg, reason="message has no '" + e.message +
+                                             "' field",
+                            errno=errors.MESSAGE_ERROR)
             return
         print cmd
         if cmd.get('command') == 'nodelist':
@@ -47,7 +52,8 @@ class ClusterController(Controller):
             if result['success']:
                 response = ok(result)
             else:
-                response = error(reason="node name '" + result['node_name'] + "' is already registered")
+                response = error(reason="node name '" + result['node_name'] +
+                                        "' is already registered")
         else:
             response = []
             response_lock = Lock()
@@ -71,7 +77,9 @@ class ClusterController(Controller):
 
     def start(self):
         if self.arbiter.stats_endpoint is not None:
-            self.stats_forwarder = StatsForwarder(self.arbiter.nodes, cluster_stats_endpoint=self.arbiter.stats_endpoint)
+            self.stats_forwarder = (
+                StatsForwarder(self.arbiter.nodes,
+                    cluster_stats_endpoint=self.arbiter.stats_endpoint))
             self.stats_forwarder.start()
         super(ClusterController, self).start()
 
@@ -81,8 +89,9 @@ class ClusterController(Controller):
 
 
 class CircusCluster(object):
-    def __init__(self, nodes, endpoint=DEFAULT_CLUSTER_DEALER, stats_endpoint=None, loop=None,
-                 context=None, check_delay=1., ssh_server=None):
+    def __init__(self, nodes, endpoint=DEFAULT_CLUSTER_DEALER,
+                 stats_endpoint=None, loop=None, context=None, check_delay=1.,
+                 ssh_server=None):
         self.nodes = {}
         for node in nodes:
             self.nodes[node['name']] = {}
@@ -110,22 +119,27 @@ class CircusCluster(object):
         config = get_config(config_file)
         # XXX ssh server requires changes in branch issue233
         return cls(config['nodes'], endpoint=config['cluster']['endpoint'],
-                   stats_endpoint=config['cluster'].get('stats_endpoint', None),
+                   stats_endpoint=config['cluster'].get('stats_endpoint',
+                                                        None),
                    ssh_server=config['cluster'].get('ssh_server', None))
 
     def start(self):
         _setproctitle('circusd-cluster')
-        
-        # XXX need to start the beat for each node since register_node is skipped
+
+        # XXX need to start the beat for each node
+        # because register_node is skipped
 
         cmd = get_commands()['join_cluster']
+
         def execute_join_cluster(node_name, node_endpoint, master_endpoint):
             msg = cmd.message(node_name, master_endpoint)
-            CircusClient(endpoint=node_endpoint, ssh_server=self.ssh_server).call(msg)
-            
+            CircusClient(endpoint=node_endpoint,
+                         ssh_server=self.ssh_server).call(msg)
+
         for node in self.nodes:
             Thread(target=execute_join_cluster,
-                   args=(node, self.nodes[node]['endpoint'], self.endpoint)).start()
+                   args=(node, self.nodes[node]['endpoint'],
+                         self.endpoint)).start()
 
         self.ctrl.start()
 
