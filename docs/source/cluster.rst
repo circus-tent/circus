@@ -97,3 +97,12 @@ To view the stats streams of registered nodes, simply direct the endpoint of
       3024                       0.00                0.20                45.13
       3025                       0.00                0.20                45.12
                                  0.00 (avg)          0.60 (sum)          45.14 (older)
+
+Seeing which nodes are registered
+=================================
+
+The **nodelist** command displays the aliases and addresses of all nodes registered with the master::
+
+    $ circusctl nodelist --endpoint tcp://127.0.0.1:5558
+    first: tcp://127.0.0.1:5555
+    second: tcp://127.0.0.1:6555
