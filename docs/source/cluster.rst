@@ -61,7 +61,7 @@ For example, if we hadn't specified the node name and master endpoint in the
 above config file, we could do so by command line::
 
     $ circusctl register_node second tcp://127.0.0.1:6555 tcp://127.0.0.1:6557
---endpoint tcp://127.0.0.1:5558
+    --endpoint tcp://127.0.0.1:5558
 
 Viewing combined stats streams in circus-top
 ============================================
