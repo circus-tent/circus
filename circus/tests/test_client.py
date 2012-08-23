@@ -1,4 +1,5 @@
 import os
+import subprocess
 import time
 import zmq
 
@@ -111,7 +112,7 @@ class TestClient(TestCircus):
         os.system('chmod 600 ' + test_directory + 'key_ecdsa')
 
         # Running SSH server
-        os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
+        subprocess.call(['sshd', '-p', str(port), '-f', config])
 
         opts = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
         self._client_test(ssh_server='localhost ' + opts + ':' + str(port),
