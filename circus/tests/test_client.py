@@ -91,24 +91,25 @@ class TestClient(TestCircus):
         except ImportError:
             return
 
-        test_directory = os.path.join(os.getcwd(), 'circus/tests/')
+        test_directory = os.path.dirname(__file__)
         port = zmq.ssh.tunnel.select_random_ports(1)[0]
 
         # Creating a sshd config file based on the template
-        self.config = test_directory + 'sshd_config'
+        self.config = os.path.join(test_directory, 'sshd_config')
         config = self.config
         config_template = config + '_template'
         config_file = open(config, 'w')
         config_template_file = open(config_template)
         for line in config_template_file:
-            config_file.write(line.replace('FOLDER', test_directory))
+            config_file.write(line.replace('FOLDER', test_directory + '/'))
         config_file.close()
         config_template_file.close()
 
         # Setting file permissions
-        keyfile = test_directory + 'key_dsa'
+        keyfile = os.path.join(test_directory, 'key_dsa')
+        ecdsa_file = os.path.join(test_directory, 'key_ecdsa')
         os.system('chmod 600 ' + keyfile)
-        os.system('chmod 600 ' + test_directory + 'key_ecdsa')
+        os.system('chmod 600 ' + ecdsa_file)
 
         # Running SSH server
         os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
