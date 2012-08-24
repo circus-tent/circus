@@ -96,9 +96,8 @@ class TestClient(TestCircus):
 
         # Creating a sshd config file based on the template
         self.config = os.path.join(test_directory, 'sshd_config')
-        config = self.config
-        config_template = config + '_template'
-        config_file = open(config, 'w')
+        config_template = self.config + '_template'
+        config_file = open(self.config, 'w')
         config_template_file = open(config_template)
         for line in config_template_file:
             config_file.write(line.replace('FOLDER', test_directory + '/'))
@@ -112,7 +111,7 @@ class TestClient(TestCircus):
         os.system('chmod 600 ' + ecdsa_file)
 
         # Running SSH server
-        os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + config)
+        os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + self.config)
 
         opts = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
         self._client_test(ssh_server='localhost ' + opts + ':' + str(port),
