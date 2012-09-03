@@ -1,4 +1,5 @@
 import os
+import stat
 import time
 import zmq
 
@@ -107,8 +108,9 @@ class TestClient(TestCircus):
         # Setting file permissions
         keyfile = os.path.join(test_directory, 'key_dsa')
         ecdsa_file = os.path.join(test_directory, 'key_ecdsa')
-        os.system('chmod 600 ' + keyfile)
-        os.system('chmod 600 ' + ecdsa_file)
+        permission_600 = stat.S_IREAD | stat.S_IWRITE
+        os.chmod(keyfile, permission_600)
+        os.chmod(ecdsa_file, permission_600)
 
         # Running SSH server
         os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + self.config)
