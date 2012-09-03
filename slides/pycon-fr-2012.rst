@@ -106,7 +106,7 @@ webapp.ini::
     cmd = /usr/local/bin/redis-server /usr/local/etc/redis.conf
     singleton = 1
 
-    [watchers:retools-workers]
+    [watcher:retools-workers]
     cmd = /var/myapp/bin/retools-worker main
     numprocesses = 5
 
@@ -150,6 +150,7 @@ Comme Apache ou Gunicorn - **modele pre-fork**:
 - Chaque process lance par Circus est un child de **circusd**
 - **circusd** cree les sockets et les ouvrent
 - Les process enfant peuvent accepter des connections sur ces sockets
+- Load balancing fait par l'OS
 
 
 ----
