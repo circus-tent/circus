@@ -117,7 +117,7 @@ def connect():
             ssh_server = request.forms.ssh
         
         client = connect_to_circus(endpoint, ssh_server=ssh_server)
-        if not client.connected:
+        if client is not None and not client.connected:
             set_message('Impossible to connect')
 
         redirect('/')
