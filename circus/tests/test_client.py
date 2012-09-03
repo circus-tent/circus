@@ -84,6 +84,9 @@ class TestClient(TestCircus):
         self._client_test()
 
     def test_handler_ssh(self):
+        if os.name != 'posix':
+            return
+
         try:
             try:
                 import pexpect    # NOQA
