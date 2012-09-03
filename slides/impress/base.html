@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>{{ head_title }}</title>
+    <!-- Styles -->
+    {% if embed %}
+    <style type="text/css" media="screen, projection">
+      {{ css.screen.contents }}
+    </style>
+    {% else %}
+    <link rel="stylesheet" media="print" href="{{ css.print.path_url }}">
+    <link rel="stylesheet" media="screen, projection" href="{{ css.screen.path_url }}">
+    {% endif %}
+    {% for css in user_css %}
+      {% if embed %}
+      <style type="text/css" media="screen, projection">
+        {{ css.contents }}
+      </style>
+      {% else %}
+      <link rel="stylesheet" href="{{ css.path_url }}">
+      {% endif %}
+    {% endfor %}
+    <!-- /Styles -->
+
+</head>
+<body>
+<div id="impress" class="impress-not-supported">
+
+    <div class="fallback-message">
+        <p>Your browser <b>doesn't support features required</b> by impress.js, so are presented with simplified version of this presentation.</p>
+        <p>For the best experience please use latest <b>Chrome</b> or <b>Safari</b> browser. Firefox 10 and Internet Explorer 10 <i>should</i> also handle it.</p>
+    </div>
+      {% for slide in slides %}
+        <!-- slide source: {% if slide.source %}{{ slide.source.rel_path }}{% endif %} -->
+        {% if slide.number %}
+            {% if slide.number % 2 == 0 %}
+            <div class="step" data-x="{{ 8000 - slide.number * 1600 }}" data-y="{{ (( slide.number % 10 ) + 1) * 800 }}"
+                 data-rotate="{{ slide.number * 7 }}" data-scale="{{ slide.number % 7 + 1 }}">
+            {% else %}
+            <div class="step" data-x="{{ 8000 - slide.number * 1600 }}" data-y="{{ (( slide.number % 10 ) + 1) * 1600 }}"
+                 data-rotate="{{ slide.number * 12 }}" data-scale="{{ slide.number % 7 + 1 }}">
+            {% endif %}
+        {% else %}
+            <div class="step slide">
+        {% endif %}
+            {% if slide.header %}
+               <header><h1>{{ slide.header }}</h1></header>
+            {% endif %}
+            {% if slide.content %}
+               <section>
+                  <div>{{ slide.content }}</div>
+               </section>
+            {% endif %}
+            <footer>
+                {% if slide.source %}
+                <aside class="source">
+                  Source: <a href="{{ slide.source.rel_path }}">{{ slide.source.rel_path }}</a>
+                </aside>
+                {% endif %}
+                <aside class="page_number">
+                  {{ slide.number }}/{{ num_slides }}
+                </aside>
+            </footer>
+        </div>
+      {% endfor %}
+</div>
+<!-- Javascripts -->
+{% if embed %}
+<script>
+  {{ js.contents }}
+</script>
+{% else %}
+<script type="text/javascript" src="{{ js.path_url }}"></script>
+{% endif %}
+{% for js in user_js %}
+  {% if embed %}
+  <script>
+    {{ js.contents }}
+  </script>
+  {% else %}
+  <script type="text/javascript" src="{{ js.path_url }}"></script>
+  {% endif %}
+{% endfor %}
+<!-- /Javascripts -->
+</body>
+</html>
