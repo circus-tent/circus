@@ -22,8 +22,12 @@ class TestClient(TestCircus):
 
     def tearDown(self):
         TestCircus.tearDown(self)
+        
+        # Using hasattr because values might not
+        # have been assigned if test crashed prematurely
         if hasattr(self, 'client'):
             self.client.stop()
+        # Removing the config file created from the template
         if hasattr(self, 'config'):
             os.remove(self.config)
 
@@ -84,9 +88,11 @@ class TestClient(TestCircus):
         self._client_test()
 
     def test_handler_ssh(self):
+        # Checking that operating system supports Unix commands
         if os.name != 'posix':
             return
 
+        # Find a way to connect to the SSH server or abort
         try:
             try:
                 import pexpect    # NOQA
@@ -96,6 +102,8 @@ class TestClient(TestCircus):
             return
 
         test_directory = os.path.dirname(__file__)
+
+        # Get a port for the SSH server
         port = zmq.ssh.tunnel.select_random_ports(1)[0]
 
         # Creating a sshd config file based on the template
@@ -108,7 +116,7 @@ class TestClient(TestCircus):
         config_file.close()
         config_template_file.close()
 
-        # Setting file permissions
+        # Setting file permissions - necessary to use keys for SSH
         keyfile = os.path.join(test_directory, 'key_dsa')
         ecdsa_file = os.path.join(test_directory, 'key_ecdsa')
         permission_600 = stat.S_IREAD | stat.S_IWRITE
