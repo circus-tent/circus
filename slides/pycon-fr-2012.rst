@@ -227,6 +227,7 @@ Cas concret: WSGI avec Chaussette
 - Socket reinstancie avec *socket.fromfd()*
 - plusieurs backends: gevent, meinheld, waitress, wsgiref, eventlet
 
+http://chaussette.readthedocs.org
 
 ----
 
