@@ -1,22 +1,38 @@
 from circus.plugins import CircusPlugin
 from zmq.eventloop import ioloop
 
-
-try:
-    import statsd
-except ImportError:
-    raise ImportError("This plugin needs the statsd-client lib.")
+import socket
 
 
-class StatsdClient(statsd.StatsdClient):
-    def decrement(self, *args, **kwargs):
-        return self.decr(*args, **kwargs)
+class StatsdClient(object):
 
-    def increment(self, *args, **kwargs):
-        return self.incr(*args, **kwargs)
+    def __init__(self, host=None, port=None, prefix=None, sample_rate=1):
+        self.host = host
+        self.port = port
+        self.prefix = prefix
+        self.sample_rate = sample_rate
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    def send(self, bucket, value, sample_rate=None):
+        sample_rate = sample_rate or self.sample_rate
+        if sample_rate != 1:
+            value += b"|@" + sample_rate
+
+        if self.prefix:
+            bucket = "%s.%s" % (self.prefix, bucket)
+
+        self.socket.sendto("%s:%s" % (bucket, value), (self.host, self.port))
+
+    def decrement(self, bucket, delta=1):
+        if delta > 0:
+            delta = - delta
+        self.increment(bucket, delta)
+
+    def increment(self, bucket, delta=1):
+        self.send(bucket, "%d|c" % delta)
 
     def gauge(self, bucket, value):
-        self._send(bucket, str(value).encode("utf-8") + b'|g', sample_rate=1)
+        self.send(bucket, "%s|g" % value)
 
 
 class StatsdEmitter(CircusPlugin):
