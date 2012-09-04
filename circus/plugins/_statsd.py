@@ -8,6 +8,17 @@ except ImportError:
     raise ImportError("This plugin needs the statsd-client lib.")
 
 
+class StatsdClient(statsd.StatsdClient):
+    def decrement(self, *args, **kwargs):
+        return self.decr(*args, **kwargs)
+
+    def increment(self, *args, **kwargs):
+        return self.incr(*args, **kwargs)
+
+    def gauge(self, bucket, value):
+        self._send(bucket, str(value).encode("utf-8") + b'|g', sample_rate=1)
+
+
 class StatsdEmitter(CircusPlugin):
     """Plugin that sends stuff to statsd
     """
@@ -21,18 +32,16 @@ class StatsdEmitter(CircusPlugin):
         self.prefix = 'circus.%s.watcher' % self.app
 
         # initialize statsd
-        statsd.init_statsd({'STATSD_HOST': config.get('host', 'localhost'),
-                            'STATSD_PORT': int(config.get('port', '8125')),
-                            'STATSD_SAMPLE_RATE':
-                                    float(config.get('sample_rate', '1.0')),
-                            'STATSD_BUCKET_PREFIX': self.prefix})
+        self.statsd = StatsdClient(host=config.get('host', 'localhost'),
+                port=int(config.get('port', '8125')), prefix=self.prefix,
+                sample_rate=float(config.get('sample_rate', '1.0')))
 
     def handle_recv(self, data):
         topic, msg = data
         topic_parts = topic.split(".")
         watcher = topic_parts[1]
         action = topic_parts[2]
-        statsd.increment('%s.%s' % (watcher, action))
+        self.statsd.increment('%s.%s' % (watcher, action))
 
 
 class FullStats(StatsdEmitter):
@@ -54,7 +63,7 @@ class FullStats(StatsdEmitter):
     def request_stats(self):
         info = self.call("stats")
         if info["status"] == "error":
-            statsd.increment("_stats.error")
+            self.statsd.increment("_stats.error")
             return
 
         for name, stats in info['info']:
@@ -90,8 +99,8 @@ class RedisStats(FullStats):
         try:
             info = self.redis.info()
         except Exception:
-            statsd.increment("redis_stats.error")
+            self.statsd.increment("redis_stats.error")
             return
 
         for key in self.OBSERVE:
-            statsd._statsd._send("redis_stats.%s" % key, str(info[key]).encode("utf-8") + b'|g', sample_rate=1)
+            self.statsd.gauge("redis_stats.%s" % key, info[key])
