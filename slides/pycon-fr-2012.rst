@@ -4,7 +4,7 @@
 
     **Gestionnaire de Processus & Sockets**
 
-    Tarek Ziadé - tarek@ziade.org
+    Tarek Ziadé - tarek@ziade.og - @tarek_ziade
 
 
 ----
@@ -28,13 +28,15 @@ Exemple -- stack Pyramid:
 Use case Mozilla
 ================
 
-Gerer un cluster d'encryption (= projet TokenServer)
+**Token Server** - server de generation de clefs
 
+- travail d'encryption => CPU-bound
 - 175 process par machine, bcp de machines :)
 - Respawn, flapping
 - Interface Web avec stats temps reels
 - Redirections Stdout/stderr
-- Command line pour controle fin
+- Command-line pour controle fin
+
 
 ----
 
@@ -75,27 +77,78 @@ Choix techniques
 
 - Gestion des process : **psutil**
 - Message passing : **ZeroMQ**
-- Appli Web : **Socket.io** & **Bottle** & **Gevent**
+- Appli Web : **socket.io** & **Bottle** & **Gevent**
 - Le reste: Pure Python
 
+----
+
+psutil
+======
+
+- portable (Circus pas encore)
+- lenteurs fixees (> 0.6.1)
+- API propre et simple
+
+
+::
+
+   >>> import psutil
+   >>> p = psutil.Process(7384)
+   >>> p.name
+   'Address Book'
+   >>> p.create_time
+   1346710439.681407
+   >>> p.uids
+   user(real=501, effective=501, saved=501)
+
 
 ----
 
-Architecture de Circus
-======================
 
-.. image:: ../docs/source/images/circus-architecture.png
+ZeroMQ
+======
+
+- librairie asynchrone de messages == socket "intelligente"
+- highly scalable
+- transports: ITC, IPC, TCP, PGM (multicast)
+- patterns principaux
+
+ - request/reply
+ - pub/sub
+ - push/pull
+
+- utilise par IPython
+- PyZMQ = bind zmq + I/O event loop adaptee de Tornado
 
 
 ----
+
+
+
+Commandes
+=========
+
+- **circusd** - daemon principal
+- **circus-top** - commande top-like
+- **circusctl** - command-line
+
+Lance par **circusd** ou manuellement:
+
+- **circusd-stats** - daemon de stats
+- **circus-plugin** - process plugin
+- **circushttpd** - interface web
+
+----
+
 
 Exemple
 =======
 
-webapp.ini::
+::
 
     [circus]
-    check_delay = 5
+    httpd = 1
+    stats_endpoint = tcp://localhost:5557
 
     [watcher:pyramid]
     cmd = bin/pserve development.ini
@@ -117,6 +170,14 @@ Lancement::
 
 ----
 
+Architecture de Circus
+======================
+
+.. image:: ../docs/source/images/circus-architecture.png
+
+
+----
+
 Va mon fils, deploie tes applis
 ===============================
 
@@ -128,8 +189,11 @@ Va mon fils, deploie tes applis
 
 ----
 
+**Mozilla use Case #2 - Gerer les stacks web completes**
 
-**Probleme** *Comment eviter 2 niveaux de gestions de process*
+----
+
+**Pb. Stack actuelles** *2 niveaux de gestions de process...*
 
 .. image:: ../docs/source/images/classical-stack.png
 
@@ -142,8 +206,8 @@ Va mon fils, deploie tes applis
 
 ----
 
-Les sockets
-===========
+Les sockets Circus
+==================
 
 Comme Apache ou Gunicorn - **modele pre-fork**:
 
@@ -181,7 +245,9 @@ Exemple::
     port = 8000
 
 
+----
 
+**Demo #2 : Une stack web**
 
 ----
 
@@ -204,11 +270,22 @@ Features en cours de conception
 ===============================
 
 - Clustering
-- XXXX
+- Tunnelling SSH
+- Streaming stderr/stdout dans l'appli web
+- ...
 
 ----
 
-Conclusion
-==========
+Thanks !
+========
 
-XXXX
+Questions ?
+
+- Docs: http://circus.io
+- IRC: #mozilla-circus sur Freenode
+- ML : http://tech.groups.yahoo.com/group/circus-dev/
+
+
+
+
+
