@@ -66,8 +66,19 @@ class FullStats(StatsdEmitter):
             self.statsd.increment("_stats.error")
             return
 
-        for name, stats in info['info']:
-            print name, stats
+        for name, stats in info['infos'].iteritems():
+            cpus = []
+            mems = []
+
+            for sub_info in stats.itervalues():
+                cpus.append(sub_info['cpu'])
+                mems.append(sub_info['mem'])
+
+            self.statsd.gauge("_stats.%s.watchers_num" % name, len(cpus))
+            self.statsd.gauge("_stats.%s.cpu_max" % name, max(cpus))
+            self.statsd.gauge("_stats.%s.cpu_sum" % name, sum(cpus))
+            self.statsd.gauge("_stats.%s.mem_max" % name, max(mems))
+            self.statsd.gauge("_stats.%s.mem_sum" % name, sum(mems))
 
     def handle_stop(self):
         self.period.stop()
