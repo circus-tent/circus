@@ -50,7 +50,7 @@ class FullStats(StatsdEmitter):
 
     def __init__(self, *args, **config):
         super(FullStats, self).__init__(*args, **config)
-        self.loop_rate = config.get("loop_rate", 5)
+        self.loop_rate = config.get("loop_rate", 60)
 
         if not bool(config.get("no_circus_stats", True)):
             # do ignore receive calls
@@ -70,7 +70,7 @@ class FullStats(StatsdEmitter):
             print name, stats
 
     def handle_stop(self):
-        self.period.start()
+        self.period.stop()
 
 
 class RedisStats(FullStats):
