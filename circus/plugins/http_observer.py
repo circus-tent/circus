@@ -1,5 +1,5 @@
 
-from cirucs.plugins.statsd import BaseObserver
+from circus.plugins.statsd import BaseObserver
 try:
     from tornado.httpclient import AsyncHTTPClient
 except ImportError:
