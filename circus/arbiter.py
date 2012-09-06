@@ -60,13 +60,14 @@ class Arbiter(object):
                  stats_endpoint=None, plugins=None, sockets=None,
                  warmup_delay=0, httpd=False, httpd_host='localhost',
                  httpd_port=8080, debug=False, stream_backend='thread',
-                 ssh_server=None):
+                 ssh_server=None, proc_name='circusd'):
         self.stream_backend = stream_backend
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
         self.pubsub_endpoint = pubsub_endpoint
+        self.proc_name = proc_name
 
         # initialize zmq context
         self.context = context or zmq.Context.instance()
@@ -186,7 +187,7 @@ class Arbiter(object):
     @debuglog
     def initialize(self):
         # set process title
-        _setproctitle("circusd")
+        _setproctitle(self.proc_name)
 
         # event pub socket
         self.evpub_socket = self.context.socket(zmq.PUB)
