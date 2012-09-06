@@ -23,7 +23,7 @@ Example::
     stdout_stream.refresh_time = 0.3
 
     [plugin:statsd]
-    use = circus.plugins._statsd.StatsdEmitter
+    use = circus.plugins.statsd.StatsdEmitter
     host = localhost
     port = 8125
     sample_rate = 1.0
@@ -251,8 +251,10 @@ RedisObserver
 *************
 
     This services observers a redis process for you, publishes the information to statsd
-    and offers to restart the service when it doesn't react in a given timeout. It has
-    the same configuration as statsd and adds the following:
+    and offers to restart the service when it doesn't react in a given timeout. This
+    plugin requires `redis-py <https://github.com/andymccurdy/redis-py>`_  to run.
+
+    It has the same configuration as statsd and adds the following:
 
     **use**
         set to   'circus.plugins.redis_observer.RedisObserver'
@@ -276,7 +278,9 @@ HttpObserver
 
     This services observers a http process for you by pinging a certain website
     regularly. Similar to the redis observer it offers to restart the service on an
-    error.. It has the same configuration as statsd and adds the following:
+    error. It requires `tornado <http://www.tornadoweb.org>`_  to run.
+
+    It has the same configuration as statsd and adds the following:
 
     **use**
         set to 'circus.plugins.http_observer.HttpObserver'

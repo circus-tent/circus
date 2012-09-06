@@ -1,6 +1,9 @@
 
-from .statsd import BaseObserver
-from tornado.httpclient import AsyncHTTPClient
+from cirucs.plugins.statsd import BaseObserver
+try:
+    from tornado.httpclient import AsyncHTTPClient
+except ImportError:
+        raise ImportError("This plugin requires tornado-framework to run.")
 
 
 class HttpObserver(BaseObserver):

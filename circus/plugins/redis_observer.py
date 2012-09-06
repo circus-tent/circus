@@ -1,7 +1,10 @@
 
-from .statsd import BaseObserver
+from cirucs.plugins.statsd import BaseObserver
 
-import redis
+try:
+    import redis
+except ImportError:
+        raise ImportError("This plugin requires the redis-lib to run.")
 
 
 class RedisObserver(BaseObserver):
