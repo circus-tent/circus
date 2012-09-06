@@ -23,7 +23,7 @@ Example::
     stdout_stream.refresh_time = 0.3
 
     [plugin:statsd]
-    use = circus.plugins._statsd.StatsdEmitter
+    use = circus.plugins.statsd.StatsdEmitter
     host = localhost
     port = 8125
     sample_rate = 1.0
@@ -185,15 +185,6 @@ watcher:NAME - as many sections as you want
         all processes for a watcher at once. Defaults to 30 seconds.
 
 
-plugin:NAME - as many sections as you want
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    **use**
-        The fully qualified name that points to the plugin class.
-    **anything else**
-        Every other key found in the section is passed to the
-        plugin constructor in the **config** mapping.
-
-
 socket:NAME - as many sections as you want
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     **host**
@@ -210,6 +201,103 @@ socket:NAME - as many sections as you want
 
 Once a socket is created, the *${socket:NAME}* string can be used in the
 command of a watcher. Circus will replace it by the FD value.
+
+
+plugin:NAME - as many sections as you want
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    **use**
+        The fully qualified name that points to the plugin class.
+    **anything else**
+        Every other key found in the section is passed to the
+        plugin constructor in the **config** mapping.
+
+
+Currently `circus`is ships the following plugins, which you can configure as follows:
+
+Statsd
+******
+    This plugin publishes all circus events to the statsd service.
+    
+    **use**
+         set to 'circus.plugins.statsd.StatsdEmitter'
+
+    **application_name**
+        the name used to identify the bucket prefix to emit the stats to (it will be prefixed with "circus." and suffixed with ".watcher")
+
+    **host**
+        the host to post the statds data to
+
+    **port**
+        the port the statsd daemon listens on
+
+    **sample_rate**
+        if you prefer a different sample rate than 1, you can set it here
+
+
+FullStats
+*********
+
+    An extension on the Statsd plugin that is also publishing the process stats. As
+    such it has the same configuration options as Statsd and the following.
+
+    **use**
+        set to 'circus.plugins.statsd.FullStats'
+
+    **loop_rate**
+        the frequency the plugin should ask for the stats in seconds. Default: 60.
+
+
+RedisObserver
+*************
+
+    This services observers a redis process for you, publishes the information to statsd
+    and offers to restart the service when it doesn't react in a given timeout. This
+    plugin requires `redis-py <https://github.com/andymccurdy/redis-py>`_  to run.
+
+    It has the same configuration as statsd and adds the following:
+
+    **use**
+        set to   'circus.plugins.redis_observer.RedisObserver'
+
+    **loop_rate**
+        the frequency the plugin should ask for the stats in seconds. Default: 60.
+
+    **redis_url**
+        the database to check for as a redis url. Default: "redis://localhost:6379/0"
+
+    **timeout**
+        the timeout in seconds the request can take before it is considered down. Defaults to 5.
+
+    **restart_on_timeout**
+        the name of the process to restart when the request timed out. No restart triggered when not given. Default: None.
+
+
+
+HttpObserver
+************
+
+    This services observers a http process for you by pinging a certain website
+    regularly. Similar to the redis observer it offers to restart the service on an
+    error. It requires `tornado <http://www.tornadoweb.org>`_  to run.
+
+    It has the same configuration as statsd and adds the following:
+
+    **use**
+        set to 'circus.plugins.http_observer.HttpObserver'
+
+    **loop_rate**
+        the frequency the plugin should ask for the stats in seconds. Default: 60.
+
+    **check_url**
+        the url to check for. Default: "http://localhost/"
+
+    **timeout**
+        the timeout in seconds the request can take before it is considered down. Defaults to 10.
+
+    **restart_on_error**
+        the name of the process to restart when the request timed out or returned
+        any other kind of error. No restart triggered when not given. Default: None.
+
 
 .. _formating_cmd:
 
