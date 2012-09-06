@@ -34,17 +34,21 @@ class StatsdClient(object):
     def gauge(self, bucket, value):
         self.send(bucket, "%s|g" % value)
 
+    def timed(self, bucket, value):
+        self.send(bucket, "%s|ms" % value)
+
 
 class StatsdEmitter(CircusPlugin):
     """Plugin that sends stuff to statsd
     """
     name = 'statsd'
+    default_app_name = "app"
 
     def __init__(self, endpoint, pubsub_endpoint, check_delay, ssh_server,
                  **config):
         super(StatsdEmitter, self).__init__(endpoint, pubsub_endpoint,
                                             check_delay, ssh_server=ssh_server)
-        self.app = config.get('application_name', 'app')
+        self.app = config.get('application_name', self.default_app_name)
         self.prefix = 'circus.%s.watcher' % self.app
 
         # initialize statsd
@@ -60,23 +64,32 @@ class StatsdEmitter(CircusPlugin):
         self.statsd.increment('%s.%s' % (watcher, action))
 
 
-class FullStats(StatsdEmitter):
+class BaseObserver(StatsdEmitter):
+
+    def __init__(self, *args, **config):
+        super(BaseObserver, self).__init__(*args, **config)
+        self.loop_rate = config.get("loop_rate", 60)  # in seconds
+
+    def handle_init(self):
+        self.period = ioloop.PeriodicCallback(self.look_after,
+                    self.loop_rate * 1000, self.loop)
+        self.period.start()
+
+    def handle_stop(self):
+        self.period.stop()
+
+    def handle_recv(self, data):
+        pass
+
+    def look_after(self):
+        raise NotImplemented
+
+
+class FullStats(BaseObserver):
 
     name = 'full_stats'
 
-    def __init__(self, *args, **config):
-        super(FullStats, self).__init__(*args, **config)
-        self.loop_rate = config.get("loop_rate", 60)
-
-        if not bool(config.get("no_circus_stats", True)):
-            # do ignore receive calls
-            self.handle_recv = lambda x: x
-
-    def handle_init(self):
-        self.period = ioloop.PeriodicCallback(self.request_stats, self.loop_rate * 1000, self.loop)
-        self.period.start()
-
-    def request_stats(self):
+    def look_after(self):
         info = self.call("stats")
         if info["status"] == "error":
             self.statsd.increment("_stats.error")
@@ -95,39 +108,3 @@ class FullStats(StatsdEmitter):
             self.statsd.gauge("_stats.%s.cpu_sum" % name, sum(cpus))
             self.statsd.gauge("_stats.%s.mem_max" % name, max(mems))
             self.statsd.gauge("_stats.%s.mem_sum" % name, sum(mems))
-
-    def handle_stop(self):
-        self.period.stop()
-
-
-class RedisStats(FullStats):
-
-    name = 'redis_stats'
-
-    OBSERVE = ['pubsub_channels', 'connected_slaves', 'lru_clock',
-                'connected_clients', 'keyspace_misses', 'used_memory',
-                'used_memory_peak', 'total_commands_processed',
-                'used_memory_rss', 'total_connections_received',
-                'pubsub_patterns', 'used_cpu_sys', 'used_cpu_sys_children',
-                'blocked_clients', 'used_cpu_user', 'client_biggest_input_buf',
-                'mem_fragmentation_ratio', 'expired_keys', 'evicted_keys',
-                'client_longest_output_list', 'uptime_in_seconds', 'keyspace_hits']
-
-    # do nothing on receive events
-    handle_recv = lambda s, x: x
-
-    def __init__(self, *args, **config):
-        super(RedisStats, self).__init__(*args, **config)
-        import redis
-        self.redis = redis.from_url(config.get("redis_url", "redis://localhost:6379/0"),
-                float(config.get("timeout", 1)))
-
-    def request_stats(self):
-        try:
-            info = self.redis.info()
-        except Exception:
-            self.statsd.increment("redis_stats.error")
-            return
-
-        for key in self.OBSERVE:
-            self.statsd.gauge("redis_stats.%s" % key, info[key])
