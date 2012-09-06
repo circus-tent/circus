@@ -96,14 +96,27 @@ class FullStats(BaseObserver):
             return
 
         for name, stats in info['infos'].iteritems():
+            if name.startswith("plugin:"):
+                # ignore plugins
+                continue
+
             cpus = []
             mems = []
 
             for sub_info in stats.itervalues():
+                if isinstance(sub_info,  basestring):
+                    # dead processes have a string instead of actual info
+                    # ignore that
+                    continue
                 cpus.append(sub_info['cpu'])
                 mems.append(sub_info['mem'])
 
             self.statsd.gauge("_stats.%s.watchers_num" % name, len(cpus))
+
+            if not cpus:
+                # if there are only dead processes, we have an empty list
+                # and we can't measure it
+                continue
             self.statsd.gauge("_stats.%s.cpu_max" % name, max(cpus))
             self.statsd.gauge("_stats.%s.cpu_sum" % name, sum(cpus))
             self.statsd.gauge("_stats.%s.mem_max" % name, max(mems))
