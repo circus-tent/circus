@@ -104,7 +104,7 @@ be using it self.loop as it gets set up by the base class. The default loop ofte
 isn't the same and therefore code might not get excuted as expected.
 
 
-Using a plugin
+Trying a plugin
 --------------
 
 You can run a plugin through the command line with the **circus-plugin** command,
