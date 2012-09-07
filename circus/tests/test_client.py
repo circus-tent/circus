@@ -1,6 +1,7 @@
 import os
-import subprocess
+import stat
 import time
+import zmq
 
 from circus.tests.support import TestCircus
 from circus.client import CircusClient, make_message
@@ -13,55 +14,33 @@ def run_process(test_file):
     except:
         return 1
 
-SSH_PATH = '/home/' + os.getlogin() + '/.ssh/'
-SSH_ID_DSA = SSH_PATH + 'id_dsa'
-SSH_ID_DSA_PUB = SSH_PATH + 'id_dsa.pub'
-SSH_AUTHORIZED_KEYS = SSH_PATH + 'authorized_keys'
-COPY_ID_DSA = 'circus/tests/id_dsa'
-COPY_ID_DSA_PUB = 'circus/tests/id_dsa.pub'
-COPY_AUTHORIZED_KEYS = 'circus/tests/authorized_keys'
-
 
 class TestClient(TestCircus):
 
     def setUp(self):
         TestCircus.setUp(self)
 
-        return
-        # XXX to be fixed
-        subprocess.call(['mv', SSH_ID_DSA, COPY_ID_DSA])
-        subprocess.call(['mv', SSH_ID_DSA_PUB, COPY_ID_DSA_PUB])
-        subprocess.call(['mv', SSH_AUTHORIZED_KEYS, COPY_AUTHORIZED_KEYS])
-        subprocess.call(['cp', 'circus/tests/test_dsa', SSH_ID_DSA])
-        subprocess.call(['cp', 'circus/tests/test_dsa.pub', SSH_ID_DSA_PUB])
-        subprocess.call(['cp', 'circus/tests/test_dsa.pub',
-                            SSH_AUTHORIZED_KEYS])
-        subprocess.call(['ssh-add'])
-
     def tearDown(self):
         TestCircus.tearDown(self)
+        
+        # Using hasattr because values might not
+        # have been assigned if test crashed prematurely
+        if hasattr(self, 'client'):
+            self.client.stop()
+        # Removing the config file created from the template
+        if hasattr(self, 'config'):
+            os.remove(self.config)
 
-        return
-
-        # XXX to be fixed
-        subprocess.call(['rm', SSH_ID_DSA])
-        subprocess.call(['rm', SSH_ID_DSA_PUB])
-        subprocess.call(['rm', SSH_AUTHORIZED_KEYS])
-        subprocess.call(['mv', COPY_ID_DSA, SSH_ID_DSA])
-        subprocess.call(['mv', COPY_ID_DSA_PUB, SSH_ID_DSA_PUB])
-        subprocess.call(['mv', COPY_AUTHORIZED_KEYS, SSH_AUTHORIZED_KEYS])
-        subprocess.call(['ssh-add'])
-
-    def _client_test(self, ssh_server):
+    def _client_test(self, ssh_server=None, keyfile=None):
         self._run_circus('circus.tests.test_client.run_process')
         time.sleep(.5)
 
         # playing around with the watcher
-        client = CircusClient(ssh_server=ssh_server)
+        self.client = CircusClient(ssh_server=ssh_server, keyfile=keyfile)
 
         def call(cmd, **props):
             msg = make_message(cmd, **props)
-            return client.call(msg)
+            return self.client.call(msg)
 
         def status(cmd, **props):
             resp = call(cmd, **props)
@@ -104,12 +83,16 @@ class TestClient(TestCircus):
         resp = call('globaloptions', name='test')
         self.assertEqual(resp['options']['pubsub_endpoint'],
                         'tcp://127.0.0.1:5556')
-        client.stop()
 
-    def XXX_test_handler(self):
-        self._client_test(None)
+    def test_handler(self):
+        self._client_test()
 
-    def XXX_test_handler_ssh(self):
+    def test_handler_ssh(self):
+        # Checking that operating system supports Unix commands
+        if os.name != 'posix':
+            return
+
+        # Find a way to connect to the SSH server or abort
         try:
             try:
                 import pexpect    # NOQA
@@ -117,4 +100,32 @@ class TestClient(TestCircus):
                 import paramiko   # NOQA
         except ImportError:
             return
-        self._client_test('localhost')
+
+        test_directory = os.path.dirname(__file__)
+
+        # Get a port for the SSH server
+        port = zmq.ssh.tunnel.select_random_ports(1)[0]
+
+        # Creating a sshd config file based on the template
+        self.config = os.path.join(test_directory, 'sshd_config')
+        config_template = self.config + '_template'
+        config_file = open(self.config, 'w')
+        config_template_file = open(config_template)
+        for line in config_template_file:
+            config_file.write(line.replace('FOLDER', test_directory + '/'))
+        config_file.close()
+        config_template_file.close()
+
+        # Setting file permissions - necessary to use keys for SSH
+        keyfile = os.path.join(test_directory, 'key_dsa')
+        ecdsa_file = os.path.join(test_directory, 'key_ecdsa')
+        permission_600 = stat.S_IREAD | stat.S_IWRITE
+        os.chmod(keyfile, permission_600)
+        os.chmod(ecdsa_file, permission_600)
+
+        # Running SSH server
+        os.system('/usr/sbin/sshd -p ' + str(port) + ' -f ' + self.config)
+
+        opts = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+        self._client_test(ssh_server='localhost ' + opts + ':' + str(port),
+                          keyfile=keyfile)

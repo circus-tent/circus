@@ -59,6 +59,7 @@ class LiveClient(object):
 
             self.watchers.sort()
             self.stats_endpoint = self.get_global_options()['stats_endpoint']
+            self.ssh_server = self.get_global_options()['ssh_server']
         except CallError:
             self.connected = False
 

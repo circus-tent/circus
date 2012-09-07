@@ -9,12 +9,16 @@ import re
 import sys
 import shlex
 import time
+import urllib
 from zmq import ssh
 from ConfigParser import (ConfigParser, MissingSectionHeaderError,
                           ParsingError, DEFAULTSECT)
 
 from psutil.error import AccessDenied, NoSuchProcess
 from psutil import Process
+
+# XXX remove once pyzmq is updated
+from circus.tunnel import tunnel_connection
 
 
 # default endpoints
@@ -513,17 +517,26 @@ class StrictConfigParser(ConfigParser):
                 if isinstance(val, list):
                     options[name] = '\n'.join(val)
 
+def parse_ssh_server(ssh_server):
+    credentials, address = urllib.splituser(ssh_server)
+    if credentials is not None:
+        user, password = urllib.splitpasswd(credentials)
+        return user + '@' + address, password
+    else:
+        return ssh_server, None
 
-def get_connection(socket, endpoint, ssh_server=None):
+def get_connection(socket, endpoint, ssh_server=None, keyfile=None):
     if ssh_server is None:
         socket.connect(endpoint)
     else:
+        server, password = parse_ssh_server(ssh_server)
         try:
             try:
-                ssh.tunnel_connection(socket, endpoint, ssh_server)
+                tunnel_connection(socket, endpoint, ssh_server,
+                                  keyfile=keyfile)
             except ImportError:
-                ssh.tunnel_connection(socket, endpoint, ssh_server,
-                                      paramiko=True)
+                tunnel_connection(socket, endpoint, ssh_server,
+                                  keyfile=keyfile, paramiko=True)
         except ImportError:
             raise ImportError("pexpect was not found, and failed to use "
                               "Paramiko.  You need to install Paramiko")
