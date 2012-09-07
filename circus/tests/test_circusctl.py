@@ -39,5 +39,5 @@ class TestCommandline(TestCircus):
         self.assertEqual(output[0], USAGE)
 
     def test_help_for_add_command(self):
-        output = self.run_ctl('add --help').splitlines()
+        output = self.run_ctl('--help add').splitlines()
         self.assertEqual(output[0], 'Add a watcher')

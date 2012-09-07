@@ -14,6 +14,7 @@ try:
 except ImportError:
     pygments = False    # NOQA
 
+from circus import __version__
 from circus.client import CircusClient
 from circus.consumer import CircusConsumer
 from circus.commands import get_commands
@@ -90,13 +91,14 @@ class ControllerApp(object):
         self.options = {
             'endpoint': {'default': None, 'help': 'connection endpoint'},
             'timeout': {'default': 5, 'help': 'connection timeout'},
+            'help': {'default': False, 'action': 'store_true',
+                     'help': 'Show help and exit'},
             'json': {'default': False, 'action': 'store_true',
                      'help': 'output to JSON'},
             'prettify': {'default': False, 'action': 'store_true',
                          'help': 'prettify output'},
             'ssh': {'default': None, 'help': 'SSH Server'},
-            'version': {'default': False, 'action': 'store_true',
-                        'help': 'display version and exit'}
+            'version': {'action': 'version', 'version': __version__}
         }
 
     def run(self, args):
@@ -121,7 +123,8 @@ class ControllerApp(object):
     def get_globalopts(self, args):
         globalopts = {}
         for option in self.options:
-            globalopts[option] = getattr(args, option)
+            if hasattr(args, option):
+                globalopts[option] = getattr(args, option)
         return globalopts
 
     def dispatch(self, args):
@@ -133,18 +136,25 @@ class ControllerApp(object):
         for option in self.options:
             parser.add_argument('--' + option, **self.options[option])
 
-        parser.add_argument('--help', action='store_true',
-                            help='Show help and exit')
-        parser.add_argument('command', nargs="?", choices=self.commands)
-        parser.add_argument('args', nargs="*", help=argparse.SUPPRESS)
+        if True in [value in self.commands for value in sys.argv]:
+            subparsers = parser.add_subparsers(dest='command')
+            for command in self.commands:
+                subparser = subparsers.add_parser(command)
+                subparser.add_argument('args', nargs="*",
+                                       help=argparse.SUPPRESS)
+                if command == 'add':
+                    subparser.add_argument('--start', action='store_true',
+                                           default=False)
 
         args = parser.parse_args()
         globalopts = self.get_globalopts(args)
         opts = {}
 
-        if args.version:
-            return self.display_version()
-        elif args.command is None:
+        if not hasattr(args, 'command'):
+            for command in self.commands:
+                doc = textwrap.dedent(self.commands[command].__doc__)
+                help = doc.split('\n')[0]
+                parser.add_argument(command, help=help)
             parser.print_help()
             return 0
         else:
@@ -152,21 +162,19 @@ class ControllerApp(object):
             if args.help:
                 print textwrap.dedent(cmd.__doc__)
                 return 0
+            else:
+                if hasattr(args, 'start'):
+                    opts['start'] = args.start
 
-            if args.endpoint is None:
-                if cmd.msg_type == 'sub':
-                    args.endpoint = DEFAULT_ENDPOINT_SUB
-                else:
-                    args.endpoint = DEFAULT_ENDPOINT_DEALER
-            msg = cmd.message(*args.args, **opts)
-            handler = getattr(self, "handle_%s" % cmd.msg_type)
-            return handler(cmd, globalopts, msg, args.endpoint,
-                           int(args.timeout), args.ssh)
-
-    def display_version(self, *args, **opts):
-        from circus import __version__
-        print(__version__)
-        return 0
+                if args.endpoint is None:
+                    if cmd.msg_type == 'sub':
+                        args.endpoint = DEFAULT_ENDPOINT_SUB
+                    else:
+                        args.endpoint = DEFAULT_ENDPOINT_DEALER
+                msg = cmd.message(*args.args, **opts)
+                handler = getattr(self, "handle_%s" % cmd.msg_type)
+                return handler(cmd, globalopts, msg, args.endpoint,
+                               int(args.timeout), args.ssh)
 
     def handle_sub(self, cmd, opts, topics, endpoint, timeout, ssh_server):
         consumer = CircusConsumer(topics, endpoint=endpoint)
