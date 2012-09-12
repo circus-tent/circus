@@ -33,3 +33,14 @@ class TestSockets(unittest.TestCase):
             self.assertNotEqual(port, mgr['1'].port)
         finally:
             mgr.close_all()
+
+    def test_load_from_config(self):
+        """Test the load_from_config function"""
+        config = {'name': 'test_socket',
+                  'host': '0.0.0.0',
+                  'port': '5000'}                  
+        sock = CircusSocket.load_from_config(config)
+        try:
+            sock.bind_and_listen()
+        finally:
+            sock.close()
