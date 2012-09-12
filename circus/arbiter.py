@@ -54,6 +54,7 @@ class Arbiter(object):
       to have *gevent* and *gevent_zmq* installed.
       All watchers will use this setup unless stated otherwise in the
       watcher configuration. (default: thread)
+    - **proc_name** -- the arbiter process name
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,

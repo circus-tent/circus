@@ -39,7 +39,7 @@ def get_arbiter(watchers, controller=None,
                 stats_endpoint=None,
                 env=None, name=None, context=None,
                 background=False, stream_backend="thread",
-                plugins=None, debug=False):
+                plugins=None, debug=False, proc_name="circusd"):
     """Creates a Arbiter and a single watcher in it.
 
     Options:
@@ -104,6 +104,7 @@ def get_arbiter(watchers, controller=None,
 
     - **debug** -- If True the arbiter is launched in debug mode
       (default: False)
+    - **proc_name** -- the arbiter process name (default: circusd)
     """
     from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
     if controller is None:
@@ -142,4 +143,5 @@ def get_arbiter(watchers, controller=None,
 
     return Arbiter(_watchers, controller, pubsub_endpoint,
                    stats_endpoint=stats_endpoint,
-                   context=context, plugins=plugins, debug=debug)
+                   context=context, plugins=plugins, debug=debug,
+                   proc_name=proc_name)
