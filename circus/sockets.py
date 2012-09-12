@@ -58,26 +58,17 @@ class CircusSocket(socket.socket):
 
     @classmethod
     def load_from_config(cls, config):
-        name = config['name']
-        host = config.get('host', 'localhost')
-        port = int(config.get('port', '8080'))
-        family = _FAMILY[config.get('family', 'AF_INET').upper()]
-        type = _TYPE[config.get('type', 'SOCK_STREAM').upper()]
+        params = {}
+        params['name'] = config['name']
+        params['host'] = config.get('host', 'localhost')
+        params['port'] = int(config.get('port', '8080'))
+        params['family'] = _FAMILY[config.get('family', 'AF_INET').upper()]
+        params['type'] = _TYPE[config.get('type', 'SOCK_STREAM').upper()]
         proto_name = config.get('proto')
         if proto_name is not None:
-            try:
-                # Following http://www.iana.org/assignments/protocol-numbers\
-                # /protocol-numbers.xml
-                proto = socket.getprotobyname(proto_name)
-            except:
-                logging.warning('proto not found : %s' % proto_name)
-                raise
-        else:
-            # By default use the default protocol defined in
-            # /etc/protocols on id 0 (usually "hopopt" or "ip")
-            proto = 0
-        backlog = int(config.get('backlog', 2048))
-        return cls(name, host, port, family, type, proto, backlog)
+            params['proto'] = socket.getprotobyname(proto_name)
+        params['backlog'] = int(config.get('backlog', 2048))
+        return cls(**params)
 
 
 class CircusSockets(dict):
