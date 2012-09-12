@@ -66,7 +66,9 @@ class CircusSocket(socket.socket):
         proto_name = config.get('proto')
         if proto_name is not None:
             try:
-                proto = socket.getprotobyname(proto_name) # Following http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml
+                # Following http://www.iana.org/assignments/protocol-numbers\
+                # /protocol-numbers.xml
+                proto = socket.getprotobyname(proto_name)
             except:
                 logging.warning('proto not found : %s' % proto_name)
                 raise
