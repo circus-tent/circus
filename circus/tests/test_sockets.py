@@ -1,4 +1,5 @@
 import os
+import socket
 from circus.tests.support import unittest
 from circus.sockets import CircusSocket, CircusSockets
 
@@ -34,13 +35,14 @@ class TestSockets(unittest.TestCase):
         finally:
             mgr.close_all()
 
-    def test_load_from_config(self):
-        """Test the load_from_config function"""
-        config = {'name': 'test_socket',
-                  'host': '0.0.0.0',
-                  'port': '5000'}                  
+    def test_load_from_config_no_proto(self):
+        """When no proto in the config, the default (0) is used."""
+        config = {'name': ''}
         sock = CircusSocket.load_from_config(config)
-        try:
-            sock.bind_and_listen()
-        finally:
-            sock.close()
+        self.assertEqual(sock.proto, 0)
+
+    def test_load_from_config_unknown_proto(self):
+        """Unknown proto in the config raises an error."""
+        config = {'name': '', 'proto': 'foo'}
+        with self.assertRaises(socket.error):
+            sock = CircusSocket.load_from_config(config)
