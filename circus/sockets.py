@@ -58,16 +58,15 @@ class CircusSocket(socket.socket):
 
     @classmethod
     def load_from_config(cls, config):
-        params = {}
-        params['name'] = config['name']
-        params['host'] = config.get('host', 'localhost')
-        params['port'] = int(config.get('port', '8080'))
-        params['family'] = _FAMILY[config.get('family', 'AF_INET').upper()]
-        params['type'] = _TYPE[config.get('type', 'SOCK_STREAM').upper()]
+        params = {'name': config['name'],
+                  'host': config.get('host', 'localhost'),
+                  'port':int(config.get('port', '8080')),
+                  'family' = _FAMILY[config.get('family', 'AF_INET').upper()],
+                  'type': _TYPE[config.get('type', 'SOCK_STREAM').upper()],
+                  'backlog': int(config.get('backlog', 2048))}
         proto_name = config.get('proto')
         if proto_name is not None:
             params['proto'] = socket.getprotobyname(proto_name)
-        params['backlog'] = int(config.get('backlog', 2048))
         return cls(**params)
 
 

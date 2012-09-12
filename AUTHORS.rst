@@ -12,7 +12,7 @@ Authors and contributors
 * Christian S. Perone <christian.perone@gmail.com>
 * David Miller <david@deadpansincerity.com>
 * Jamie Matthews <jamie.matthews@gmail.com>
-* Jean-Michel ARMAND <jmad@Albert.(none)>
+* Jean-Michel ARMAND <j-mad@j-mad.com>
 * John Morrison <jrgmorrison@gmail.com>
 * Kamil Kisiel <kamil@kamilkisiel.net>
 * Kris Beevers <kbeevers@voxel.net>
