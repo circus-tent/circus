@@ -73,6 +73,8 @@ class CircusSocket(socket.socket):
                 logging.warning('proto not found : %s' % proto_name)
                 raise
         else:
+            # By default use the default protocol defined in
+            # /etc/protocols on id 0 (usually "hopopt" or "ip")
             proto = 0
         backlog = int(config.get('backlog', 2048))
         return cls(name, host, port, family, type, proto, backlog)
