@@ -61,7 +61,7 @@ class CircusSocket(socket.socket):
         params = {'name': config['name'],
                   'host': config.get('host', 'localhost'),
                   'port': int(config.get('port', '8080')),
-                  'family' = _FAMILY[config.get('family', 'AF_INET').upper()],
+                  'family': _FAMILY[config.get('family', 'AF_INET').upper()],
                   'type': _TYPE[config.get('type', 'SOCK_STREAM').upper()],
                   'backlog': int(config.get('backlog', 2048))}
         proto_name = config.get('proto')
