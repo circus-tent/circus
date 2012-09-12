@@ -60,7 +60,7 @@ class CircusSocket(socket.socket):
     def load_from_config(cls, config):
         params = {'name': config['name'],
                   'host': config.get('host', 'localhost'),
-                  'port':int(config.get('port', '8080')),
+                  'port': int(config.get('port', '8080')),
                   'family' = _FAMILY[config.get('family', 'AF_INET').upper()],
                   'type': _TYPE[config.get('type', 'SOCK_STREAM').upper()],
                   'backlog': int(config.get('backlog', 2048))}
