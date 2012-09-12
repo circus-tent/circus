@@ -18,3 +18,7 @@ Links:
 - There's a mailing list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
 - The repository and issue tracker are at GitHub : https://github.com/mozilla-services/circus
 - Join us on the IRC : Freenode, channel #mozilla-circus
+
+Sprints:
+
+- Please use : http://issue2pr.herokuapp.com/ to reference a commit to an circus existing issue

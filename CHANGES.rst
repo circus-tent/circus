@@ -4,7 +4,7 @@ CHANGES
 0.6
 ---
 
-???
+* Patching protocols name for sockets - #248
 
 
 0.5.2 - 2012-07-26
