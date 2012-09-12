@@ -63,7 +63,15 @@ class CircusSocket(socket.socket):
         port = int(config.get('port', '8080'))
         family = _FAMILY[config.get('family', 'AF_INET').upper()]
         type = _TYPE[config.get('type', 'SOCK_STREAM').upper()]
-        proto = socket.getprotobyname(config.get('proto', 'ip'))
+        proto_name = config.get('proto')
+        if proto_name is not None:
+            try:
+                proto = socket.getprotobyname(proto_name) # Following http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xml
+            except:
+                logging.warning('proto not found : %s' % proto_name)
+                raise
+        else:
+            proto = 0
         backlog = int(config.get('backlog', 2048))
         return cls(name, host, port, family, type, proto, backlog)
 
