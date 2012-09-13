@@ -5,6 +5,7 @@ import json
 import sys
 import traceback
 import textwrap
+import os
 
 # import pygments if here
 try:
@@ -16,7 +17,7 @@ except ImportError:
 
 from circus.client import CircusClient
 from circus.consumer import CircusConsumer
-from circus.commands import get_commands
+from circus.commands.base import get_commands, KNOWN_COMMANDS
 from circus.exc import CallError, ArgumentError
 from circus.util import DEFAULT_ENDPOINT_SUB, DEFAULT_ENDPOINT_DEALER
 
@@ -99,6 +100,47 @@ class ControllerApp(object):
                         'help': 'display version and exit'}
         }
 
+    def autocomplete(self):
+        """
+        Output completion suggestions for BASH.
+
+        The output of this function is passed to BASH's `COMREPLY` variable and
+        treated as completion suggestions. `COMREPLY` expects a space
+        separated string as the result.
+
+        The `COMP_WORDS` and `COMP_CWORD` BASH environment variables are used
+        to get information about the cli input. Please refer to the BASH
+        man-page for more information about this variables.
+
+        Subcommand options are saved as pairs. A pair consists of
+        the long option string (e.g. '--exclude') and a boolean
+        value indicating if the option requires arguments. When printing to
+        stdout, a equal sign is appended to options which require arguments.
+
+        Note: If debugging this function, it is recommended to write the debug
+        output in a separate file. Otherwise the debug output will be treated
+        and formatted as potential completion suggestions.
+        """
+        # Don't complete if user hasn't sourced bash_completion file.
+        if 'AUTO_COMPLETE' not in os.environ:
+            return
+
+        cwords = os.environ['COMP_WORDS'].split()[1:]
+        cword = int(os.environ['COMP_CWORD'])
+
+        try:
+            curr = cwords[cword-1]
+        except IndexError:
+            curr = ''
+
+        subcommands = [cmd.name for cmd in KNOWN_COMMANDS]
+
+        # subcommand
+        if cword == 1:
+            print(' '.join(sorted(filter(lambda x: x.startswith(curr), subcommands))))
+        sys.exit(1)
+
+
     def run(self, args):
         try:
             sys.exit(self.dispatch(args))
@@ -125,6 +167,7 @@ class ControllerApp(object):
         return globalopts
 
     def dispatch(self, args):
+        self.autocomplete()
         usage = '%(prog)s [options] command [args]'
         parser = argparse.ArgumentParser(
                 description="Controls a Circus daemon",
