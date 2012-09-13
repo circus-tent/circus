@@ -32,6 +32,6 @@ _circusctl_completion()
 {
     COMPREPLY=( $( COMP_WORDS="${COMP_WORDS[*]}" \
                    COMP_CWORD=$COMP_CWORD \
-	               AUTO_COMPLETE=1 $1 ) )
+                   AUTO_COMPLETE=1 $1 ) )
 }
 complete -F _circusctl_completion -o default circusctl
