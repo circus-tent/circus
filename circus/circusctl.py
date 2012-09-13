@@ -244,38 +244,48 @@ class ControllerApp(object):
         return 0
 
 
-class Console(cmd.Cmd, object):
-    """Console tool."""   
-    
+class CircusCTL(cmd.Cmd, object):
+    """CircusCTL tool."""   
+    prompt = '(circusctl) '
+
     def __new__(cls, *args, **kw):
         """Auto add do and complete methods for all known commands."""
         commands = get_commands()
         for name, cmd in commands.iteritems():
-            cls._add_do_cmd(name)
-            cls._add_complete_cmd(name)
+            cls._add_do_cmd(name, cmd)
+            cls._add_complete_cmd(name, cmd)
             cls.controller = ControllerApp()
-        return  super(Console, cls).__new__(cls, *args, **kw)
+        return  super(CircusCTL, cls).__new__(cls, *args, **kw)
    
     @classmethod
-    def _add_do_cmd(cls, cmd_name):
+    def _add_do_cmd(cls, cmd_name, cmd):
         def inner_do_cmd(cls, line):
             cls.controller.run([cmd_name] + line.split())
-        inner_do_cmd.__doc__ = "Run the %s command" % cmd_name
+        inner_do_cmd.__doc__ = textwrap.dedent(cmd.__doc__)
         inner_do_cmd.__name__ = "do_%s" % cmd_name    
         setattr(cls, inner_do_cmd.__name__, inner_do_cmd)
 
     @classmethod
-    def _add_complete_cmd(cls, cmd):        
+    def _add_complete_cmd(cls, cmd_name, cmd):        
         def inner_complete_cmd(cls, line):
             pass
         inner_complete_cmd.__doc__ = "Complete the %s command" % cmd
         inner_complete_cmd.__name__ = "complete_%s" % cmd    
         setattr(cls, inner_complete_cmd.__name__, inner_complete_cmd)
             
+    def do_EOF(self, line):
+        return True
+
+    def postloop(self):
+        print
+
 def main():
     if len(sys.argv) == 1:
-        console = Console()
-        console.cmdloop()
+        console = CircusCTL()
+        try:
+            console.cmdloop()
+        except KeyboardInterrupt:
+            print
         sys.exit(0)
     controller = ControllerApp()
     sys.exit(controller.run(sys.argv[1:]))
