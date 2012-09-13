@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -
 import argparse
+import cmd
 import getopt
 import json
 import sys
@@ -144,22 +145,22 @@ class ControllerApp(object):
 
     def run(self, args):
         try:
-            sys.exit(self.dispatch(args))
+            return self.dispatch(args)
         except getopt.GetoptError as e:
             print("Error: %s\n" % str(e))
             self.display_help()
-            sys.exit(2)
+            return 2
         except CallError as e:
             sys.stderr.write("%s\n" % str(e))
-            sys.exit(1)
+            return 1
         except ArgumentError as e:
             sys.stderr.write("%s\n" % str(e))
-            sys.exit(1)
+            return 1
         except KeyboardInterrupt:
-            sys.exit(1)
+            return 1
         except Exception, e:
             sys.stderr.write(traceback.format_exc())
-            sys.exit(1)
+            return 1
 
     def get_globalopts(self, args):
         globalopts = {}
@@ -182,7 +183,7 @@ class ControllerApp(object):
         parser.add_argument('command', nargs="?", choices=self.commands)
         parser.add_argument('args', nargs="*", help=argparse.SUPPRESS)
 
-        args = parser.parse_args()
+        args = parser.parse_args(args)
         globalopts = self.get_globalopts(args)
         opts = {}
 
@@ -243,9 +244,41 @@ class ControllerApp(object):
         return 0
 
 
+class Console(cmd.Cmd, object):
+    """Console tool."""   
+    
+    def __new__(cls, *args, **kw):
+        """Auto add do and complete methods for all known commands."""
+        commands = get_commands()
+        for name, cmd in commands.iteritems():
+            cls._add_do_cmd(name)
+            cls._add_complete_cmd(name)
+            cls.controller = ControllerApp()
+        return  super(Console, cls).__new__(cls, *args, **kw)
+   
+    @classmethod
+    def _add_do_cmd(cls, cmd_name):
+        def inner_do_cmd(cls, line):
+            cls.controller.run([cmd_name] + line.split())
+        inner_do_cmd.__doc__ = "Run the %s command" % cmd_name
+        inner_do_cmd.__name__ = "do_%s" % cmd_name    
+        setattr(cls, inner_do_cmd.__name__, inner_do_cmd)
+
+    @classmethod
+    def _add_complete_cmd(cls, cmd):        
+        def inner_complete_cmd(cls, line):
+            pass
+        inner_complete_cmd.__doc__ = "Complete the %s command" % cmd
+        inner_complete_cmd.__name__ = "complete_%s" % cmd    
+        setattr(cls, inner_complete_cmd.__name__, inner_complete_cmd)
+            
 def main():
+    if len(sys.argv) == 1:
+        console = Console()
+        console.cmdloop()
+        sys.exit(0)
     controller = ControllerApp()
-    controller.run(sys.argv[1:])
+    sys.exit(controller.run(sys.argv[1:]))
 
 if __name__ == '__main__':
     main()
