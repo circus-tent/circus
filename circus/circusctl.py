@@ -100,7 +100,7 @@ class ControllerApp(object):
                         'help': 'display version and exit'}
         }
 
-    def autocomplete(self):
+    def autocomplete(self, autocomplete=False, words=None, cword=None):
         """
         Output completion suggestions for BASH.
 
@@ -121,25 +121,26 @@ class ControllerApp(object):
         output in a separate file. Otherwise the debug output will be treated
         and formatted as potential completion suggestions.
         """
+        autocomplete = autocomplete or 'AUTO_COMPLETE' in os.environ
+
         # Don't complete if user hasn't sourced bash_completion file.
-        if 'AUTO_COMPLETE' not in os.environ:
+        if not autocomplete:
             return
 
-        cwords = os.environ['COMP_WORDS'].split()[1:]
-        cword = int(os.environ['COMP_CWORD'])
+        words = words or os.environ['COMP_WORDS'].split()[1:]
+        cword = cword or int(os.environ['COMP_CWORD'])
 
         try:
-            curr = cwords[cword-1]
+            curr = words[cword - 1]
         except IndexError:
             curr = ''
 
         subcommands = [cmd.name for cmd in KNOWN_COMMANDS]
 
-        # subcommand
-        if cword == 1:
-            print(' '.join(sorted(filter(lambda x: x.startswith(curr), subcommands))))
+        if cword == 1:  # if completing the command name
+            print(' '.join(sorted(filter(lambda x: x.startswith(curr),
+                                         subcommands))))
         sys.exit(1)
-
 
     def run(self, args):
         try:
