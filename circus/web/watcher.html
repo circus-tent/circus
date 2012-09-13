@@ -24,7 +24,8 @@
     %for pid in client.get_pids(name):
     <div class="process">
         <div>
-            <span style="display: inline-block; float: left;" class="label">Process #${pid}</span>
+            <span style="display: inline-block; float: left;" class="label">Process #${pid}</span><span id="${name}-${pid}_last_age" class="age-stat"></span>
+
             <span style="display: inline-block; float: right;">
                 <a href="/watchers/${name}/process/kill/${pid}" title="Kill">
                     <img src="/media/kill.png" border="0" alt="Kill" />
