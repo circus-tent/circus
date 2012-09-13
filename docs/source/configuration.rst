@@ -310,6 +310,11 @@ worker id (WID) and all the options that are passed to the :class:`Process`.
 Additionally, it is possible to access the options passed to the
 :class:`Watcher` which instanciated the process.
 
+.. note::
+
+   The worker id is different from the process id. It's a unique value,
+   starting at 1, which is only unique for the watcher. 
+
 For instance, if you want to access some variables that are contained in the
 environment, you would need to do it with a setting like this::
 
