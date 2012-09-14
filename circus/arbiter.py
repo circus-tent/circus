@@ -1,4 +1,5 @@
 import errno
+import json
 import logging
 import os
 from threading import Thread, RLock
@@ -8,11 +9,13 @@ import sys
 import zmq
 from zmq.eventloop import ioloop
 
+from circus.client import CircusClient
+from circus.commands import get_commands
 from circus.controller import Controller
-from circus.exc import AlreadyExist
+from circus.exc import AlreadyExist, CallError
 from circus import logger
 from circus.watcher import Watcher
-from circus.util import debuglog, _setproctitle
+from circus.util import debuglog, _setproctitle, DEFAULT_CLUSTER_DEALER
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
@@ -60,13 +63,17 @@ class Arbiter(object):
                  stats_endpoint=None, plugins=None, sockets=None,
                  warmup_delay=0, httpd=False, httpd_host='localhost',
                  httpd_port=8080, debug=False, stream_backend='thread',
-                 ssh_server=None):
+                 ssh_server=None, node_name=None,
+                 master=DEFAULT_CLUSTER_DEALER):
         self.stream_backend = stream_backend
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
         self.pubsub_endpoint = pubsub_endpoint
+        self.ssh_server = ssh_server
+        self.node_name = node_name
+        self.master = master
 
         # initialize zmq context
         self.context = context or zmq.Context.instance()
@@ -92,8 +99,8 @@ class Arbiter(object):
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --pubsub %s' % self.pubsub_endpoint
             cmd += ' --statspoint %s' % self.stats_endpoint
-            if ssh_server is not None:
-                cmd += ' --ssh %s' % ssh_server
+            if self.ssh_server is not None:
+                cmd += ' --ssh %s' % self.ssh_server
             if debug:
                 cmd += ' --log-level DEBUG'
             stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True,
@@ -110,8 +117,8 @@ class Arbiter(object):
                    "circushttpd.main()'") % sys.executable
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --fd $(circus.sockets.circushttpd)'
-            if ssh_server is not None:
-                cmd += ' --ssh %s' % ssh_server
+            if self.ssh_server is not None:
+                cmd += ' --ssh %s' % self.ssh_server
             httpd_watcher = Watcher('circushttpd', cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=stdout_stream,
@@ -135,7 +142,7 @@ class Arbiter(object):
                 name = 'plugin:%s' % fqnd.replace('.', '-')
                 cmd = get_plugin_cmd(plugin, self.endpoint,
                                      self.pubsub_endpoint, self.check_delay,
-                                     ssh_server, debug=self.debug)
+                                     self.ssh_server, debug=self.debug)
                 plugin_watcher = Watcher(name, cmd, priority=1, singleton=True,
                                          stdout_stream=stdout_stream,
                                          stderr_stream=stderr_stream,
@@ -173,7 +180,9 @@ class Arbiter(object):
                       httpd_port=cfg.get('httpd_port', 8080),
                       debug=cfg.get('debug', False),
                       stream_backend=cfg.get('stream_backend', 'thread'),
-                      ssh_server=cfg.get('ssh_server', None))
+                      ssh_server=cfg.get('ssh_server', None),
+                      node_name=cfg.get('node', None),
+                      master=cfg.get('master', DEFAULT_CLUSTER_DEALER))
 
         return arbiter
 
@@ -224,6 +233,26 @@ class Arbiter(object):
             watcher.start()
             time.sleep(self.warmup_delay)
 
+        time.sleep(3)
+        #XXX do something safer than sleep to make sure
+        #that stats is ready for evpubsub event
+
+        # register node with master
+
+        def reg(self, commands):
+            if self.node_name is not None and self.master is not None:
+                reg_cmd = commands['register_node']
+                msg = reg_cmd.message(self.node_name, self.endpoint,
+                                      self.stats_endpoint)
+                try:
+                    print reg_cmd.console_msg(CircusClient(endpoint=self.master, ssh_server=self.ssh_server).call(msg))
+                except CallError as e:
+                    print ("Unable to register node '" + self.node_name +
+                           "' with master at " + self.master + ' because: ' +
+                           e.message)
+
+        Thread(target=reg, args=(self, get_commands(),)).start()
+
         logger.info('Arbiter now waiting for commands')
         while True:
             try:
@@ -247,6 +276,17 @@ class Arbiter(object):
 
         # close sockets
         self.sockets.close_all()
+
+    def set_cluster_properties(self, node_name, master_endpoint):
+        if node_name is not None:
+            self.node_name = node_name
+        if master_endpoint is not None:
+            self.master = master_endpoint
+
+    def set_publisher_name(self):
+        print 'set publisher name:', self.node_name
+        self.evpub_socket.send_multipart(
+            ['watcher..set', json.dumps({'node_name': self.node_name})])
 
     def reap_processes(self):
         # map watcher to pids

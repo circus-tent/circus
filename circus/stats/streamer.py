@@ -12,6 +12,7 @@ from circus.commands import get_commands
 from circus.client import CircusClient
 from circus.stats.collector import WatcherStatsCollector, SocketStatsCollector
 from circus.stats.publisher import StatsPublisher
+from circus.util import get_connection
 from circus import logger
 
 
@@ -24,7 +25,7 @@ class StatsStreamer(object):
         self.pubsub_endpoint = pubsub_endoint
         self.sub_socket = self.ctx.socket(zmq.SUB)
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, self.topic)
-        self.sub_socket.connect(self.pubsub_endpoint)
+        get_connection(self.sub_socket, self.pubsub_endpoint, ssh_server)
         self.loop = ioloop.IOLoop.instance()  # events coming from circusd
         self.substream = zmqstream.ZMQStream(self.sub_socket, self.loop)
         self.substream.on_recv(self.handle_recv)
@@ -161,6 +162,9 @@ class StatsStreamer(object):
                 break
         self.stop()
 
+    def set_node_name(self, node_name):
+        self.publisher.node_name = node_name
+
     def handle_recv(self, data):
         """called each time circusd sends an event"""
         # maintains a periodic callback to compute mem and cpu consumption for
@@ -185,6 +189,8 @@ class StatsStreamer(object):
                 self._init()
             elif action == 'stop':
                 self.stop()
+            elif action == 'set':
+                self.set_node_name(msg['node_name'])
             else:
                 logger.debug('Unknown action: %r' % action)
                 logger.debug(msg)

@@ -11,8 +11,9 @@ class CircusConsumer(object):
         self.keep_context = context is not None
         self.context = context or zmq.Context()
         self.endpoint = endpoint
+        self.ssh_server = ssh_server
         self.pubsub_socket = self.context.socket(zmq.SUB)
-        get_connection(self.pubsub_socket, self.endpoint, ssh_server)
+        self.add_connection(self.endpoint)
         for topic in self.topics:
             self.pubsub_socket.setsockopt(zmq.SUBSCRIBE, topic)
         self.poller = zmq.Poller()
@@ -55,3 +56,7 @@ class CircusConsumer(object):
                 pass
             else:
                 raise
+
+    def add_connection(self, endpoint):
+        if endpoint is not None:
+            get_connection(self.pubsub_socket, endpoint, self.ssh_server)

@@ -89,10 +89,15 @@ class ControllerApp(object):
         self.commands = get_commands()
         _Help.commands = self.commands
         self.options = {
+            'broadcast': {'default': False, 'action': 'store_true',
+                          'help': 'send command to all nodes'},
+            'cluster_timeout': {'default': 4, 'help':
+                                'connection timeout for master to node'},
             'endpoint': {'default': None, 'help': 'connection endpoint'},
             'timeout': {'default': 5, 'help': 'connection timeout'},
             'json': {'default': False, 'action': 'store_true',
                      'help': 'output to JSON'},
+            'node': {'default': None, 'help': 'worker node'},
             'prettify': {'default': False, 'action': 'store_true',
                          'help': 'prettify output'},
             'ssh': {'default': None, 'help': 'SSH Server'},
@@ -185,6 +190,9 @@ class ControllerApp(object):
         args = parser.parse_args()
         globalopts = self.get_globalopts(args)
         opts = {}
+        self.node = args.node
+        self.broadcast = args.broadcast
+        self.cluster_timeout = int(args.cluster_timeout)
 
         if args.version:
             return self.display_version()
@@ -218,11 +226,27 @@ class ControllerApp(object):
             print("%s: %s" % (topic, msg))
         return 0
 
-    def _console(self, client, cmd, opts, msg):
-        if opts['json']:
-            return prettify(client.call(msg), prettify=opts['prettify'])
+    def get_formatted_response(self, response, opts, cmd):
+        if 'err' in response:
+            return response['err']
         else:
-            return cmd.console_msg(client.call(msg))
+            if opts['json']:
+                response.pop('node')
+                return prettify(response, prettify=opts['prettify'])
+            else:
+                return cmd.console_msg(response)
+
+    def _console(self, client, cmd, opts, msg):
+        received = client.call(msg, node=self.node, broadcast=self.broadcast,
+                               cluster_timeout=self.cluster_timeout)
+        if type(received) is list:
+            response = (['NODE: RESPONSE'] +
+                        [resp['node'] + ": " +
+                         self.get_formatted_response(resp, opts, cmd)
+                         for resp in received])
+            return '\n'.join(response)
+        else:
+            return self.get_formatted_response(received, opts, cmd)
 
     def handle_dealer(self, cmd, opts, msg, endpoint, timeout, ssh_server):
         client = CircusClient(endpoint=endpoint, timeout=timeout,

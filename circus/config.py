@@ -4,7 +4,7 @@ import sys
 
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                         StrictConfigParser)
+                         DEFAULT_CLUSTER_DEALER, StrictConfigParser)
 
 
 def watcher_defaults():
@@ -86,6 +86,26 @@ def read_config(config_path):
     return cfg, cfg_files_read
 
 
+def load_circus_options(config, section, dget):
+    config['check'] = dget(section, 'check_delay', 5, int)
+    config['endpoint'] = dget(section, 'endpoint',
+                              DEFAULT_ENDPOINT_DEALER
+                              if section == 'circus'
+                              else DEFAULT_CLUSTER_DEALER)
+    config['pubsub_endpoint'] = dget(section, 'pubsub_endpoint',
+                                     DEFAULT_ENDPOINT_SUB
+                                     if section == 'circus'
+                                     else None)
+    config['stats_endpoint'] = dget(section, 'stats_endpoint', None, str)
+    config['warmup_delay'] = dget(section, 'warmup_delay', 0, int)
+    config['httpd'] = dget(section, 'httpd', False, bool)
+    config['httpd_host'] = dget(section, 'httpd_host', 'localhost', str)
+    config['httpd_port'] = dget(section, 'httpd_port', 8080, int)
+    config['debug'] = dget(section, 'debug', False, bool)
+    config['node'] = dget(section, 'node', None, str)
+    config['master'] = dget(section, 'master', DEFAULT_CLUSTER_DEALER, str)
+
+
 def get_config(config_file):
     if not os.path.exists(config_file):
         sys.stderr.write("the configuration file %r does not exist\n" %
@@ -98,16 +118,11 @@ def get_config(config_file):
     config = {}
 
     # main circus options
-    config['check'] = dget('circus', 'check_delay', 5, int)
-    config['endpoint'] = dget('circus', 'endpoint', DEFAULT_ENDPOINT_DEALER)
-    config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
-                                     DEFAULT_ENDPOINT_SUB)
-    config['stats_endpoint'] = dget('circus', 'stats_endpoint', None, str)
-    config['warmup_delay'] = dget('circus', 'warmup_delay', 0, int)
-    config['httpd'] = dget('circus', 'httpd', False, bool)
-    config['httpd_host'] = dget('circus', 'httpd_host', 'localhost', str)
-    config['httpd_port'] = dget('circus', 'httpd_port', 8080, int)
-    config['debug'] = dget('circus', 'debug', False, bool)
+    load_circus_options(config, 'circus', dget)
+
+    # main circus cluster options
+    config['cluster'] = {}
+    load_circus_options(config['cluster'], 'circus-cluster', dget)
     stream_backend = dget('circus', 'stream_backend', 'thread')
     if stream_backend == 'gevent':
         try:
@@ -130,6 +145,7 @@ def get_config(config_file):
     watchers = []
     plugins = []
     sockets = []
+    nodes = []
 
     for section in cfg.sections():
         if section.startswith("socket:"):
@@ -139,6 +155,16 @@ def get_config(config_file):
 
         if section.startswith("plugin:"):
             plugins.append(dict(cfg.items(section)))
+
+        if section.startswith("node:"):
+            node = {}
+            node['name'] = section.split("node:", 1)[1]
+            for opt, val in cfg.items(section):
+                if opt == 'endpoint':
+                    node['endpoint'] = val
+                elif opt == 'stats_endpoint':
+                    node['stats_endpoint'] = val
+            nodes.append(node)
 
         if section.startswith("watcher:"):
             watcher = watcher_defaults()
@@ -214,4 +240,5 @@ def get_config(config_file):
     config['watchers'] = watchers
     config['plugins'] = plugins
     config['sockets'] = sockets
+    config['nodes'] = nodes
     return config

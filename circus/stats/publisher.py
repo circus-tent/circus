@@ -12,9 +12,12 @@ class StatsPublisher(object):
         self.socket = self.ctx.socket(zmq.PUB)
         self.socket.bind(self.stats_endpoint)
         self.socket.linger = 0
+        self.node_name = None
 
     def publish(self, name, stat):
         try:
+            if self.node_name is not None:
+                stat['node_name'] = self.node_name
             topic = b'stat.%s' % str(name)
             if 'subtopic' in stat:
                 topic += '.%d' % stat['subtopic']

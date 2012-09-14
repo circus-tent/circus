@@ -101,7 +101,8 @@ class TestClient(TestCircus):
     def XXX_test_handler(self):
         self._client_test(None)
 
-    def XXX_test_handler_ssh(self):
+    def _XXX_test_handler_ssh(self):
+        return
         try:
             try:
                 import pexpect    # NOQA
