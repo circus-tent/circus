@@ -74,3 +74,30 @@ class CircusClient(object):
                 return json.loads(msg)
             except ValueError as e:
                 raise CallError(str(e))
+
+    def update_watchers(self):
+        """Calls circus and initialize the list of watchers.
+
+        If circus is not connected raises an error.
+        """
+        self.watchers = []
+        self.plugins = []
+
+        # trying to list the watchers
+        try:
+            self.connected = True
+            for watcher in self.send_message('list')['watchers']:
+                if watcher in ('circusd-stats', 'circushttpd'):
+                    if watcher == 'circushttpd':
+                        self.embed_httpd = True
+                    continue
+
+                options = self.send_message('options',
+                                            name=watcher)['options']
+                self.watchers.append((watcher, options))
+                if watcher.startswith('plugin:'):
+                    self.plugins.append(watcher)
+
+            self.watchers.sort()
+        except CallError:
+            self.connected = False

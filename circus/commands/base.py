@@ -107,3 +107,7 @@ class Command(object):
                         propname)
 
 Command = CommandMeta('Command', (Command,), {})
+
+def find(s, ch=' '):
+    """Return indexes of words"""
+    return [i for i, ltr in enumerate(s) if ltr == ch]
