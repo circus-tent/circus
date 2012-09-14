@@ -127,7 +127,11 @@ class Stats(Command):
             return {"infos": infos}
 
     def _to_str(self, info):
-        children = info.pop("children", [])
+        try:
+            children = info.pop("children", [])
+        except AttributeError:
+            return info
+
         ret = [_INFOLINE % info]
         for child in children:
             ret.append("   " + _INFOLINE % child)

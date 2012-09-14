@@ -195,11 +195,10 @@ class CircusCtl(cmd.Cmd, object):
     def _add_complete_cmd(cls, cmd_name, cmd):        
         def inner_complete_cmd(cls, *args, **kwargs):
             if hasattr(cmd, 'autocomplete'):
-                import sys
                 try:
                     return cmd.autocomplete(cls.client, *args, **kwargs)
                 except Exception, e:
-                    import traceback
+                    import traceback, sys
                     sys.stderr.write(e.message+"\n")
                     traceback.print_exc(file=sys.stderr)
             else:
