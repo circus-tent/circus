@@ -244,8 +244,8 @@ class ControllerApp(object):
         return 0
 
 
-class CircusCTL(cmd.Cmd, object):
-    """CircusCTL tool."""   
+class CircusCtl(cmd.Cmd, object):
+    """CircusCtl tool."""   
     prompt = '(circusctl) '
 
     def __new__(cls, *args, **kw):
@@ -255,7 +255,8 @@ class CircusCTL(cmd.Cmd, object):
             cls._add_do_cmd(name, cmd)
             cls._add_complete_cmd(name, cmd)
             cls.controller = ControllerApp()
-        return  super(CircusCTL, cls).__new__(cls, *args, **kw)
+
+        return  super(CircusCtl, cls).__new__(cls, *args, **kw)
    
     @classmethod
     def _add_do_cmd(cls, cmd_name, cmd):
@@ -267,10 +268,19 @@ class CircusCTL(cmd.Cmd, object):
 
     @classmethod
     def _add_complete_cmd(cls, cmd_name, cmd):        
-        def inner_complete_cmd(cls, line):
-            pass
-        inner_complete_cmd.__doc__ = "Complete the %s command" % cmd
-        inner_complete_cmd.__name__ = "complete_%s" % cmd    
+        def inner_complete_cmd(cls, *args, **kwargs):
+            if hasattr(cmd, 'autocomplete'):
+                import sys
+                sys.stderr.write('Start autocomplete\n')
+                try:
+                    return cmd.autocomplete(cls.controller, *args, **kwargs)
+                except Exception, e:
+                    sys.stderr.write(e.message)
+            else:
+                return []
+
+        inner_complete_cmd.__doc__ = "Complete the %s command" % cmd_name
+        inner_complete_cmd.__name__ = "complete_%s" % cmd_name    
         setattr(cls, inner_complete_cmd.__name__, inner_complete_cmd)
             
     def do_EOF(self, line):
@@ -281,7 +291,7 @@ class CircusCTL(cmd.Cmd, object):
 
 def main():
     if len(sys.argv) == 1:
-        console = CircusCTL()
+        console = CircusCtl()
         try:
             console.cmdloop()
         except KeyboardInterrupt:
