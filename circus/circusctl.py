@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -
 import argparse
 import cmd
+import collections
 import getopt
 import json
 import sys
@@ -18,7 +19,6 @@ except ImportError:
 
 from circus.client import CircusClient
 from circus.consumer import CircusConsumer
-from circus.commands.base import get_commands, KNOWN_COMMANDS
 from circus.exc import CallError, ArgumentError
 from circus.util import DEFAULT_ENDPOINT_SUB, DEFAULT_ENDPOINT_DEALER
 
@@ -86,21 +86,6 @@ def _get_switch_str(opt):
 
 class ControllerApp(object):
 
-    def __init__(self):
-        self.commands = get_commands()
-        _Help.commands = self.commands
-        self.options = {
-            'endpoint': {'default': None, 'help': 'connection endpoint'},
-            'timeout': {'default': 5, 'help': 'connection timeout'},
-            'json': {'default': False, 'action': 'store_true',
-                     'help': 'output to JSON'},
-            'prettify': {'default': False, 'action': 'store_true',
-                         'help': 'prettify output'},
-            'ssh': {'default': None, 'help': 'SSH Server'},
-            'version': {'default': False, 'action': 'store_true',
-                        'help': 'display version and exit'}
-        }
-
     def autocomplete(self, autocomplete=False, words=None, cword=None):
         """
         Output completion suggestions for BASH.
@@ -162,29 +147,9 @@ class ControllerApp(object):
             sys.stderr.write(traceback.format_exc())
             return 1
 
-    def get_globalopts(self, args):
-        globalopts = {}
-        for option in self.options:
-            globalopts[option] = getattr(args, option)
-        return globalopts
-
     def dispatch(self, args):
         self.autocomplete()
         usage = '%(prog)s [options] command [args]'
-        parser = argparse.ArgumentParser(
-                description="Controls a Circus daemon",
-                formatter_class=_Help, usage=usage, add_help=False)
-
-        for option in self.options:
-            parser.add_argument('--' + option, **self.options[option])
-
-        parser.add_argument('--help', action='store_true',
-                            help='Show help and exit')
-        parser.add_argument('command', nargs="?", choices=self.commands)
-        parser.add_argument('args', nargs="*", help=argparse.SUPPRESS)
-
-        args = parser.parse_args(args)
-        globalopts = self.get_globalopts(args)
         opts = {}
 
         if args.version:
@@ -257,7 +222,8 @@ class CircusCtl(cmd.Cmd, object):
             cls.controller = ControllerApp()
 
         return  super(CircusCtl, cls).__new__(cls, *args, **kw)
-   
+
+
     @classmethod
     def _add_do_cmd(cls, cmd_name, cmd):
         def inner_do_cmd(cls, line):
@@ -282,23 +248,72 @@ class CircusCtl(cmd.Cmd, object):
         inner_complete_cmd.__doc__ = "Complete the %s command" % cmd_name
         inner_complete_cmd.__name__ = "complete_%s" % cmd_name    
         setattr(cls, inner_complete_cmd.__name__, inner_complete_cmd)
-            
+
     def do_EOF(self, line):
         return True
 
     def postloop(self):
         print
 
-def main():
-    if len(sys.argv) == 1:
-        console = CircusCtl()
+    def start(self):
+        parse_arguments(sys.argv)
+
+        if len(sys.argv) == 1:
+            sys.exit(self.controller.run(sys.argv[1:]))
+
         try:
-            console.cmdloop()
+            self.cmdloop()
         except KeyboardInterrupt:
             print
         sys.exit(0)
-    controller = ControllerApp()
-    sys.exit(controller.run(sys.argv[1:]))
+
+
+def parse_arguments(args)
+    options = {
+        'endpoint': {'default': None, 'help': 'connection endpoint'},
+        'timeout': {'default': 5, 'help': 'connection timeout'},
+        'json': {'default': False, 'action': 'store_true',
+                 'help': 'output to JSON'},
+        'prettify': {'default': False, 'action': 'store_true',
+                     'help': 'prettify output'},
+        'ssh': {'default': None, 'help': 'SSH Server'},
+        'version': {'default': False, 'action': 'store_true',
+                    'help': 'display version and exit'},
+        'help': {'action': 'store_true', 'help': "Show help and exit"}
+    }
+
+    parser = argparse.ArgumentParser(description="Controls a Circus daemon",
+                                     formatter_class=_Help, usage=usage,
+                                     add_help=False)
+
+    for option in options:
+        parser.add_argument('--' + option, **options[option])
+
+    #parser.add_argument('command', nargs="?", choices=self.commands)
+    #parser.add_argument('args', nargs="*", help=argparse.SUPPRESS)
+
+    args = parser.parse_args(args)
+
+    globalopts = {}
+    for option in self.options:
+        globalopts[option] = getattr(args, option)
+
+    return globalopts
+
+
+def main():
+    args = parse_arguments(sys.argv)
+
+    client = CircusClient(endpoint=args['endpoint'],
+                          timeout=args['timeout'],
+                          ssh_server=args['ssh'])
+
+    commands = client.send_message("get_commands")
+
+    print commands
+
+    CircusCtl().start()
+
 
 if __name__ == '__main__':
     main()
