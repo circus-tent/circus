@@ -11,7 +11,7 @@ class Stats(Command):
        =================
 
        You can get at any time some statistics about your processes
-       with teh stat command.
+       with the stat command.
 
        ZMQ Message
        -----------
