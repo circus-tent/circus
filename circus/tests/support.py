@@ -111,3 +111,11 @@ def profile(func):
         finally:
             pstats.Stats(profiler).sort_stats('time').print_stats(30)
     return _profile
+
+
+def run_process(test_file):
+    try:
+        while True:
+            time.sleep(1)
+    except:
+        return 1

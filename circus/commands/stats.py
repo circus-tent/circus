@@ -1,5 +1,5 @@
 from circus.exc import MessageError, ArgumentError
-from circus.commands.base import Command
+from circus.commands.base import Command, find
 
 _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
              "%(mem_info2)s %(cpu)s %(mem)s %(ctime)s")
@@ -85,6 +85,26 @@ class Stats(Command):
             return self.make_message(name=args[0])
         else:
             return self.make_message()
+
+    def autocomplete(self, client, text, line, start_index, stop_index):
+        # return ["t:%s" % text, "l:%s" % line, "s:%s" % start_index, "e:%s" % stop_index]
+        # What is the current argument to complete ?
+        
+        words_indexes = find(line)
+        current_arg = 0
+        for wi in words_indexes:
+            if start_index < wi:
+                break
+            else:
+                current_arg += 1
+
+        if current_arg == 1:
+            if not hasattr(client, 'connected') or not client.connected:
+                client.update_watchers()
+            watchers_name = [name[0] for name in client.watchers]
+            if text:
+                watchers_name = [name for name in watchers_name if name.startswith(text)]
+            return watchers_name        
 
     def execute(self, arbiter, props):
         if 'name' in props:
