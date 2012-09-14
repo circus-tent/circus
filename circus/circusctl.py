@@ -176,10 +176,11 @@ class CircusCtl(cmd.Cmd, object):
             cls._add_complete_cmd(name, cmd)
             cls.controller = ControllerApp()
             cls.controller.commands = commands
+            cls.client = client
 
         return  super(CircusCtl, cls).__new__(cls, *args, **kw)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, client, *args, **kwargs):
         return super(CircusCtl, self).__init__()
 
     @classmethod
@@ -195,11 +196,12 @@ class CircusCtl(cmd.Cmd, object):
         def inner_complete_cmd(cls, *args, **kwargs):
             if hasattr(cmd, 'autocomplete'):
                 import sys
-                sys.stderr.write('Start autocomplete\n')
                 try:
-                    return cmd.autocomplete(cls.controller, *args, **kwargs)
+                    return cmd.autocomplete(cls.client, *args, **kwargs)
                 except Exception, e:
-                    sys.stderr.write(e.message)
+                    import traceback
+                    sys.stderr.write(e.message+"\n")
+                    traceback.print_exc(file=sys.stderr)
             else:
                 return []
 

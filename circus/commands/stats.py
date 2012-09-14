@@ -86,12 +86,10 @@ class Stats(Command):
         else:
             return self.make_message()
 
-    def autocomplete(self, arbiter, text, line, start_index, stop_index):
+    def autocomplete(self, client, text, line, start_index, stop_index):
         # return ["t:%s" % text, "l:%s" % line, "s:%s" % start_index, "e:%s" % stop_index]
         # What is the current argument to complete ?
         
-        import sys
-        sys.stderr.write(text)
         words_indexes = find(line)
         current_arg = 0
         for wi in words_indexes:
@@ -100,14 +98,13 @@ class Stats(Command):
             else:
                 current_arg += 1
 
-        sys.stderr.write(current_arg)
-
         if current_arg == 1:
-            watchers = sorted(arbiter._watchers_names)
-            return [name for name in watchers]
-        elif current_arg == 2:
-            return ["<processid>"]
-        
+            if not hasattr(client, 'connected') or not client.connected:
+                client.update_watchers()
+            watchers_name = [name[0] for name in client.watchers]
+            if text:
+                watchers_name = [name for name in watchers_name if name.startswith(text)]
+            return watchers_name        
 
     def execute(self, arbiter, props):
         if 'name' in props:
