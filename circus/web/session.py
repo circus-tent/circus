@@ -35,11 +35,16 @@ def disconnect_from_circus():
 
 
 def connect_to_circus(endpoint, ssh_server=None):
-    client = LiveClient(endpoint=endpoint, ssh_server=ssh_server)
-    client.update_watchers()
-    set_client(client)
-    session = get_session()
-    if session is not None:
-        session['endpoint'] = endpoint
-        session.save()
-    return client
+    try: 
+        client = LiveClient(endpoint=endpoint, ssh_server=ssh_server)
+        client.update_watchers()
+        set_client(client)
+        session = get_session()
+        if session is not None:
+            session['endpoint'] = endpoint
+            session.save()
+        return client
+    except ValueError as e:
+        from circus.web.util import set_error
+        set_error(e.message)
+        raise e
