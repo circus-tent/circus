@@ -11,7 +11,7 @@ class Stats(Command):
        =================
 
        You can get at any time some statistics about your processes
-       with teh stat command.
+       with the stat command.
 
        ZMQ Message
        -----------
@@ -107,6 +107,9 @@ class Stats(Command):
             return {"infos": infos}
 
     def _to_str(self, info):
+        if isinstance(info, basestring):
+            return info
+
         children = info.pop("children", [])
         ret = [_INFOLINE % info]
         for child in children:
