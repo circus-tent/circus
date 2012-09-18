@@ -268,6 +268,9 @@ class Watcher(object):
                 if e.errno == errno.EAGAIN:
                   time.sleep(0.001)
                   continue
+                elif e.errno == errno.ECHILD:
+                  # nothing to do here, we do not have any child process running
+                  return
                 else:
                   raise
 
