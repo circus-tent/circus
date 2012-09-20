@@ -11,7 +11,6 @@ environment. In order to have Circus working, you *must*
 install PyZMQ >= 2.2.0.1.
 """
 
-
 try:
     import gevent                   # NOQA
     from gevent import monkey       # NOQA

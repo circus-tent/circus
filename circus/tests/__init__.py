@@ -3,23 +3,21 @@
 def setUp():
     from circus import _patch   # NOQA
     try:
+        import gevent                   # NOQA
         from gevent import monkey       # NOQA
         try:
-            from gevent_zeromq import monkey_patch, IOLOOP_IS_MONKEYPATCHED  # NOQA
-            monkey.patch_all()
-            monkey_patch()
+            import zmq.green as zmq         # NOQA
         except ImportError:
-            msg = """We have detected that you have gevent in your
-            environment. In order to have Circus working, you *must*
-            install gevent_zmq from :
+            # older version
+            try:
+                from gevent_zeromq import (                     # NOQA
+                        monkey_patch, IOLOOP_IS_MONKEYPATCHED)  # NOQA
+                monkey_patch()
+                warnings.warn("gevent_zeromq is deprecated, please "
+                            "use PyZMQ >= 2.2.0.1")
+            except ImportError:
+                raise ImportError(_MSG)
 
-            https://github.com/tarekziade/gevent-zeromq
-
-            Circus will not need this in the future once
-            pyzmq gets a green poller:
-
-            https://github.com/zeromq/pyzmq/issues/197
-            """
-            raise ImportError(msg)
+        monkey.patch_all()
     except ImportError:
         pass
