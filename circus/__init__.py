@@ -125,7 +125,9 @@ def get_arbiter(watchers, controller=None,
             import gevent                   # NOQA
             from gevent import monkey       # NOQA
             try:
+                import zmq.eventloop as old_io
                 import zmq.green as zmq     # NOQA
+                old_io.ioloop.Poller = zmq.Poller
             except ImportError:
                 # older version
                 try:

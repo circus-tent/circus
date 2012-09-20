@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -
 import errno
 import uuid
-import zmq
+from circus import zmq
 
 from circus.exc import CallError
 from circus.py3compat import string_types

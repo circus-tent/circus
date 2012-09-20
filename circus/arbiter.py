@@ -5,7 +5,7 @@ from threading import Thread, RLock
 import time
 import sys
 
-import zmq
+from circus import zmq
 from zmq.eventloop import ioloop
 
 from circus.controller import Controller
