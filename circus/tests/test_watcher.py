@@ -7,6 +7,7 @@ from circus.client import CircusClient, make_message
 from circus.tests.support import TestCircus
 from circus.stream import QueueStream
 from circus.watcher import Watcher
+from circus.process import UNEXISTING
 
 
 def run_process(test_file):
@@ -28,6 +29,7 @@ class TestWatcher(TestCircus):
         dummy_process = 'circus.tests.test_watcher.run_process'
         self.test_file = self._run_circus(dummy_process,
                 stdout_stream={'stream': self.stream})
+        self.arbiter = self.arbiters[-1]
         self.cli = CircusClient()
 
     def call(self, cmd, **props):
@@ -64,6 +66,30 @@ class TestWatcher(TestCircus):
         pids = self.pids()
         self.assertEquals(len(pids), 2)
         self.assertTrue(to_kill not in pids)
+
+    def test_unexisting(self):
+        watcher = self.arbiter.get_watcher("test")
+
+        self.assertEquals(len(watcher.processes), 1)
+        process = watcher.processes.values()[0]
+        to_kill = process.pid
+        # the process is killed in an unsual way
+        os.kill(to_kill, signal.SIGSEGV)
+        # and wait for it to die
+        pid, status = os.waitpid(to_kill, 0)
+        # ansure the old process is considered "unexisting"
+        self.assertEquals(process.status, UNEXISTING)
+
+        # this should clean up and create a new process
+        watcher.reap_and_manage_processes()
+
+        # we should have a new process here now
+        self.assertEquals(len(watcher.processes), 1)
+        process = watcher.processes.values()[0]
+        # and that one needs to have a new pid.
+        self.assertNotEqual(process.pid, to_kill)
+        # and should not be unexisting...
+        self.assertNotEqual(process.status, UNEXISTING)
 
     def test_stats(self):
         resp = self.call("stats").get('infos')

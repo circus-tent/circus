@@ -256,9 +256,23 @@ class Watcher(object):
             self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
-    def reap_process(self, pid, status):
+    def reap_process(self, pid, status=None):
         """ensure that the process is killed (and not a zombie)"""
         process = self.processes.pop(pid)
+
+        if not status:
+          while True:
+              try:
+                _, status = os.waitpid(pid, os.WNOHANG)
+              except OSError as e:
+                if e.errno == errno.EAGAIN:
+                  time.sleep(0.001)
+                  continue
+                elif e.errno == errno.ECHILD:
+                  # nothing to do here, we do not have any child process running
+                  return
+                else:
+                  raise
 
         # get return code
         if os.WIFSIGNALED(status):
@@ -286,28 +300,8 @@ class Watcher(object):
             logger.debug('do not reap processes as the watcher is stopped')
             return
 
-        while True:
-            try:
-                # wait for completion of all the childs of circus, if it
-                # pertains to this watcher. Call reap on it.
-                pid, status = os.waitpid(-1, os.WNOHANG)
-                if not pid:
-                    return
-
-                if pid in self.processes:
-                    self.reap_process(pid, status)
-
-                if self.stopped:
-                    logger.debug('watcher have been stopped, exit the loop')
-                    return
-            except OSError as e:
-                if e.errno == errno.EAGAIN:
-                    time.sleep(0.001)
-                    continue
-                elif e.errno == errno.ECHILD:
-                    return
-                else:
-                    raise
+        for pid in self.processes.keys():  # reap_process changes our dict, look through the copy of keys
+          self.reap_process(pid)
 
     @util.debuglog
     def manage_processes(self):
