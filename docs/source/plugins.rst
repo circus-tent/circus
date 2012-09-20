@@ -89,3 +89,33 @@ HttpObserver
         the name of the process to restart when the request timed out or returned
         any other kind of error. No restart triggered when not given. Default: None.
 
+
+
+ResourceWatcher
+~~~~~~~~~~~~~~~
+
+    This services watches the resources of the given process and triggers a restart when they exceeed certain limitations too often in a row.
+
+    It has the same configuration as statsd and adds the following:
+
+    **use**
+        set to 'circus.plugins.resource_watcher.ResourceWatcher'
+
+    **loop_rate**
+        the frequency the plugin should ask for the stats in seconds. Default: 60.
+
+    **service**
+        the service (read: watcher) this resource watcher should be looking after
+
+    **max_cpu**
+        The maximum cpu one process is allowed to consume (in %). Default: 90
+
+    **max_mem**
+        The amount of memory one process of this watcher is allowed to consume (in %). Default: 90
+
+    **health_threshold**
+        The health is the average of cpu and memory (in %) the watchers processes are allowed to consume (in %). Default: 75
+
+    **max_count**
+        How often these limits (each one is counted separately) are allowed to be exceeded before a restart will be triggered. Default: 3
+
