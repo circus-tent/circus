@@ -44,5 +44,4 @@ class TestSockets(unittest.TestCase):
     def test_load_from_config_unknown_proto(self):
         """Unknown proto in the config raises an error."""
         config = {'name': '', 'proto': 'foo'}
-        with self.assertRaises(socket.error):
-            CircusSocket.load_from_config(config)
+        self.assertRaises(socket.error, CircusSocket.load_from_config, config)

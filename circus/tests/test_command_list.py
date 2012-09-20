@@ -17,4 +17,4 @@ class ListCommandTest(TestCircus):
 
     def test_list_error(self):
         cmd = List()
-        self.assertIn("error", cmd.console_msg({'foo': 'bar'}))
+        self.assertTrue("error" in cmd.console_msg({'foo': 'bar'}))
