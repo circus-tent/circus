@@ -31,7 +31,11 @@ try:
 
     monkey.patch_all()
 except ImportError:
-    import zmq      # NOQA
+    try:
+        import zmq      # NOQA
+    except ImportError:
+        # lazy loading
+        pass
 
 
 version_info = (0, 6, 0)
