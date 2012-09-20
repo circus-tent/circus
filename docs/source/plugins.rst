@@ -1,143 +1,91 @@
 .. _plugins:
 
-The Plugin System
-=================
+Plugins
+-------
 
-Circus comes with a plugin system which let you interact with **circusd**.
+Circus comes with a few pre-shipped plugins you can use easily. The configuration of them is as follows:
 
-.. note::
+Statsd
+~~~~~~
+    This plugin publishes all circus events to the statsd service.
+    
+    **use**
+         set to 'circus.plugins.statsd.StatsdEmitter'
 
-   We might add circusd-stats support to plugins later on
+    **application_name**
+        the name used to identify the bucket prefix to emit the stats to (it will be prefixed with "circus." and suffixed with ".watcher")
 
+    **host**
+        the host to post the statds data to
 
-A Plugin is composed of two parts:
+    **port**
+        the port the statsd daemon listens on
 
-- a ZMQ subscriber to all events published by **circusd**
-- a ZMQ client to send commands to **circusd**
-
-Each plugin is run as a separate process under a custom watcher.
-
-A few examples of some plugins you could create with this system:
-
-- a notification system that sends e-mail alerts when a watcher is flapping
-- a logger
-- a tool that add or remove processes depending on the load
-- etc.
-
-Circus itself provides a few plugins:
-
-- a statsd plugin, that sends to statsd all events emited by circusd
-- the flapping feature which avoid to re-launch processes infinitely when they
-  die too quickly.
-- many more to come !
+    **sample_rate**
+        if you prefer a different sample rate than 1, you can set it here
 
 
-The CircusPlugin class
-----------------------
+FullStats
+~~~~~~~~~
 
-Circus provides a base class to help you implement plugins:
-:class:`circus.plugins.CircusPlugin`
+    An extension on the Statsd plugin that is also publishing the process stats. As
+    such it has the same configuration options as Statsd and the following.
 
+    **use**
+        set to 'circus.plugins.statsd.FullStats'
 
-.. autoclass:: circus.plugins.CircusPlugin
-   :members: call, cast, handle_recv, handle_stop, handle_init
-
-When initialized by Circus, this class creates its own event loop that receives
-all **circusd** events and pass them to :func:`handle_recv`. The data received
-is a tuple containing the topic and the data itself.
-
-:func:`handle_recv` **must** be implemented by the plugin.
-
-The :func:`call` and :func:`cast` methods can be used to interact with
-**circusd** if you are building a Plugin that actively interacts with
-the daemon.
-
-:func:`handle_init` and :func:`handle_stop` are just convenience methods
-you can use to initialize and clean up your code. :func:`handle_init` is
-called within the thread that just started. :func:`handle_stop` is called
-in the main thread just before the thread is stopped and joined.
+    **loop_rate**
+        the frequency the plugin should ask for the stats in seconds. Default: 60.
 
 
-Writing a plugin
-----------------
+RedisObserver
+~~~~~~~~~~~~~
 
-Let's write a plugin that logs in a file every event happening in
-**circusd**. It takes one argument which is the filename.
+    This services observers a redis process for you, publishes the information to statsd
+    and offers to restart the service when it doesn't react in a given timeout. This
+    plugin requires `redis-py <https://github.com/andymccurdy/redis-py>`_  to run.
 
-The plugin could look like this::
+    It has the same configuration as statsd and adds the following:
 
-    from circus.plugins import CircusPlugin
+    **use**
+        set to   'circus.plugins.redis_observer.RedisObserver'
 
+    **loop_rate**
+        the frequency the plugin should ask for the stats in seconds. Default: 60.
 
-    class Logger(CircusPlugin):
+    **redis_url**
+        the database to check for as a redis url. Default: "redis://localhost:6379/0"
 
-        name = 'logger'
+    **timeout**
+        the timeout in seconds the request can take before it is considered down. Defaults to 5.
 
-        def __init__(self, filename, **kwargs):
-            super(Logger, self).__init__(**kwargs)
-            self.filename = filename
-            self.file = None
-
-        def handle_init(self):
-            self.file = open(self.filename, 'a+')
-
-        def handle_stop(self):
-            self.file.close()
-
-        def handle_recv(self, data):
-            topic, msg = data
-            self.file.write('%s::%s' % (topic, msg))
+    **restart_on_timeout**
+        the name of the process to restart when the request timed out. No restart triggered when not given. Default: None.
 
 
-That's it ! This class can be saved in any package/module, as long as it can be seen
-by Python.
 
-For example, :class:`Logger` could be found in a *plugins* module in a
-*myproject* package.
+HttpObserver
+~~~~~~~~~~~~
 
-Async requests
-~~~~~~~~~~~~~~~
+    This services observers a http process for you by pinging a certain website
+    regularly. Similar to the redis observer it offers to restart the service on an
+    error. It requires `tornado <http://www.tornadoweb.org>`_  to run.
 
-In case you want to make any asynchronous operations (like a Tornado call or using
-periodicCall) make sure you are using the right loop. The loop you always want to 
-be using it self.loop as it gets set up by the base class. The default loop often
-isn't the same and therefore code might not get excuted as expected.
+    It has the same configuration as statsd and adds the following:
 
+    **use**
+        set to 'circus.plugins.http_observer.HttpObserver'
 
-Trying a plugin
---------------
+    **loop_rate**
+        the frequency the plugin should ask for the stats in seconds. Default: 60.
 
-You can run a plugin through the command line with the **circus-plugin** command,
-by specifying the plugin fully qualified name::
+    **check_url**
+        the url to check for. Default: "http://localhost/"
 
-    $ circus-plugin --endpoint tcp://127.0.0.1:5555 --pubsub tcp://127.0.0.1:5556 myproject.plugins.Logger
-    [INFO] Loading the plugin...
-    [INFO] Endpoint: 'tcp://127.0.0.1:5555'
-    [INFO] Pub/sub: 'tcp://127.0.0.1:5556'
-    [INFO] Starting
+    **timeout**
+        the timeout in seconds the request can take before it is considered down. Defaults to 10.
 
-Another way to run a plugin is to let Circus handle its initialization. This is done
-by adding a **[plugin:NAME]** section in the configuration file, where *NAME* is a unique
-name for your plugin::
+    **restart_on_error**
+        the name of the process to restart when the request timed out or returned
+        any other kind of error. No restart triggered when not given. Default: None.
 
-    [plugin:logger]
-    use = myproject.plugins.Logger
-    filename = /var/myproject/circus.log
-
-**use** is mandatory and points to the fully qualified name of the plugin.
-
-When Circus starts, it creates a watcher with one process that runs the pointed class,
-and pass any other variable contained in the section to the plugin constructor
-via the **config** mapping.
-
-You can also programmatically add plugins when you create a
-:class:`circus.arbiter.Arbiter` class or use :func:`circus.get_arbiter`,
-see :ref:`library`.
-
-
-Performances
-------------
-
-Since every plugin is loaded in its own process, it should not impact
-the overall performances of the system as long as the work done by the
-plugin is not doing too many calls to the **circusd** process.
