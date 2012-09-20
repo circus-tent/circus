@@ -98,15 +98,15 @@ class TestClient(TestCircus):
                         'tcp://127.0.0.1:5556')
         client.stop()
 
-    def XXX_test_handler(self):
-        self._client_test(None)
+    #def XXX_test_handler(self):
+    #    self._client_test(None)
 
-    def XXX_test_handler_ssh(self):
-        try:
-            try:
-                import pexpect    # NOQA
-            except ImportError:
-                import paramiko   # NOQA
-        except ImportError:
-            return
-        self._client_test('localhost')
+    #def XXX_test_handler_ssh(self):
+    #    try:
+    #        try:
+    #            import pexpect    # NOQA
+    #        except ImportError:
+    #            import paramiko   # NOQA
+    #    except ImportError:
+    #        return
+    #    self._client_test('localhost')
