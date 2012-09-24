@@ -32,8 +32,12 @@ class ResourceWatcher(BaseObserver):
             cpus.append(sub_info['cpu'])
             mems.append(sub_info['mem'])
 
-        max_cpu = max(cpus)
-        max_mem = max(mems)
+        if cpus:
+            max_cpu = max(cpus)
+            max_mem = max(mems)
+        else:
+            # we dont' have any process running. max = 0 then
+            max_cpu = max_mem = 0
 
         if self.max_cpu and max_cpu > self.max_cpu:
             self.statsd.increment("_resource_watcher.%s.over_cpu" % self.service)
