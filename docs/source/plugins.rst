@@ -94,7 +94,7 @@ HttpObserver
 ResourceWatcher
 ~~~~~~~~~~~~~~~
 
-    This services watches the resources of the given process and triggers a restart when they exceeed certain limitations too often in a row.
+    This services watches the resources of the given process and triggers a restart when they exceed certain limitations too often in a row.
 
     It has the same configuration as statsd and adds the following:
 
