@@ -59,7 +59,7 @@ circus - single section
         Defines the type of backend to use for the streaming. Possible
         values are **thread** or **gevent**. (default: thread)
     **warmup_delay**
-        The interval in seconds between two watchers start. (default: 0)
+        The interval in seconds between two watchers start. Must be an int. (default: 0)
     **httpd**
         If set to True, Circus runs the circushttpd daemon. (default: False)
     **httpd_host**
