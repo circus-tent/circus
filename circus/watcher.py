@@ -13,7 +13,7 @@ from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
-from circus.util import parse_env
+from circus.util import parse_env, resolve_name
 
 
 class Watcher(object):
@@ -138,6 +138,7 @@ class Watcher(object):
                  stderr_stream=None, stream_backend='thread', priority=0,
                  singleton=False, use_sockets=False, copy_env=False,
                  copy_path=False, max_age=0, max_age_variance=30,
+                 hooks=None,
                  **options):
         self.name = name
         self.use_sockets = use_sockets
@@ -165,6 +166,7 @@ class Watcher(object):
         self.copy_path = copy_path
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
+        self.hooks = self._resolve_hooks(hooks)
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
@@ -203,6 +205,7 @@ class Watcher(object):
         self.rlimits = rlimits
         self.send_hup = send_hup
         self.sockets = self.evpub_socket = None
+        self.arbiter = None
 
     def _create_redirectors(self):
         if self.stdout_stream:
@@ -224,6 +227,23 @@ class Watcher(object):
         else:
             self.stderr_redirector = None
 
+    def _resolve_hooks(self, hooks):
+        """Check the supplied hooks argument to make sure we can find callables"""
+        if not hooks:
+            return {}
+
+        resolved_hooks = {}
+
+        for hook_name, callable_or_name in hooks.items():
+            if callable(callable_or_name):
+                resolved_hooks[hook_name] = callable_or_name
+            else:
+                # will raise ImportError on failure
+                resolved_hook = resolve_name(callable_or_name)
+                resolved_hooks[hook_name] = resolved_hook
+
+        return resolved_hooks
+
     @classmethod
     def load_from_config(cls, config):
         if 'env' in config:
@@ -231,9 +251,10 @@ class Watcher(object):
         return cls(name=config.pop('name'), cmd=config.pop('cmd'), **config)
 
     @util.debuglog
-    def initialize(self, evpub_socket, sockets):
+    def initialize(self, evpub_socket, sockets, arbiter):
         self.evpub_socket = evpub_socket
         self.sockets = sockets
+        self.arbiter = arbiter
 
     def __len__(self):
         return len(self.processes)
@@ -515,6 +536,7 @@ class Watcher(object):
         logger.debug('gracefully stopping processes [%s] for %ss' % (
                      self.name, self.graceful_timeout))
 
+        self.call_hook('before_stop')
         while self.get_active_processes() and time.time() < limit:
             self.kill_processes(signal.SIGTERM)
             try:
@@ -530,6 +552,7 @@ class Watcher(object):
 
         self.stopped = True
 
+        self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
 
     def get_active_processes(self):
@@ -542,6 +565,11 @@ class Watcher(object):
         """Returns a list of PIDs"""
         return [process.pid for process in self.processes]
 
+    def call_hook(self, hook_name):
+        """Call a hook function"""
+        if hook_name in self.hooks:
+            self.hooks[hook_name](watcher=self, arbiter=self.arbiter, hook_name=hook_name)
+
     @util.debuglog
     def start(self):
         """Start.
@@ -551,8 +579,11 @@ class Watcher(object):
 
         self.stopped = False
         self._create_redirectors()
+
+        self.call_hook('before_start')
         self.reap_processes()
         self.manage_processes()
+        self.call_hook('after_start')
 
         if self.stdout_redirector is not None:
             self.stdout_redirector.start()

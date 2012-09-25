@@ -114,6 +114,10 @@ class TestWatcher(TestCircus):
         self.assertEqual(len(current_pids), 1)
         self.assertNotEqual(initial_pids, current_pids)
 
+    def test_arbiter_reference(self):
+        self.assertEqual(self.arbiters[0].watchers[0].arbiter,
+                         self.arbiters[0])
+
 
 class TestWatcherFromConfiguration(TestCircus):
 
@@ -163,3 +167,31 @@ class TestWatcherInitialization(TestCircus):
         finally:
             os.environ = old_environ
             sys.path[:] = old_paths
+
+
+class TestWatcherHooks(TestCircus):
+
+    def run_with_hooks(self, hooks):
+        self.stream = QueueStream()
+        dummy_process = 'circus.tests.test_watcher.run_process'
+        self._run_circus(dummy_process,
+                stdout_stream={'stream': self.stream},
+                hooks=hooks)
+
+    def test_missing_hook(self):
+        hooks = {'before_start': 'fake.hook.path'}
+        self.assertRaises(ImportError, self.run_with_hooks, hooks)
+
+
+    def test_before_start(self):
+
+        self.before_start_called = False
+
+        def hook(watcher, arbiter, hook_name):
+            self.before_start_called = True
+            self.arbiter_in_hook = arbiter
+
+        hooks = {'before_start': hook}
+        self.run_with_hooks(hooks)
+        self.assertTrue(self.before_start_called)
+        self.assertEqual(self.arbiter_in_hook, self.arbiters[0])

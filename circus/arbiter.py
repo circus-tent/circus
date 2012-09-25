@@ -203,7 +203,7 @@ class Arbiter(object):
         # initialize watchers
         for watcher in self.iter_watchers():
             self._watchers_names[watcher.name.lower()] = watcher
-            watcher.initialize(self.evpub_socket, self.sockets)
+            watcher.initialize(self.evpub_socket, self.sockets, self)
 
     @debuglog
     def start(self):
@@ -345,7 +345,7 @@ class Arbiter(object):
             return ValueError("command name shouldn't be empty")
 
         watcher = Watcher(name, cmd, **kw)
-        watcher.initialize(self.evpub_socket, self.sockets)
+        watcher.initialize(self.evpub_socket, self.sockets, self)
         self.watchers.append(watcher)
         self._watchers_names[watcher.name.lower()] = watcher
         return watcher
