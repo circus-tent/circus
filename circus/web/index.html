@@ -63,6 +63,8 @@
    <div class="process" style="margin-bottom: 15px">
     <div>
         <span style="display: inline-block; float: left;" class="label">${name or watcher}</span>
+	<span class="age-stat" id="${watcher}_last_age"></span>
+
         %if display_status:
         <div style="width: 20px; float: right; margin-right: 10px;"><a class="${client.get_status(watcher)}" title="${client.get_status(watcher)}" href="/watchers/${watcher}/switch_status"></a></div>
         %endif
