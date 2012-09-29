@@ -23,7 +23,7 @@ class TestConfig(unittest.TestCase):
     def test_include_wildcards(self):
         conf = get_config(_CONF['include'])
         watchers = conf['watchers']
-        self.assertEquals(len(watchers), 2)
+        self.assertEquals(len(watchers), 4)
 
     def test_watcher_graceful_timeout(self):
         conf = get_config(_CONF['issue210'])
