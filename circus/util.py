@@ -268,8 +268,13 @@ def parse_env(env_str):
     env = {}
     for kvs in env_str.split(","):
         k, v = kvs.split("=")
+        v = re.sub(r'\$([A-Z]+[A-Z0-9_]*)', replace_env, v)
         env[k.strip()] = v.strip()
     return env
+
+
+def replace_env(var):
+    return os.getenv(var.group(1))
 
 
 def env_to_str(env):
