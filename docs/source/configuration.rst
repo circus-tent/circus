@@ -202,8 +202,20 @@ socket:NAME - as many sections as you want
         'SOCK_RDM' or 'SOCK_SEQPACKET'. Defaults to 'SOCK_STREAM'.
 
 
-Once a socket is created, the *${socket:NAME}* string can be used in the
-command of a watcher. Circus will replace it by the FD value.
+Once a socket is created, the *${circus.sockets.NAME}* string can be used in the
+command (`cmd` or `args`) of a watcher. Circus will replace it by the FD value. The watcher must also 
+have `use_sockets` set to `True` otherwise the socket will have been closed and 
+you will get errors when the watcher tries to use it.
+
+Example::
+
+    [watcher:webworker]
+    cmd = chaussette --fd $(circus.sockets.webapp) chaussette.util.bench_app
+    use_sockets = True
+
+    [socket:webapp]
+    host = 127.0.0.1
+    port = 8888
 
 
 plugin:NAME - as many sections as you want
