@@ -19,5 +19,10 @@ rebooting, you can control circusd with the service command:
 
     $ service circus start/stop/restart
 
-This section will contain recipes to deploy Circus. Until then
-you can look at Pete's Puppet recipe at https://github.com/fetep/puppet-circus
+Recipes
+=======
+
+This section will contain recipes to deploy Circus. Until then you can look at
+Pete's `Puppet recipe <https://github.com/fetep/puppet-circus>`_ or at Remy's
+`Chef recipe
+<https://github.com/novagile/insight-installer/blob/master/chef/cookbooks/insight/recipes/circus.rb>`_
