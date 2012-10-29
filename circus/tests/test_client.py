@@ -5,10 +5,11 @@ import time
 from circus.tests.support import TestCircus
 from circus.client import CircusClient, make_message
 
-SSH_PATH = '/home/' + os.getlogin() + '/.ssh/'
-SSH_ID_DSA = SSH_PATH + 'id_dsa'
-SSH_ID_DSA_PUB = SSH_PATH + 'id_dsa.pub'
-SSH_AUTHORIZED_KEYS = SSH_PATH + 'authorized_keys'
+# SSH_PATH = '/home/' + os.getlogin() + '/.ssh/'
+# SSH_ID_DSA = SSH_PATH + 'id_dsa'
+# SSH_ID_DSA_PUB = SSH_PATH + 'id_dsa.pub'
+# SSH_AUTHORIZED_KEYS = SSH_PATH + 'authorized_keys'
+
 COPY_ID_DSA = 'circus/tests/id_dsa'
 COPY_ID_DSA_PUB = 'circus/tests/id_dsa.pub'
 COPY_AUTHORIZED_KEYS = 'circus/tests/authorized_keys'
