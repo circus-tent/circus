@@ -256,6 +256,10 @@ class CircusCtl(cmd.Cmd, object):
 
     def start(self, globalopts):
         self.autocomplete()
+
+        if globalopts['timeout'] < 30:        
+            globalopts['timeout'] = 30
+
         self.controller.globalopts = globalopts
 
         args = globalopts['args']
