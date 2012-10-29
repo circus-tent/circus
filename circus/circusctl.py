@@ -198,7 +198,7 @@ class ControllerApp(object):
         for option in self.options:
             parser.add_argument('--' + option, **self.options[option])
 
-        if True in [value in self.commands for value in sys.argv]:
+        if any([value in self.commands for value in sys.argv]):
             subparsers = parser.add_subparsers(dest='command')
             for command in self.commands:
                 subparser = subparsers.add_parser(command)
