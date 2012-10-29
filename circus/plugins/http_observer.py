@@ -30,6 +30,8 @@ class HttpObserver(BaseObserver):
                     self.statsd.increment("http_stats.restart_on_error")
                 return
 
-            self.statsd.timed("http_stats.request_time", int(response.request_time * 1000))
+            self.statsd.timed("http_stats.request_time",
+                              int(response.request_time * 1000))
 
-        self.http_client.fetch(self.check_url, handle_response, request_timeout=self.timeout)
+        self.http_client.fetch(self.check_url, handle_response,
+                               request_timeout=self.timeout)

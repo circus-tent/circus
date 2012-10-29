@@ -1,9 +1,10 @@
 import subprocess
+import sys
 import time
 
 from circus.tests.support import TestCircus
 
-USAGE = 'usage: circusctl [options] command [args]'
+USAGE = 'usage: circusctl.py [options] command [args]'
 
 
 class TestCommandline(TestCircus):
@@ -13,8 +14,9 @@ class TestCommandline(TestCircus):
         self.test_file = self._run_circus(self.dummy_process)
 
     def run_ctl(self, args):
-        cmd = ['circusctl']
-        proc = subprocess.Popen(cmd + args.split(), stdout=subprocess.PIPE)
+        cmd = '%s -m circus.circusctl' % sys.executable
+        proc = subprocess.Popen(cmd.split() + args.split(),
+                                stdout=subprocess.PIPE)
         # use proc.communicate, if we need to handle lots of output
         while proc.returncode is None:
             time.sleep(0.1)

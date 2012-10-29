@@ -19,12 +19,14 @@ class RedisObserver(BaseObserver):
                 'pubsub_patterns', 'used_cpu_sys', 'used_cpu_sys_children',
                 'blocked_clients', 'used_cpu_user', 'client_biggest_input_buf',
                 'mem_fragmentation_ratio', 'expired_keys', 'evicted_keys',
-                'client_longest_output_list', 'uptime_in_seconds', 'keyspace_hits']
+                'client_longest_output_list', 'uptime_in_seconds',
+                'keyspace_hits']
 
     def __init__(self, *args, **config):
         super(RedisObserver, self).__init__(*args, **config)
-        self.redis = redis.from_url(config.get("redis_url", "redis://localhost:6379/0"),
-                float(config.get("timeout", 5)))
+        self.redis = redis.from_url(config.get("redis_url",
+                                    "redis://localhost:6379/0"),
+                                    float(config.get("timeout", 5)))
 
         self.restart_on_timeout = config.get("restart_on_timeout", None)
 

@@ -1,5 +1,5 @@
 from collections import defaultdict
-import zmq
+from circus import zmq
 import json
 from itertools import chain
 import os

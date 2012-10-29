@@ -7,7 +7,7 @@ import errno
 import threading
 import time
 
-import zmq
+from circus import zmq
 
 from circus.consumer import CircusConsumer
 from circus import __version__

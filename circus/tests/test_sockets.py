@@ -1,4 +1,5 @@
 import os
+import socket
 from circus.tests.support import unittest
 from circus.sockets import CircusSocket, CircusSockets
 
@@ -33,3 +34,14 @@ class TestSockets(unittest.TestCase):
             self.assertNotEqual(port, mgr['1'].port)
         finally:
             mgr.close_all()
+
+    def test_load_from_config_no_proto(self):
+        """When no proto in the config, the default (0) is used."""
+        config = {'name': ''}
+        sock = CircusSocket.load_from_config(config)
+        self.assertEqual(sock.proto, 0)
+
+    def test_load_from_config_unknown_proto(self):
+        """Unknown proto in the config raises an error."""
+        config = {'name': '', 'proto': 'foo'}
+        self.assertRaises(socket.error, CircusSocket.load_from_config, config)

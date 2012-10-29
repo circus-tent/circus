@@ -46,6 +46,11 @@ function hookGraph(socket, watcher, metrics, prefix, capValues, config) {
             $('#' + watcher + '_last_' + metric).text(value);
         });
 
+	if(received.hasOwnProperty("age")){
+	    var val =  '(' + Math.round(received['age']) + 's)';
+            $('#' + watcher + '_last_age').text(val);
+	}
+
         graph.series.addData(data);
         graph.render();
     });

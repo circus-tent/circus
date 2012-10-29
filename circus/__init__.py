@@ -2,29 +2,40 @@ import _patch       # NOQA
 import logging
 import os
 import sys
+import warnings
 
+
+_MSG = """\
+We have detected that you have gevent in your
+environment. In order to have Circus working, you *must*
+install PyZMQ >= 2.2.0.1.
+"""
 
 try:
+    import gevent                   # NOQA
     from gevent import monkey       # NOQA
     try:
-        from gevent_zeromq import monkey_patch, IOLOOP_IS_MONKEYPATCHED  # NOQA
-        monkey.patch_all()
-        monkey_patch()
+        import zmq.eventloop as old_io
+        import zmq.green as zmq         # NOQA
+        old_io.ioloop.Poller = zmq.Poller
     except ImportError:
-        msg = """We have detected that you have gevent in your
-        environment. In order to have Circus working, you *must*
-        install gevent_zmq from :
+        # older version
+        try:
+            from gevent_zeromq import (                     # NOQA
+                    monkey_patch, IOLOOP_IS_MONKEYPATCHED)  # NOQA
+            monkey_patch()
+            warnings.warn("gevent_zeromq is deprecated, please "
+                          "use PyZMQ >= 2.2.0.1")
+        except ImportError:
+            raise ImportError(_MSG)
 
-          https://github.com/tarekziade/gevent-zeromq
-
-        Circus will not need this in the future once
-        pyzmq gets a green poller:
-
-          https://github.com/zeromq/pyzmq/issues/197
-        """
-        raise ImportError(msg)
+    monkey.patch_all()
 except ImportError:
-    pass
+    try:
+        import zmq      # NOQA
+    except ImportError:
+        # lazy loading
+        pass
 
 
 version_info = (0, 6, 0)
@@ -39,7 +50,7 @@ def get_arbiter(watchers, controller=None,
                 stats_endpoint=None,
                 env=None, name=None, context=None,
                 background=False, stream_backend="thread",
-                plugins=None, debug=False):
+                plugins=None, debug=False, proc_name="circusd"):
     """Creates a Arbiter and a single watcher in it.
 
     Options:
@@ -104,6 +115,7 @@ def get_arbiter(watchers, controller=None,
 
     - **debug** -- If True the arbiter is launched in debug mode
       (default: False)
+    - **proc_name** -- the arbiter process name (default: circusd)
     """
     from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
     if controller is None:
@@ -112,19 +124,31 @@ def get_arbiter(watchers, controller=None,
         pubsub_endpoint = DEFAULT_ENDPOINT_SUB
 
     if stream_backend == 'gevent':
+
         try:
-            import gevent           # NOQA
-            import gevent_zeromq    # NOQA
+            import gevent                   # NOQA
+            from gevent import monkey       # NOQA
+            try:
+                import zmq.eventloop as old_io
+                import zmq.green as zmq     # NOQA
+                old_io.ioloop.Poller = zmq.Poller
+            except ImportError:
+                # older version
+                try:
+                    from gevent_zeromq import (                     # NOQA
+                            monkey_patch, IOLOOP_IS_MONKEYPATCHED)  # NOQA
+                    monkey_patch()
+                    warnings.warn("gevent_zeromq is deprecated, please "
+                                "use PyZMQ >= 2.2.0.1")
+                except ImportError:
+                    raise ImportError(_MSG)
+
+            monkey.patch_all()
         except ImportError:
             sys.stderr.write("stream_backend set to gevent, " +
-                             "but gevent or gevent_zeromq isn't installed\n")
+                             "but gevent isn't installed\n")
             sys.stderr.write("Exiting...")
             sys.exit(1)
-
-        from gevent import monkey
-        from gevent_zeromq import monkey_patch
-        monkey.patch_all()
-        monkey_patch()
 
     from circus.watcher import Watcher
     if background:
@@ -142,4 +166,5 @@ def get_arbiter(watchers, controller=None,
 
     return Arbiter(_watchers, controller, pubsub_endpoint,
                    stats_endpoint=stats_endpoint,
-                   context=context, plugins=plugins, debug=debug)
+                   context=context, plugins=plugins, debug=debug,
+                   proc_name=proc_name)

@@ -29,7 +29,7 @@ Example:
 
    from circus import get_arbiter
 
-   arbiter = get_arbiter("myprogram", numprocesses=3)
+   arbiter = get_arbiter({"cmd": "myprogram", "numprocesses": 3})
    try:
        arbiter.start()
    finally:

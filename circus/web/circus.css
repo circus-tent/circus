@@ -260,6 +260,10 @@ footer {
      display: block;
  }
 
+.age-stat {
+     margin-left:10px;
+}
+
 .stat {
     font-size: 12px;
     background: #fff;

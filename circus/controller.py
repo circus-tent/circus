@@ -6,7 +6,7 @@ except ImportError:
     from Queue import Queue, Empty  # NOQA
 
 
-import zmq
+from circus import zmq
 from zmq.eventloop import ioloop, zmqstream
 from zmq.utils.jsonapi import jsonmod as json
 

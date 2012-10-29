@@ -268,8 +268,13 @@ def parse_env(env_str):
     env = {}
     for kvs in env_str.split(","):
         k, v = kvs.split("=")
+        v = re.sub(r'\$([A-Z]+[A-Z0-9_]*)', replace_env, v)
         env[k.strip()] = v.strip()
     return env
+
+
+def replace_env(var):
+    return os.getenv(var.group(1))
 
 
 def env_to_str(env):
@@ -514,16 +519,17 @@ class StrictConfigParser(ConfigParser):
                     options[name] = '\n'.join(val)
 
 
-def get_connection(socket, endpoint, ssh_server=None):
+def get_connection(socket, endpoint, ssh_server=None, ssh_keyfile=None):
     if ssh_server is None:
         socket.connect(endpoint)
     else:
         try:
             try:
-                ssh.tunnel_connection(socket, endpoint, ssh_server)
+                ssh.tunnel_connection(socket, endpoint, ssh_server,
+                                    keyfile=ssh_keyfile)
             except ImportError:
                 ssh.tunnel_connection(socket, endpoint, ssh_server,
-                                      paramiko=True)
+                                     keyfile=ssh_keyfile, paramiko=True)
         except ImportError:
             raise ImportError("pexpect was not found, and failed to use "
                               "Paramiko.  You need to install Paramiko")

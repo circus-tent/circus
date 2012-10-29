@@ -1,6 +1,5 @@
 import grp
 import os
-import platform
 import pwd
 import unittest
 from psutil import Popen
@@ -79,16 +78,10 @@ class TestUtil(unittest.TestCase):
         getpwuid = lambda pid: pwd.getpwuid(pid)
         getgrgid = lambda gid: grp.getgrgid(gid)
 
-        if os.uname()[0] == 'Linux' and platform.machine() == 'x86_64':
-            self.assertRaises(KeyError, getpwuid, uid_max + 1)
-            self.assertRaises(OverflowError, getpwuid, uid_min - 1)
-            self.assertRaises(KeyError, getgrgid, gid_max + 1)
-            self.assertRaises(OverflowError, getgrgid, gid_min - 1)
-        else:
-            self.assertRaises(KeyError, getpwuid, uid_max + 1)
-            self.assertRaises(KeyError, getpwuid, uid_min - 1)
-            self.assertRaises(KeyError, getgrgid, gid_max + 1)
-            self.assertRaises(KeyError, getgrgid, gid_min - 1)
+        self.assertRaises(KeyError, getpwuid, uid_max + 1)
+        self.assertRaises((KeyError, OverflowError), getpwuid, uid_min - 1)
+        self.assertRaises(KeyError, getgrgid, gid_max + 1)
+        self.assertRaises((KeyError, OverflowError), getgrgid, gid_min - 1)
 
     def test_replace_gnu_args(self):
         repl = replace_gnu_args
