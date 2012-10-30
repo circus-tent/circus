@@ -1,3 +1,4 @@
+import warnings
 
 
 def setUp():
@@ -18,7 +19,7 @@ def setUp():
                 warnings.warn("gevent_zeromq is deprecated, please "
                             "use PyZMQ >= 2.2.0.1")
             except ImportError:
-                raise ImportError(_MSG)
+                raise
 
         monkey.patch_all()
     except ImportError:

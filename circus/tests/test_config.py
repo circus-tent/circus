@@ -35,4 +35,3 @@ class TestConfig(unittest.TestCase):
         watcher = Watcher.load_from_config(conf['watchers'][0])
         self.assertEquals("%s:/bin" % os.getenv('PATH'), watcher.env['PATH'])
         watcher.stop()
-

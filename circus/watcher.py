@@ -261,18 +261,19 @@ class Watcher(object):
         process = self.processes.pop(pid)
 
         if not status:
-          while True:
-              try:
-                _, status = os.waitpid(pid, os.WNOHANG)
-              except OSError as e:
-                if e.errno == errno.EAGAIN:
-                  time.sleep(0.001)
-                  continue
-                elif e.errno == errno.ECHILD:
-                  # nothing to do here, we do not have any child process running
-                  return
-                else:
-                  raise
+            while True:
+                try:
+                    _, status = os.waitpid(pid, os.WNOHANG)
+                except OSError as e:
+                    if e.errno == errno.EAGAIN:
+                        time.sleep(0.001)
+                        continue
+                    elif e.errno == errno.ECHILD:
+                        # nothing to do here, we do not have any child
+                        # process running
+                        return
+                    else:
+                        raise
 
         # get return code
         if os.WIFSIGNALED(status):
@@ -300,8 +301,9 @@ class Watcher(object):
             logger.debug('do not reap processes as the watcher is stopped')
             return
 
-        for pid in self.processes.keys():  # reap_process changes our dict, look through the copy of keys
-          self.reap_process(pid)
+        # reap_process changes our dict, look through the copy of keys
+        for pid in self.processes.keys():
+            self.reap_process(pid)
 
     @util.debuglog
     def manage_processes(self):
