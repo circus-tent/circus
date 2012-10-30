@@ -1,5 +1,7 @@
 import os
 import socket
+import tempfile
+
 from circus.tests.support import unittest
 from circus.sockets import CircusSocket, CircusSockets
 
@@ -45,3 +47,19 @@ class TestSockets(unittest.TestCase):
         """Unknown proto in the config raises an error."""
         config = {'name': '', 'proto': 'foo'}
         self.assertRaises(socket.error, CircusSocket.load_from_config, config)
+
+    def test_unix_socket(self):
+        if TRAVIS:
+            return
+
+        fd, sockfile = tempfile.mkstemp()
+        os.close(fd)
+        os.remove(sockfile)
+
+        sock = CircusSocket('somename', path=sockfile)
+        try:
+            sock.bind_and_listen()
+            self.assertTrue(os.path.exists(sockfile))
+        finally:
+            sock.close()
+            os.remove(sockfile)
