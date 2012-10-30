@@ -11,19 +11,16 @@ TRAVIS = os.getenv('TRAVIS', False)
 
 class TestSockets(unittest.TestCase):
 
+    @unittest.skipIf(TRAVIS, "Running in Travis")
     def test_socket(self):
-        if TRAVIS:
-            return
         sock = CircusSocket('somename', 'localhost', 0)
         try:
             sock.bind_and_listen()
         finally:
             sock.close()
 
+    @unittest.skipIf(TRAVIS, "Running in Travis")
     def test_manager(self):
-        if TRAVIS:
-            return
-
         mgr = CircusSockets()
 
         for i in range(5):
@@ -48,10 +45,8 @@ class TestSockets(unittest.TestCase):
         config = {'name': '', 'proto': 'foo'}
         self.assertRaises(socket.error, CircusSocket.load_from_config, config)
 
+    @unittest.skipIf(TRAVIS, "Running in Travis")
     def test_unix_socket(self):
-        if TRAVIS:
-            return
-
         fd, sockfile = tempfile.mkstemp()
         os.close(fd)
         os.remove(sockfile)
