@@ -101,9 +101,9 @@ watcher:NAME - as many sections as you want
         The group id or name the command should run
         with. (The current gid is the default).
     **env**
-        The environment passed to the processes. Bash style environment 
+        The environment passed to the processes. Bash style environment
         variables are supported. For example, append '/usr/local/bin' to
-        `PATH` with the config line 'env = PATH=$PATH:/usr/local/bin' 
+        `PATH` with the config line 'env = PATH=$PATH:/usr/local/bin'
         (default: None)
     **copy_env**
         If set to true, the local environment variables will be copied and
@@ -200,11 +200,15 @@ socket:NAME - as many sections as you want
     **type**
         The socket type. Can be 'SOCK_STREAM', 'SOCK_DGRAM', 'SOCK_RAW',
         'SOCK_RDM' or 'SOCK_SEQPACKET'. Defaults to 'SOCK_STREAM'.
+    **path**
+        When provided a path to a file that will be used as a unix socket
+        file. If a path is provided, **family** is forced to AF_UNIX and
+        **host** and **port** are ignored.
 
 
 Once a socket is created, the *${circus.sockets.NAME}* string can be used in the
-command (`cmd` or `args`) of a watcher. Circus will replace it by the FD value. The watcher must also 
-have `use_sockets` set to `True` otherwise the socket will have been closed and 
+command (`cmd` or `args`) of a watcher. Circus will replace it by the FD value. The watcher must also
+have `use_sockets` set to `True` otherwise the socket will have been closed and
 you will get errors when the watcher tries to use it.
 
 Example::
@@ -243,7 +247,7 @@ Additionally, it is possible to access the options passed to the
 .. note::
 
    The worker id is different from the process id. It's a unique value,
-   starting at 1, which is only unique for the watcher. 
+   starting at 1, which is only unique for the watcher.
 
 For instance, if you want to access some variables that are contained in the
 environment, you would need to do it with a setting like this::
