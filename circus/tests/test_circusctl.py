@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import time
+import shlex
 
 from circus.tests.support import TestCircus
 
@@ -15,7 +16,7 @@ class TestCommandline(TestCircus):
 
     def run_ctl(self, args):
         cmd = '%s -m circus.circusctl' % sys.executable
-        proc = subprocess.Popen(cmd.split() + args.split(),
+        proc = subprocess.Popen(cmd.split() + shlex.split(args),
                                 stdout=subprocess.PIPE)
         # use proc.communicate, if we need to handle lots of output
         while proc.returncode is None:
@@ -43,3 +44,15 @@ class TestCommandline(TestCircus):
     def test_help_for_add_command(self):
         output = self.run_ctl('--help add').splitlines()
         self.assertEqual(output[0], 'Add a watcher')
+
+    def test_add(self):
+        output = self.run_ctl('add test2 "sleep 1"')
+        self.assertEqual(output, 'ok')
+        output = self.run_ctl('status test2')
+        self.assertEqual(output, 'stopped')
+
+    def test_add_start(self):
+        output = self.run_ctl('add --start test2 "sleep 1"')
+        self.assertEqual(output, 'ok')
+        output = self.run_ctl('status test2')
+        self.assertEqual(output, 'active')
