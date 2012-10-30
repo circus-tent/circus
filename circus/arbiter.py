@@ -220,26 +220,28 @@ class Arbiter(object):
         # start controller
         self.ctrl.start()
 
-        # initialize processes
-        logger.debug('Initializing watchers')
-        for watcher in self.iter_watchers():
-            watcher.start()
-            time.sleep(self.warmup_delay)
+        try:
+            # initialize processes
+            logger.debug('Initializing watchers')
+            for watcher in self.iter_watchers():
+                watcher.start()
+                time.sleep(self.warmup_delay)
 
-        logger.info('Arbiter now waiting for commands')
-        while True:
-            try:
-                self.loop.start()
-            except zmq.ZMQError as e:
-                if e.errno == errno.EINTR:
-                    continue
+            logger.info('Arbiter now waiting for commands')
+
+            while True:
+                try:
+                    self.loop.start()
+                except zmq.ZMQError as e:
+                    if e.errno == errno.EINTR:
+                        continue
+                    else:
+                        raise
                 else:
-                    raise
-            else:
-                break
-
-        self.ctrl.stop()
-        self.evpub_socket.close()
+                    break
+        finally:
+            self.ctrl.stop()
+            self.evpub_socket.close()
 
     def stop(self):
         if self.alive:
