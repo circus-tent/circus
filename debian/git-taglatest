@@ -1,0 +1,26 @@
+#!/bin/bash
+# This is the simple script to tag the latest commit with
+# upstream/version+gitDATE tag
+#
+# It is supposed that "upstream" branch points to
+# master@https://github.com/mozilla-services/circus.git
+
+trap "git checkout debian" 0 2 3 15
+
+# update the upstream repo
+git checkout upstream && git pull
+
+# Search for the latest tag to define upstream version
+version=$(git tag -l | egrep -v '(debian|upstream)' | sort -rn | head -n1)
+
+# Search for the latest commit to define its timestamp and hash
+read -a res <<<$(git log upstream -n1 --pretty=format:'%h %at')
+commit=${res[0]}
+timestamp=${res[1]}
+
+# Format timestamp according to mask YYYYMMDDHHMMSS
+time=$(date -u -d @"$timestamp" +'%Y%m%d%H%M%S')
+
+# Build a new tag
+tag_name="upstream/$version+git$time"
+git tag -l | grep -q "$tag_name" || git tag -a "upstream/$version+git$time" $commit -m "$version+git$time"

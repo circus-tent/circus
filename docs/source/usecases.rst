@@ -82,29 +82,29 @@ Congrats ! you have a WSGI application running 3 workers.
 
 You can run the :ref:`circushttpd` or the :ref:`cli`, and enjoy Circus management.
 
-
-
 Running a Django application
 ----------------------------
 
-Running a Django application is done exactly like running a WSGI application.
+Running a Django application is done exactly like running a WSGI application. Use the
+*PYTHONPATH* to import the directory the project is in, the directory that contains the 
+directory that has settings.py in it (with Django 1.4+ this directory has manage.py in it)
 
-Circus simply uses Chaussette's ability to run Django applications. Instead of
-providing a fully qualified name for a WSGI python, you provide the path to
-the Django application, by prefixing it with **django:**::
+    [socket:dwebapp]
+    host = 127.0.0.1
+    port = 8080
+    
+    [watcher:dwebworker]
+    cmd = chaussette --fd $(circus.sockets.dwebapp) dproject.wsgi.application
+    use_sockets = True
+    env = PYTHONPATH=/path/to/parent-of-dproject
+    numprocesses = 2
 
-    $ chaussette django:path/to/mysite
-    Application is <django.core.handlers.wsgi.WSGIHandler object at 0x...>
-    Serving on localhost:8080
-    Using <class 'chaussette.backend._waitress.Server'> as a backend
-
-Chaussette will look for your settings file automatically for you, or you
-can explicitely give it with the **--django-settings** option::
-
-    $ chaussette django:path/to/mysite --backend gevent --django-settings mysite.settings
-    Application is <django.core.handlers.wsgi.WSGIHandler object at 0x10ec3f350>
-    Serving on localhost:8080
-    Using <class 'chaussette.backend._gevent.Server'> as a backend
-
-
-See http://chaussette.readthedocs.org for more info on this.
+If you need to pass the *DJANGO_SETTINGS_MODULE* for a backend worker for example, you can pass that also though
+the *env* configation option:
+    
+    [watcher:dbackend]
+    cmd = /path/to/script.py
+    env = PYTHONPATH=/path/to/parent-of-dproject, DJANGO_SETTINGS_MODULE=dproject.settings
+    numprocesses=3
+    
+See http://chaussette.readthedocs.org for more about chaussette.

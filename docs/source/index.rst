@@ -161,13 +161,14 @@ More documentation
 
    installation
    configuration
+   plugins
    cli
    commands
    circushttpd
    sockets
    library
-   plugins
    deployment
+   develop_plugins
    security
    design
    rationale

@@ -10,6 +10,7 @@ _CONF = {
     'include': os.path.join(HERE, 'include.ini'),
     'issue210': os.path.join(HERE, 'issue210.ini'),
     'hooks': os.path.join(HERE, 'hooks.ini'),
+    'env_var': os.path.join(HERE, 'env_var.ini'),
 }
 
 
@@ -38,3 +39,9 @@ class TestConfig(unittest.TestCase):
         conf = get_config(_CONF['hooks'])
         watcher = Watcher.load_from_config(conf['watchers'][0])
         self.assertEqual(watcher.hooks['before_start'], hook)
+
+    def test_watcher_env_var(self):
+        conf = get_config(_CONF['env_var'])
+        watcher = Watcher.load_from_config(conf['watchers'][0])
+        self.assertEquals("%s:/bin" % os.getenv('PATH'), watcher.env['PATH'])
+        watcher.stop()

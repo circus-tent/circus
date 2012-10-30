@@ -1,3 +1,4 @@
+# flake8: noqa
 import os
 import subprocess
 import time
@@ -5,18 +6,11 @@ import time
 from circus.tests.support import TestCircus
 from circus.client import CircusClient, make_message
 
+# SSH_PATH = '/home/' + os.getlogin() + '/.ssh/'
+# SSH_ID_DSA = SSH_PATH + 'id_dsa'
+# SSH_ID_DSA_PUB = SSH_PATH + 'id_dsa.pub'
+# SSH_AUTHORIZED_KEYS = SSH_PATH + 'authorized_keys'
 
-def run_process(test_file):
-    try:
-        while True:
-            time.sleep(1)
-    except:
-        return 1
-
-SSH_PATH = '/home/' + os.getlogin() + '/.ssh/'
-SSH_ID_DSA = SSH_PATH + 'id_dsa'
-SSH_ID_DSA_PUB = SSH_PATH + 'id_dsa.pub'
-SSH_AUTHORIZED_KEYS = SSH_PATH + 'authorized_keys'
 COPY_ID_DSA = 'circus/tests/id_dsa'
 COPY_ID_DSA_PUB = 'circus/tests/id_dsa.pub'
 COPY_AUTHORIZED_KEYS = 'circus/tests/authorized_keys'
@@ -53,7 +47,7 @@ class TestClient(TestCircus):
         subprocess.call(['ssh-add'])
 
     def _client_test(self, ssh_server):
-        self._run_circus('circus.tests.test_client.run_process')
+        self._run_circus('circus.tests.support.run_process')
         time.sleep(.5)
 
         # playing around with the watcher
@@ -106,15 +100,15 @@ class TestClient(TestCircus):
                         'tcp://127.0.0.1:5556')
         client.stop()
 
-    def XXX_test_handler(self):
-        self._client_test(None)
+    #def XXX_test_handler(self):
+    #    self._client_test(None)
 
-    def XXX_test_handler_ssh(self):
-        try:
-            try:
-                import pexpect    # NOQA
-            except ImportError:
-                import paramiko   # NOQA
-        except ImportError:
-            return
-        self._client_test('localhost')
+    #def XXX_test_handler_ssh(self):
+    #    try:
+    #        try:
+    #            import pexpect    # NOQA
+    #        except ImportError:
+    #            import paramiko   # NOQA
+    #    except ImportError:
+    #        return
+    #    self._client_test('localhost')

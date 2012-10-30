@@ -6,10 +6,11 @@ endif
 
 build:	
 	virtualenv $(VTENV_OPTS) .
+	bin/pip install unittest2
 	bin/python setup.py develop
 
-test: bin/nosetests
-	bin/nosetests -s circus
+test:
+	bin/python setup.py test
 
 coverage: bin/coverage
 	bin/nosetests --with-coverage --cover-html --cover-html-dir=html --cover-package=circus

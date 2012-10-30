@@ -5,6 +5,7 @@ import json
 import sys
 import traceback
 import textwrap
+import os
 
 # import pygments if here
 try:
@@ -14,9 +15,10 @@ try:
 except ImportError:
     pygments = False    # NOQA
 
+from circus import __version__
 from circus.client import CircusClient
 from circus.consumer import CircusConsumer
-from circus.commands import get_commands
+from circus.commands.base import get_commands, KNOWN_COMMANDS
 from circus.exc import CallError, ArgumentError
 from circus.util import DEFAULT_ENDPOINT_SUB, DEFAULT_ENDPOINT_DEALER
 
@@ -90,14 +92,75 @@ class ControllerApp(object):
         self.options = {
             'endpoint': {'default': None, 'help': 'connection endpoint'},
             'timeout': {'default': 5, 'help': 'connection timeout'},
+
+            'help': {
+                'default': False,
+                'action': 'store_true',
+                'help': 'Show help and exit'},
+
             'json': {'default': False, 'action': 'store_true',
                      'help': 'output to JSON'},
-            'prettify': {'default': False, 'action': 'store_true',
-                         'help': 'prettify output'},
-            'ssh': {'default': None, 'help': 'SSH Server'},
-            'version': {'default': False, 'action': 'store_true',
-                        'help': 'display version and exit'}
+
+            'prettify': {
+                'default': False,
+                'action': 'store_true',
+                'help': 'prettify output'},
+
+            'ssh': {
+                'default': None,
+                'help': 'SSH Server in the format user@host:port'},
+
+            'ssh_keyfile': {
+                'default': None,
+                'help': 'the path to the keyfile to authorise the user'},
+
+            'version': {
+                'default': False,
+                'action': 'store_true',
+                'help': 'display version and exit'}
         }
+
+    def autocomplete(self, autocomplete=False, words=None, cword=None):
+        """
+        Output completion suggestions for BASH.
+
+        The output of this function is passed to BASH's `COMREPLY` variable and
+        treated as completion suggestions. `COMREPLY` expects a space
+        separated string as the result.
+
+        The `COMP_WORDS` and `COMP_CWORD` BASH environment variables are used
+        to get information about the cli input. Please refer to the BASH
+        man-page for more information about this variables.
+
+        Subcommand options are saved as pairs. A pair consists of
+        the long option string (e.g. '--exclude') and a boolean
+        value indicating if the option requires arguments. When printing to
+        stdout, a equal sign is appended to options which require arguments.
+
+        Note: If debugging this function, it is recommended to write the debug
+        output in a separate file. Otherwise the debug output will be treated
+        and formatted as potential completion suggestions.
+        """
+        autocomplete = autocomplete or 'AUTO_COMPLETE' in os.environ
+
+        # Don't complete if user hasn't sourced bash_completion file.
+        if not autocomplete:
+            return
+
+        words = words or os.environ['COMP_WORDS'].split()[1:]
+        cword = cword or int(os.environ['COMP_CWORD'])
+
+        try:
+            curr = words[cword - 1]
+        except IndexError:
+            curr = ''
+
+        subcommands = [cmd.name for cmd in KNOWN_COMMANDS]
+
+        if cword == 1:  # if completing the command name
+            print(' '.join(sorted(filter(lambda x: x.startswith(curr),
+                                         subcommands))))
+        sys.exit(1)
 
     def run(self, args):
         try:
@@ -121,10 +184,12 @@ class ControllerApp(object):
     def get_globalopts(self, args):
         globalopts = {}
         for option in self.options:
-            globalopts[option] = getattr(args, option)
+            if hasattr(args, option):
+                globalopts[option] = getattr(args, option)
         return globalopts
 
     def dispatch(self, args):
+        self.autocomplete()
         usage = '%(prog)s [options] command [args]'
         parser = argparse.ArgumentParser(
                 description="Controls a Circus daemon",
@@ -133,18 +198,25 @@ class ControllerApp(object):
         for option in self.options:
             parser.add_argument('--' + option, **self.options[option])
 
-        parser.add_argument('--help', action='store_true',
-                            help='Show help and exit')
-        parser.add_argument('command', nargs="?", choices=self.commands)
-        parser.add_argument('args', nargs="*", help=argparse.SUPPRESS)
+        if any([value in self.commands for value in sys.argv]):
+            subparsers = parser.add_subparsers(dest='command')
+            for command in self.commands:
+                subparser = subparsers.add_parser(command)
+                subparser.add_argument('args', nargs="*",
+                                       help=argparse.SUPPRESS)
+                if command == 'add':
+                    subparser.add_argument('--start', action='store_true',
+                                           default=False)
 
         args = parser.parse_args()
         globalopts = self.get_globalopts(args)
         opts = {}
 
-        if args.version:
-            return self.display_version()
-        elif args.command is None:
+        if not hasattr(args, 'command'):
+            for command in self.commands:
+                doc = textwrap.dedent(self.commands[command].__doc__)
+                help = doc.split('\n')[0]
+                parser.add_argument(command, help=help)
             parser.print_help()
             return 0
         else:
@@ -152,23 +224,26 @@ class ControllerApp(object):
             if args.help:
                 print textwrap.dedent(cmd.__doc__)
                 return 0
+            else:
+                if hasattr(args, 'start'):
+                    opts['start'] = args.start
 
-            if args.endpoint is None:
-                if cmd.msg_type == 'sub':
-                    args.endpoint = DEFAULT_ENDPOINT_SUB
-                else:
-                    args.endpoint = DEFAULT_ENDPOINT_DEALER
-            msg = cmd.message(*args.args, **opts)
-            handler = getattr(self, "handle_%s" % cmd.msg_type)
-            return handler(cmd, globalopts, msg, args.endpoint,
-                           int(args.timeout), args.ssh)
+                if args.endpoint is None:
+                    if cmd.msg_type == 'sub':
+                        args.endpoint = DEFAULT_ENDPOINT_SUB
+                    else:
+                        args.endpoint = DEFAULT_ENDPOINT_DEALER
+                msg = cmd.message(*args.args, **opts)
+                handler = getattr(self, "handle_%s" % cmd.msg_type)
+                return handler(cmd, globalopts, msg, args.endpoint,
+                               int(args.timeout), args.ssh, args.ssh_keyfile)
 
     def display_version(self, *args, **opts):
-        from circus import __version__
         print(__version__)
         return 0
 
-    def handle_sub(self, cmd, opts, topics, endpoint, timeout, ssh_server):
+    def handle_sub(self, cmd, opts, topics, endpoint, timeout, ssh_server,
+                   ssh_keyfile):
         consumer = CircusConsumer(topics, endpoint=endpoint)
         for topic, msg in consumer:
             print("%s: %s" % (topic, msg))
@@ -180,9 +255,10 @@ class ControllerApp(object):
         else:
             return cmd.console_msg(client.call(msg))
 
-    def handle_dealer(self, cmd, opts, msg, endpoint, timeout, ssh_server):
+    def handle_dealer(self, cmd, opts, msg, endpoint, timeout, ssh_server,
+                      ssh_keyfile):
         client = CircusClient(endpoint=endpoint, timeout=timeout,
-                              ssh_server=ssh_server)
+                              ssh_server=ssh_server, ssh_keyfile=ssh_keyfile)
         try:
             if isinstance(msg, list):
                 for i, command in enumerate(msg):

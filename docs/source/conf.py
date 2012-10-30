@@ -33,6 +33,7 @@ class Mock(object):
 MOCK_MODULES = ['zmq', 'zmq.eventloop', 'zmq.utils.jsonapi', 'zmq.utils']
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+skip_coverage = os.environ.get('SKIP_COVERAGE', None) == 'True'
 
 if on_rtd:
     for mod_name in MOCK_MODULES:
@@ -59,7 +60,8 @@ sys.path.append(os.path.join(CURDIR, '..'))
 import circus
 extensions = ['sphinx.ext.autodoc', 'circus_ext']
 
-if not on_rtd:
+
+if not skip_coverage and not on_rtd:
     extensions.append('coverage_ext')
 
 # Add any paths that contain templates here, relative to this directory.

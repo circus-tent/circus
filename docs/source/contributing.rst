@@ -50,6 +50,9 @@ Before proposing your changes, double check that they are not breaking
 anything! You can use the `tox` command to ensure this, it will run the
 testsuite under the different supported python versions.
 
+Please use : http://issue2pr.herokuapp.com/ to reference a commit to an
+existing circus issue, if any.
+
 Avoiding merge commits
 ======================
 

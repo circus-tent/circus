@@ -1,4 +1,3 @@
-
 from circus.commands import (   # NOQA
     addwatcher,
     decrproc,

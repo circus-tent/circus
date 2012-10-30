@@ -23,7 +23,7 @@ Example::
     stdout_stream.refresh_time = 0.3
 
     [plugin:statsd]
-    use = circus.plugins._statsd.StatsdEmitter
+    use = circus.plugins.statsd.StatsdEmitter
     host = localhost
     port = 8125
     sample_rate = 1.0
@@ -59,7 +59,7 @@ circus - single section
         Defines the type of backend to use for the streaming. Possible
         values are **thread** or **gevent**. (default: thread)
     **warmup_delay**
-        The interval in seconds between two watchers start. (default: 0)
+        The interval in seconds between two watchers start. Must be an int. (default: 0)
     **httpd**
         If set to True, Circus runs the circushttpd daemon. (default: False)
     **httpd_host**
@@ -101,7 +101,10 @@ watcher:NAME - as many sections as you want
         The group id or name the command should run
         with. (The current gid is the default).
     **env**
-        The environment passed to the processes (default: None)
+        The environment passed to the processes. Bash style environment
+        variables are supported. For example, append '/usr/local/bin' to
+        `PATH` with the config line 'env = PATH=$PATH:/usr/local/bin'
+        (default: None)
     **copy_env**
         If set to true, the local environment variables will be copied and
         passed to the workers when spawning them. (Default: False)
@@ -125,7 +128,7 @@ watcher:NAME - as many sections as you want
         will receive the **stderr** stream of all processes in its
         :func:`__call__` method.
 
-        Circus provides two classes you can use without prefix:
+        Circus provides three classes you can use without prefix:
 
         - :class:`FileStream`: writes in a file
         - :class:`QueueStream`: write in a memory Queue
@@ -139,7 +142,7 @@ watcher:NAME - as many sections as you want
         A fully qualified Python class name that will be instanciated, and
         will receive the **stdout** stream of all processes in its
         :func:`__call__` method.
-        Circus provides two classes you can use without prefix:
+        Circus provides three classes you can use without prefix:
 
         - :class:`FileStream`: writes in a file
         - :class:`QueueStream`: write in a memory Queue
@@ -190,15 +193,6 @@ watcher:NAME - as many sections as you want
         Define callback functions that hook into the watcher startup/shutdown process.
 
 
-plugin:NAME - as many sections as you want
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    **use**
-        The fully qualified name that points to the plugin class.
-    **anything else**
-        Every other key found in the section is passed to the
-        plugin constructor in the **config** mapping.
-
-
 socket:NAME - as many sections as you want
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     **host**
@@ -211,10 +205,38 @@ socket:NAME - as many sections as you want
     **type**
         The socket type. Can be 'SOCK_STREAM', 'SOCK_DGRAM', 'SOCK_RAW',
         'SOCK_RDM' or 'SOCK_SEQPACKET'. Defaults to 'SOCK_STREAM'.
+    **path**
+        When provided a path to a file that will be used as a unix socket
+        file. If a path is provided, **family** is forced to AF_UNIX and
+        **host** and **port** are ignored.
 
 
-Once a socket is created, the *${socket:NAME}* string can be used in the
-command of a watcher. Circus will replace it by the FD value.
+Once a socket is created, the *${circus.sockets.NAME}* string can be used in the
+command (`cmd` or `args`) of a watcher. Circus will replace it by the FD value. The watcher must also
+have `use_sockets` set to `True` otherwise the socket will have been closed and
+you will get errors when the watcher tries to use it.
+
+Example::
+
+    [watcher:webworker]
+    cmd = chaussette --fd $(circus.sockets.webapp) chaussette.util.bench_app
+    use_sockets = True
+
+    [socket:webapp]
+    host = 127.0.0.1
+    port = 8888
+
+
+plugin:NAME - as many sections as you want
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    **use**
+        The fully qualified name that points to the plugin class.
+    **anything else**
+        Every other key found in the section is passed to the
+        plugin constructor in the **config** mapping.
+
+Circus comes with a few pre-shipped :ref:`plugins <plugins>` but you can also extend them easily by :ref:`developing your own <develop_plugins>`.
+
 
 .. _formating_cmd:
 
@@ -226,6 +248,11 @@ dynamically when running the processes. Among other things, you can get the
 worker id (WID) and all the options that are passed to the :class:`Process`.
 Additionally, it is possible to access the options passed to the
 :class:`Watcher` which instanciated the process.
+
+.. note::
+
+   The worker id is different from the process id. It's a unique value,
+   starting at 1, which is only unique for the watcher.
 
 For instance, if you want to access some variables that are contained in the
 environment, you would need to do it with a setting like this::

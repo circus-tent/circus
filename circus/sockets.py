@@ -1,4 +1,6 @@
 import socket
+import os
+
 from circus import logger
 
 
@@ -30,42 +32,68 @@ class CircusSocket(socket.socket):
     """
     def __init__(self, name='', host='localhost', port=8080,
                  family=socket.AF_INET, type=socket.SOCK_STREAM,
-                 proto=0, backlog=2048):
+                 proto=0, backlog=2048, path=None):
+        if path is not None:
+            family = socket.AF_UNIX
+
         super(CircusSocket, self).__init__(family=family, type=type,
                                            proto=proto)
         self.name = name
         self.socktype = type
-        self.host, self.port = addrinfo(host, port)
+        self.path = path
+
+        if family == socket.AF_UNIX:
+            self.host = self.port = None
+            self.is_unix = True
+        else:
+            self.host, self.port = addrinfo(host, port)
+            self.is_unix = False
+
         self.backlog = backlog
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
+    @property
+    def location(self):
+        if self.is_unix:
+            return '%r' % self.path
+        return '%s:%d' % (self.host, self.port)
+
     def __str__(self):
-        return 'socket %r at %s:%d' % (self.name, self.host, self.port)
+        return 'socket %r at %s' % (self.name, self.location)
 
     def bind_and_listen(self):
         try:
-            self.bind((self.host, self.port))
+            if self.is_unix:
+                self.bind(self.path)
+            else:
+                self.bind((self.host, self.port))
         except socket.error:
-            logger.error('Could not bind %s:%d' % (self.host, self.port))
+            logger.error('Could not bind %s:%d' % self.location)
             raise
 
         self.setblocking(0)
         if self.socktype in (socket.SOCK_STREAM, socket.SOCK_SEQPACKET):
             self.listen(self.backlog)
-        self.host, self.port = self.getsockname()
-        logger.debug('Socket bound at %s:%d - fd: %d' % (self.host, self.port,
-                                                         self.fileno()))
+
+        if not self.is_unix:
+            self.host, self.port = self.getsockname()
+
+        logger.debug('Socket bound at %s - fd: %d' % (self.location,
+                                                      self.fileno()))
 
     @classmethod
     def load_from_config(cls, config):
-        name = config['name']
-        host = config.get('host', 'localhost')
-        port = int(config.get('port', '8080'))
-        family = _FAMILY[config.get('family', 'AF_INET').upper()]
-        type = _TYPE[config.get('type', 'SOCK_STREAM').upper()]
-        proto = socket.getprotobyname(config.get('proto', 'ip'))
-        backlog = int(config.get('backlog', 2048))
-        return cls(name, host, port, family, type, proto, backlog)
+        params = {'name': config['name'],
+                  'host': config.get('host', 'localhost'),
+                  'port': int(config.get('port', '8080')),
+                  'path': config.get('path'),
+                  'family': _FAMILY[config.get('family', 'AF_INET').upper()],
+                  'type': _TYPE[config.get('type', 'SOCK_STREAM').upper()],
+                  'backlog': int(config.get('backlog', 2048))}
+        proto_name = config.get('proto')
+        if proto_name is not None:
+            params['proto'] = socket.getprotobyname(proto_name)
+        return cls(**params)
 
 
 class CircusSockets(dict):
@@ -78,7 +106,7 @@ class CircusSockets(dict):
                 self[sock.name] = sock
 
     def add(self, name, host='localhost', port=8080, family=socket.AF_INET,
-            type=socket.SOCK_STREAM, proto=0, backlog=None):
+            type=socket.SOCK_STREAM, proto=0, backlog=None, path=None):
 
         if backlog is None:
             backlog = self.backlog
@@ -87,13 +115,16 @@ class CircusSockets(dict):
         if sock is not None:
             raise ValueError('A socket already exists %s' % sock)
 
-        sock = CircusSocket(name, host, port, family, type, proto, backlog)
+        sock = CircusSocket(name, host, port, family, type, proto, backlog,
+                            path)
         self[name] = sock
         return sock
 
     def close_all(self):
         for sock in self.values():
             sock.close()
+            if sock.is_unix and os.path.exists(sock.path):
+                os.remove(sock.path)
 
     def bind_and_listen_all(self):
         for sock in self.values():

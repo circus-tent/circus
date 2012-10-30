@@ -128,8 +128,8 @@ Then add a new *watcher* and a *socket* sections in your ini file::
 That's it !
 
 
-Running behind Nginx
---------------------
+Running behind Nginx and Varnish
+--------------------------------
 
 Nginx can act as a proxy in front of Circus. It an also deal with security.
 
@@ -152,6 +152,43 @@ Example::
 
 If you want more configuration options, see http://wiki.nginx.org/HttpProxyModule.
 
+Websockets in Nginx (v1.2.5) is currently unsupported, although it will be 
+implemented in 1.3. To receive real-time statuses and graphs in the web console,
+you need to use a websocket-compatible proxy like Varnish or HAProxy. In Varnish,
+two backends can be defined: one for serving the web console and one for the 
+handling the socket connections.
+
+Example::
+
+    backend default {
+        .host = "127.0.0.1";
+        .port = "8001";
+    }
+
+    backend socket {
+        .host = "127.0.0.1";
+        .port = "8080";
+        .connect_timeout = 1s;
+        .first_byte_timeout = 2s;
+        .between_bytes_timeout = 60s;
+    }
+
+    sub vcl_pipe {
+         if (req.http.upgrade) {
+             set bereq.http.upgrade = req.http.upgrade;
+         }
+    }
+
+    sub vcl_recv {
+        if (req.http.Upgrade ~ "(?i)websocket") {
+            set req.backend = socket;
+          return (pipe);
+        }
+    }
+
+Here, web console requests are bound to port 8001, and Nginx should be configured to
+listen on that port. Websocket connections are upgraded and piped directly to the
+circushttpd process listening on port 8080.
 
 Password-protect circushttpd
 ----------------------------

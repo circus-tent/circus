@@ -1,0 +1,42 @@
+Source: circus
+Section: admin
+Priority: optional
+Maintainer: Roman Imankulov <roman.imankulov@gmail.com>
+DM-Upload-Allowed: yes
+Build-Depends: debhelper (>= 7),
+               libzmq-dev (>= 2.1.9),
+               python | python-all | python-dev | python-all-dev (>=2.6.3),
+               python-setuptools,
+               python-zmq (>= 2.1.9),
+               python-iowait (>= 0.1),
+               python-psutil (>= 0.4),
+Standards-Version: 3.9.3
+Homepage: http://circus.io/
+
+Package: circus
+Architecture: all
+Depends: ${python:Depends},
+         ${misc:Depends},
+         ${shlibs:Depends},
+         python,
+         python-pkg-resources,
+         python-zmq (>= 2.1.9),
+         python-iowait (>= 0.1),
+         python-psutil (>= 0.4),
+Recommends: python-mako (>=0.5),
+            python-markupsafe (>=0.15),
+            python-bottle (>=0.10),
+            python-anyjson (>=0.3.1),
+            python-gevent (>=0.13),
+            python-gevent-socketio,
+            python-gevent-websocket,
+            python-gevent-zeromq,
+            python-greenlet,
+            python-beaker,
+Description: process & socket manager. It can be used to monitor and control
+ processes and sockets.
+ .
+ Circus can be driven via a command-line interface or programmatically trough
+ its python API.
+ .
+ It shares some of the goals of Supervisord, BluePill and Daemontools.

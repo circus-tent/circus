@@ -1,14 +1,11 @@
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest  # NOQA
-
 from tempfile import mkstemp
 import os
 import sys
 import time
 import cProfile
 import pstats
+
+import unittest2 as unittest
 
 from circus import get_arbiter
 from circus.util import DEFAULT_ENDPOINT_STATS
@@ -111,3 +108,11 @@ def profile(func):
         finally:
             pstats.Stats(profiler).sort_stats('time').print_stats(30)
     return _profile
+
+
+def run_process(test_file):
+    try:
+        while True:
+            time.sleep(1)
+    except:
+        return 1

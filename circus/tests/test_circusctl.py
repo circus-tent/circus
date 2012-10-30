@@ -1,9 +1,11 @@
 import subprocess
+import sys
 import time
+import shlex
 
 from circus.tests.support import TestCircus
 
-USAGE = 'usage: circusctl [options] command [args]'
+USAGE = 'usage: circusctl.py [options] command [args]'
 
 
 class TestCommandline(TestCircus):
@@ -13,8 +15,9 @@ class TestCommandline(TestCircus):
         self.test_file = self._run_circus(self.dummy_process)
 
     def run_ctl(self, args):
-        cmd = ['circusctl']
-        proc = subprocess.Popen(cmd + args.split(), stdout=subprocess.PIPE)
+        cmd = '%s -m circus.circusctl' % sys.executable
+        proc = subprocess.Popen(cmd.split() + shlex.split(args),
+                                stdout=subprocess.PIPE)
         # use proc.communicate, if we need to handle lots of output
         while proc.returncode is None:
             time.sleep(0.1)
@@ -39,5 +42,17 @@ class TestCommandline(TestCircus):
         self.assertEqual(output[0], USAGE)
 
     def test_help_for_add_command(self):
-        output = self.run_ctl('add --help').splitlines()
+        output = self.run_ctl('--help add').splitlines()
         self.assertEqual(output[0], 'Add a watcher')
+
+    def test_add(self):
+        output = self.run_ctl('add test2 "sleep 1"')
+        self.assertEqual(output, 'ok')
+        output = self.run_ctl('status test2')
+        self.assertEqual(output, 'stopped')
+
+    def test_add_start(self):
+        output = self.run_ctl('add --start test2 "sleep 1"')
+        self.assertEqual(output, 'ok')
+        output = self.run_ctl('status test2')
+        self.assertEqual(output, 'active')
