@@ -3,7 +3,6 @@ import signal
 import sys
 import os
 
-from circus.client import CircusClient, make_message
 from circus.tests.support import TestCircus
 from circus.stream import QueueStream
 from circus.watcher import Watcher
@@ -30,15 +29,6 @@ class TestWatcher(TestCircus):
         self.test_file = self._run_circus(dummy_process,
                 stdout_stream={'stream': self.stream})
         self.arbiter = self.arbiters[-1]
-        self.cli = CircusClient()
-
-    def call(self, cmd, **props):
-        msg = make_message(cmd, **props)
-        return self.cli.call(msg)
-
-    def tearDown(self):
-        super(TestWatcher, self).tearDown()
-        self.cli.stop()
 
     def status(self, cmd, **props):
         resp = self.call(cmd, **props)
@@ -76,7 +66,11 @@ class TestWatcher(TestCircus):
         # the process is killed in an unsual way
         os.kill(to_kill, signal.SIGSEGV)
         # and wait for it to die
-        pid, status = os.waitpid(to_kill, 0)
+        try:
+            pid, status = os.waitpid(to_kill, 0)
+        except OSError:
+            pass
+
         # ansure the old process is considered "unexisting"
         self.assertEquals(process.status, UNEXISTING)
 
@@ -113,6 +107,10 @@ class TestWatcher(TestCircus):
         current_pids = self.pids()
         self.assertEqual(len(current_pids), 1)
         self.assertNotEqual(initial_pids, current_pids)
+
+    def test_arbiter_reference(self):
+        self.assertEqual(self.arbiters[0].watchers[0].arbiter,
+                         self.arbiters[0])
 
 
 class TestWatcherFromConfiguration(TestCircus):
@@ -163,3 +161,96 @@ class TestWatcherInitialization(TestCircus):
         finally:
             os.environ = old_environ
             sys.path[:] = old_paths
+
+
+SUCCESS = 1
+FAILURE = 2
+ERROR = 3
+
+
+class TestWatcherHooks(TestCircus):
+
+    def run_with_hooks(self, hooks):
+        self.stream = QueueStream()
+        dummy_process = 'circus.tests.test_watcher.run_process'
+        self._run_circus(dummy_process,
+                stdout_stream={'stream': self.stream},
+                hooks=hooks)
+
+    def _stop(self):
+        self.call("stop", name="test")
+
+    def get_status(self):
+        return self.call("status", name="test")['status']
+
+    def test_missing_hook(self):
+        hooks = {'before_start': ('fake.hook.path', False)}
+        self.assertRaises(ImportError, self.run_with_hooks, hooks)
+
+    def _test_hooks(self, hook_name='before_start', status='active',
+                    behavior=SUCCESS, call=None):
+        self.before_start_called = False
+
+        def hook(watcher, arbiter, hook_name):
+            self.before_start_called = True
+            self.arbiter_in_hook = arbiter
+            if behavior == SUCCESS:
+                return True
+            elif behavior == FAILURE:
+                return False
+            raise TypeError('beeeuuua')
+
+        hooks = {hook_name: (hook, False)}
+        self.run_with_hooks(hooks)
+        if call:
+            call()
+        self.assertTrue(self.before_start_called)
+        self.assertEqual(self.arbiter_in_hook, self.arbiters[0])
+        self.assertEqual(self.get_status(), status)
+
+    def test_before_start(self):
+        self._test_hooks()
+
+    def test_before_start_fails(self):
+        self._test_hooks(behavior=ERROR, status='stopped')
+
+    def test_before_start_false(self):
+        self._test_hooks(behavior=FAILURE, status='stopped',
+                         hook_name='after_start')
+
+    def test_after_start(self):
+        self._test_hooks(hook_name='after_start')
+
+    def test_after_start_fails(self):
+        self._test_hooks(behavior=ERROR, status='stopped',
+                         hook_name='after_start')
+
+    def test_after_start_false(self):
+        self._test_hooks(behavior=FAILURE, status='stopped',
+                         hook_name='after_start')
+
+    def test_before_stop(self):
+        self._test_hooks(hook_name='before_stop', status='stopped',
+                         call=self._stop)
+
+    def test_before_stop_fails(self):
+        self._test_hooks(behavior=ERROR, status='stopped',
+                         hook_name='before_stop',
+                         call=self._stop)
+
+    def test_before_stop_false(self):
+        self._test_hooks(behavior=FAILURE, status='stopped',
+                         hook_name='before_stop', call=self._stop)
+
+    def test_after_stop(self):
+        self._test_hooks(hook_name='after_stop', status='stopped',
+                         call=self._stop)
+
+    def test_after_stop_fails(self):
+        self._test_hooks(behavior=ERROR, status='stopped',
+                         hook_name='after_stop',
+                         call=self._stop)
+
+    def test_after_stop_false(self):
+        self._test_hooks(behavior=FAILURE, status='stopped',
+                         hook_name='after_stop', call=self._stop)

@@ -13,7 +13,7 @@ from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
-from circus.util import parse_env
+from circus.util import parse_env, resolve_name
 
 
 class Watcher(object):
@@ -125,6 +125,14 @@ class Watcher(object):
       same time.  A process will live between max_age and
       max_age + max_age_variance seconds.
 
+    - **hooks**: callback functions for hooking into the watcher startup
+      and shutdown process. **hooks** is a dict where each key is the hook
+      name and each value is a 2-tuple with the name of the callable
+      or the callabled itself and a boolean flag indicating if an
+      exception occuring in the hook should not be ignored.
+      Possible values for the hook name: *before_start*, *after_start*,
+      *before_stop*, *after_stop*.
+
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
       in this mapping -- this can be used by plugins for watcher-specific
@@ -138,6 +146,7 @@ class Watcher(object):
                  stderr_stream=None, stream_backend='thread', priority=0,
                  singleton=False, use_sockets=False, copy_env=False,
                  copy_path=False, max_age=0, max_age_variance=30,
+                 hooks=None,
                  **options):
         self.name = name
         self.use_sockets = use_sockets
@@ -165,6 +174,9 @@ class Watcher(object):
         self.copy_path = copy_path
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
+        self.ignore_hook_failure = ['before_stop', 'after_stop']
+        self.hooks = self._resolve_hooks(hooks)
+
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
@@ -203,6 +215,7 @@ class Watcher(object):
         self.rlimits = rlimits
         self.send_hup = send_hup
         self.sockets = self.evpub_socket = None
+        self.arbiter = None
 
     def _create_redirectors(self):
         if self.stdout_stream:
@@ -224,6 +237,29 @@ class Watcher(object):
         else:
             self.stderr_redirector = None
 
+    def _resolve_hooks(self, hooks):
+        """Check the supplied hooks argument to make sure we can find
+        callables"""
+        if not hooks:
+            return {}
+
+        resolved_hooks = {}
+
+        for hook_name, hook_value in hooks.items():
+            callable_or_name, ignore_failure = hook_value
+
+            if callable(callable_or_name):
+                resolved_hooks[hook_name] = callable_or_name
+            else:
+                # will raise ImportError on failure
+                resolved_hook = resolve_name(callable_or_name)
+                resolved_hooks[hook_name] = resolved_hook
+
+            if ignore_failure:
+                self.ignore_hook_failure.append(hook_name)
+
+        return resolved_hooks
+
     @classmethod
     def load_from_config(cls, config):
         if 'env' in config:
@@ -231,9 +267,10 @@ class Watcher(object):
         return cls(name=config.pop('name'), cmd=config.pop('cmd'), **config)
 
     @util.debuglog
-    def initialize(self, evpub_socket, sockets):
+    def initialize(self, evpub_socket, sockets, arbiter):
         self.evpub_socket = evpub_socket
         self.sockets = sockets
+        self.arbiter = arbiter
 
     def __len__(self):
         return len(self.processes)
@@ -517,6 +554,9 @@ class Watcher(object):
         logger.debug('gracefully stopping processes [%s] for %ss' % (
                      self.name, self.graceful_timeout))
 
+        # We ignore the hook result
+        self.call_hook('before_stop')
+
         while self.get_active_processes() and time.time() < limit:
             self.kill_processes(signal.SIGTERM)
             try:
@@ -532,6 +572,8 @@ class Watcher(object):
 
         self.stopped = True
 
+        # We ignore the hook result
+        self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
 
     def get_active_processes(self):
@@ -544,6 +586,28 @@ class Watcher(object):
         """Returns a list of PIDs"""
         return [process.pid for process in self.processes]
 
+    def call_hook(self, hook_name):
+        """Call a hook function"""
+        kwargs = {'watcher': self, 'arbiter': self.arbiter,
+                  'hook_name': hook_name}
+
+        if hook_name in self.hooks:
+            try:
+                result = self.hooks[hook_name](**kwargs)
+                error = None
+                self.notify_event("hook_success",
+                        {"name": hook_name, "time": time.time()})
+            except Exception, error:
+                logger.exception('Hook %r failed' % hook_name)
+                result = hook_name in self.ignore_hook_failure
+                self.notify_event("hook_failure",
+                        {"name": hook_name, "time": time.time(),
+                         "error": str(error)})
+
+            return result
+        else:
+            return True
+
     @util.debuglog
     def start(self):
         """Start.
@@ -552,9 +616,20 @@ class Watcher(object):
             return
 
         self.stopped = False
+
+        if not self.call_hook('before_start'):
+            logger.debug('Aborting startup')
+            self.stopped = True
+            return False
+
         self._create_redirectors()
         self.reap_processes()
         self.manage_processes()
+
+        if not self.call_hook('after_start'):
+            logger.debug('Aborting startup')
+            self.stop()
+            return False
 
         if self.stdout_redirector is not None:
             self.stdout_redirector.start()
@@ -564,6 +639,7 @@ class Watcher(object):
 
         logger.info('%s started' % self.name)
         self.notify_event("start", {"time": time.time()})
+        return True
 
     @util.debuglog
     def restart(self):
@@ -571,8 +647,10 @@ class Watcher(object):
         """
         self.notify_event("restart", {"time": time.time()})
         self.stop()
-        self.start()
-        logger.info('%s restarted', self.name)
+        if self.start():
+            logger.info('%s restarted', self.name)
+        else:
+            logger.info('Failed to restart %s', self.name)
 
     @util.debuglog
     def reload(self, graceful=True):
