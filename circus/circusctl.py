@@ -88,6 +88,9 @@ def _get_switch_str(opt):
 
 class ControllerApp(object):
 
+    def __init__(self, commands):
+        self.commands = commands
+
     def run(self, args):
         try:
             return self.dispatch(args)
@@ -166,12 +169,11 @@ class CircusCtl(cmd.Cmd, object):
     def __new__(cls, client, commands, *args, **kw):
         """Auto add do and complete methods for all known commands."""
         cls.commands = commands
+        cls.controller = ControllerApp(commands)
+        cls.client = client
         for name, cmd in commands.iteritems():
             cls._add_do_cmd(name, cmd)
             cls._add_complete_cmd(name, cmd)
-            cls.controller = ControllerApp()
-            cls.controller.commands = commands
-            cls.client = client
         return  super(CircusCtl, cls).__new__(cls, *args, **kw)
 
     def __init__(self, client, *args, **kwargs):
@@ -206,7 +208,7 @@ class CircusCtl(cmd.Cmd, object):
         return True
 
     def postloop(self):
-        print
+        sys.stdout.write('\n')
 
     def autocomplete(self, autocomplete=False, words=None, cword=None):
         """
@@ -273,8 +275,8 @@ class CircusCtl(cmd.Cmd, object):
 
         try:
             self.cmdloop()
-        except KeyboardInterrupt:
-            print
+        except KeyboardInterrupt:            
+            sys.stdout.write('\n')
         sys.exit(0)
 
 
