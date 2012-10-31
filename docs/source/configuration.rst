@@ -72,6 +72,9 @@ circus - single section
     **debug**
         If set to True, all Circus stout/stderr daemons are redirected to circusd
         stdout/stderr (default: False)
+    **respawn**
+        If set to False, the processes handled by a watcher will not be
+        respawned automatically. (default: True)
 
 .. note::
 

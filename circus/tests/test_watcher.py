@@ -254,3 +254,34 @@ class TestWatcherHooks(TestCircus):
     def test_after_stop_false(self):
         self._test_hooks(behavior=FAILURE, status='stopped',
                          hook_name='after_stop', call=self._stop)
+
+
+def oneshot_process(test_file):
+    pass
+
+
+class RespawnTest(TestCircus):
+    def setUp(self):
+        super(RespawnTest, self).setUp()
+        # Create a watcher which doesn't respawn its processes.
+        oneshot_process = 'circus.tests.test_watcher.oneshot_process'
+        self._run_circus(oneshot_process, respawn=False)
+        self.watcher = self.arbiters[-1].watchers[-1]
+
+    def test_not_respawning(self):
+        # Per default, we shouldn't respawn processes, so we should have one
+        # process, even if in a dead state.
+        self.assertEquals(len(self.watcher.processes), 1)
+
+        # let's reap processes and explicitely ask for process management
+        self.watcher.reap_and_manage_processes()
+        # we should have zero processes (the process shouldn't respawn)
+        self.assertEquals(len(self.watcher.processes), 0)
+
+    def test_respawning(self):
+        # If we explicitely ask the watcher to respawn its processes, ensure
+        # it's doing so.
+        self.assertEquals(len(self.watcher.processes), 1)
+        self.watcher.reap_and_manage_processes()
+        self.watcher.spawn_processes()
+        self.assertEquals(len(self.watcher.processes), 1)

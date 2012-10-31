@@ -30,7 +30,9 @@ def watcher_defaults():
         'singleton': False,
         'copy_env': False,
         'copy_path': False,
-        'hooks': dict()}
+        'hooks': dict(),
+        'respawn': True,
+        }
 
 
 _BOOL_STATES = {'1': True, 'yes': True, 'true': True, 'on': True,
@@ -222,6 +224,9 @@ def get_config(config_file):
                         val[1] = to_boolean(val[1])
 
                     watcher['hooks'][hook_name] = val
+
+                elif opt == 'respawn':
+                    watcher['respawn'] = dget(section, "respawn", True, bool)
 
                 else:
                     # freeform
