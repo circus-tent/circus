@@ -96,6 +96,13 @@ def get_arbiter(watchers, controller=None,
             - any other key will be passed the class constructor.
         - **max_retry**: the number of times we attempt to start a process,
           before we abandon and stop the whole watcher. (default: 5)
+        - **hooks**: callback functions for hooking into the watcher startup
+          and shutdown process. **hooks** is a dict where each key is the hook
+          name and each value is a 2-tuple with the name of the callable
+          or the callabled itself and a boolean flag indicating if an
+          exception occuring in the hook should not be ignored.
+          Possible values for the hook name: *before_start*, *after_start*,
+          *before_stop*, *after_stop*.
 
     - **controller** -- the zmq entry point (default: 'tcp://127.0.0.1:5555')
     - **pubsub_endpoint** -- the zmq entry point for the pubsub

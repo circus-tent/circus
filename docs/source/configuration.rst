@@ -17,6 +17,9 @@ Example::
     warmup_delay = 0
     numprocesses = 5
 
+    # hook
+    hooks.before_start = my.hooks.control_redis
+
     # will push in test.log the stream every 300 ms
     stdout_stream.class = FileStream
     stdout_stream.filename = test.log
@@ -186,6 +189,24 @@ watcher:NAME - as many sections as you want
         If max_age is set then the process will live between max_age and
         max_age + random(0, max_age_variance) seconds. This avoids restarting
         all processes for a watcher at once. Defaults to 30 seconds.
+
+    **hooks.***
+        Available hooks: **before_start**, **after_start**, **before_stop**, **after_stop**
+
+        Define callback functions that hook into the watcher startup/shutdown process.
+
+        If the hook returns **False** and if the hook is one of
+        **before_start** or **after_start**, the startup will be aborted.
+
+        Notice that a hook that fails during the stopping process will not
+        abort it.
+
+        The callback definition can be followed by a boolean flag separated by a
+        comma. When the flag is set to **true**, any error occuring in the
+        hook will be ignored. If set to **false** (the default), the hook
+        will return **False**.
+
+        More on :ref:`hooks`.
 
 
 socket:NAME - as many sections as you want
