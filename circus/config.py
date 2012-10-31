@@ -33,6 +33,17 @@ def watcher_defaults():
         'hooks': dict()}
 
 
+_BOOL_STATES = {'1': True, 'yes': True, 'true': True, 'on': True,
+                '0': False, 'no': False, 'false': False, 'off': False}
+
+
+def to_boolean(value):
+    value = value.lower().strip()
+    if value not in _BOOL_STATES:
+        raise ValueError(value)
+    return _BOOL_STATES[value]
+
+
 class DefaultConfigParser(StrictConfigParser):
     def dget(self, section, option, default=None, type=str):
         if not self.has_option(section, option):
@@ -202,8 +213,14 @@ def get_config(config_file):
                 elif opt == 'copy_path':
                     watcher['copy_path'] = dget(section, "copy_path", False,
                                                 bool)
-                elif opt.startswith('hooks'):
-                    hook_name = opt[6:]
+                elif opt.startswith('hooks.'):
+                    hook_name = opt[len('hooks.'):]
+                    val = [elmt.strip() for elmt in val.split(',', 1)]
+                    if len(val) == 1:
+                        val.append(False)
+                    else:
+                        val[1] = to_boolean(val[1])
+
                     watcher['hooks'][hook_name] = val
 
                 else:

@@ -39,6 +39,7 @@ class TestConfig(unittest.TestCase):
         conf = get_config(_CONF['hooks'])
         watcher = Watcher.load_from_config(conf['watchers'][0])
         self.assertEqual(watcher.hooks['before_start'], hook)
+        self.assertTrue('before_start' not in watcher.ignore_hook_failure)
 
     def test_watcher_env_var(self):
         conf = get_config(_CONF['env_var'])

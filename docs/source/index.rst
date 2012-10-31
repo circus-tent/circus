@@ -148,9 +148,11 @@ processes dying, measures how often it happens, and stops the incriminated
 watchers after too many restarts attempts.
 
 Circus comes with a plugin system to help you write such extensions, and
-a few built-in plugins you can reuse.
+a few built-in plugins you can reuse. See :ref:`plugins`.
 
-See :ref:`plugins`.
+You can also have a more subtile startup and shutdown behavior by using the
+**hooks** system that will let you run arbitrary code before and after
+some processes are started or stopped. See :ref:`hooks`.
 
 
 More documentation
@@ -162,6 +164,7 @@ More documentation
    installation
    configuration
    plugins
+   hooks
    cli
    commands
    circushttpd

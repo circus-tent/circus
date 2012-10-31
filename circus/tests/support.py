@@ -9,6 +9,7 @@ import unittest2 as unittest
 
 from circus import get_arbiter
 from circus.util import DEFAULT_ENDPOINT_STATS
+from circus.client import CircusClient, make_message
 
 
 def resolve_name(name):
@@ -54,12 +55,14 @@ class TestCircus(unittest.TestCase):
         self.arbiters = []
         self.files = []
         self.tmpfiles = []
+        self.cli = CircusClient()
 
     def tearDown(self):
         self._stop_runners()
         for file in self.files + self.tmpfiles:
             if os.path.exists(file):
                 os.remove(file)
+        self.cli.stop()
 
     def get_tmpfile(self, content=None):
         fd, file = mkstemp()
@@ -97,6 +100,10 @@ class TestCircus(unittest.TestCase):
         for arbiter in self.arbiters:
             arbiter.stop()
         self.arbiters = []
+
+    def call(self, cmd, **props):
+        msg = make_message(cmd, **props)
+        return self.cli.call(msg)
 
 
 def profile(func):
