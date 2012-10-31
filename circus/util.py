@@ -328,47 +328,90 @@ def convert_opt(key, val):
     return val
 
 
-# taken from distutils2
-def resolve_name(name):
-    """Resolve a name like ``module.object`` to an object and return it.
+class ImportStringError(ImportError):
+    """Provides information about a failed :func:`import_string` attempt."""
 
-    This functions supports packages and attributes without depth limitation:
-    ``package.package.module.class.class.function.attr`` is valid input.
-    However, looking up builtins is not directly supported: use
-    ``__builtin__.name``.
+    #: String in dotted notation that failed to be imported.
+    import_name = None
+    #: Wrapped exception.
+    exception = None
 
-    Raises ImportError if importing the module fails or if one requested
-    attribute is not found.
+    def __init__(self, import_name, exception):
+        self.import_name = import_name
+        self.exception = exception
+
+        msg = (
+            'import_string() failed for %r. Possible reasons are:\n\n'
+            '- missing __init__.py in a package;\n'
+            '- package or module path not included in sys.path;\n'
+            '- duplicated package or module name taking precedence in '
+            'sys.path;\n'
+            '- missing module, class, function or variable;\n\n'
+            'Debugged import:\n\n%s\n\n'
+            'Original exception:\n\n%s: %s')
+
+        name = ''
+        tracked = []
+        for part in import_name.replace(':', '.').split('.'):
+            name += (name and '.') + part
+            imported = import_string(name, silent=True)
+            if imported:
+                tracked.append((name, getattr(imported, '__file__', None)))
+            else:
+                track = ['- %r found in %r.' % (n, i) for n, i in tracked]
+                track.append('- %r not found.' % name)
+                msg = msg % (import_name, '\n'.join(track),
+                             exception.__class__.__name__, str(exception))
+                break
+
+        ImportError.__init__(self, msg)
+
+    def __repr__(self):
+        return '<%s(%r, %r)>' % (self.__class__.__name__, self.import_name,
+                                 self.exception)
+
+
+def resolve_name(import_name, silent=False):
+    """Imports an object based on a string.  This is useful if you want to
+    use import paths as endpoints or something similar.  An import path can
+    be specified either in dotted notation (``xml.sax.saxutils.escape``)
+    or with a colon as object delimiter (``xml.sax.saxutils:escape``).
+
+    If `silent` is True the return value will be `None` if the import fails.
+
+    For better debugging we recommend the new :func:`import_module`
+    function to be used instead.
+
+    :param import_name: the dotted name for the object to import.
+    :param silent: if set to `True` import errors are ignored and
+                   `None` is returned instead.
+    :return: imported object
     """
-    if '.' not in name:
-        # shortcut
-        __import__(name)
-        return sys.modules[name]
-
-    # FIXME clean up this code!
-    parts = name.split('.')
-    cursor = len(parts)
-    module_name = parts[:cursor]
-    ret = ''
-
-    while cursor > 0:
+    # force the import name to automatically convert to strings
+    if isinstance(import_name, unicode):
+        import_name = str(import_name)
+    try:
+        if ':' in import_name:
+            module, obj = import_name.split(':', 1)
+        elif '.' in import_name:
+            module, obj = import_name.rsplit('.', 1)
+        else:
+            return __import__(import_name)
+            # __import__ is not able to handle unicode strings in the fromlist
+        # if the module is a package
+        if isinstance(obj, unicode):
+            obj = obj.encode('utf-8')
         try:
-            ret = __import__('.'.join(module_name))
-            break
-        except ImportError:
-            cursor -= 1
-            module_name = parts[:cursor]
-
-    if ret == '':
-        raise ImportError(parts[0])
-
-    for part in parts[1:]:
-        try:
-            ret = getattr(ret, part)
-        except AttributeError, exc:
-            raise ImportError(exc)
-
-    return ret
+            return getattr(__import__(module, None, None, [obj]), obj)
+        except (ImportError, AttributeError):
+            # support importing modules not yet set up by the parent module
+            # (or package for that matter)
+            modname = module + '.' + obj
+            __import__(modname)
+            return sys.modules[modname]
+    except ImportError, e:
+        if not silent:
+            raise ImportStringError(import_name, e), None, sys.exc_info()[2]
 
 
 _CIRCUS_VAR = re.compile(r'\$\(circus\.([\w\.]+)\)', re.I)
