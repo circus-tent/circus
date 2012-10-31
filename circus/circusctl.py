@@ -8,6 +8,7 @@ import os
 import sys
 import textwrap
 import traceback
+import shlex
 
 # import pygments if here
 try:
@@ -182,7 +183,7 @@ class CircusCtl(cmd.Cmd, object):
     @classmethod
     def _add_do_cmd(cls, cmd_name, cmd):
         def inner_do_cmd(cls, line):
-            arguments = parse_arguments([cmd_name] + line.split(), cls.commands)
+            arguments = parse_arguments([cmd_name] + shlex.split(line), cls.commands)
             cls.controller.run(arguments['args'])
         inner_do_cmd.__doc__ = textwrap.dedent(cmd.__doc__)
         inner_do_cmd.__name__ = "do_%s" % cmd_name    
