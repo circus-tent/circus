@@ -327,7 +327,7 @@ def convert_opt(key, val):
             val = str(val)
     return val
 
-
+# taken from werkzeug
 class ImportStringError(ImportError):
     """Provides information about a failed :func:`import_string` attempt."""
 
