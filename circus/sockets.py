@@ -68,7 +68,7 @@ class CircusSocket(socket.socket):
             else:
                 self.bind((self.host, self.port))
         except socket.error:
-            logger.error('Could not bind %s:%d' % self.location)
+            logger.error('Could not bind %s' % self.location)
             raise
 
         self.setblocking(0)
