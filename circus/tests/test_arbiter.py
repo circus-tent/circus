@@ -46,6 +46,11 @@ def run_dummy(test_file):
 class Plugin(CircusPlugin):
     name = 'dummy'
 
+    def __init__(self, *args, **kwargs):
+        super(Plugin, self).__init__(*args, **kwargs)
+        with open(self.config['file'], 'a+') as f:
+            f.write('PLUGIN STARTED\n')
+
     def handle_recv(self, data):
         topic, msg = data
         topic_parts = topic.split(".")
@@ -308,6 +313,11 @@ class TestTrainer(TestCircus):
         def incr_processes():
             return cli.send_message('incr', name='test')
 
+        # wait for the plugin to be started (at most 5 seconds)
+        start = time.time()
+        while os.path.getsize(datafile) == 0 and (time.time() - start) < 5:
+            time.sleep(.1)
+
         cli = CircusClient()
         self.assertEqual(nb_processes(), 1)
         incr_processes()
@@ -315,15 +325,12 @@ class TestTrainer(TestCircus):
         incr_processes()
         self.assertEqual(nb_processes(), 3)
 
-        # wait a bit
-        time.sleep(.2)
-
         # checking what the plugin did
         with open(datafile) as f:
             data = [line for line in f.read().split('\n')
                     if line != '']
 
-        wanted = ['test:spawn', 'test:spawn']
+        wanted = ['PLUGIN STARTED', 'test:spawn', 'test:spawn']
         self.assertEqual(data, wanted)
 
     def test_singleton(self):
