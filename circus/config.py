@@ -230,7 +230,7 @@ def get_config(config_file):
                     watcher['respawn'] = dget(section, "respawn", True, bool)
                 
                 elif opt == 'env':
-                    logger.warning('the env option is depreciated the use of env sections is recommended')
+                    logger.warning('the env option is deprecated the use of env sections is recommended')
                     watcher['env'] = parse_env_str(val)
 
                 else:
