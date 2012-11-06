@@ -263,11 +263,16 @@ def to_gid(name):
     except KeyError:
         raise ValueError("No such group: %r" % name)
 
+def parse_env_str(env_str):
+    env = dict()
+    for kvs in env_str.split(','):
+        k, v = kvs.split('=')
+        env[k.strip()] = v.strip()
+    return parse_env(env)
 
-def parse_env(env_str):
-    env = {}
-    for kvs in env_str.split(","):
-        k, v = kvs.split("=")
+def parse_env(env):
+    for k,v in env.iteritems():
+        print k, v
         v = re.sub(r'\$([A-Z]+[A-Z0-9_]*)', replace_env, v)
         env[k.strip()] = v.strip()
     return env

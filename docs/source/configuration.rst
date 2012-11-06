@@ -17,6 +17,10 @@ Example::
     warmup_delay = 0
     numprocesses = 5
 
+	[env:myprogram]
+	PATH = $PATH:/bin
+	CAKE = lie
+
     # hook
     hooks.before_start = my.hooks.control_redis
 
@@ -111,6 +115,8 @@ watcher:NAME - as many sections as you want
         variables are supported. For example, append '/usr/local/bin' to
         `PATH` with the config line 'env = PATH=$PATH:/usr/local/bin'
         (default: None)
+        
+        [env:WATCHER] sections are preferred - see below
     **copy_env**
         If set to true, the local environment variables will be copied and
         passed to the workers when spawning them. (Default: False)
@@ -256,6 +262,37 @@ plugin:NAME - as many sections as you want
 
 Circus comes with a few pre-shipped :ref:`plugins <plugins>` but you can also extend them easily by :ref:`developing your own <develop_plugins>`.
 
+
+env:WATCHERS - as many sections as you want
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	**anything**
+		The name of an environment variable to assign value to.
+		bash style environment substitutions are supported.
+		for example, append /bin to `PATH` 'PATH = $PATH:/bin'
+
+WATCHERS can be a comma separated list of watcher sections to apply this environment to.
+if multiple env sections match a watcher, they will be combine in the order they appear in the configuration file.
+later entries will take precedence.
+
+Example::
+
+	[watcher:worker1]
+	cmd = ping 127.0.0.1
+	
+	[watcher:worker2]
+	cmd = ping 127.0.0.1
+	
+	[env:worker1,worker2]
+	PATH = /bin
+	
+	[env:worker1]
+	PATH = $PATH
+	
+	[env:worker2]
+	CAKE = lie
+
+`worker1` will be run with PATH = $PATH (expanded from the environment circusd was run in)
+`worker2` will be run with PATH = /bin and CAKE = lie
 
 .. _formating_cmd:
 

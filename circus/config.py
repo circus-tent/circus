@@ -4,7 +4,7 @@ import sys
 
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                         StrictConfigParser)
+                         StrictConfigParser, parse_env_str)
 
 
 def watcher_defaults():
@@ -142,6 +142,7 @@ def get_config(config_file):
 
     # Initialize watchers, plugins & sockets to manage
     watchers = []
+    environs = {}
     plugins = []
     sockets = []
 
@@ -227,6 +228,9 @@ def get_config(config_file):
 
                 elif opt == 'respawn':
                     watcher['respawn'] = dget(section, "respawn", True, bool)
+                
+                elif opt == 'env':
+                    watcher['env'] = parse_env_str(val)
 
                 else:
                     # freeform
@@ -236,7 +240,18 @@ def get_config(config_file):
             if 'stream_backend' not in watcher:
                 watcher['stream_backend'] = stream_backend
             watchers.append(watcher)
-
+        
+        if section.startswith('env:'):
+            for watcher in section.split("env:", 1)[1].split(','):
+                watcher = watcher.strip()
+                if not watcher in environs:
+                    environs[watcher] = dict()
+                environs[watcher].update([ (k.upper(),v) for k,v in cfg.items(section)])
+    
+    for watcher in watchers:
+        if watcher['name'] in environs:
+            watcher['env'] = environs[watcher['name']]
+    
     config['watchers'] = watchers
     config['plugins'] = plugins
     config['sockets'] = sockets

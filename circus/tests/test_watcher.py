@@ -113,16 +113,6 @@ class TestWatcher(TestCircus):
                          self.arbiters[0])
 
 
-class TestWatcherFromConfiguration(TestCircus):
-
-    def test_env_from_string(self):
-        config = {'name': 'foobar',
-                  'cmd': 'foobar',
-                  'env': 'coconuts=migrate'}
-        watcher = Watcher.load_from_config(config)
-        self.assertEquals(watcher.env, {'coconuts': 'migrate'})
-
-
 class TestWatcherInitialization(TestCircus):
 
     def test_copy_env(self):

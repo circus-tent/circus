@@ -4,7 +4,7 @@ import pwd
 import unittest
 from psutil import Popen
 
-from circus.util import (get_info, bytes2human, to_bool, parse_env,
+from circus.util import (get_info, bytes2human, to_bool, parse_env_str,
                          env_to_str, to_uid, to_gid, replace_gnu_args,
                          StrictConfigParser)
 
@@ -36,10 +36,10 @@ class TestUtil(unittest.TestCase):
 
         for value in ('Fal', '344', ''):
             self.assertRaises(ValueError, to_bool, value)
-
-    def test_parse_env(self):
+    
+    def test_parse_env_str(self):
         env = 'test=1,booo=2'
-        parsed = parse_env(env)
+        parsed = parse_env_str(env)
         self.assertEqual(parsed, {'test': '1', 'booo': '2'})
         self.assertEqual(env_to_str(parsed), env)
 
