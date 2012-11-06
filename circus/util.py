@@ -302,14 +302,14 @@ def debuglog(func):
 
         cls = self.__class__.__name__
         global INDENTATION_LEVEL
-        logger.debug("    " * INDENTATION_LEVEL +\
+        logger.debug("    " * INDENTATION_LEVEL +
                      "'%s.%s' starts" % (cls, func.func_name))
         INDENTATION_LEVEL += 1
         try:
             return func(self, *args, **kw)
         finally:
             INDENTATION_LEVEL -= 1
-            logger.debug("    " * INDENTATION_LEVEL +\
+            logger.debug("    " * INDENTATION_LEVEL +
                          "'%s.%s' ends" % (cls, func.func_name))
 
     return _log
@@ -326,6 +326,7 @@ def convert_opt(key, val):
         else:
             val = str(val)
     return val
+
 
 # taken from werkzeug
 class ImportStringError(ImportError):
@@ -354,7 +355,7 @@ class ImportStringError(ImportError):
         tracked = []
         for part in import_name.replace(':', '.').split('.'):
             name += (name and '.') + part
-            imported = import_string(name, silent=True)
+            imported = resolve_name(name, silent=True)
             if imported:
                 tracked.append((name, getattr(imported, '__file__', None)))
             else:
