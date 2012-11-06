@@ -27,7 +27,6 @@ from circus.util import DEFAULT_ENDPOINT_SUB, DEFAULT_ENDPOINT_DEALER
 
 USAGE = 'circusctl [options] command [args]'
 VERSION = 'circusctl ' + __version__
-PROMPT = '(circusctl) '
 
 
 def prettify(jsonobj, prettify=True):
@@ -170,7 +169,7 @@ class ControllerApp(object):
 
 class CircusCtl(cmd.Cmd, object):
     """CircusCtl tool."""
-    prompt = PROMPT
+    prompt = '(circusctl) '
 
     def __new__(cls, client, commands, *args, **kw):
         """Auto add do and complete methods for all known commands."""
@@ -202,8 +201,6 @@ class CircusCtl(cmd.Cmd, object):
                 try:
                     return cmd.autocomplete(cls.client, *args, **kwargs)
                 except Exception, e:
-                    import traceback
-                    import sys
                     sys.stderr.write(e.message + "\n")
                     traceback.print_exc(file=sys.stderr)
             else:

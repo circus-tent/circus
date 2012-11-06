@@ -3,7 +3,7 @@ import sys
 import shlex
 from unittest import TestCase
 
-from circus.circusctl import USAGE, VERSION, PROMPT
+from circus.circusctl import USAGE, VERSION, CircusCtl
 from circus.tests.support import TestCircus
 
 
@@ -73,12 +73,12 @@ class CLITest(TestCase):
         output = stdout.splitlines()
         self.assertEqual(output[0], VERSION)
         # strip of term escape characters, if any
-        prompt = output[1][-len(PROMPT):]
-        self.assertEqual(prompt, PROMPT)  # prompt start with color code
+        prompt = output[1][-len(CircusCtl.prompt):]
+        self.assertEqual(prompt, CircusCtl.prompt)
 
     def test_cli_help(self):
         stdout, stderr = self.run_ctl('help')
         self.assertEqual(stderr, '')
         prompt = stdout.splitlines()
-        # first two lines are VERSION and PROMPT, followed by a blank line
+        # first two lines are VERSION and prompt, followed by a blank line
         self.assertEqual(prompt[2], "Documented commands (type help <topic>):")
