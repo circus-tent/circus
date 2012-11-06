@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -
 import argparse
 import cmd
-import collections
 import getopt
 import json
 import os
@@ -24,6 +23,10 @@ from circus.commands import get_commands
 from circus.consumer import CircusConsumer
 from circus.exc import CallError, ArgumentError
 from circus.util import DEFAULT_ENDPOINT_SUB, DEFAULT_ENDPOINT_DEALER
+
+
+USAGE = 'circusctl [options] command [args]'
+VERSION = 'circusctl ' + __version__
 
 
 def prettify(jsonobj, prettify=True):
@@ -49,7 +52,7 @@ class _Help(argparse.HelpFormatter):
     def _metavar_formatter(self, action, default_metavar):
         if action.dest != 'command':
             return super(_Help, self)._metavar_formatter(action,
-                       default_metavar)
+                                                         default_metavar)
 
         commands = self.commands.items()
         commands.sort()
@@ -163,10 +166,11 @@ class ControllerApp(object):
             client.stop()
         return 0
 
+
 class CircusCtl(cmd.Cmd, object):
-    """CircusCtl tool.""" 
+    """CircusCtl tool."""
     prompt = '(circusctl) '
-    
+
     def __new__(cls, client, commands, *args, **kw):
         """Auto add do and complete methods for all known commands."""
         cls.commands = commands
@@ -183,26 +187,26 @@ class CircusCtl(cmd.Cmd, object):
     @classmethod
     def _add_do_cmd(cls, cmd_name, cmd):
         def inner_do_cmd(cls, line):
-            arguments = parse_arguments([cmd_name] + shlex.split(line), cls.commands)
+            arguments = parse_arguments([cmd_name] + shlex.split(line),
+                                        cls.commands)
             cls.controller.run(arguments['args'])
         inner_do_cmd.__doc__ = textwrap.dedent(cmd.__doc__)
-        inner_do_cmd.__name__ = "do_%s" % cmd_name    
+        inner_do_cmd.__name__ = "do_%s" % cmd_name
         setattr(cls, inner_do_cmd.__name__, inner_do_cmd)
 
     @classmethod
-    def _add_complete_cmd(cls, cmd_name, cmd):        
+    def _add_complete_cmd(cls, cmd_name, cmd):
         def inner_complete_cmd(cls, *args, **kwargs):
             if hasattr(cmd, 'autocomplete'):
                 try:
                     return cmd.autocomplete(cls.client, *args, **kwargs)
                 except Exception, e:
-                    import traceback, sys
-                    sys.stderr.write(e.message+"\n")
+                    sys.stderr.write(e.message + "\n")
                     traceback.print_exc(file=sys.stderr)
             else:
                 return []
         inner_complete_cmd.__doc__ = "Complete the %s command" % cmd_name
-        inner_complete_cmd.__name__ = "complete_%s" % cmd_name    
+        inner_complete_cmd.__name__ = "complete_%s" % cmd_name
         setattr(cls, inner_complete_cmd.__name__, inner_complete_cmd)
 
     def do_EOF(self, line):
@@ -253,10 +257,6 @@ class CircusCtl(cmd.Cmd, object):
                                          subcommands))))
         sys.exit(1)
 
-    def display_version(self, *args, **opts):
-        print(__version__)
-        return 0
-
     def start(self, globalopts):
         self.autocomplete()
 
@@ -271,12 +271,20 @@ class CircusCtl(cmd.Cmd, object):
         if hasattr(args, 'command'):
             sys.exit(self.controller.run(globalopts['args']))
 
-        print self.prompt[1:-2],
-        self.display_version()
+        if args.help:
+            for command in self.commands:
+                doc = textwrap.dedent(self.commands[command].__doc__)
+                help = doc.split('\n')[0]
+                parser.add_argument(command, help=help)
+            parser.print_help()
+            sys.exit(0)
+
+        # no command, no --help: enter the CLI
+        print VERSION
 
         try:
             self.cmdloop()
-        except KeyboardInterrupt:            
+        except KeyboardInterrupt:
             sys.stdout.write('\n')
         sys.exit(0)
 
@@ -284,42 +292,42 @@ class CircusCtl(cmd.Cmd, object):
 def parse_arguments(args, commands):
     _Help.commands = commands
 
-    usage = '%(prog)s [options] command [args]'
     options = {
         'endpoint': {'default': None, 'help': 'connection endpoint'},
         'timeout': {'default': 5, 'help': 'connection timeout'},
-        
+
         'help': {
             'default': False,
             'action': 'store_true',
             'help': 'Show help and exit'},
-        
+
         'json': {'default': False, 'action': 'store_true',
                  'help': 'output to JSON'},
-        
+
         'prettify': {
             'default': False,
             'action': 'store_true',
             'help': 'prettify output'},
-        
+
         'ssh': {
             'default': None,
             'help': 'SSH Server in the format user@host:port'},
-        
+
         'ssh_keyfile': {
             'default': None,
             'help': 'the path to the keyfile to authorise the user'},
-        
+
         'version': {
             'default': False,
-            'action': 'store_true',
-            'help': 'display version and exit'}
-        }
+            'action': 'version',
+            'version': VERSION,
+            'help': 'display version and exit'},
+    }
 
     parser = argparse.ArgumentParser(
         description="Controls a Circus daemon",
-        formatter_class=_Help, usage=usage, add_help=False)
-    
+        formatter_class=_Help, usage=USAGE, add_help=False)
+
     for option in options:
         parser.add_argument('--' + option, **options[option])
 
