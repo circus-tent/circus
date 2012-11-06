@@ -13,7 +13,7 @@ from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
-from circus.util import parse_env, resolve_name
+from circus.util import parse_env_dict, resolve_name
 
 
 class Watcher(object):
@@ -266,7 +266,7 @@ class Watcher(object):
     @classmethod
     def load_from_config(cls, config):
         if 'env' in config:
-            config['env'] = parse_env(config['env'])
+            config['env'] = parse_env_dict(config['env'])
         return cls(name=config.pop('name'), cmd=config.pop('cmd'), **config)
 
     @util.debuglog

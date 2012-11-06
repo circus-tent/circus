@@ -230,6 +230,7 @@ def get_config(config_file):
                     watcher['respawn'] = dget(section, "respawn", True, bool)
                 
                 elif opt == 'env':
+                    logger.warning('the env option is depreciated the use of env sections is recommended')
                     watcher['env'] = parse_env_str(val)
 
                 else:
@@ -250,7 +251,9 @@ def get_config(config_file):
     
     for watcher in watchers:
         if watcher['name'] in environs:
-            watcher['env'] = environs[watcher['name']]
+            if not 'env' in watcher:
+                watcher['env'] = dict()
+            watcher['env'].update(environs[watcher['name']])
     
     config['watchers'] = watchers
     config['plugins'] = plugins

@@ -96,15 +96,20 @@ directory that has settings.py in it (with Django 1.4+ this directory has manage
     [watcher:dwebworker]
     cmd = chaussette --fd $(circus.sockets.dwebapp) dproject.wsgi.application
     use_sockets = True
-    env = PYTHONPATH=/path/to/parent-of-dproject
     numprocesses = 2
+    
+    [env:dwebworker]
+    PYTHONPATH = /path/to/parent-of-dproject
 
 If you need to pass the *DJANGO_SETTINGS_MODULE* for a backend worker for example, you can pass that also though
 the *env* configation option:
     
     [watcher:dbackend]
     cmd = /path/to/script.py
-    env = PYTHONPATH=/path/to/parent-of-dproject, DJANGO_SETTINGS_MODULE=dproject.settings
     numprocesses=3
     
+    [env:dbackend]
+    PYTHONPATH = /path/to/parent-of-dproject
+    DJANGO_SETTINGS_MODULE=dproject.settings
+
 See http://chaussette.readthedocs.org for more about chaussette.
