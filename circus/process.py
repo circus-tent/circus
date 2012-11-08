@@ -145,7 +145,8 @@ class Process(object):
             'wid': self.wid, 'shell': self.shell, 'args': self.args,
             'env': current_env, 'working_dir': self.working_dir,
             'uid': self.uid, 'gid': self.gid, 'rlimits': self.rlimits,
-            'executable': self.executable, 'use_fds': self.use_fds}
+            'executable': self.executable, 'use_fds': self.use_fds,
+            'sockets': self.watcher._get_sockets_fds()}
 
         if self.watcher is not None:
             for option in self.watcher.optnames:
