@@ -19,7 +19,7 @@ def run_ctl(args, stdin=''):
 class CommandlineTest(TestCircus):
     def setUp(self):
         super(CommandlineTest, self).setUp()
-        self._run_circus('circus.tests.test_arbiter.run_dummy')
+        self._run_circus('circus.tests.support.run_process')
 
     def test_help_switch_no_command(self):
         stdout, stderr = run_ctl('--help')

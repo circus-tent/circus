@@ -1,23 +1,11 @@
-import time
 import signal
 import sys
 import os
 
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, poll_for, truncate_file
 from circus.stream import QueueStream
 from circus.watcher import Watcher
 from circus.process import UNEXISTING
-
-
-def run_process(test_file):
-    try:
-        i = 0
-        while True:
-            sys.stdout.write('%d-%s\\n' % (os.getpid(), i))
-            sys.stdout.flush()
-            time.sleep(1)
-    except:
-        return 1
 
 
 class TestWatcher(TestCircus):
@@ -25,9 +13,9 @@ class TestWatcher(TestCircus):
     def setUp(self):
         super(TestWatcher, self).setUp()
         self.stream = QueueStream()
-        dummy_process = 'circus.tests.test_watcher.run_process'
-        self.test_file = self._run_circus(dummy_process,
-                stdout_stream={'stream': self.stream})
+        dummy_process = 'circus.tests.support.run_process'
+        self.test_file = self._run_circus(
+            dummy_process, stdout_stream={'stream': self.stream})
         self.arbiter = self.arbiters[-1]
 
     def status(self, cmd, **props):
@@ -43,6 +31,9 @@ class TestWatcher(TestCircus):
 
     def test_signal(self):
         self.assertEquals(self.numprocesses('incr', name='test'), 2)
+        # wait for both to have started
+        self.assertTrue(poll_for(self.test_file, 'STARTSTART'))
+        truncate_file(self.test_file)
 
         pids = self.pids()
         self.assertEquals(len(pids), 2)
@@ -50,7 +41,8 @@ class TestWatcher(TestCircus):
         self.assertEquals(self.status('signal', name='test', pid=to_kill,
                                       signum=signal.SIGKILL), 'ok')
 
-        time.sleep(1)  # wait for the process to die
+        # make sure process is restarted
+        self.assertTrue(poll_for(self.test_file, 'START'))
 
         # we still should have two processes, but not the same pids for them
         pids = self.pids()
@@ -93,17 +85,16 @@ class TestWatcher(TestCircus):
         self.assertEqual(watchers[watchers.keys()[0]]['cmdline'],
                          sys.executable.split(os.sep)[-1])
 
-    def test_streams(self):
-        time.sleep(1.)
-        # let's see what we got
-        self.assertTrue(self.stream.qsize() > 1)
-
     def test_max_age(self):
         result = self.call('set', name='test',
                            options={'max_age': 1, 'max_age_variance': 0})
         self.assertEquals(result.get('status'), 'ok')
         initial_pids = self.pids()
-        time.sleep(3.0)  # allow process to reach max_age and restart
+
+        truncate_file(self.test_file)  # make sure we have a clean slate
+        # expect at least one restart (max_age and restart), in less than 5s
+        self.assertTrue(poll_for(self.test_file, 'QUITSTART'))
+
         current_pids = self.pids()
         self.assertEqual(len(current_pids), 1)
         self.assertNotEqual(initial_pids, current_pids)
@@ -143,9 +134,9 @@ class TestWatcherInitialization(TestCircus):
             watcher = Watcher('xx', cmd, copy_env=True, copy_path=True,
                               stdout_stream=qstream)
             watcher.start()
-            time.sleep(3.)
+            data = stream.get(timeout=5)  # wait for watcher data at most 5s
             watcher.stop()
-            data = [v for k, v in stream.get().items()][1]
+            data = [v for k, v in data.items()][1]
             data = ''.join(data)
             self.assertTrue('XYZ' in data, data)
         finally:
@@ -162,10 +153,10 @@ class TestWatcherHooks(TestCircus):
 
     def run_with_hooks(self, hooks):
         self.stream = QueueStream()
-        dummy_process = 'circus.tests.test_watcher.run_process'
+        dummy_process = 'circus.tests.support.run_process'
         self._run_circus(dummy_process,
-                stdout_stream={'stream': self.stream},
-                hooks=hooks)
+                         stdout_stream={'stream': self.stream},
+                         hooks=hooks)
 
     def _stop(self):
         self.call("stop", name="test")
