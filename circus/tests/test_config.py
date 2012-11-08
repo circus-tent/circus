@@ -2,6 +2,8 @@ import unittest
 import os
 from circus.config import get_config
 from circus.watcher import Watcher
+from circus.arbiter import Arbiter
+from circus.process import Process
 
 HERE = os.path.join(os.path.dirname(__file__))
 
@@ -9,6 +11,7 @@ _CONF = {
     'issue137': os.path.join(HERE, 'issue137.ini'),
     'include': os.path.join(HERE, 'include.ini'),
     'issue210': os.path.join(HERE, 'issue210.ini'),
+    'issue310': os.path.join(HERE, 'issue310.ini'),
     'hooks': os.path.join(HERE, 'hooks.ini'),
     'env_var': os.path.join(HERE, 'env_var.ini'),
     'env_section': os.path.join(HERE, 'env_section.ini'),
@@ -20,6 +23,30 @@ def hook(watcher, hook_name):
 
 
 class TestConfig(unittest.TestCase):
+
+    def test_issue310(self):
+        '''
+        https://github.com/mozilla-services/circus/pull/310
+
+        Allow $(circus.sockets.name) to be used in args.
+        '''
+        conf = _CONF['issue310']
+        arbiter = Arbiter.load_from_config(conf)
+        arbiter.initialize()
+        watcher = arbiter.watchers[0]
+        process = Process(watcher._process_counter, watcher.cmd,
+                    args=watcher.args, working_dir=watcher.working_dir,
+                    shell=watcher.shell, uid=watcher.uid, gid=watcher.gid,
+                    env=watcher.env, rlimits=watcher.rlimits,
+                    spawn=False, executable=watcher.executable,
+                    use_fds=watcher.use_sockets, watcher=watcher)
+
+        fd = watcher._get_sockets_fds()['web']
+        formatted_args = process.format_args()
+
+        self.assertEquals(formatted_args,
+                          ['foo', '--fd', str(fd)])
+
 
     def test_issue137(self):
         conf = get_config(_CONF['issue137'])
