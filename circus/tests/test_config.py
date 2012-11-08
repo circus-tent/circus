@@ -47,16 +47,18 @@ class TestConfig(unittest.TestCase):
         watcher = Watcher.load_from_config(conf['watchers'][0])
         self.assertEquals("%s:/bin" % os.getenv('PATH'), watcher.env['PATH'])
         watcher.stop()
-    
+
     def test_env_section(self):
         conf = get_config(_CONF['env_section'])
-        watchers = []
-        watchers.append(Watcher.load_from_config(conf['watchers'][0]))
-        watchers.append(Watcher.load_from_config(conf['watchers'][1]))
-        
-        self.assertEquals('lie', watchers[0].env['CAKE'])
-        self.assertEquals('cake', watchers[1].env['LIE'])
-        
-        for watcher in watchers:
-            self.assertEquals("%s:/bin" % os.getenv('PATH'), watcher.env['PATH'])
-            watcher.stop()
+        watchers_conf = {}
+        for watcher_conf in conf['watchers']:
+            watchers_conf[watcher_conf['name']] = watcher_conf
+        watcher1 = Watcher.load_from_config(watchers_conf['watcher1'])
+        watcher2 = Watcher.load_from_config(watchers_conf['watcher2'])
+
+        self.assertEquals('lie', watcher1.env['CAKE'])
+        self.assertEquals('cake', watcher2.env['LIE'])
+
+        for watcher in [watcher1, watcher2]:
+            self.assertEquals("%s:/bin" % os.getenv('PATH'),
+                              watcher.env['PATH'])
