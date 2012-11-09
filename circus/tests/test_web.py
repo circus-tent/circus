@@ -1,7 +1,6 @@
 import subprocess
 import os
 import sys
-import time
 
 from webtest import TestApp
 
@@ -29,12 +28,11 @@ if GEVENT:
             cmd = '%s -c "from circus import circusd; circusd.main()" %s' % \
                 (sys.executable, cfg)
             self.p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+                                      stderr=subprocess.PIPE)
 
         def tearDown(self):
             self.p.terminate()
             self.p.kill()
-            time.sleep(0.4)
             TestCircus.tearDown(self)
 
         def test_index(self):

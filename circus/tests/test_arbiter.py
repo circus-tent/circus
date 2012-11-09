@@ -1,46 +1,10 @@
 import os
 import sys
 from tempfile import mkstemp
-import time
 
 from circus.client import CallError, CircusClient, make_message
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, poll_for, truncate_file
 from circus.plugins import CircusPlugin
-
-
-class DummyProcess(object):
-
-    def __init__(self, testfile):
-        self.alive = True
-        self.testfile = testfile
-        import signal
-        signal.signal(signal.SIGQUIT, self.handle_quit)
-        signal.signal(signal.SIGTERM, self.handle_quit)
-        signal.signal(signal.SIGINT, self.handle_quit)
-        signal.signal(signal.SIGCHLD, self.handle_chld)
-
-    def _write(self, msg):
-        with open(self.testfile, 'a+') as f:
-            f.write(msg)
-
-    def handle_quit(self, *args):
-        self._write('QUIT')
-        self.alive = False
-
-    def handle_chld(self, *args):
-        self._write('CHLD')
-
-    def run(self):
-        self._write('START')
-        while self.alive:
-            time.sleep(0.1)
-        self._write('STOP')
-
-
-def run_dummy(test_file):
-    dummy = DummyProcess(test_file)
-    dummy.run()
-    return 1
 
 
 class Plugin(CircusPlugin):
@@ -49,7 +13,7 @@ class Plugin(CircusPlugin):
     def __init__(self, *args, **kwargs):
         super(Plugin, self).__init__(*args, **kwargs)
         with open(self.config['file'], 'a+') as f:
-            f.write('PLUGIN STARTED\n')
+            f.write('PLUGIN STARTED')
 
     def handle_recv(self, data):
         topic, msg = data
@@ -57,40 +21,14 @@ class Plugin(CircusPlugin):
         watcher = topic_parts[1]
         action = topic_parts[2]
         with open(self.config['file'], 'a+') as f:
-            f.write('%s:%s\n' % (watcher, action))
-
-
-class DummyProcess1(object):
-
-    def __init__(self):
-        import signal
-        signal.signal(signal.SIGQUIT, self.handle_quit)
-        signal.signal(signal.SIGTERM, self.handle_quit)
-        signal.signal(signal.SIGINT, self.handle_quit)
-        signal.signal(signal.SIGCHLD, self.handle_chld)
-
-    def handle_quit(self, *args):
-        self.alive = False
-
-    def handle_chld(self, *args):
-        pass
-
-    def run(self):
-        self.alive = True
-        while self.alive:
-            time.sleep(0.1)
-
-
-def run_dummy1():
-    dummy1 = DummyProcess1()
-    dummy1.run()
+            f.write('%s:%s' % (watcher, action))
 
 
 class TestTrainer(TestCircus):
 
     def setUp(self):
         super(TestTrainer, self).setUp()
-        dummy_process = 'circus.tests.test_arbiter.run_dummy'
+        dummy_process = 'circus.tests.support.run_process'
         self.test_file = self._run_circus(dummy_process)
         self.cli = CircusClient()
 
@@ -130,14 +68,16 @@ class TestTrainer(TestCircus):
     def _get_cmd(self):
         fd, testfile = mkstemp()
         os.close(fd)
-        cmd = '%s generic.py %s %s' % (sys.executable,
-                        'circus.tests.test_arbiter.run_dummy', testfile)
+        cmd = '%s generic.py %s %s' % (
+            sys.executable,
+            'circus.tests.support.run_process',
+            testfile)
 
         return cmd
 
     def _get_cmd_args(self):
         cmd = sys.executable
-        args = ['generic.py', 'circus.tests.test_arbiter.run_dummy1']
+        args = ['generic.py', 'circus.tests.support.run_process']
         return cmd, args
 
     def _get_options(self, **kwargs):
@@ -175,14 +115,14 @@ class TestTrainer(TestCircus):
     def test_add_watcher4(self):
         cmd, args = self._get_cmd_args()
         msg = make_message("add", name="test1", cmd=cmd, args=args,
-                options=self._get_options())
+                           options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
     def test_add_watcher5(self):
         cmd, args = self._get_cmd_args()
         msg = make_message("add", name="test1", cmd=cmd, args=args,
-                options=self._get_options())
+                           options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
         resp = self.cli.call(make_message("start", name="test1"))
@@ -233,12 +173,14 @@ class TestTrainer(TestCircus):
         self.assertEqual(resp.get("status"), "ok")
 
     def test_reload1(self):
+        self.assertTrue(poll_for(self.test_file, 'START'))  # process started
         msg1 = make_message("list", name="test")
         resp = self.cli.call(msg1)
         processes1 = resp.get('pids')
 
+        truncate_file(self.test_file)  # clean slate
         self.cli.call(make_message("reload"))
-        time.sleep(0.5)
+        self.assertTrue(poll_for(self.test_file, 'START'))  # restarted
 
         msg2 = make_message("list", name="test")
         resp = self.cli.call(msg2)
@@ -247,13 +189,15 @@ class TestTrainer(TestCircus):
         self.assertNotEqual(processes1, processes2)
 
     def test_reload2(self):
+        self.assertTrue(poll_for(self.test_file, 'START'))  # process started
         msg1 = make_message("list", name="test")
         resp = self.cli.call(msg1)
         processes1 = resp.get('pids')
         self.assertEqual(len(processes1), 1)
 
+        truncate_file(self.test_file)  # clean slate
         self.cli.call(make_message("reload"))
-        time.sleep(0.5)
+        self.assertTrue(poll_for(self.test_file, 'START'))  # restarted
 
         make_message("list", name="test")
         resp = self.cli.call(msg1)
@@ -301,7 +245,7 @@ class TestTrainer(TestCircus):
         os.close(fd)
 
         # setting up a circusd with a plugin
-        dummy_process = 'circus.tests.test_arbiter.run_dummy'
+        dummy_process = 'circus.tests.support.run_process'
         plugin = 'circus.tests.test_arbiter.Plugin'
         plugins = [{'use': plugin, 'file': datafile}]
         self._run_circus(dummy_process, plugins=plugins)
@@ -313,30 +257,25 @@ class TestTrainer(TestCircus):
         def incr_processes():
             return cli.send_message('incr', name='test')
 
-        # wait for the plugin to be started (at most 5 seconds)
-        start = time.time()
-        while os.path.getsize(datafile) == 0 and (time.time() - start) < 5:
-            time.sleep(.1)
+        # wait for the plugin to be started
+        self.assertTrue(poll_for(datafile, 'PLUGIN STARTED'))
 
         cli = CircusClient()
         self.assertEqual(nb_processes(), 1)
         incr_processes()
         self.assertEqual(nb_processes(), 2)
+        # wait for the plugin to receive the signal
+        self.assertTrue(poll_for(datafile, 'test:spawn'))
+        truncate_file(datafile)
         incr_processes()
         self.assertEqual(nb_processes(), 3)
-
-        # checking what the plugin did
-        with open(datafile) as f:
-            data = [line for line in f.read().split('\n')
-                    if line != '']
-
-        wanted = ['PLUGIN STARTED', 'test:spawn', 'test:spawn']
-        self.assertEqual(data, wanted)
+        # wait for the plugin to receive the signal
+        self.assertTrue(poll_for(datafile, 'test:spawn'))
 
     def test_singleton(self):
         self._stop_runners()
 
-        dummy_process = 'circus.tests.test_arbiter.run_dummy'
+        dummy_process = 'circus.tests.support.run_process'
         self._run_circus(dummy_process, singleton=True)
         cli = CircusClient()
 

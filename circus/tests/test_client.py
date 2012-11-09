@@ -47,8 +47,8 @@ class TestClient(TestCircus):
         subprocess.call(['ssh-add'])
 
     def _client_test(self, ssh_server):
-        self._run_circus('circus.tests.support.run_process')
-        time.sleep(.5)
+        test_file = self._run_circus('circus.tests.support.run_process')
+        self.assertTrue(poll_for(test_file, 'START'))  # process started
 
         # playing around with the watcher
         client = CircusClient(ssh_server=ssh_server)
