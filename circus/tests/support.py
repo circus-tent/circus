@@ -1,5 +1,6 @@
 from tempfile import mkstemp
 import os
+import signal
 import sys
 import time
 import cProfile
@@ -88,7 +89,7 @@ class TestCircus(unittest.TestCase):
                                   debug=kw.get('debug', False))
         else:
             arbiter = get_arbiter([worker], background=True, plugins=plugins,
-                    debug=kw.get('debug', False))
+                                  debug=kw.get('debug', False))
 
         arbiter.start()
         time.sleep(.3)
@@ -117,9 +118,63 @@ def profile(func):
     return _profile
 
 
+class Process(object):
+
+    def __init__(self, testfile):
+        self.testfile = testfile
+        # init signal handling
+        signal.signal(signal.SIGQUIT, self.handle_quit)
+        signal.signal(signal.SIGTERM, self.handle_quit)
+        signal.signal(signal.SIGINT, self.handle_quit)
+        signal.signal(signal.SIGCHLD, self.handle_chld)
+        self.alive = True
+
+    def _write(self, msg):
+        with open(self.testfile, 'a+') as f:
+            f.write(msg)
+
+    def handle_quit(self, *args):
+        self._write('QUIT')
+        sys.exit(0)
+
+    def handle_chld(self, *args):
+        self._write('CHLD')
+        return
+
+    def run(self):
+        self._write('START')
+        while self.alive:
+            time.sleep(0.1)
+        self._write('STOP')
+
+
 def run_process(test_file):
-    try:
-        while True:
-            time.sleep(1)
-    except:
-        return 1
+    process = Process(test_file)
+    process.run()
+    return 1
+
+
+class TimeoutException(Exception):
+    pass
+
+
+def poll_for(filename, needle, timeout=5):
+    """Poll a file for a given string.
+
+    Raises a TimeoutException if the string isn't found after timeout seconds
+    of polling.
+
+    """
+    start = time.time()
+    while (time.time() - start) < 5:
+        with open(filename) as f:
+            content = f.read()
+        if needle in content:
+            return True
+    raise TimeoutException('Timeout while polling %s for %s. Content: %s' % (
+        filename, needle, content))
+
+
+def truncate_file(filename):
+    """Truncate a file (empty it)."""
+    open(filename, 'w').close()  # opening as 'w' overwrites the file
