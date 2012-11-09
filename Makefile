@@ -4,13 +4,13 @@ ifndef VTENV_OPTS
 VTENV_OPTS = "--no-site-packages"
 endif
 
-build:	
+build:
 	virtualenv $(VTENV_OPTS) .
-	bin/pip install unittest2
+	bin/pip install tox
 	bin/python setup.py develop
 
 test:
-	bin/python setup.py test
+	bin/tox
 
 coverage: bin/coverage
 	bin/nosetests --with-coverage --cover-html --cover-html-dir=html --cover-package=circus
