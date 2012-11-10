@@ -4,6 +4,7 @@ from circus.config import get_config
 from circus.watcher import Watcher
 from circus.arbiter import Arbiter
 from circus.process import Process
+from circus.sockets import CircusSocket
 
 HERE = os.path.join(os.path.dirname(__file__))
 
@@ -30,10 +31,10 @@ class TestConfig(unittest.TestCase):
 
         Allow $(circus.sockets.name) to be used in args.
         '''
-        conf = _CONF['issue310']
-        arbiter = Arbiter.load_from_config(conf)
-        arbiter.initialize()
-        watcher = arbiter.watchers[0]
+        conf = get_config(_CONF['issue310'])
+        watcher = Watcher.load_from_config(conf['watchers'][0])
+        socket = CircusSocket.load_from_config(conf['sockets'][0])
+        watcher.initialize(None, {'web': socket}, None)
         process = Process(watcher._process_counter, watcher.cmd,
                     args=watcher.args, working_dir=watcher.working_dir,
                     shell=watcher.shell, uid=watcher.uid, gid=watcher.gid,
@@ -46,7 +47,6 @@ class TestConfig(unittest.TestCase):
 
         self.assertEquals(formatted_args,
                           ['foo', '--fd', str(fd)])
-
 
     def test_issue137(self):
         conf = get_config(_CONF['issue137'])
