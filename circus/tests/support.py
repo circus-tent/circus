@@ -100,6 +100,7 @@ class TestCircus(unittest.TestCase):
     def _stop_runners(self):
         for arbiter in self.arbiters:
             arbiter.stop()
+            arbiter.join(timeout=5)
         self.arbiters = []
 
     def call(self, cmd, **props):
@@ -171,7 +172,7 @@ def poll_for(filename, needle, timeout=5):
             content = f.read()
         if needle in content:
             return True
-    raise TimeoutException('Timeout while polling %s for %s. Content: %s' % (
+    raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
         filename, needle, content))
 
 
