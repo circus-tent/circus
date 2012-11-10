@@ -36,8 +36,9 @@ setup(name='circus',
         "License :: OSI Approved :: Apache Software License",
         "Development Status :: 3 - Alpha"],
       install_requires=install_requires,
-      tests_require=['nose', 'webtest', 'unittest2'],
-      test_suite='nose.collector',
+      setup_requires=install_requires,
+      tests_require=['webtest', 'unittest2'],
+      test_suite='circus.tests',
       entry_points="""
       [console_scripts]
       circusd = circus.circusd:main
