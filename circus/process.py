@@ -145,10 +145,10 @@ class Process(object):
             'wid': self.wid, 'shell': self.shell, 'args': self.args,
             'env': current_env, 'working_dir': self.working_dir,
             'uid': self.uid, 'gid': self.gid, 'rlimits': self.rlimits,
-            'executable': self.executable, 'use_fds': self.use_fds,
-            'sockets': self.watcher._get_sockets_fds()}
+            'executable': self.executable, 'use_fds': self.use_fds}
 
         if self.watcher is not None:
+            format_kwargs['sockets'] = self.watcher._get_sockets_fds()
             for option in self.watcher.optnames:
                 if option not in format_kwargs\
                         and hasattr(self.watcher, option):
