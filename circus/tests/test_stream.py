@@ -53,9 +53,9 @@ class TestWatcher(TestCircus):
         self.assertTrue(poll_for(self.stderr, 'stderr'))
 
         # restart and make sure streams are still working
-        self.call('restart')
         truncate_file(self.stdout)
         truncate_file(self.stderr)
+        self.call('restart')
 
         # wait for the process to be restarted
         self.assertTrue(poll_for(self.stdout, 'stdout'))

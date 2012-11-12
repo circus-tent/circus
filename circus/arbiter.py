@@ -403,4 +403,3 @@ class ThreadedArbiter(Arbiter, Thread):
 
     def stop(self):
         Arbiter.stop(self)
-        self.join()
