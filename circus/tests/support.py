@@ -11,6 +11,7 @@ import unittest2 as unittest
 from circus import get_arbiter
 from circus.util import DEFAULT_ENDPOINT_STATS
 from circus.client import CircusClient, make_message
+from circus.exc import TimeoutException
 
 
 def resolve_name(name):
@@ -154,10 +155,6 @@ def run_process(test_file):
     return 1
 
 
-class TimeoutException(Exception):
-    pass
-
-
 def poll_for(filename, needle, timeout=5):
     """Poll a file for a given string.
 
@@ -171,7 +168,7 @@ def poll_for(filename, needle, timeout=5):
             content = f.read()
         if needle in content:
             return True
-    raise TimeoutException('Timeout while polling %s for %s. Content: %s' % (
+    raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
         filename, needle, content))
 
 
