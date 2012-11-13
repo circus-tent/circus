@@ -1,0 +1,4 @@
+-r pip-requirements.txt
+
+unittest2==0.5.1
+webtest==1.4.0
