@@ -11,7 +11,6 @@ import unittest2 as unittest
 from circus import get_arbiter
 from circus.util import DEFAULT_ENDPOINT_STATS
 from circus.client import CircusClient, make_message
-from circus.exc import TimeoutException
 
 
 def resolve_name(name):
@@ -153,6 +152,10 @@ def run_process(test_file):
     process = Process(test_file)
     process.run()
     return 1
+
+
+class TimeoutException(Exception):
+    pass
 
 
 def poll_for(filename, needle, timeout=5):

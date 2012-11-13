@@ -18,7 +18,3 @@ class ArgumentError(Exception):
     """Exception raised when one argument or the number of
     arguments invalid"""
     pass
-
-
-class TimeoutException(Exception):
-    pass
