@@ -1,13 +1,12 @@
 language: python
 python:
-- "2.6"
-- "2.7"
-install: python setup.py develop; pip install webtest unittest2
-script: python setup.py test
+    - "2.6"
+    - "2.7"
+install:
+    - pip install -r test-requirements.txt --use-mirrors
+    - python setup.py develop
+script: unit2 discover -v
 notifications:
-  email: 
-    - tarek@mozilla.com
-  irc:
-    channels: 
-        - "irc.freenode.org#mozilla-circus"
+    email: tarek@mozilla.com
+    irc: "irc.freenode.org#mozilla-circus"
     on_success: change

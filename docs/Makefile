@@ -41,7 +41,7 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -rf $(BUILDDIR)/*
+	-rm -rf $(BUILDDIR)/* $(BUILDDIR)/source/commands*
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
@@ -154,7 +154,6 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
-# Need it to avoid error
-bin/sphinx-build:
+# Need it to avoid error (hack in ../Makefile to manage dependencies)
+bin/coverage:
 	@echo "Doc updated"
-
