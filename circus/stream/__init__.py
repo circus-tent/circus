@@ -65,7 +65,7 @@ def get_stream(conf):
 
 
 def get_pipe_redirector(redirect, backend='thread', extra_info=None,
-        buffer=1024):
+                        buffer=1024):
     """Redirects data received in pipes to the redirect callable.
 
     This function creates a separate thread that continuously reads

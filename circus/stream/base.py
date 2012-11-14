@@ -25,7 +25,7 @@ class NamedPipe(object):
 
 class BaseRedirector(object):
     def __init__(self, redirect, refresh_time=0.3, extra_info=None,
-            buffer=1024, selector=None):
+                 buffer=1024, selector=None):
         self.pipes = []
         self._names = {}
         self.redirect = redirect
@@ -68,7 +68,7 @@ class BaseRedirector(object):
                 data = pipe.read(self.buffer)
                 if data:
                     datamap = {'data': data, 'pid': pipe.process.pid,
-                                'name': pipe.name}
+                               'name': pipe.name}
                     datamap.update(self.extra_info)
                     self.redirect(datamap)
         except IOError, ex:

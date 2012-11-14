@@ -73,8 +73,8 @@ class Status(Command):
         if "statuses" in msg:
             statuses = msg.get("statuses")
             watchers = sorted(statuses)
-            return "\n".join(["%s: %s" % (watcher, statuses[watcher]) \
-                    for watcher in watchers])
+            return "\n".join(["%s: %s" % (watcher, statuses[watcher])
+                              for watcher in watchers])
         elif "status" in msg and "status" != "error":
             return msg.get("status")
         return self.console_error(msg)

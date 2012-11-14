@@ -56,16 +56,16 @@ def main():
 
     # XXX we should be able to add all these options in the config file as well
     parser.add_argument('--log-level', dest='loglevel', default='info',
-            choices=LOG_LEVELS.keys() + [key.upper() for key in
-                LOG_LEVELS.keys()],
-            help="log level")
+                        choices=LOG_LEVELS.keys() + [key.upper() for key in
+                                                     LOG_LEVELS.keys()],
+                        help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
-            help="log output")
+                        help="log output")
     parser.add_argument('--daemon', dest='daemonize', action='store_true',
-            help="Start circusd in the background")
+                        help="Start circusd in the background")
     parser.add_argument('--pidfile', dest='pidfile')
-    parser.add_argument('--version', action='store_true',
-                     default=False, help='Displays Circus version and exits.')
+    parser.add_argument('--version', action='store_true', default=False,
+                        help='Displays Circus version and exits.')
 
     args = parser.parse_args()
 

@@ -45,7 +45,7 @@ class Controller(object):
     def start(self):
         self.initialize()
         self.caller = ioloop.PeriodicCallback(self.wakeup, self.check_delay,
-                self.loop)
+                                              self.loop)
         self.caller.start()
 
     def stop(self):
@@ -95,34 +95,33 @@ class Controller(object):
         except KeyError:
             error = "unknown command: %r" % cmd_name
             return self.send_error(cid, msg, error, cast=cast,
-                        errno=errors.UNKNOWN_COMMAND)
+                                   errno=errors.UNKNOWN_COMMAND)
 
         try:
             cmd.validate(properties)
             resp = cmd.execute(self.arbiter, properties)
         except MessageError as e:
             return self.send_error(cid, msg, str(e), cast=cast,
-                    errno=errors.MESSAGE_ERROR)
+                                   errno=errors.MESSAGE_ERROR)
         except OSError as e:
             return self.send_error(cid, msg, str(e), cast=cast,
-                    errno=errors.OS_ERROR)
+                                   errno=errors.OS_ERROR)
         except:
             exctype, value = sys.exc_info()[:2]
             tb = traceback.format_exc()
             reason = "command %r: %s" % (msg, value)
             logger.debug("error: command %r: %s\n\n%s", msg, value, tb)
             return self.send_error(cid, msg, reason, tb, cast=cast,
-                    errno=errors.COMMAND_ERROR)
+                                   errno=errors.COMMAND_ERROR)
 
         if resp is None:
             resp = ok()
 
         if not isinstance(resp, (dict, list,)):
-            msg = "msg %r tried to send a non-dict: %s" % (msg,
-                    str(resp))
+            msg = "msg %r tried to send a non-dict: %s" % (msg, str(resp))
             logger.error("msg %r tried to send a non-dict: %s", msg, str(resp))
             return self.send_error(cid, msg, "server error", cast=cast,
-                    errno=errors.BAD_MSG_DATA_ERROR)
+                                   errno=errors.BAD_MSG_DATA_ERROR)
 
         if isinstance(resp, list):
             resp = {"results": resp}

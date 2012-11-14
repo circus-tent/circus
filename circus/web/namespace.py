@@ -56,7 +56,7 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         # there when we got them.
         stats = StatsClient(endpoint=client.stats_endpoint)
         for watcher, pid, stat in stats:
-            if self._running == False:
+            if not self._running:
                 return
 
             if watcher == 'sockets':
@@ -75,20 +75,22 @@ class StatsNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
                     if (watcher == 'circus'
                             and stat.get('name', None) in available_watchers):
                         self.send_data(
-                             'stats-{watcher}'.format(watcher=stat['name']),
-                             mem=stat['mem'], cpu=stat['cpu'], age=stat['age'])
+                            'stats-{watcher}'.format(watcher=stat['name']),
+                            mem=stat['mem'], cpu=stat['cpu'], age=stat['age'])
                     else:
                         if pid is None:  # means that it's the aggregation
                             self.send_data(
-                             'stats-{watcher}'.format(watcher=watcher),
-                             mem=stat['mem'], cpu=stat['cpu'], age=stat['age'])
+                                'stats-{watcher}'.format(watcher=watcher),
+                                mem=stat['mem'], cpu=stat['cpu'],
+                                age=stat['age'])
                         else:
                             if watcher in streams_with_pids:
-                                self.send_data('stats-{watcher}-{pid}'\
-                                           .format(watcher=watcher, pid=pid),
-                                           mem=stat['mem'],
-                                           cpu=stat['cpu'],
-                                           age=stat['age'])
+                                self.send_data(
+                                    'stats-{watcher}-{pid}'.format(
+                                        watcher=watcher, pid=pid),
+                                    mem=stat['mem'],
+                                    cpu=stat['cpu'],
+                                    age=stat['age'])
 
     def send_data(self, topic, **kwargs):
         """Send the given dict encoded into json to the listening socket on the

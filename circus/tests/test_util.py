@@ -36,7 +36,7 @@ class TestUtil(unittest.TestCase):
 
         for value in ('Fal', '344', ''):
             self.assertRaises(ValueError, to_bool, value)
-    
+
     def test_parse_env_str(self):
         env = 'test=1,booo=2'
         parsed = parse_env_str(env)
@@ -52,8 +52,8 @@ class TestUtil(unittest.TestCase):
         self.assertRaises(TypeError, to_gid, None)
 
     def test_negative_uid_gid(self):
-        # OSX allows negative uid/gid and throws KeyError on a miss. On 
-        # 32-bit and 64-bit Linux, all negative values throw KeyError as do 
+        # OSX allows negative uid/gid and throws KeyError on a miss. On
+        # 32-bit and 64-bit Linux, all negative values throw KeyError as do
         # requests for non-existent uid/gid.
         def int32(val):
             if (val & 0x80000000):
@@ -97,7 +97,7 @@ class TestUtil(unittest.TestCase):
                           test='foobar'))
         self.assertEquals('foo, foobar, baz',
                           replace_gnu_args('foo, $(circus.test), baz',
-                              test='foobar'))
+                                           test='foobar'))
 
         self.assertEquals('foobar', replace_gnu_args('$(cir.test)',
                                                      prefix='cir',

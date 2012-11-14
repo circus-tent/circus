@@ -42,14 +42,14 @@ def convert_option(key, val):
 
 def validate_option(key, val):
     if key not in ('numprocesses', 'warmup_delay', 'working_dir', 'uid',
-            'gid', 'send_hup', 'shell', 'env', 'cmd', 'flapping_attempts',
-            'flapping_window', 'retry_in', 'max_retry',
-            'graceful_timeout', 'stdout_stream', 'stderr_stream',
-            'max_age', 'max_age_variance'):
+                   'gid', 'send_hup', 'shell', 'env', 'cmd',
+                   'flapping_attempts', 'flapping_window', 'retry_in',
+                   'max_retry', 'graceful_timeout', 'stdout_stream',
+                   'stderr_stream', 'max_age', 'max_age_variance'):
         raise MessageError('unknown key %r' % key)
 
-    if key in ('numprocesses', 'flapping_attempts', 'max_retry',
-                'max_age', 'max_age_variance',):
+    if key in ('numprocesses', 'flapping_attempts', 'max_retry', 'max_age',
+               'max_age_variance'):
         if not isinstance(val, int):
             raise MessageError("%r isn't an integer" % key)
 
@@ -77,5 +77,4 @@ def validate_option(key, val):
     if key in ('stderr_stream', 'stdout_stream'):
         for k, v in val.items():
             if not k in ('class', 'filename', 'refresh_time'):
-                raise MessageError("%r is an invalid option for %r" % \
-                        (k, key))
+                raise MessageError("%r is an invalid option for %r" % (k, key))
