@@ -1,10 +1,8 @@
 import signal
 import copy
 import textwrap
-import time
 
 from circus.exc import MessageError, ArgumentError
-from circus.commands import errors
 
 
 KNOWN_COMMANDS = []
@@ -16,23 +14,6 @@ def get_commands():
         cmd = c()
         commands[c.name] = cmd.copy()
     return commands
-
-
-def ok(props=None):
-    resp = {"status": "ok", "time": time.time()}
-    if props:
-        resp.update(props)
-    return resp
-
-
-def error(reason="unknown", tb=None, errno=errors.NOT_SPECIFIED):
-    return {
-        "status": "error",
-        "reason": reason,
-        "tb": tb,
-        "time": time.time(),
-        "errno": errno
-    }
 
 
 class CommandMeta(type):

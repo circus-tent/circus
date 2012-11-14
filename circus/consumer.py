@@ -5,6 +5,7 @@ from circus.util import DEFAULT_ENDPOINT_SUB, get_connection
 
 
 class CircusConsumer(object):
+    """Class to ease the consumption of the messages in the pubsub endpoint."""
     def __init__(self, topics, context=None, endpoint=DEFAULT_ENDPOINT_SUB,
                  ssh_server=None, timeout=1.):
         self.topics = topics
