@@ -171,7 +171,7 @@ def poll_for(filename, needle, timeout=5):
             content = f.read()
         if needle in content:
             return True
-    raise TimeoutException('Timeout while polling %s for %s. Content: %s' % (
+    raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
         filename, needle, content))
 
 
