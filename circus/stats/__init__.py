@@ -35,25 +35,26 @@ def main():
     parser = argparse.ArgumentParser(description=desc)
 
     parser.add_argument('--endpoint',
-            help='The circusd ZeroMQ socket to connect to',
-            default=util.DEFAULT_ENDPOINT_DEALER)
+                        help='The circusd ZeroMQ socket to connect to',
+                        default=util.DEFAULT_ENDPOINT_DEALER)
 
     parser.add_argument('--pubsub',
-            help='The circusd ZeroMQ pub/sub socket to connect to',
-            default=util.DEFAULT_ENDPOINT_SUB)
+                        help='The circusd ZeroMQ pub/sub socket to connect to',
+                        default=util.DEFAULT_ENDPOINT_SUB)
 
     parser.add_argument('--statspoint',
-            help='The ZeroMQ pub/sub socket to send data to',
-            default=util.DEFAULT_ENDPOINT_STATS)
+                        help='The ZeroMQ pub/sub socket to send data to',
+                        default=util.DEFAULT_ENDPOINT_STATS)
 
     parser.add_argument('--log-level', dest='loglevel', default='info',
-            help="log level")
+                        help="log level")
 
     parser.add_argument('--log-output', dest='logoutput', default='-',
-            help="log output")
+                        help="log output")
 
     parser.add_argument('--version', action='store_true',
-                      default=False, help='Displays Circus version and exits.')
+                        default=False,
+                        help='Displays Circus version and exits.')
 
     parser.add_argument('--ssh', default=None, help='SSH Server')
 

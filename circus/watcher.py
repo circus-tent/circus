@@ -6,7 +6,7 @@ import time
 import sys
 from random import randint
 
-from psutil import STATUS_DEAD, NoSuchProcess
+from psutil import NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
 
 from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
@@ -185,12 +185,12 @@ class Watcher(object):
                              " watcher" % self.numprocesses)
 
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
-                      "uid", "gid", "send_hup", "shell", "env", "max_retry",
-                      "cmd", "args", "graceful_timeout", "executable",
-                      "use_sockets", "priority", "copy_env",
-                      "singleton", "stdout_stream_conf", "stderr_stream_conf",
-                      "max_age", "max_age_variance")
-                      + tuple(options.keys()))
+                          "uid", "gid", "send_hup", "shell", "env",
+                          "max_retry", "cmd", "args", "graceful_timeout",
+                          "executable", "use_sockets", "priority", "copy_env",
+                          "singleton", "stdout_stream_conf",
+                          "stderr_stream_conf", "max_age", "max_age_variance")
+                         + tuple(options.keys()))
 
         if not working_dir:
             # working dir hasn't been set
@@ -223,20 +223,20 @@ class Watcher(object):
     def _create_redirectors(self):
         if self.stdout_stream:
             if (self.stdout_redirector is not None and
-                self.stdout_redirector.running):
+                    self.stdout_redirector.running):
                 self.stdout_redirector.kill()
-            self.stdout_redirector = get_pipe_redirector(self.stdout_stream,
-                    backend=self.stream_backend)
+            self.stdout_redirector = get_pipe_redirector(
+                self.stdout_stream, backend=self.stream_backend)
         else:
             self.stdout_redirector = None
 
         if self.stderr_stream:
             if (self.stderr_redirector is not None and
-                self.stderr_redirector.running):
+                    self.stderr_redirector.running):
                 self.stderr_redirector.kill()
 
-            self.stderr_redirector = get_pipe_redirector(self.stderr_stream,
-                    backend=self.stream_backend)
+            self.stderr_redirector = get_pipe_redirector(
+                self.stderr_stream, backend=self.stream_backend)
         else:
             self.stderr_redirector = None
 
@@ -317,11 +317,11 @@ class Watcher(object):
 
         # get return code
         if os.WIFSIGNALED(status):
-            retcode = os.WTERMSIG(status)
+            os.WTERMSIG(status)
         # process exited using exit(2) system call; return the
         # integer exit(2) system call has been called with
         elif os.WIFEXITED(status):
-            retcode = os.WEXITSTATUS(status)
+            os.WEXITSTATUS(status)
         else:
             # should never happen
             raise RuntimeError("Unknown process exit status")
@@ -412,11 +412,11 @@ class Watcher(object):
             process = None
             try:
                 process = Process(self._process_counter, cmd,
-                          args=self.args, working_dir=self.working_dir,
-                          shell=self.shell, uid=self.uid, gid=self.gid,
-                          env=self.env, rlimits=self.rlimits,
-                          executable=self.executable, use_fds=self.use_sockets,
-                          watcher=self)
+                                  args=self.args, working_dir=self.working_dir,
+                                  shell=self.shell, uid=self.uid, gid=self.gid,
+                                  env=self.env, rlimits=self.rlimits,
+                                  executable=self.executable,
+                                  use_fds=self.use_sockets, watcher=self)
 
                 # stream stderr/stdout if configured
                 if self.stdout_redirector is not None:
@@ -431,7 +431,7 @@ class Watcher(object):
 
                 self.processes[process.pid] = process
                 logger.debug('running %s process [pid %d]', self.name,
-                            process.pid)
+                             process.pid)
             except OSError, e:
                 logger.warning('error in %r: %s', self.name, str(e))
 
@@ -467,7 +467,7 @@ class Watcher(object):
             # now sending the signal to the process itself
             self.send_signal(process.pid, sig)
             self.notify_event("kill", {"process_pid": process.pid,
-                                   "time": time.time()})
+                                       "time": time.time()})
 
         except NoSuchProcess:
             # already dead !
@@ -597,13 +597,13 @@ class Watcher(object):
                 result = self.hooks[hook_name](**kwargs)
                 error = None
                 self.notify_event("hook_success",
-                        {"name": hook_name, "time": time.time()})
+                                  {"name": hook_name, "time": time.time()})
             except Exception, error:
                 logger.exception('Hook %r failed' % hook_name)
                 result = hook_name in self.ignore_hook_failure
                 self.notify_event("hook_failure",
-                        {"name": hook_name, "time": time.time(),
-                         "error": str(error)})
+                                  {"name": hook_name, "time": time.time(),
+                                   "error": str(error)})
 
             return result
         else:

@@ -21,8 +21,8 @@ try:
     except ImportError:
         # older version
         try:
-            from gevent_zeromq import (                     # NOQA
-                    monkey_patch, IOLOOP_IS_MONKEYPATCHED)  # NOQA
+            from gevent_zeromq import (  # NOQA
+                monkey_patch, IOLOOP_IS_MONKEYPATCHED)
             monkey_patch()
             warnings.warn("gevent_zeromq is deprecated, please "
                           "use PyZMQ >= 2.2.0.1")
@@ -142,11 +142,11 @@ def get_arbiter(watchers, controller=None,
             except ImportError:
                 # older version
                 try:
-                    from gevent_zeromq import (                     # NOQA
-                            monkey_patch, IOLOOP_IS_MONKEYPATCHED)  # NOQA
+                    from gevent_zeromq import (  # NOQA
+                        monkey_patch, IOLOOP_IS_MONKEYPATCHED)
                     monkey_patch()
                     warnings.warn("gevent_zeromq is deprecated, please "
-                                "use PyZMQ >= 2.2.0.1")
+                                  "use PyZMQ >= 2.2.0.1")
                 except ImportError:
                     raise ImportError(_MSG)
 

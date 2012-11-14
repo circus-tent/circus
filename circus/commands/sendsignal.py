@@ -124,12 +124,12 @@ class Signal(Command):
         if len(args) == 4:
             signum = self._get_signal(args[3])
             return self.make_message(name=args[0], process=args[1],
-                    pid=args[2], signum=signum)
+                                     pid=args[2], signum=signum)
         elif len(args) == 3:
             signum = self._get_signal(args[2])
             children = opts.get("children", False)
             return self.make_message(name=args[0], process=args[1],
-                    signum=signum, children=children)
+                                     signum=signum, children=children)
         else:
             signum = self._get_signal(args[1])
             return self.make_message(name=args[0], signum=signum)
@@ -170,13 +170,13 @@ class Signal(Command):
 
         if isinstance(signum, int):
             if signum not in (signal.SIGQUIT, signal.SIGHUP, signal.SIGKILL,
-                    signal.SIGTERM, signal.SIGTTIN, signal.SIGTTOU,
-                    signal.SIGUSR1, signal.SIGUSR2):
+                              signal.SIGTERM, signal.SIGTTIN, signal.SIGTTOU,
+                              signal.SIGUSR1, signal.SIGUSR2):
                 raise MessageError('signal invalid')
 
         elif isinstance(signum, string_types):
             if signum.lower() in ('quit', 'hup', 'kill', 'term', 'ttin',
-                'ttou', 'usr1', 'usr2'):
+                                  'ttou', 'usr1', 'usr2'):
                 props['signum'] = getattr(signal, "SIG%s" % signum.upper())
             else:
                 raise MessageError('signal invalid')

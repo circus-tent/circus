@@ -31,8 +31,7 @@ def watcher_defaults():
         'copy_env': False,
         'copy_path': False,
         'hooks': dict(),
-        'respawn': True,
-        }
+        'respawn': True}
 
 
 _BOOL_STATES = {'1': True, 'yes': True, 'true': True, 'on': True,
@@ -103,7 +102,7 @@ def read_config(config_path):
 def get_config(config_file):
     if not os.path.exists(config_file):
         sys.stderr.write("the configuration file %r does not exist\n" %
-                config_file)
+                         config_file)
         sys.stderr.write("Exiting...\n")
         sys.exit(1)
 
@@ -167,13 +166,13 @@ def get_config(config_file):
                     watcher['args'] = val
                 elif opt == 'numprocesses':
                     watcher['numprocesses'] = dget(section, 'numprocesses', 1,
-                            int)
+                                                   int)
                 elif opt == 'warmup_delay':
                     watcher['warmup_delay'] = dget(section, 'warmup_delay', 0,
-                            int)
+                                                   int)
                 elif opt == 'executable':
                     watcher['executable'] = dget(section, 'executable', None,
-                            str)
+                                                 str)
                 elif opt == 'working_dir':
                     watcher['working_dir'] = val
                 elif opt == 'shell':
@@ -184,15 +183,15 @@ def get_config(config_file):
                     watcher['gid'] = val
                 elif opt == 'send_hup':
                     watcher['send_hup'] = dget(section, 'send_hup', False,
-                            bool)
+                                               bool)
                 elif opt == 'check_flapping':
                     watcher['check_flapping'] = dget(section, 'check_flapping',
                                                      True, bool)
                 elif opt == 'max_retry':
                     watcher['max_retry'] = dget(section, "max_retry", 5, int)
                 elif opt == 'graceful_timout':
-                    watcher['graceful_timeout'] = dget(section,
-                            "graceful_timeout", 30, int)
+                    watcher['graceful_timeout'] = dget(
+                        section, "graceful_timeout", 30, int)
                 elif opt.startswith('stderr_stream') or \
                         opt.startswith('stdout_stream'):
                     stream_name, stream_opt = opt.split(".", 1)
@@ -212,7 +211,7 @@ def get_config(config_file):
                     watcher['stream_backend'] = val
                 elif opt == 'copy_env':
                     watcher['copy_env'] = dget(section, "copy_env", False,
-                                                bool)
+                                               bool)
                 elif opt == 'copy_path':
                     watcher['copy_path'] = dget(section, "copy_path", False,
                                                 bool)
@@ -228,9 +227,10 @@ def get_config(config_file):
 
                 elif opt == 'respawn':
                     watcher['respawn'] = dget(section, "respawn", True, bool)
-                
+
                 elif opt == 'env':
-                    logger.warning('the env option is deprecated the use of env sections is recommended')
+                    logger.warning('the env option is deprecated the use of '
+                                   'env sections is recommended')
                     watcher['env'] = parse_env_str(val)
 
                 else:
@@ -241,20 +241,21 @@ def get_config(config_file):
             if 'stream_backend' not in watcher:
                 watcher['stream_backend'] = stream_backend
             watchers.append(watcher)
-        
+
         if section.startswith('env:'):
             for watcher in section.split("env:", 1)[1].split(','):
                 watcher = watcher.strip()
                 if not watcher in environs:
                     environs[watcher] = dict()
-                environs[watcher].update([ (k.upper(),v) for k,v in cfg.items(section)])
-    
+                environs[watcher].update([(k.upper(), v)
+                                          for k, v in cfg.items(section)])
+
     for watcher in watchers:
         if watcher['name'] in environs:
             if not 'env' in watcher:
                 watcher['env'] = dict()
             watcher['env'].update(environs[watcher['name']])
-    
+
     config['watchers'] = watchers
     config['plugins'] = plugins
     config['sockets'] = sockets

@@ -1,6 +1,6 @@
 import threading
 from threading import (_active_limbo_lock, _limbo, _active, _sys, _trace_hook,
-        _profile_hook, _format_exc)
+                       _profile_hook, _format_exc)
 
 
 # see http://bugs.python.org/issue1596321
@@ -24,15 +24,13 @@ def _bootstrap_inner(self):
         except:
             if _sys:
                 _sys.stderr.write("Exception in thread %s:\n%s\n" %
-                                    (self.name, _format_exc()))
+                                  (self.name, _format_exc()))
             else:
                 exc_type, exc_value, exc_tb = self._exc_info()
                 try:
                     self._stderr.write(
-                        (
-                        "Exception in thread " + self.name +
-                        " (most likely raised during interpreter shutdown):")
-                        )
+                        "Exception in thread " + self.name + " (most likely "
+                        "raised during interpreter shutdown):")
 
                     self._stderr.write("Traceback (most recent call last):")
                     while exc_tb:

@@ -166,10 +166,10 @@ class Process(object):
 
         if self.args is not None:
             if isinstance(self.args, string_types):
-                args = shlex.split(bytestring(replace_gnu_args(self.args,
-                            **format_kwargs)))
+                args = shlex.split(bytestring(replace_gnu_args(
+                    self.args, **format_kwargs)))
             else:
-                args = [bytestring(replace_gnu_args(arg, **format_kwargs))\
+                args = [bytestring(replace_gnu_args(arg, **format_kwargs))
                         for arg in self.args]
             args = shlex.split(bytestring(cmd)) + args
         else:
@@ -247,8 +247,8 @@ class Process(object):
     @debuglog
     def send_signal_child(self, pid, signum):
         """Send signal *signum* to child *pid*."""
-        children = dict([(child.pid, child) \
-                for child in self._worker.get_children()])
+        children = dict([(child.pid, child)
+                         for child in self._worker.get_children()])
 
         children[pid].send_signal(signum)
 
