@@ -78,7 +78,7 @@ class TestProcess(TestCircus):
         # command / process
 
         p1 = Process('1', 'make-me-a-coffee',
-                '$(circus.wid) --type $(circus.env.type)',
+                     '$(circus.wid) --type $(circus.env.type)',
                      shell=False, spawn=False, env={'type': 'macchiato'})
 
         self.assertEquals(['make-me-a-coffee', '1', '--type', 'macchiato'],
@@ -89,6 +89,6 @@ class TestProcess(TestCircus):
 
         os.environ['coffee_type'] = 'american'
         p3 = Process('1', 'yeah $(circus.env.type)', shell=False, spawn=False,
-                env={'type': 'macchiato'})
+                     env={'type': 'macchiato'})
         self.assertEquals(['yeah', 'macchiato'], p3.format_args())
         os.environ.pop('coffee_type')

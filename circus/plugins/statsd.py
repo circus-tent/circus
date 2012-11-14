@@ -53,8 +53,10 @@ class StatsdEmitter(CircusPlugin):
 
         # initialize statsd
         self.statsd = StatsdClient(host=config.get('host', 'localhost'),
-                port=int(config.get('port', '8125')), prefix=self.prefix,
-                sample_rate=float(config.get('sample_rate', '1.0')))
+                                   port=int(config.get('port', '8125')),
+                                   prefix=self.prefix,
+                                   sample_rate=float(
+                                       config.get('sample_rate', '1.0')))
 
     def handle_recv(self, data):
         topic, msg = data
@@ -72,7 +74,7 @@ class BaseObserver(StatsdEmitter):
 
     def handle_init(self):
         self.period = ioloop.PeriodicCallback(self.look_after,
-                    self.loop_rate * 1000, self.loop)
+                                              self.loop_rate * 1000, self.loop)
         self.period.start()
 
     def handle_stop(self):

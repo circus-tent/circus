@@ -74,7 +74,7 @@ class Arbiter(object):
         self.context = context or zmq.Context.instance()
         self.loop = loop or ioloop.IOLoop()
         self.ctrl = Controller(endpoint, self.context, self.loop, self,
-                check_delay)
+                               check_delay)
 
         self.pid = os.getpid()
         self._watchers_names = {}
@@ -90,7 +90,7 @@ class Arbiter(object):
         self.stats_endpoint = stats_endpoint
         if self.stats_endpoint is not None:
             cmd = "%s -c 'from circus import stats; stats.main()'" % \
-                        sys.executable
+                sys.executable
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --pubsub %s' % self.pubsub_endpoint
             cmd += ' --statspoint %s' % self.stats_endpoint
@@ -306,8 +306,7 @@ class Arbiter(object):
             if isinstance(handler, logging.FileHandler):
                 handler.acquire()
                 handler.stream.close()
-                handler.stream = open(handler.baseFilename,
-                        handler.mode)
+                handler.stream = open(handler.baseFilename, handler.mode)
                 handler.release()
 
         # gracefully reload watchers
@@ -329,7 +328,7 @@ class Arbiter(object):
 
     def statuses(self):
         return dict([(watcher.name, watcher.status())
-                      for watcher in self.watchers])
+                     for watcher in self.watchers])
 
     def add_watcher(self, name, cmd, **kw):
         """Adds a watcher.

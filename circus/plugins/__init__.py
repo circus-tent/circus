@@ -189,18 +189,18 @@ def main():
     parser = argparse.ArgumentParser(description='Runs a plugin.')
 
     parser.add_argument('--endpoint',
-            help='The circusd ZeroMQ socket to connect to',
-            default=DEFAULT_ENDPOINT_DEALER)
+                        help='The circusd ZeroMQ socket to connect to',
+                        default=DEFAULT_ENDPOINT_DEALER)
 
     parser.add_argument('--pubsub',
-            help='The circusd ZeroMQ pub/sub socket to connect to',
-            default=DEFAULT_ENDPOINT_SUB)
+                        help='The circusd ZeroMQ pub/sub socket to connect to',
+                        default=DEFAULT_ENDPOINT_SUB)
 
     parser.add_argument('--config', help='The plugin configuration',
-            default=None)
+                        default=None)
 
-    parser.add_argument('--version', action='store_true',
-                     default=False, help='Displays Circus version and exits.')
+    parser.add_argument('--version', action='store_true', default=False,
+                        help='Displays Circus version and exits.')
 
     parser.add_argument('--check-delay', type=float, default=5.,
                         help='Checck delay.')

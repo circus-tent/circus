@@ -118,14 +118,14 @@ class StatsStreamer(object):
             logger.debug('Removing %d from %s' % (pid, watcher))
             self._pids[watcher].remove(pid)
             if len(self._pids[watcher]) == 0:
-                logger.debug('Stopping the periodic callback for {0}'\
-                             .format(watcher))
+                logger.debug(
+                    'Stopping the periodic callback for {0}' .format(watcher))
                 self._callbacks[watcher].stop()
 
     def append_pid(self, watcher, pid):
         if watcher not in self._pids or len(self._pids[watcher]) == 0:
-            logger.debug('Starting the periodic callback for {0}'\
-                         .format(watcher))
+            logger.debug(
+                'Starting the periodic callback for {0}'.format(watcher))
             if watcher not in self._callbacks:
                 self._add_callback(watcher)
             else:

@@ -108,7 +108,7 @@ class Flapping(CircusPlugin):
             if duration <= self._get_conf(conf, 'window'):
                 if tries < self._get_conf(conf, 'max_retry'):
                     logger.info("%s: flapping detected: retry in %2ds",
-                            watcher_name, self._get_conf(conf, 'retry_in'))
+                                watcher_name, self._get_conf(conf, 'retry_in'))
 
                     self.cast("stop", name=watcher_name)
                     self.timelines[watcher_name] = []
@@ -122,7 +122,7 @@ class Flapping(CircusPlugin):
                     self.timers[watcher_name] = timer
                 else:
                     logger.info("%s: flapping detected: max retry limit",
-                            watcher_name)
+                                watcher_name)
                     self.timelines[watcher_name] = []
                     self.tries[watcher_name] = 0
                     self.cast("stop", name=watcher_name)

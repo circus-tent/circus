@@ -36,9 +36,8 @@ except ImportError:
                 dot = package.rindex('.', 0, dot)
             except ValueError:
                 raise ValueError("attempted relative import beyond top-level "
-                                  "package")
+                                 "package")
         return "%s.%s" % (package[:dot], name)
-
 
     def import_module(name, package=None):      # NOQA
         """Import a module.
@@ -60,6 +59,7 @@ except ImportError:
 
 try:
     from setproctitle import setproctitle
+
     def _setproctitle(title):       # NOQA
         setproctitle(title)
 except ImportError:
@@ -158,8 +158,8 @@ def get_info(process=None, interval=0, with_childs=False):
         cpu_times = process.get_cpu_times()
         ctime = timedelta(seconds=sum(cpu_times))
         ctime = "%s:%s.%s" % (ctime.seconds // 60 % 60,
-                        str((ctime.seconds % 60)).zfill(2),
-                        str(ctime.microseconds)[:2])
+                              str((ctime.seconds % 60)).zfill(2),
+                              str(ctime.microseconds)[:2])
     except AccessDenied:
         ctime = "N/A"
 
@@ -263,6 +263,7 @@ def to_gid(name):
     except KeyError:
         raise ValueError("No such group: %r" % name)
 
+
 def parse_env_str(env_str):
     env = dict()
     for kvs in env_str.split(','):
@@ -270,9 +271,10 @@ def parse_env_str(env_str):
         env[k.strip()] = v.strip()
     return parse_env_dict(env)
 
+
 def parse_env_dict(env):
     ret = dict()
-    for k,v in env.iteritems():
+    for k, v in env.iteritems():
         v = re.sub(r'\$([A-Z]+[A-Z0-9_]*)', replace_env, v)
         ret[k.strip()] = v.strip()
     return ret
@@ -508,8 +510,7 @@ class StrictConfigParser(ConfigParser):
                 if mo:
                     sectname = mo.group('header')
                     if sectname in self._sections:
-                        raise ValueError('Duplicate section %r' %
-                                        sectname)
+                        raise ValueError('Duplicate section %r' % sectname)
                     elif sectname == DEFAULTSECT:
                         cursect = self._defaults
                     else:
@@ -575,10 +576,10 @@ def get_connection(socket, endpoint, ssh_server=None, ssh_keyfile=None):
         try:
             try:
                 ssh.tunnel_connection(socket, endpoint, ssh_server,
-                                    keyfile=ssh_keyfile)
+                                      keyfile=ssh_keyfile)
             except ImportError:
                 ssh.tunnel_connection(socket, endpoint, ssh_server,
-                                     keyfile=ssh_keyfile, paramiko=True)
+                                      keyfile=ssh_keyfile, paramiko=True)
         except ImportError:
             raise ImportError("pexpect was not found, and failed to use "
                               "Paramiko.  You need to install Paramiko")

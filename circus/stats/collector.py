@@ -91,7 +91,7 @@ class WatcherStatsCollector(BaseStatsCollector):
                 pass
             except Exception, e:
                 logger.exception('Failed to get info for %d. %s' % (pid,
-                    str(e)))
+                                                                    str(e)))
 
         # now sending the aggregation
         yield self._aggregate(aggregate)
@@ -116,7 +116,7 @@ class SocketStatsCollector(BaseStatsCollector):
 
     def __init__(self, streamer, name, callback_time=1., io_loop=None):
         super(SocketStatsCollector, self).__init__(streamer, name,
-                callback_time, io_loop)
+                                                   callback_time, io_loop)
         # if gevent is installed, we'll use a greenlet,
         # otherwise we'll use a thread
         try:

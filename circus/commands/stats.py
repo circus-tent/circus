@@ -96,8 +96,8 @@ class Stats(Command):
                         "info": watcher.process_info(props['process'])
                     }
                 except KeyError:
-                    raise MessageError("process %r not found in %r" % \
-                            (props['process'], props['name']))
+                    raise MessageError("process %r not found in %r" % (
+                        props['process'], props['name']))
             else:
                 return {"name": props['name'], "info": watcher.info()}
         else:

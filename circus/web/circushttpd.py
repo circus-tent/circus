@@ -9,9 +9,9 @@ try:
 except ImportError, e:
     reqs = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                         'web-requirements.txt')
-    raise ImportError('You need to install dependencies to run the webui. '\
-                    + 'You can do so by using "pip install -r '
-                    + '%s"\nInitial error: %s' % (reqs, str(e)))
+    raise ImportError('You need to install dependencies to run the webui. '
+                      'You can do so by using "pip install -r '
+                      '%s"\nInitial error: %s' % (reqs, str(e)))
 
 from circus.web.namespace import StatsNamespace
 from circus import __version__, logger
@@ -55,8 +55,8 @@ def kill_process(name, pid):
 def decr_proc(name):
     return run_command(
         func='decrproc', args=(name,),
-        message='removed one process from the {watcher} pool'\
-                .format(watcher=name),
+        message='removed one process from the {watcher} pool'.format(
+            watcher=name),
         redirect_url='/watchers/%s' % name)
 
 
@@ -140,16 +140,16 @@ def main():
     parser.add_argument('--server', help='web server to use',
                         default=SocketIOServer)
     parser.add_argument('--endpoint', default=None,
-        help='Circus Endpoint. If not specified, Circus will ask you which '
-             'system you want to connect to')
-    parser.add_argument('--version', action='store_true',
-                     default=False, help='Displays Circus version and exits.')
+                        help='Circus Endpoint. If not specified, Circus will '
+                             'ask you which system you want to connect to')
+    parser.add_argument('--version', action='store_true', default=False,
+                        help='Displays Circus version and exits.')
     parser.add_argument('--log-level', dest='loglevel', default='info',
-            choices=LOG_LEVELS.keys() + [key.upper() for key in
-                LOG_LEVELS.keys()],
-            help="log level")
+                        choices=LOG_LEVELS.keys() + [key.upper() for key in
+                                                     LOG_LEVELS.keys()],
+                        help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
-            help="log output")
+                        help="log output")
     parser.add_argument('--ssh', default=None, help='SSH Server')
 
     args = parser.parse_args()
