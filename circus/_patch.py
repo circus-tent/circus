@@ -97,6 +97,7 @@ try:
         old_io.ioloop.Poller = zmq.Poller
     except ImportError:
         # older version
+        import zmq
         try:
             from gevent_zeromq import (  # NOQA
                 monkey_patch, IOLOOP_IS_MONKEYPATCHED)
@@ -112,4 +113,4 @@ except ImportError:
         import zmq      # NOQA
     except ImportError:
         # lazy loading
-        pass
+        zmq = None
