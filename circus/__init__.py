@@ -1,41 +1,7 @@
-import _patch       # NOQA
+from _patch import zmq       # NOQA
 import logging
 import os
 import sys
-import warnings
-
-
-_MSG = """\
-We have detected that you have gevent in your
-environment. In order to have Circus working, you *must*
-install PyZMQ >= 2.2.0.1.
-"""
-
-try:
-    import gevent                   # NOQA
-    from gevent import monkey       # NOQA
-    try:
-        import zmq.eventloop as old_io
-        import zmq.green as zmq         # NOQA
-        old_io.ioloop.Poller = zmq.Poller
-    except ImportError:
-        # older version
-        try:
-            from gevent_zeromq import (  # NOQA
-                monkey_patch, IOLOOP_IS_MONKEYPATCHED)
-            monkey_patch()
-            warnings.warn("gevent_zeromq is deprecated, please "
-                          "use PyZMQ >= 2.2.0.1")
-        except ImportError:
-            raise ImportError(_MSG)
-
-    monkey.patch_all()
-except ImportError:
-    try:
-        import zmq      # NOQA
-    except ImportError:
-        # lazy loading
-        pass
 
 
 version_info = (0, 6, 0)
@@ -131,26 +97,8 @@ def get_arbiter(watchers, controller=None,
         pubsub_endpoint = DEFAULT_ENDPOINT_SUB
 
     if stream_backend == 'gevent':
-
         try:
             import gevent                   # NOQA
-            from gevent import monkey       # NOQA
-            try:
-                import zmq.eventloop as old_io
-                import zmq.green as zmq     # NOQA
-                old_io.ioloop.Poller = zmq.Poller
-            except ImportError:
-                # older version
-                try:
-                    from gevent_zeromq import (  # NOQA
-                        monkey_patch, IOLOOP_IS_MONKEYPATCHED)
-                    monkey_patch()
-                    warnings.warn("gevent_zeromq is deprecated, please "
-                                  "use PyZMQ >= 2.2.0.1")
-                except ImportError:
-                    raise ImportError(_MSG)
-
-            monkey.patch_all()
         except ImportError:
             sys.stderr.write("stream_backend set to gevent, " +
                              "but gevent isn't installed\n")

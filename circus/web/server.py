@@ -15,10 +15,8 @@ class SocketIOServer(ServerAdapter):
         except ImportError:
             raise ImportError('You need to install gevent_socketio')
 
-        from gevent import monkey
-        from gevent_zeromq import monkey_patch
-        monkey.patch_all()
-        monkey_patch()
+        # sets up the ZMQ/Gevent environ
+        from circus import _patch   # NOQA
 
         namespace = self.options.get('namespace', 'socket.io')
         policy_server = self.options.get('policy_server', False)
