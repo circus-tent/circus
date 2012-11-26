@@ -1,12 +1,12 @@
 Circus Use Cases
-================
+################
 
 This chapter presents a few use cases, to give you an idea on how to use
 Circus in your environment.
 
 
 Running a WSGI application
---------------------------
+==========================
 
 
 Running a WSGI application with Circus is quite interesting because you can
@@ -83,7 +83,7 @@ Congrats ! you have a WSGI application running 3 workers.
 You can run the :ref:`circushttpd` or the :ref:`cli`, and enjoy Circus management.
 
 Running a Django application
-----------------------------
+============================
 
 Running a Django application is done exactly like running a WSGI application. Use the
 *PYTHONPATH* to import the directory the project is in, the directory that contains the 

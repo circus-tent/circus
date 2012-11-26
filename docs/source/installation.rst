@@ -1,7 +1,7 @@
 .. _installation:
 
 Installing Circus
------------------
+#################
 
 Use pip::
 
@@ -18,7 +18,7 @@ ppa to install circus, it's at
 https://launchpad.net/~roman-imankulov/+archive/circus
 
 More on Requirements
---------------------
+====================
 
 Circus uses:
 

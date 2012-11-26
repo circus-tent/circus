@@ -1,7 +1,7 @@
 .. _library:
 
 Circus Library
---------------
+##############
 
 The Circus package is composed of a high-level :func:`get_arbiter`
 function and many classes. In most cases, using the high-level function

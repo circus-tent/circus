@@ -1,13 +1,12 @@
 .. _plugins:
 
 Plugins
--------
+#######
 
 Circus comes with a few pre-shipped plugins you can use easily. The configuration of them is as follows:
 
 Statsd
-~~~~~~
-    This plugin publishes all circus events to the statsd service.
+======
     
     **use**
          set to 'circus.plugins.statsd.StatsdEmitter'
@@ -26,7 +25,7 @@ Statsd
 
 
 FullStats
-~~~~~~~~~
+=========
 
     An extension on the Statsd plugin that is also publishing the process stats. As
     such it has the same configuration options as Statsd and the following.
@@ -39,7 +38,7 @@ FullStats
 
 
 RedisObserver
-~~~~~~~~~~~~~
+=============
 
     This services observers a redis process for you, publishes the information to statsd
     and offers to restart the service when it doesn't react in a given timeout. This
@@ -63,9 +62,8 @@ RedisObserver
         the name of the process to restart when the request timed out. No restart triggered when not given. Default: None.
 
 
-
 HttpObserver
-~~~~~~~~~~~~
+============
 
     This services observers a http process for you by pinging a certain website
     regularly. Similar to the redis observer it offers to restart the service on an
@@ -92,7 +90,7 @@ HttpObserver
 
 
 ResourceWatcher
-~~~~~~~~~~~~~~~
+===============
 
     This services watches the resources of the given process and triggers a restart when they exceed certain limitations too often in a row.
 

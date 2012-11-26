@@ -1,7 +1,7 @@
 .. _develop_plugins:
 
 The Plugin System
-=================
+#################
 
 Circus comes with a plugin system which let you interact with **circusd**.
 
@@ -33,7 +33,7 @@ Circus itself provides a few plugins:
 
 
 The CircusPlugin class
-----------------------
+======================
 
 Circus provides a base class to help you implement plugins:
 :class:`circus.plugins.CircusPlugin`
@@ -59,7 +59,7 @@ in the main thread just before the thread is stopped and joined.
 
 
 Writing a plugin
-----------------
+================
 
 Let's write a plugin that logs in a file every event happening in
 **circusd**. It takes one argument which is the filename.
@@ -96,7 +96,7 @@ For example, :class:`Logger` could be found in a *plugins* module in a
 *myproject* package.
 
 Async requests
-~~~~~~~~~~~~~~~
+--------------
 
 In case you want to make any asynchronous operations (like a Tornado call or using
 periodicCall) make sure you are using the right loop. The loop you always want to 
@@ -105,7 +105,7 @@ isn't the same and therefore code might not get excuted as expected.
 
 
 Trying a plugin
---------------
+===============
 
 You can run a plugin through the command line with the **circus-plugin** command,
 by specifying the plugin fully qualified name::
@@ -136,7 +136,7 @@ see :ref:`library`.
 
 
 Performances
-------------
+============
 
 Since every plugin is loaded in its own process, it should not impact
 the overall performances of the system as long as the work done by the

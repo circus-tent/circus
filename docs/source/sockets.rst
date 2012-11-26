@@ -1,7 +1,7 @@
 .. _sockets:
 
 Circus Sockets
-==============
+##############
 
 Circus can bind network sockets and manage them as it does for processes.
 
@@ -11,7 +11,7 @@ the watcher's command can inherit from all the opened file descriptors.
 That's how Apache or Unicorn works, and many other tools out there.
 
 Goal
-----
+====
 
 The goal of having sockets managed by Circus is to be able to manage network
 applications in Circus exactly like other applications.
@@ -25,7 +25,7 @@ a lot of opportunities to scale and manage your stack.
 
 
 Design
-------
+======
 
 The gist of the feature is done by binding the socket and start listening
 to it in **circusd**:
@@ -88,7 +88,7 @@ created and bound on the 8888 *port*.
 
 
 Real-world example
-------------------
+==================
 
 `Chaussette <http://chaussette.rtfd.org>`_ is the perfect Circus companion if
 you want to run your WSGI application.
@@ -121,7 +121,7 @@ or Meinheld backend is as fast as any pre-fork WSGI server out there.
 
 
 Circus stack v.s. Classical stack
----------------------------------
+=================================
 
 In a classical WSGI stack, you have a server like Gunicorn that serves on a port
 or an unix socket and is usually deployed behind a web server like Nginx:
@@ -165,7 +165,7 @@ whatever. Adding a new web worker is done exactly like adding a new Redis
 process.
 
 Benches
-=======
+-------
 
 We did a few benches to compare Circus & Chaussette with Gunicorn. To
 summarize, Circus is not adding any overhead and you can pick up many
@@ -175,6 +175,4 @@ See:
 
 - http://blog.ziade.org/2012/06/28/wgsi-web-servers-bench
 - http://blog.ziade.org/2012/07/03/wsgi-web-servers-bench-part-2
-
-
 

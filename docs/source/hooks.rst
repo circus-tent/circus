@@ -1,7 +1,7 @@
 .. _hooks:
 
 Hooks
-=====
+#####
 
 Circus provides four hooks that can be used to trigger actions when a watcher
 is starting or stopping.
@@ -76,7 +76,7 @@ Available hooks are:
 
 
 Hook signature
---------------
+==============
 
 A hook must follow this signature::
 
@@ -91,7 +91,7 @@ You can ignore those but being able to use the watcher and/or arbiter
 data and methods can be useful in some hooks.
 
 Hook events
------------
+===========
 
 Everytime a hook is run, its result is notified as an event in Circus.
 

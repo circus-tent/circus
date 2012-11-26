@@ -1,7 +1,7 @@
 .. _security:
 
 Security
-========
+########
 
 Circus is built on the top of the ZeroMQ library and comes with no security
 at all in its protocols. However, you can run a Circus system on
@@ -14,7 +14,7 @@ You can also read http://www.zeromq.org/area:faq#toc5
 
 
 TCP ports
----------
+=========
 
 By default, Circus opens the following TCP ports on the local host:
 
@@ -43,7 +43,7 @@ Of course, if you activate the Web UI, the **8080** port will still
 be open.
 
 circushttpd
------------
+===========
 
 When you run **circushttpd** manually, or when you use the **httpd**
 option in the ini file like this::
@@ -70,7 +70,7 @@ take care of the security.
 
 
 User and Group Permissions
---------------------------
+==========================
 
 By default, all processes started with Circus will be running with the
 same user and group than **circusd**. Depending on the privileges the user
@@ -96,7 +96,7 @@ under a controlled user.
 
 
 SSH tunneling
--------------
+=============
 
 Clients can connect to a **circusd** instance by creating an SSH tunnel.  To
 do so, pass the command line option **--ssh** followed by **user@address**,
@@ -110,7 +110,7 @@ option **--endpoint**
 
 
 Secured setup example
----------------------
+=====================
 
 Setting up a secured Circus server can be done by:
 

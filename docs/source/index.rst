@@ -1,5 +1,5 @@
 Circus: A Process & Socket Manager
-==================================
+##################################
 
 .. image:: images/circus-medium.png
    :align: right
@@ -28,7 +28,7 @@ To install it, check out :ref:`installation`
 
 
 Running Circus
---------------
+==============
 
 Circus provides a command-line script call **circusd** that can be used
 to manage one or more :term:`watchers`. Each watcher can have one or more
@@ -81,7 +81,7 @@ To understand why it's a killer feature, read :ref:`whycircussockets`.
 
 
 Controlling Circus
-------------------
+==================
 
 Circus provides two command-line tools to manage your running daemon:
 
@@ -114,7 +114,7 @@ To learn more about this feature, see :ref:`circushttpd`
 
 
 Developing with Circus
-----------------------
+======================
 
 Circus provides high-level classes and functions that will let you manage
 processes in your own applications.
@@ -138,7 +138,7 @@ To learn more about this, see :ref:`library`
 
 
 Extending Circus
-----------------
+================
 
 It's easy to extend Circus to create a more complex system, by listening to all
 the **circusd** events via its pub/sub channel, and driving it via commands.
@@ -156,7 +156,7 @@ some processes are started or stopped. See :ref:`hooks`.
 
 
 More documentation
-------------------
+==================
 
 .. toctree::
    :maxdepth: 2
@@ -185,7 +185,7 @@ More documentation
 
 
 Contributions and Feedback
---------------------------
+==========================
 
 More on contribution: :ref:`contribs`.
 

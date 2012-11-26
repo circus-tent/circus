@@ -1,5 +1,5 @@
 Configuration
--------------
+#############
 
 Circus can be configured using an ini-style configuration file.
 
@@ -41,9 +41,8 @@ Example::
     port = 8080
 
 
-
 circus - single section
-~~~~~~~~~~~~~~~~~~~~~~~
+=======================
     **endpoint**
         The ZMQ socket used to manage Circus via **circusctl**.
         (default: *tcp://127.0.0.1:5555*)
@@ -89,7 +88,7 @@ circus - single section
 
 
 watcher:NAME - as many sections as you want
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+===========================================
     **NAME**
         The name of the watcher. This name is used in **circusctl**
     **cmd**
@@ -212,7 +211,7 @@ watcher:NAME - as many sections as you want
 
 
 socket:NAME - as many sections as you want
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+==========================================
     **host**
         The host of the socket. Defaults to 'localhost'
     **port**
@@ -246,7 +245,7 @@ Example::
 
 
 plugin:NAME - as many sections as you want
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+==========================================
     **use**
         The fully qualified name that points to the plugin class.
     **anything else**
@@ -257,7 +256,7 @@ Circus comes with a few pre-shipped :ref:`plugins <plugins>` but you can also ex
 
 
 env:WATCHERS - as many sections as you want
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+===========================================
 	**anything**
 		The name of an environment variable to assign value to.
 		bash style environment substitutions are supported.
@@ -290,7 +289,7 @@ Example::
 .. _formating_cmd:
 
 Formating the commands and arguments with dynamic variables
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+===========================================================
 
 As you may have seen, it is possible to pass some information that are computed
 dynamically when running the processes. Among other things, you can get the

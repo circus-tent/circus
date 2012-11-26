@@ -1,5 +1,5 @@
 Deployment
-==========
+##########
 
 Although the Circus daemon can be managed with the circusd command, it's
 easier to have it start on boot. If your system supports Upstart, you can 

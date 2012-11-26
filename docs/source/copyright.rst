@@ -1,5 +1,5 @@
 Copyright
-=========
+#########
 
 Circus was initiated by Tarek Ziade and is licenced under APLv2
 
@@ -8,7 +8,7 @@ the circus.commands work.
 
 
 Licence
--------
+=======
 
 ::
 
@@ -28,20 +28,6 @@ Licence
     limitations under the License.
 
 Contributors
-------------
+============
 
-In order of appearence:
-
-- Tarek Ziadé
-- Benoit Chesneau
-- Pratyk S. Paudel
-- Neil Chintomby
-- Ori Livneh
-- Pete Fritchman
-- Johan Charpentier
-- John Morrison
-- Chris McDonald
-- Stefane Fermigier
-- Adnane Belmadiaf
-- Alexis Métaireau
-- Christian S. Perone
+See https://github.com/mozilla-services/circus/graphs/contributors

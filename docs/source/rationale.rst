@@ -1,7 +1,7 @@
 .. _why:
 
 Why should I use Circus instead of X ?
---------------------------------------
+######################################
 
 
 1. **Circus simplifies your web stack process management**

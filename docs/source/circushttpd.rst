@@ -1,7 +1,7 @@
 .. _circushttpd:
 
 The Web Console
-===============
+###############
 
 Circus comes with a Web Console that can be used to manage the system.
 
@@ -52,7 +52,7 @@ By default the script will run the Web Console on port 8080, but the --port opti
 be used to change it.
 
 Using the console
------------------
+=================
 
 Once the script is running, you can open a browser and visit *http://localhost:8080*.
 You should get this screen:
@@ -100,7 +100,7 @@ in the left menu:
 
 
 Embedding circushttpd into Circus
----------------------------------
+=================================
 
 *circushttpd* is a WSGI application so you can run it with any web server that's
 compatible with that protocol. By default it uses the standard library
@@ -129,7 +129,7 @@ That's it !
 
 
 Running behind Nginx and Varnish
---------------------------------
+================================
 
 Nginx can act as a proxy in front of Circus. It an also deal with security.
 
@@ -191,7 +191,7 @@ listen on that port. Websocket connections are upgraded and piped directly to th
 circushttpd process listening on port 8080.
 
 Password-protect circushttpd
-----------------------------
+============================
 
 As explained in the :ref:`Security` page, running *circushttpd* is pretty
 unsafe. We don't provide any security in Circus itself, but you can protect
@@ -219,7 +219,7 @@ Of course that's just one way to protect your web console, you could use
 many other techniques.
 
 Extending the web console
--------------------------
+=========================
 
 We picked *bottle* to build the webconsole, mainly because it's a really
 tiny framework that doesn't do much. By having a look at the code of the web
