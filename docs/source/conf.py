@@ -117,9 +117,6 @@ exclude_patterns = []
 # output. They are ignored by default.
 #show_authors = False
 
-# The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
-
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
@@ -131,10 +128,7 @@ pygments_style = 'sphinx'
 sys.path.append(os.path.abspath('_themes'))
 html_theme_path = ['_themes']
 html_short_title = "Circus"
-if on_rtd:
-    html_theme = 'default'
-else:
-    html_theme = 'bootstrap'
+html_theme = 'mozilla'
 
 #html_logo = "images/circus32.png"
 
