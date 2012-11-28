@@ -2,7 +2,9 @@ import sys
 from Queue import Queue
 
 from circus.util import import_module, resolve_name
+from circus.config import to_boolean
 from circus.stream.file_stream import FileStream
+from circus.stream.utils import stream_log
 
 
 class QueueStream(Queue):
@@ -19,10 +21,13 @@ class QueueStream(Queue):
 
 class StdoutStream(object):
     def __init__(self, **kwargs):
-        pass
+        self.log = 'log' in kwargs and to_boolean(kwargs['log'])
 
     def __call__(self, data):
-        sys.stdout.write(data['data'])
+        if self.log:
+            stream_log(sys.stdout, data['data'])
+        else:
+            sys.stdout.write(data['data'])
         sys.stdout.flush()
 
     def close(self):

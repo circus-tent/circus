@@ -1,6 +1,8 @@
 import os
 
 from circus import logger
+from circus.config import to_boolean
+from circus.stream.utils import stream_log
 
 
 class FileStream(object):
@@ -32,6 +34,7 @@ class FileStream(object):
         self._backup_count = backup_count
         self._file = self._open()
         self._buffer = []
+        self._log = 'log' in kwargs and to_boolean(kwargs['log'])
 
     def _open(self):
         return open(self._filename, 'a+')
@@ -39,7 +42,10 @@ class FileStream(object):
     def __call__(self, data):
         if self._should_rollover(data['data']):
             self._do_rollover()
-        self._file.write(data['data'])
+        if self._log:
+            stream_log(self._file, data['data'])
+        else:
+            self._file.write(data['data'])
         self._file.flush()
 
     def close(self):

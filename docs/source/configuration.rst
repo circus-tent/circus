@@ -27,6 +27,7 @@ Example::
     # will push in test.log the stream every 300 ms
     stdout_stream.class = FileStream
     stdout_stream.filename = test.log
+    stdout_stream.log = True
     stdout_stream.refresh_time = 0.3
 
     # optionally rotate the log file when it reaches 1 gb
