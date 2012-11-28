@@ -6,7 +6,6 @@ Design
 .. image:: images/circus-architecture.png
    :align: center
 
-
 Circus is composed of a main process called **circusd** which takes
 care of running all the processes. Each process managed by Circus
 is a child process of **circusd**.
@@ -25,6 +24,11 @@ processes running the same command -- like restart them, etc.
   *commands*.
 - **PUB/SUB** -- a socket where **circusd** publishes events, like
   when a process is started or stopped.
+
+.. note::
+
+   Although its name, ZeroMQ is not a queue management system. For instance, it
+   it as an Inter Process Communication library.
 
 Another process called **circusd-stats** is run by **circusd** when
 the option is activated. **circusd-stats**'s job is to publish
