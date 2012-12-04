@@ -2,7 +2,7 @@ import sys
 from Queue import Queue
 
 from circus.util import import_module, resolve_name
-
+from circus.stream.file_stream import FileStream
 
 class QueueStream(Queue):
 
@@ -14,19 +14,6 @@ class QueueStream(Queue):
 
     def close(self):
         pass
-
-
-class FileStream(object):
-    def __init__(self, filename=None, **kwargs):
-        self._file = open(filename, 'a+')
-        self._buffer = []
-
-    def __call__(self, data):
-        self._file.write(data['data'])
-        self._file.flush()
-
-    def close(self):
-        self._file.close()
 
 
 class StdoutStream(object):
