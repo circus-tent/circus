@@ -7,4 +7,4 @@ gevent-socketio
 gevent-websocket==0.3.6
 greenlet
 beaker==1.6.3
-git+http://github.com/mozilla-services/gevent-zeromq.git
+pyzmq==2.2.0.1
