@@ -113,4 +113,4 @@ except ImportError:
         import zmq      # NOQA
     except ImportError:
         # lazy loading
-        zmq = None
+        zmq = None      # NOQA
