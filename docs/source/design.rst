@@ -27,8 +27,8 @@ processes running the same command -- like restart them, etc.
 
 .. note::
 
-   Although its name, ZeroMQ is not a queue management system. For instance, it
-   it as an Inter Process Communication library.
+   Although its name, ZeroMQ is not a queue management system. Think of it
+   as an inter-process communication (IPC) library.
 
 Another process called **circusd-stats** is run by **circusd** when
 the option is activated. **circusd-stats**'s job is to publish
