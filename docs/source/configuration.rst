@@ -29,6 +29,11 @@ Example::
     stdout_stream.filename = test.log
     stdout_stream.refresh_time = 0.3
 
+    # optionally rotate the log file when it reaches 1 gb
+    # and save 5 copied of rotated files
+    stdout_stream.max_bytes = 1073741824
+    stdout_stream.backup_count = 5
+
     [plugin:statsd]
     use = circus.plugins.statsd.StatsdEmitter
     host = localhost
