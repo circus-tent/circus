@@ -30,11 +30,6 @@ class TestTrainer(TestCircus):
         super(TestTrainer, self).setUp()
         dummy_process = 'circus.tests.support.run_process'
         self.test_file = self._run_circus(dummy_process)
-        self.cli = CircusClient()
-
-    def tearDown(self):
-        super(TestTrainer, self).tearDown()
-        self.cli.stop()
 
     def test_numwatchers(self):
         msg = make_message("numwatchers")
