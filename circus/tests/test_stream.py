@@ -35,7 +35,6 @@ class TestWatcher(TestCircus):
             stdout_stream={'stream': FileStream(self.stdout)},
             stderr_stream={'stream': FileStream(self.stderr)},
             debug=True)
-        self.cli = CircusClient()
 
     def call(self, cmd, **props):
         msg = make_message(cmd, **props)
@@ -43,7 +42,6 @@ class TestWatcher(TestCircus):
 
     def tearDown(self):
         super(TestWatcher, self).tearDown()
-        self.cli.stop()
         os.remove(self.stdout)
         os.remove(self.stderr)
 
