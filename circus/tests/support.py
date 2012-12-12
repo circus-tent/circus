@@ -171,6 +171,9 @@ def poll_for(filename, needle, timeout=5):
             content = f.read()
         if needle in content:
             return True
+        # When using gevent this will make sure the redirector greenlets are
+        # scheduled.
+        time.sleep(0)
     raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
         filename, needle, content))
 
