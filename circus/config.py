@@ -1,6 +1,7 @@
 import os
 import fnmatch
 import sys
+import warnings
 
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
@@ -125,17 +126,30 @@ def get_config(config_file):
     if stream_backend == 'gevent':
         try:
             import gevent           # NOQA
-            import gevent_zeromq    # NOQA
         except ImportError:
             sys.stderr.write("stream_backend set to gevent, " +
-                             "but gevent or gevent_zeromq isn't installed\n")
-            sys.stderr.write("Exiting...")
+                             "but gevent isn't installed\n")
+            sys.stderr.write("Exiting...\n")
             sys.exit(1)
 
         from gevent import monkey
-        from gevent_zeromq import monkey_patch
         monkey.patch_all()
-        monkey_patch()
+
+        try:
+            import zmq.green as zmq         # NOQA
+        except ImportError:
+            try:
+                from gevent_zeromq import monkey_patch
+            except ImportError:
+                sys.stderr.write("stream_backend set to gevent, but " +
+                                 "but required PyZMQ >= 2.2.0.1 not found\n")
+                sys.stderr.write("Exiting...\n")
+                sys.exit(1)
+
+            monkey_patch()
+            warnings.warn("gevent_zeromq is deprecated, please "
+                          "use PyZMQ >= 2.2.0.1")
+
 
     config['stream_backend'] = stream_backend
 

@@ -25,14 +25,20 @@ if GEVENT:
             self.app = TestApp(app)
             self.stream = QueueStream()
             # let's run a circus
-            cmd = '%s -c "from circus import circusd; circusd.main()" %s' % \
-                (sys.executable, cfg)
-            self.p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+            cmd = [sys.executable, "-c",
+                   "from circus import circusd; circusd.main()", cfg]
+            self.p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE)
 
         def tearDown(self):
             self.p.terminate()
-            self.p.kill()
+            try:
+                with gevent.Timeout(1):
+                    while self.p.poll() is None:
+                        gevent.sleep(0.1)
+            except gevent.Timeout:
+                self.p.kill()
+
             TestCircus.tearDown(self)
 
         def test_index(self):

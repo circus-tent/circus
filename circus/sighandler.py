@@ -2,7 +2,7 @@ import signal
 import traceback
 import sys
 
-from circus import logger
+from circus import logger, USING_GEVENT
 from client import make_json
 
 
@@ -22,7 +22,11 @@ class SysHandler(object):
         self.controller = controller
 
         # init signals
-        map(lambda s: signal.signal(s, self.signal), self.SIGNALS)
+        if USING_GEVENT:
+            import gevent
+            map(lambda s: gevent.signal(s, self.signal, s, None), self.SIGNALS)
+        else:
+            map(lambda s: signal.signal(s, self.signal), self.SIGNALS)
 
         # Don't let SIGQUIT and SIGUSR1 disturb active requests
         # by interrupting system calls

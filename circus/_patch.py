@@ -88,6 +88,8 @@ environment. In order to have Circus working, you *must*
 install PyZMQ >= 2.2.0.1.
 """
 
+USING_GEVENT = False
+
 try:
     import gevent                   # NOQA
     from gevent import monkey       # NOQA
@@ -108,6 +110,7 @@ try:
             raise ImportError(_MSG)
 
     monkey.patch_all()
+    USING_GEVENT = True
 except ImportError:
     try:
         import zmq      # NOQA
