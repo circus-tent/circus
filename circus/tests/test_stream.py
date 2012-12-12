@@ -3,7 +3,7 @@ import sys
 import os
 import tempfile
 
-from circus.client import CircusClient, make_message
+from circus.client import make_message
 from circus.tests.support import TestCircus, poll_for, truncate_file
 from circus.stream import FileStream
 

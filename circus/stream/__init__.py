@@ -4,6 +4,7 @@ from Queue import Queue
 from circus.util import import_module, resolve_name
 from circus.stream.file_stream import FileStream
 
+
 class QueueStream(Queue):
 
     def __init__(self, **kwargs):
