@@ -64,6 +64,10 @@ class CircusSocket(socket.socket):
     def bind_and_listen(self):
         try:
             if self.is_unix:
+                if os.path.exists(self.path):
+                    raise OSError("%r already exists. You might want to "
+                                  "remove it. If it's a stalled socket "
+                                  "file, just restart Circus" % self.path)
                 self.bind(self.path)
             else:
                 self.bind((self.host, self.port))
