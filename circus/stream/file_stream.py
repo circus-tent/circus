@@ -2,6 +2,7 @@ import os
 
 from circus import logger
 
+
 class FileStream(object):
     def __init__(self, filename=None, max_bytes=0, backup_count=0, **kwargs):
         '''
@@ -77,7 +78,7 @@ class FileStream(object):
         if self._file is None:                 # delay was set...
             self._file = self._open()
         if self._max_bytes > 0:                   # are we rolling over?
-            self._file.seek(0, 2)  #due to non-posix-compliant Windows feature
+            self._file.seek(0, 2)  # due to non-posix-compliant Windows feature
             if self._file.tell() + len(raw_data) >= self._max_bytes:
                 return 1
         return 0
