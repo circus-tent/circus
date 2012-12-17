@@ -2,6 +2,7 @@ import errno
 import logging
 import os
 from threading import Thread, RLock
+from thread import get_ident
 import time
 import sys
 
@@ -399,4 +400,5 @@ class ThreadedArbiter(Arbiter, Thread):
 
     def stop(self):
         Arbiter.stop(self)
-        self.join()
+        if get_ident() != self.ident:
+            self.join()
