@@ -1,10 +1,29 @@
 CHANGES
 =======
 
-0.6
----
+0.6 - 2012-12-18
+----------------
+
 
 * Patching protocols name for sockets - #248
+* Don't autoscale graphs. #240
+* circusctl: add per command help, from docstrings #217
+* Added workers hooks
+* Added Debian package - #227
+* Added Redis, HTTP Observer, Full stats & Resource plugins
+* Now processes can have titles
+* Added autocompletion
+* Added process/watcher age in the webui
+* Added SSH tunnel support
+* Now using pyzmq.green
+* Added upstart script & Varnish doc
+* Added environment variables & sections
+* Added unix sockets support
+* Added the *respawn* option to have single-run watchers
+* Now using tox in the tests
+* Allow socket substitution in args
+* New doc theme
+* New rotation options for streams: max_bytes/backup_count
 
 
 0.5.2 - 2012-07-26
