@@ -27,7 +27,7 @@ Circus uses:
 
 And on Python side:
 
-- pyzmq 2.2.0
+- pyzmq 2.2.0.1
 - iowait 0.1
 - psutil 0.4.1
 
@@ -49,7 +49,6 @@ If you want to run the Web console you will need more things:
 - gevent-websocket 0.3.6
 - greenlet 0.3.4
 - beaker 1.6.3
-- http://github.com/tarekziade/gevent-zeromq
 
 Those can be installed with::
 
