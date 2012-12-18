@@ -150,7 +150,6 @@ def get_config(config_file):
             warnings.warn("gevent_zeromq is deprecated, please "
                           "use PyZMQ >= 2.2.0.1")
 
-
     config['stream_backend'] = stream_backend
 
     # Initialize watchers, plugins & sockets to manage
