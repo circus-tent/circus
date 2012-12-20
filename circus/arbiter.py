@@ -20,6 +20,8 @@ from circus.sockets import CircusSocket, CircusSockets
 
 import select
 
+class ReloadArbiterException:
+    pass
 
 class Arbiter(object):
     """Class used to control a list of watchers.
@@ -78,6 +80,7 @@ class Arbiter(object):
         self.pubsub_endpoint = pubsub_endpoint
         self.multicast_endpoint = multicast_endpoint
         self.proc_name = proc_name
+        self.ssh_server = ssh_server
 
         self.pidfile = pidfile
         self.loglevel = loglevel
@@ -94,9 +97,9 @@ class Arbiter(object):
         self._lock = RLock()
         self.debug = debug
         if self.debug:
-            stdout_stream = stderr_stream = {'class': 'StdoutStream'}
+            self.stdout_stream = self.stderr_stream = {'class': 'StdoutStream'}
         else:
-            stdout_stream = stderr_stream = None
+            self.stdout_stream = self.stderr_stream = None
 
         # initializing circusd-stats as a watcher when configured
         self.statsd = statsd
@@ -114,8 +117,8 @@ class Arbiter(object):
                 cmd += ' --log-level DEBUG'
             stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True,
                                     singleton=True,
-                                    stdout_stream=stdout_stream,
-                                    stderr_stream=stderr_stream,
+                                    stdout_stream=self.stdout_stream,
+                                    stderr_stream=self.stderr_stream,
                                     copy_env=True, copy_path=True,
                                     close_child_stderr=statsd_close_outputs,
                                     close_child_stdout=statsd_close_outputs)
@@ -133,8 +136,8 @@ class Arbiter(object):
 
             httpd_watcher = Watcher('circushttpd', cmd, use_sockets=True,
                                     singleton=True,
-                                    stdout_stream=stdout_stream,
-                                    stderr_stream=stderr_stream,
+                                    stdout_stream=self.stdout_stream,
+                                    stderr_stream=self.stderr_stream,
                                     copy_env=True, copy_path=True,
                                     close_child_stderr=httpd_close_outputs,
                                     close_child_stdout=httpd_close_outputs)
@@ -150,23 +153,22 @@ class Arbiter(object):
                 sockets.append(httpd_socket)
 
         # adding each plugin as a watcher
-        ch_stderr = stderr_stream is None
-        ch_stdout = stdout_stream is None
+        ch_stderr = self.stderr_stream is None
+        ch_stdout = self.stdout_stream is None
 
         if plugins is not None:
             for plugin in plugins:
-                fqnd = plugin['use']
-                name = 'plugin:%s' % fqnd.replace('.', '-')
                 cmd = get_plugin_cmd(plugin, self.endpoint,
                                      self.pubsub_endpoint, self.check_delay,
                                      ssh_server, debug=self.debug)
-                plugin_watcher = Watcher(name, cmd, priority=1, singleton=True,
-                                         stdout_stream=stdout_stream,
-                                         stderr_stream=stderr_stream,
-                                         copy_env=True, copy_path=True,
-                                         close_child_stderr=ch_stderr,
-                                         close_child_stdout=ch_stdout)
-
+                plugin_cfg = dict(cmd=cmd, priority=1, singleton=True,
+                                  stdout_stream=self.stdout_stream,
+                                  stderr_stream=self.stderr_stream,
+                                  copy_env=True, copy_path=True,
+                                  close_child_stderr=ch_stderr,
+                                  close_child_stdout=ch_stdout)
+                plugin_cfg.update(plugin)
+                plugin_watcher = Watcher.load_from_config(plugin_cfg)
                 self.watchers.append(plugin_watcher)
 
         self.sockets = CircusSockets(sockets)
@@ -174,6 +176,152 @@ class Arbiter(object):
         self.loop = ioloop.IOLoop.instance()
         self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
                                self.context, self.loop, self, self.check_delay)
+
+    def get_socket(self, name):
+        return self.sockets.get(name, None)
+
+    def get_socket_config(self, config, name):
+        for i in config.get('sockets', []):
+            if i['name'] == name:
+                return i.copy()
+        return None
+
+    def get_watcher_config(self, config, name):
+        for i in config.get('watchers', []):
+            if i['name'] == name:
+                return i.copy()
+        return None
+
+    def get_plugin_config(self, config, name):
+        for i in config.get('plugins', []):
+            if i['name'] == name:
+                cfg = i.copy()
+                cmd = get_plugin_cmd(cfg, self.endpoint,
+                                     self.pubsub_endpoint, self.check_delay,
+                                     self.ssh_server, debug=self.debug)
+
+                cfg.update(dict(
+                        cmd=cmd,
+                        priority=1,
+                        singleton=True,
+                        stdout_stream=self.stdout_stream,
+                        stderr_stream=self.stderr_stream,
+                        copy_env=True,
+                        copy_path=True,
+                        ))
+                return cfg
+        return None
+
+    @classmethod
+    def get_arbiter_config(cls, config):
+        cfg = config.copy()
+        del cfg['watchers']
+        del cfg['plugins']
+        del cfg['sockets']
+
+        return cfg
+
+    def reload_from_config(self, config_file=None):
+        new_cfg = get_config(config_file if config_file else self.config_file)
+
+        # if arbiter is changed, reload everything
+        if self.get_arbiter_config(new_cfg) != self.cfg:
+            self.stop()
+            raise ReloadArbiterException
+
+        current_socket_names = set([i.name for i in self.sockets.values()])
+        new_socket_names = set([i['name'] for i in new_cfg.get('sockets', [])])
+        added_socket_names = new_socket_names - current_socket_names
+        deleted_socket_names = current_socket_names - new_socket_names
+        maybechanged_socket_names = current_socket_names - deleted_socket_names
+        changed_socket_names = set([])
+        watcher_names_with_changed_socket = set([])
+        watcher_names_with_deleted_socket = set([])
+
+        # get changed sockets
+        for n in maybechanged_socket_names:
+            s = self.get_socket(n)
+            if self.get_socket_config(new_cfg, n) != s.cfg:
+                changed_socket_names.add(n)
+
+                # just delete the socket and add it again
+                deleted_socket_names.add(n)
+                added_socket_names.add(n)
+
+                # Get the watchers whichs use these, so they could be deleted and added also
+                for w in self.iter_watchers():
+                    if 'circus.sockets.%s' % n.lower() in w.cmd:
+                        watcher_names_with_changed_socket.add(w.name)
+
+        # get deleted sockets
+        for n in deleted_socket_names:
+            s = self.get_socket(n)
+            s.close()
+            # Get the watchers whichs use these, these should not be active anymore
+            for w in self.iter_watchers():
+                if 'circus.sockets.%s' % n.lower() in w.cmd:
+                    watcher_names_with_deleted_socket.add(w.name)
+            del self.sockets[s.name]
+
+        # get added sockets
+        for n in added_socket_names:
+            s = CircusSocket.load_from_config(self.get_socket_config(new_cfg, n))
+            s.bind_and_listen()
+            self.sockets[s.name] = s
+
+        if added_socket_names or deleted_socket_names:
+            # make sure all existing watchers get the new sockets in their attributes and get the old removed
+            # XXX: is this necessary? self.sockets is an mutable object
+            for watcher in self.iter_watchers():
+                # XXX: What happens as initalize is called on a running watcher?
+                watcher.initialize(self.evpub_socket, self.sockets, self)
+
+        current_watcher_names = set([i.name for i in self.iter_watchers()])
+        new_watcher_names = set([i['name'] for i in new_cfg.get('watchers', [])]) | set([i['name'] for i in new_cfg.get('plugins', [])])
+        added_watcher_names = (new_watcher_names - current_watcher_names) | watcher_names_with_changed_socket
+        deleted_watcher_names = current_watcher_names - new_watcher_names - watcher_names_with_changed_socket
+        maybechanged_watcher_names = current_watcher_names - deleted_watcher_names
+        changed_watcher_names = set([])
+
+        if watcher_names_with_deleted_socket and watcher_names_with_deleted_socket not in new_watcher_names:
+            raise ValueError('Watchers %s uses a socket which is deleted' % watcher_names_with_deleted_socket)
+
+        #get changed watchers
+        for n in maybechanged_watcher_names:
+            w = self.get_watcher(n)
+            new_watcher_cfg = self.get_watcher_config(new_cfg, n) or self.get_plugin_config(new_cfg, n)
+            old_watcher_cfg = w.cfg.copy()
+            if new_watcher_cfg != old_watcher_cfg:
+                if not w.name.startswith('plugin:'):
+                    old_watcher_cfg['numprocesses'] = new_watcher_cfg['numprocesses']
+                    if new_watcher_cfg == old_watcher_cfg:
+                        # if nothing but the number of processes is changed, just changes this
+                        w.set_numprocesses(int(new_watcher_cfg['numprocesses']))
+                        continue
+
+                # Others things are changed. Just delete and add the watcher.
+                changed_watcher_names.add(n)
+                deleted_watcher_names.add(n)
+                added_watcher_names.add(n)
+
+        # delete watchers
+        for n in deleted_watcher_names:
+            w = self.get_watcher(n)
+            w.stop()
+            del self._watchers_names[w.name.lower()]
+            self.watchers.remove(w)
+
+        # add watchers
+        for n in added_watcher_names:
+            new_watcher_cfg = self.get_plugin_config(new_cfg, n) or self.get_watcher_config(new_cfg, n)
+
+            w = Watcher.load_from_config(new_watcher_cfg)
+            w.initialize(self.evpub_socket, self.sockets, self)
+            w.start()
+            self.watchers.append(w)
+            self._watchers_names[w.name.lower()] = w
+
+        return False
 
     @classmethod
     def load_from_config(cls, config_file):
@@ -214,6 +362,10 @@ class Arbiter(object):
                       pidfile=cfg.get('pidfile', None),
                       loglevel=cfg.get('loglevel', None),
                       logoutput=cfg.get('logoutput', None))
+
+        # store the cfg which will be used, so it can be used later for checking if the cfg has been changed
+        arbiter.cfg = cls.get_arbiter_config(cfg)
+        arbiter.config_file = config_file
 
         return arbiter
 
