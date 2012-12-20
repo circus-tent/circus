@@ -13,6 +13,7 @@ from circus.commands import (   # NOQA
     options,
     quit,
     reload,
+    reloadconfig,
     restart,
     rmwatcher,
     sendsignal,
