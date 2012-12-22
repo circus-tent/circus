@@ -69,7 +69,13 @@ can write:
 
     from circus import get_arbiter
 
-    arbiter = get_arbiter("myprogram", 4)
+    myprogram = {
+        "cmd": "python",
+        "args": "-u myprogram.py $(WID)",
+        "numprocesses": 3,
+    }
+
+    arbiter = get_arbiter([myprogram])
     try:
         arbiter.start()
     finally:
