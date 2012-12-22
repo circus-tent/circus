@@ -144,6 +144,7 @@ More documentation
    architecture
    deployment
    examples
+   troubleshooting
    coverage
 
 
