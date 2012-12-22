@@ -1,5 +1,7 @@
 import sys
+import random
 from Queue import Queue
+from datetime import datetime
 
 from circus.util import import_module
 
@@ -39,6 +41,32 @@ class StdoutStream(object):
 
     def close(self):
         pass
+
+
+class FancyStdoutStream(StdoutStream):
+
+    colors = ['red', 'green', 'yellow', 'blue',
+              'magenta', 'cyan', 'white']
+
+    def __init__(self, color=None, *args, **kwargs):
+        color_name = color
+        if color_name not in self.colors:
+            color_name = random.choice(self.colors)
+        self.color = self.colors.index(color_name) + 1  # ansi code
+
+    def prefix(self, pid):
+        time = datetime.now().strftime('%Y-%M-%d %H:%M:%S')
+        color = '\033[0;3%s;40m' % self.color
+        prefix = '{time} [{pid}] | '.format(pid=pid, time=time)
+        return color + prefix
+
+    def __call__(self, data):
+        for line in data['data'].split('\n'):
+            if line:
+                sys.stdout.write(self.prefix(data['pid']))
+                sys.stdout.write(line)
+                sys.stdout.write('\033[0m\n')
+                sys.stdout.flush()
 
 
 def get_pipe_redirector(redirect, backend='thread', extra_info=None,
