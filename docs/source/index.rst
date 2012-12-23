@@ -123,9 +123,16 @@ For example, if you want to run four processes forever, you could write:
 
 .. code-block:: python
 
+
+    myprogram = {
+        "cmd": "python",
+        "args": "-u myprogram.py $(WID)",
+        "numprocesses": 3,
+    }
+
     from circus import get_arbiter
 
-    arbiter = get_arbiter("myprogram", 4)
+    arbiter = get_arbiter([myprogram])
     try:
         arbiter.start()
     finally:
@@ -177,6 +184,7 @@ More documentation
    rationale
    examples
    usecases
+   troubleshooting
    coverage
    glossary
    contributing
