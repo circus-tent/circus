@@ -418,7 +418,7 @@ class Watcher(object):
         cmd = util.replace_gnu_args(self.cmd, sockets=self._get_sockets_fds())
         self._process_counter += 1
         nb_tries = 0
-        while nb_tries < self.max_retry:
+        while nb_tries < self.max_retry or self.max_retry == -1:
             process = None
             try:
                 process = Process(self._process_counter, cmd,
