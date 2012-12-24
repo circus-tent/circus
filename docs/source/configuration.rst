@@ -169,6 +169,7 @@ watcher:NAME - as many sections as you want
     **max_retry**
         The number of times we attempt to start a process, before
         we abandon and stop the whole watcher. Defaults to 5.
+        Set to -1 to disable.
 
     **priority**
         Integer that defines a priority for the watcher. When the
