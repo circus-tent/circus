@@ -165,7 +165,7 @@ class Arbiter(object):
         if httpd:
             # controlling that we have what it takes to run the web UI
             # if something is missing this will tell the user
-            from circus.web import circushttpd
+            from circus.web import circushttpd      # NOQA
 
         # creating arbiter
         arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
