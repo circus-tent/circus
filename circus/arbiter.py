@@ -161,6 +161,12 @@ class Arbiter(object):
         for socket in cfg.get('sockets', []):
             sockets.append(CircusSocket.load_from_config(socket))
 
+        httpd = cfg.get('httpd', False)
+        if httpd:
+            # controlling that we have what it takes to run the web UI
+            # if something is missing this will tell the user
+            from circus.web import circushttpd
+
         # creating arbiter
         arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
                       check_delay=cfg.get('check_delay', 1.),
@@ -168,7 +174,7 @@ class Arbiter(object):
                       stats_endpoint=cfg.get('stats_endpoint'),
                       plugins=cfg.get('plugins'), sockets=sockets,
                       warmup_delay=cfg.get('warmup_delay', 0),
-                      httpd=cfg.get('httpd', False),
+                      httpd=httpd,
                       httpd_host=cfg.get('httpd_host', 'localhost'),
                       httpd_port=cfg.get('httpd_port', 8080),
                       debug=cfg.get('debug', False),
