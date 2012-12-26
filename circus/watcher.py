@@ -552,7 +552,6 @@ class Watcher(object):
         """Stop.
         """
         logger.debug('stopping the %s watcher' % self.name)
-
         # stop redirectors
         if self.stdout_redirector is not None:
             self.stdout_redirector.kill()
@@ -570,10 +569,6 @@ class Watcher(object):
 
         while self.get_active_processes() and time.time() < limit:
             self.kill_processes(signal.SIGTERM)
-            try:
-                time.sleep(0.1)
-            except KeyboardInterrupt:
-                pass
             self.reap_processes()
 
         self.kill_processes(signal.SIGKILL)
