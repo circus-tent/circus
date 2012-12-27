@@ -18,6 +18,12 @@ from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
 
+try:
+    import gevent       # NOQA
+    DEFAULT_STREAM = 'gevent'
+except ImportError:
+    DEFAULT_STREAM = 'thread'
+
 
 class Arbiter(object):
     """Class used to control a list of watchers.
@@ -51,17 +57,15 @@ class Arbiter(object):
     - **debug** -- if True, adds a lot of debug info in the stdout (default:
       False)
     - **stream_backend** -- the backend that will be used for the streaming
-      process. Can be *thread* or *gevent*. When set to *gevent* you need
-      to have *gevent* and *gevent_zmq* installed.
-      All watchers will use this setup unless stated otherwise in the
-      watcher configuration. (default: thread)
+      process. Can be *thread* or *gevent*. If *gevent* is installed,
+      *gevent* is forced. (default: thread)
     - **proc_name** -- the arbiter process name
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
                  prereload_fn=None, context=None, loop=None,
                  stats_endpoint=None, plugins=None, sockets=None,
                  warmup_delay=0, httpd=False, httpd_host='localhost',
-                 httpd_port=8080, debug=False, stream_backend='thread',
+                 httpd_port=8080, debug=False, stream_backend=DEFAULT_STREAM,
                  ssh_server=None, proc_name='circusd'):
         self.stream_backend = stream_backend
         self.watchers = watchers

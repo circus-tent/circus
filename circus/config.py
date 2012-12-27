@@ -6,6 +6,11 @@ import warnings
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          StrictConfigParser, parse_env_str)
+try:
+    import gevent       # NOQA
+    DEFAULT_STREAM = 'gevent'
+except ImportError:
+    DEFAULT_STREAM = 'thread'
 
 
 def watcher_defaults():
@@ -122,7 +127,7 @@ def get_config(config_file):
     config['httpd_host'] = dget('circus', 'httpd_host', 'localhost', str)
     config['httpd_port'] = dget('circus', 'httpd_port', 8080, int)
     config['debug'] = dget('circus', 'debug', False, bool)
-    stream_backend = dget('circus', 'stream_backend', 'thread')
+    stream_backend = dget('circus', 'stream_backend', DEFAULT_STREAM)
     if stream_backend == 'gevent':
         try:
             import gevent           # NOQA

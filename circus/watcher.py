@@ -15,6 +15,12 @@ from circus import util
 from circus.stream import get_pipe_redirector, get_stream
 from circus.util import parse_env_dict, resolve_name
 
+try:
+    import gevent       # NOQA
+    DEFAULT_STREAM = 'gevent'
+except ImportError:
+    DEFAULT_STREAM = 'thread'
+
 
 class Watcher(object):
     """
@@ -106,7 +112,8 @@ class Watcher(object):
 
     - **stream_backend** -- the backend that will be used for the streaming
       process. Can be *thread* or *gevent*. When set to *gevent* you need
-      to have *gevent* and *gevent_zmq* installed. (default: thread)
+      to have *gevent* installed. (default: thread, or gevent if
+      gevent is detected)
 
     - **priority** -- integer that defines a priority for the watcher. When
       the Arbiter do some operations on all watchers, it will sort them
@@ -156,7 +163,8 @@ class Watcher(object):
                  gid=None, send_hup=False, env=None, stopped=True,
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
-                 stderr_stream=None, stream_backend='thread', priority=0,
+                 stderr_stream=None, stream_backend=DEFAULT_STREAM,
+                 priority=0,
                  singleton=False, use_sockets=False, copy_env=False,
                  copy_path=False, max_age=0, max_age_variance=30,
                  hooks=None, respawn=True, **options):
@@ -172,6 +180,7 @@ class Watcher(object):
         self.graceful_timeout = float(graceful_timeout)
         self.prereload_fn = prereload_fn
         self.executable = None
+
         self.stream_backend = stream_backend
         self.priority = priority
         self.stdout_stream_conf = copy.copy(stdout_stream)
