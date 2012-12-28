@@ -2,10 +2,6 @@ from tempfile import mkstemp
 import os
 import signal
 import sys
-try:
-    from gevent import sleep
-except ImportError:
-    from time import sleep
 from time import time
 
 import cProfile
@@ -13,6 +9,7 @@ import pstats
 
 import unittest2 as unittest
 
+from gevent import sleep
 from circus import get_arbiter
 from circus.util import DEFAULT_ENDPOINT_STATS
 from circus.client import CircusClient, make_message

@@ -3,7 +3,6 @@ import sys
 import os
 import threading
 
-from gevent import sleep
 from zmq.eventloop import ioloop
 
 from circus.tests.support import TestCircus, poll_for, truncate_file
@@ -136,8 +135,8 @@ class TestWatcherInitialization(TestCircus):
     def test_copy_path(self):
         watcher = SomeWatcher()
         watcher.start()
-
-        data = watcher.stream.get(timeout=5)  # wait for watcher data at most 5s
+        # wait for watcher data at most 5s
+        data = watcher.stream.get(timeout=5)
         watcher.stop()
         data = [v for k, v in data.items()][1]
         data = ''.join(data)

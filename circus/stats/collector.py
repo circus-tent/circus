@@ -5,6 +5,7 @@ from circus import util
 from circus import logger
 
 from gevent.select import select
+from gevent import socket
 from zmq.eventloop import ioloop
 
 
