@@ -8,6 +8,7 @@ from random import randint
 
 from psutil import NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
+from zmq.eventloop import ioloop
 
 from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus import logger
@@ -226,7 +227,10 @@ class Watcher(object):
         self.arbiter = None
 
     def _create_redirectors(self):
-        loop = self.arbiter.loop
+        if self.arbiter is not None:
+            loop = self.arbiter.loop
+        else:
+            loop = ioloop.IOLoop.instance()
 
         if self.stdout_stream:
             if (self.stdout_redirector is not None and

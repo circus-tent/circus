@@ -50,6 +50,8 @@ class Redirector(object):
         self.caller.start()
 
     def kill(self):
+        if self.caller is None:
+            return
         self.caller.stop()
 
     def add_redirection(self, name, process, pipe):
