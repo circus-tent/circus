@@ -5,6 +5,8 @@ import select
 import sys
 import time
 
+from zmq.eventloop import ioloop
+
 
 class NamedPipe(object):
     def __init__(self, pipe, process, name):
@@ -23,9 +25,9 @@ class NamedPipe(object):
         return self.pipe.read(buffer)
 
 
-class BaseRedirector(object):
+class Redirector(object):
     def __init__(self, redirect, refresh_time=0.3, extra_info=None,
-                 buffer=1024, selector=None):
+                 buffer=1024, selector=None, loop=None):
         self.pipes = []
         self._names = {}
         self.redirect = redirect
@@ -38,7 +40,17 @@ class BaseRedirector(object):
         if selector is None:
             selector = select.select
         self.selector = selector
-        self.refresh_time = refresh_time
+        self.refresh_time = refresh_time * 1000
+        self.loop = loop or ioloop.IOLoop()
+        self.caller = None
+
+    def start(self):
+        self.caller = ioloop.PeriodicCallback(self._select, self.refresh_time,
+                                              self.loop)
+        self.caller.start()
+
+    def kill(self):
+        self.caller.stop()
 
     def add_redirection(self, name, process, pipe):
         npipe = NamedPipe(pipe, process, name)
@@ -57,7 +69,6 @@ class BaseRedirector(object):
         if len(self.pipes) == 0:
             time.sleep(.1)
             return
-
         try:
             try:
                 rlist, __, __ = self.selector(self.pipes, [], [], 1.0)

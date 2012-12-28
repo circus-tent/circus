@@ -156,9 +156,9 @@ class SocketStatsCollector(BaseStatsCollector):
         if len(events) == 0:
             return
 
-        for socket, read, write in events:
+        for sock, read, write in events:
             if read:
-                self._rstats[socket.fileno()] += 1
+                self._rstats[sock.fileno()] += 1
 
     def _aggregate(self, aggregate):
         raise NotImplementedError()

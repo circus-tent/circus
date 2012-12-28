@@ -15,12 +15,6 @@ from circus import util
 from circus.stream import get_pipe_redirector, get_stream
 from circus.util import parse_env_dict, resolve_name
 
-try:
-    import gevent       # NOQA
-    DEFAULT_STREAM = 'gevent'
-except ImportError:
-    DEFAULT_STREAM = 'thread'
-
 
 class Watcher(object):
     """
@@ -110,11 +104,6 @@ class Watcher(object):
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
 
-    - **stream_backend** -- the backend that will be used for the streaming
-      process. Can be *thread* or *gevent*. When set to *gevent* you need
-      to have *gevent* installed. (default: thread, or gevent if
-      gevent is detected)
-
     - **priority** -- integer that defines a priority for the watcher. When
       the Arbiter do some operations on all watchers, it will sort them
       with this field, from the bigger number to the smallest.
@@ -163,8 +152,7 @@ class Watcher(object):
                  gid=None, send_hup=False, env=None, stopped=True,
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
-                 stderr_stream=None, stream_backend=DEFAULT_STREAM,
-                 priority=0,
+                 stderr_stream=None, priority=0,
                  singleton=False, use_sockets=False, copy_env=False,
                  copy_path=False, max_age=0, max_age_variance=30,
                  hooks=None, respawn=True, **options):
@@ -180,8 +168,6 @@ class Watcher(object):
         self.graceful_timeout = float(graceful_timeout)
         self.prereload_fn = prereload_fn
         self.executable = None
-
-        self.stream_backend = stream_backend
         self.priority = priority
         self.stdout_stream_conf = copy.copy(stdout_stream)
         self.stderr_stream_conf = copy.copy(stderr_stream)
@@ -240,12 +226,14 @@ class Watcher(object):
         self.arbiter = None
 
     def _create_redirectors(self):
+        loop = self.arbiter.loop
+
         if self.stdout_stream:
             if (self.stdout_redirector is not None and
                     self.stdout_redirector.running):
                 self.stdout_redirector.kill()
             self.stdout_redirector = get_pipe_redirector(
-                self.stdout_stream, backend=self.stream_backend)
+                self.stdout_stream, loop=loop)
         else:
             self.stdout_redirector = None
 
@@ -255,7 +243,7 @@ class Watcher(object):
                 self.stderr_redirector.kill()
 
             self.stderr_redirector = get_pipe_redirector(
-                self.stderr_stream, backend=self.stream_backend)
+                self.stderr_stream, loop=loop)
         else:
             self.stderr_redirector = None
 
@@ -283,9 +271,10 @@ class Watcher(object):
         return resolved_hooks
 
     @classmethod
-    def load_from_config(cls, config):
+    def load_from_config(cls, config, **extras):
         if 'env' in config:
             config['env'] = parse_env_dict(config['env'])
+        config.update(extras)
         return cls(name=config.pop('name'), cmd=config.pop('cmd'), **config)
 
     @util.debuglog
