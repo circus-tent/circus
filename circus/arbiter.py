@@ -3,8 +3,9 @@ import logging
 import os
 from threading import Thread, RLock
 from thread import get_ident
-import time
 import sys
+
+from gevent import sleep
 
 from circus import zmq
 from zmq.eventloop import ioloop
@@ -65,12 +66,10 @@ class Arbiter(object):
         self.pubsub_endpoint = pubsub_endpoint
         self.proc_name = proc_name
 
+        self.ctrl = self.loop = None
+
         # initialize zmq context
         self.context = context or zmq.Context.instance()
-        self.loop = loop or ioloop.IOLoop.instance()
-        self.ctrl = Controller(endpoint, self.context, self.loop, self,
-                               check_delay)
-
         self.pid = os.getpid()
         self._watchers_names = {}
         self.alive = True
@@ -209,18 +208,20 @@ class Arbiter(object):
         processes and restarts them if needed.
         """
         logger.info("Starting master on pid %s", self.pid)
-
         self.initialize()
+
+        self.loop = ioloop.IOLoop.instance()
+        self.ctrl = Controller(self.endpoint, self.context, self.loop, self,
+                               self.check_delay)
 
         # start controller
         self.ctrl.start()
-
         try:
             # initialize processes
             logger.debug('Initializing watchers')
             for watcher in self.iter_watchers():
                 watcher.start()
-                time.sleep(self.warmup_delay)
+                sleep(self.warmup_delay)
 
             logger.info('Arbiter now waiting for commands')
 
@@ -239,10 +240,14 @@ class Arbiter(object):
             self.evpub_socket.close()
 
     def stop(self):
+        self._stop()
+
+    def _stop(self):
         if self.alive:
             self.stop_watchers(stop_alive=True)
 
-        self.loop.stop()
+        if self.loop.running():
+            self.loop.stop()
 
         # close sockets
         self.sockets.close_all()
@@ -268,7 +273,7 @@ class Arbiter(object):
                     watcher.reap_process(pid, status)
             except OSError as e:
                 if e.errno == errno.EAGAIN:
-                    time.sleep(0.001)
+                    sleep(0)
                     continue
                 elif e.errno == errno.ECHILD:
                     # process already reaped
@@ -307,7 +312,7 @@ class Arbiter(object):
         # gracefully reload watchers
         for watcher in self.iter_watchers():
             watcher.reload(graceful=graceful)
-            time.sleep(self.warmup_delay)
+            sleep(self.warmup_delay)
 
     def numprocesses(self):
         """Return the number of processes running across all watchers."""
@@ -365,7 +370,7 @@ class Arbiter(object):
     def start_watchers(self):
         for watcher in self.iter_watchers():
             watcher.start()
-            time.sleep(self.warmup_delay)
+            sleep(self.warmup_delay)
 
     def stop_watchers(self, stop_alive=False):
         if not self.alive:
@@ -396,6 +401,6 @@ class ThreadedArbiter(Arbiter, Thread):
         return Arbiter.start(self)
 
     def stop(self):
-        Arbiter.stop(self)
+        self.loop.add_callback(self._stop)
         if get_ident() != self.ident:
             self.join()

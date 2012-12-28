@@ -2,8 +2,8 @@ import fcntl
 import errno
 import os
 import sys
-import time
 
+from gevent import sleep
 from zmq.eventloop import ioloop
 
 
@@ -65,7 +65,7 @@ class Redirector(object):
 
     def _select(self):
         if len(self.pipes) == 0:
-            time.sleep(.1)
+            sleep(.1)
             return
 
         # we just try to read, if we see some data

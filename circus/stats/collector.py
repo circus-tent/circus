@@ -1,20 +1,11 @@
+import errno
 from collections import defaultdict
-try:
-    import gevent       # NOQA
-    from gevent import monkey
-    monkey.noisy = False
-    monkey.patch_all()
-    from gevent_zeromq import monkey_patch
-    monkey_patch()
-except ImportError:
-    pass
-
 
 from circus import util
 from circus import logger
 
+from gevent.select import select
 from zmq.eventloop import ioloop
-from iowait import IOWait, SelectIOWait
 
 
 class BaseStatsCollector(ioloop.PeriodicCallback):
@@ -117,28 +108,13 @@ class SocketStatsCollector(BaseStatsCollector):
     def __init__(self, streamer, name, callback_time=1., io_loop=None):
         super(SocketStatsCollector, self).__init__(streamer, name,
                                                    callback_time, io_loop)
-        # if gevent is installed, we'll use a greenlet,
-        # otherwise we'll use a thread
-        try:
-            import gevent       # NOQA
-            self.greenlet = True
-        except ImportError:
-            self.greenlet = False
-
         self._rstats = defaultdict(int)
-        if self.greenlet:
-            self.poller = SelectIOWait()
-        else:
-            self.poller = IOWait()
-
-        for sock, address, fd in self.streamer.get_sockets():
-            self.poller.watch(sock, read=True, write=False)
-
+        self.sockets = [sock for sock, address, fd in
+                        self.streamer.get_sockets()]
         self._p = ioloop.PeriodicCallback(self._select, _LOOP_RES,
                                           io_loop=io_loop)
 
     def start(self):
-        # starting the thread or greenlet
         self._p.start()
         super(SocketStatsCollector, self).start()
 
@@ -147,18 +123,25 @@ class SocketStatsCollector(BaseStatsCollector):
         BaseStatsCollector.stop(self)
 
     def _select(self):
-        # polling for events
         try:
-            events = self.poller.wait(_RESOLUTION)
-        except ValueError:
+            rlist, wlist, xlist = select(self.sockets, [], [], .01)
+        except socket.error, err:
+            if err.errno == errno.EBADF:
+                return
+
+        if len(rlist) == 0:
             return
 
-        if len(events) == 0:
-            return
+        for sock in rlist:
+            try:
+                fileno = sock.fileno()
+            except socket.error, err:
+                if err.errno == errno.EBADF:
+                    continue
+                else:
+                    raise
 
-        for sock, read, write in events:
-            if read:
-                self._rstats[sock.fileno()] += 1
+            self._rstats[fileno] += 1
 
     def _aggregate(self, aggregate):
         raise NotImplementedError()

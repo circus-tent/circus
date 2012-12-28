@@ -2,7 +2,12 @@ from tempfile import mkstemp
 import os
 import signal
 import sys
-import time
+try:
+    from gevent import sleep
+except ImportError:
+    from time import sleep
+from time import time
+
 import cProfile
 import pstats
 
@@ -74,7 +79,8 @@ class TestCircus(unittest.TestCase):
                 f.write(content)
         return file
 
-    def _run_circus(self, callable, plugins=None, stats=False, **kw):
+    @classmethod
+    def _create_circus(cls, callable, plugins=None, stats=False, **kw):
         resolve_name(callable)   # used to check the callable
         fd, testfile = mkstemp()
         os.close(fd)
@@ -90,9 +96,13 @@ class TestCircus(unittest.TestCase):
         else:
             arbiter = get_arbiter([worker], background=True, plugins=plugins,
                                   debug=kw.get('debug', False))
-
         arbiter.start()
-        time.sleep(.3)
+        return testfile, arbiter
+
+    def _run_circus(self, callable, plugins=None, stats=False, **kw):
+
+        testfile, arbiter = TestCircus._create_circus(callable, plugins, stats,
+                                                      **kw)
         self.arbiters.append(arbiter)
         self.files.append(testfile)
         return testfile
@@ -144,7 +154,7 @@ class Process(object):
     def run(self):
         self._write('START')
         while self.alive:
-            time.sleep(0.1)
+            sleep(0.1)
         self._write('STOP')
 
 
@@ -165,15 +175,15 @@ def poll_for(filename, needle, timeout=5):
     of polling.
 
     """
-    start = time.time()
-    while (time.time() - start) < 5:
+    start = time()
+    while (time() - start) < 5:
         with open(filename) as f:
             content = f.read()
         if needle in content:
             return True
         # When using gevent this will make sure the redirector greenlets are
         # scheduled.
-        time.sleep(0)
+        sleep(0)
     raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
         filename, needle, content))
 

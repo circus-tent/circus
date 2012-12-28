@@ -32,7 +32,6 @@ class StatsClient(CircusConsumer):
                         continue
 
                 if len(events) == 0:
-                    print 'nothing'
                     continue
 
                 try:

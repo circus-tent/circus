@@ -38,7 +38,6 @@ class Controller(object):
         self.ctrl_socket = self.context.socket(zmq.ROUTER)
         self.ctrl_socket.bind(self.endpoint)
         self.ctrl_socket.linger = 0
-
         self.stream = zmqstream.ZMQStream(self.ctrl_socket, self.loop)
         self.stream.on_recv(self.handle_message)
 
@@ -50,6 +49,8 @@ class Controller(object):
 
     def stop(self):
         self.caller.stop()
+        self.stream.flush()
+        self.stream.close()
         self.ctrl_socket.close()
 
     def wakeup(self):

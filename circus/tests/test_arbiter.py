@@ -162,6 +162,11 @@ class TestTrainer(TestCircus):
         resp = self.cli.call(make_message("quit"))
         self.assertEqual(resp.get("status"), "ok")
         self.assertRaises(CallError, self.cli.call, make_message("list"))
+        dummy_process = 'circus.tests.support.run_process'
+        self.test_file = self._run_circus(dummy_process)
+        msg = make_message("numprocesses")
+        resp = self.cli.call(msg)
+        self.assertEqual(resp.get("status"), "ok")
 
     def test_reload(self):
         resp = self.cli.call(make_message("reload"))
