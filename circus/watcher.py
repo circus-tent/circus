@@ -153,7 +153,7 @@ class Watcher(object):
                  gid=None, send_hup=False, env=None, stopped=True,
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
-                 stderr_stream=None, priority=0,
+                 stderr_stream=None, priority=0, loop=None,
                  singleton=False, use_sockets=False, copy_env=False,
                  copy_path=False, max_age=0, max_age_variance=30,
                  hooks=None, respawn=True, **options):
@@ -185,6 +185,7 @@ class Watcher(object):
         self.ignore_hook_failure = ['before_stop', 'after_stop']
         self.hooks = self._resolve_hooks(hooks)
         self.respawn = respawn
+        self.loop = loop or ioloop.IOLoop.instance()
 
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
@@ -227,17 +228,12 @@ class Watcher(object):
         self.arbiter = None
 
     def _create_redirectors(self):
-        if self.arbiter is not None:
-            loop = self.arbiter.loop
-        else:
-            loop = ioloop.IOLoop.instance()
-
         if self.stdout_stream:
             if (self.stdout_redirector is not None and
                     self.stdout_redirector.running):
                 self.stdout_redirector.kill()
             self.stdout_redirector = get_pipe_redirector(
-                self.stdout_stream, loop=loop)
+                self.stdout_stream, loop=self.loop)
         else:
             self.stdout_redirector = None
 
@@ -247,7 +243,7 @@ class Watcher(object):
                 self.stderr_redirector.kill()
 
             self.stderr_redirector = get_pipe_redirector(
-                self.stderr_stream, loop=loop)
+                self.stderr_stream, loop=self.loop)
         else:
             self.stderr_redirector = None
 

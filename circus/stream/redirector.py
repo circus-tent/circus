@@ -1,7 +1,6 @@
 import fcntl
 import errno
 import os
-import select
 import sys
 import time
 
@@ -27,7 +26,7 @@ class NamedPipe(object):
 
 class Redirector(object):
     def __init__(self, redirect, refresh_time=0.3, extra_info=None,
-                 buffer=1024, selector=None, loop=None):
+                 buffer=1024, loop=None):
         self.pipes = []
         self._names = {}
         self.redirect = redirect
@@ -37,11 +36,8 @@ class Redirector(object):
         if extra_info is None:
             extra_info = {}
         self.extra_info = extra_info
-        if selector is None:
-            selector = select.select
-        self.selector = selector
         self.refresh_time = refresh_time * 1000
-        self.loop = loop or ioloop.IOLoop()
+        self.loop = loop or ioloop.IOLoop.instance()
         self.caller = None
 
     def start(self):
@@ -71,13 +67,11 @@ class Redirector(object):
         if len(self.pipes) == 0:
             time.sleep(.1)
             return
-        try:
-            try:
-                rlist, __, __ = self.selector(self.pipes, [], [], 1.0)
-            except select.error:     # need a non specific error
-                return
 
-            for pipe in rlist:
+        # we just try to read, if we see some data
+        # we just redirect it.
+        try:
+            for pipe in self.pipes:
                 data = pipe.read(self.buffer)
                 if data:
                     datamap = {'data': data, 'pid': pipe.process.pid,

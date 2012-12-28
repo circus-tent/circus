@@ -52,7 +52,7 @@ class Arbiter(object):
       False)
     - **proc_name** -- the arbiter process name
     """
-    def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.,
+    def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=.5,
                  prereload_fn=None, context=None, loop=None,
                  stats_endpoint=None, plugins=None, sockets=None,
                  warmup_delay=0, httpd=False, httpd_host='localhost',
@@ -67,7 +67,7 @@ class Arbiter(object):
 
         # initialize zmq context
         self.context = context or zmq.Context.instance()
-        self.loop = loop or ioloop.IOLoop()
+        self.loop = loop or ioloop.IOLoop.instance()
         self.ctrl = Controller(endpoint, self.context, self.loop, self,
                                check_delay)
 

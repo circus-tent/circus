@@ -1,5 +1,8 @@
 import sys
-from Queue import Queue
+try:
+    from gevent.queue import Queue
+except ImportError:
+    from Queue import Queue
 
 from circus.util import resolve_name
 from circus.stream.file_stream import FileStream

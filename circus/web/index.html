@@ -120,7 +120,7 @@
             <i>circushttpd</i>
         </td>
         <td>
-            <span class="label">${goptions['endpoint']}</span>
+            <span class="label">${goptions.get('endpoint', 'N/A')}</span>
         </td>
     </tr>
     <tr>
@@ -128,7 +128,7 @@
             ZeroMQ endpoint used for pub/sub
         </td>
         <td>
-            <span class="label">${goptions['pubsub_endpoint']}</span>
+            <span class="label">${goptions.get('pubsub_endpoint', 'N/A')}</span>
         </td>
     </tr>
     <tr>
@@ -136,7 +136,7 @@
             ZeroMQ endpoint used for the pub/sub stats
         </td>
         <td>
-            <span class="label">${goptions['stats_endpoint']}</span>
+            <span class="label">${goptions.get('stats_endpoint', 'N/A')}</span>
         </td>
     </tr>
 
@@ -145,7 +145,7 @@
             Delay in seconds for the ZMQ polling.
         </td>
         <td>
-            <span class="label">${goptions['check_delay']}</span>
+            <span class="label">${goptions.get('check_delay', 'N/A')}</span>
         </td>
     </tr>
 
