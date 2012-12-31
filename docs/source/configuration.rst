@@ -137,7 +137,7 @@ watcher:NAME - as many sections as you want
         will receive the **stderr** stream of all processes in its
         :func:`__call__` method.
 
-        Circus provides four classes you can use without prefix:
+        Circus provides some stream classes you can use without prefix:
 
         - :class:`FileStream`: writes in a file
         - :class:`QueueStream`: write in a memory Queue
@@ -152,7 +152,8 @@ watcher:NAME - as many sections as you want
         A fully qualified Python class name that will be instanciated, and
         will receive the **stdout** stream of all processes in its
         :func:`__call__` method.
-        Circus provides four classes you can use without prefix:
+
+        Circus provides soem stream classes you can use without prefix:
 
         - :class:`FileStream`: writes in a file
         - :class:`QueueStream`: write in a memory Queue
