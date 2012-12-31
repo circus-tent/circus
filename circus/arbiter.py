@@ -159,7 +159,7 @@ class Arbiter(object):
             # controlling that we have what it takes to run the web UI
             # if something is missing this will tell the user
             try:
-                from circusweb import circushttpd      # NOQA
+                import circusweb     # NOQA
             except ImportError:
                 logger.error('You need to install circus-web')
                 sys.exit(1)
