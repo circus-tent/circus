@@ -22,7 +22,9 @@ class SysHandler(object):
         self.controller = controller
 
         # init signals
-        map(lambda s: signal.signal(s, self.signal), self.SIGNALS)
+        logger.info('Registring signals...')
+        for sig in self.SIGNALS:
+            signal.signal(sig, self.signal)
 
         # Don't let SIGQUIT and SIGUSR1 disturb active requests
         # by interrupting system calls
@@ -32,6 +34,8 @@ class SysHandler(object):
 
     def signal(self, sig, frame):
         signame = self.SIG_NAMES.get(sig)
+        logger.info('Got signal SIG_%s' % signame.upper())
+
         if signame is not None:
             try:
                 handler = getattr(self, "handle_%s" % signame)
