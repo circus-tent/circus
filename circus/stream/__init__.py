@@ -66,29 +66,51 @@ class FancyStdoutStream(StdoutStream):
       stdout_stream.time_format = '%Y/%M/%d | %H:%M:%S'
     """
 
+    # colors in order according to the ascii escape sequences
     colors = ['red', 'green', 'yellow', 'blue',
               'magenta', 'cyan', 'white']
 
+    # Where we write output
+    out = sys.stdout
+
+    # Generate a datetime object
+    now = datetime.now
+
     def __init__(self, color=None, time_format=None, *args, **kwargs):
-        color_name = color
         self.time_format = time_format or '%Y-%M-%d %H:%M:%S'
-        if color_name not in self.colors:
-            color_name = random.choice(self.colors)
-        self.color = self.colors.index(color_name) + 1  # ansi code
+
+        # If no color is provided we pick one at random
+        if color not in self.colors:
+            color = random.choice(self.colors)
+
+        self.color_code = self.colors.index(color) + 1
 
     def prefix(self, pid):
-        time = datetime.now().strftime(self.time_format)
-        color = '\033[0;3%s;40m' % self.color
+        """
+        Create a prefix for each line.
+
+        This includes the ansi escape sequence for the color. This
+        will not work on windows. For something more robust there is a
+        good discussion over on Stack Overflow:
+
+        http://stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
+        """
+        time = self.now().strftime(self.time_format)
+
+        # start the coloring with the ansi escape sequence
+        color = '\033[0;3%s;40m' % self.color_code
+
         prefix = '{time} [{pid}] | '.format(pid=pid, time=time)
         return color + prefix
 
     def __call__(self, data):
         for line in data['data'].split('\n'):
             if line:
-                sys.stdout.write(self.prefix(data['pid']))
-                sys.stdout.write(line)
-                sys.stdout.write('\033[0m\n')
-                sys.stdout.flush()
+                self.out.write(self.prefix(data['pid']))
+                self.out.write(line)
+                # stop coloring
+                self.out.write('\033[0m\n')
+                self.out.flush()
 
 
 def get_stream(conf):
