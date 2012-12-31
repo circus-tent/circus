@@ -152,10 +152,10 @@ Example::
 
 If you want more configuration options, see http://wiki.nginx.org/HttpProxyModule.
 
-Websockets in Nginx (v1.2.5) is currently unsupported, although it will be 
+Websockets in Nginx (v1.2.5) is currently unsupported, although it will be
 implemented in 1.3. To receive real-time statuses and graphs in the web console,
 you need to use a websocket-compatible proxy like Varnish or HAProxy. In Varnish,
-two backends can be defined: one for serving the web console and one for the 
+two backends can be defined: one for serving the web console and one for the
 handling the socket connections.
 
 Example::
