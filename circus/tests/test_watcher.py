@@ -2,7 +2,6 @@ import signal
 import sys
 import os
 import threading
-import time
 
 from zmq.eventloop import ioloop
 
@@ -288,8 +287,8 @@ class RespawnTest(TestCircus):
         testfile, arbiter = self._create_circus(oneshot_process, respawn=False)
         watcher = arbiter.watchers[-1]
         try:
-            # Per default, we shouldn't respawn processes, so we should have one
-            # process, even if in a dead state.
+            # Per default, we shouldn't respawn processes,
+            # so we should have one process, even if in a dead state.
             resp = self.call("numprocesses", name="test")
             self.assertEquals(resp['numprocesses'], 1)
 
@@ -299,8 +298,8 @@ class RespawnTest(TestCircus):
             # we should have zero processes (the process shouldn't respawn)
             self.assertEquals(len(watcher.processes), 0)
 
-            # If we explicitely ask the watcher to respawn its processes, ensure
-            # it's doing so.
+            # If we explicitely ask the watcher to respawn its processes,
+            # ensure it's doing so.
             watcher.spawn_processes()
             self.assertEquals(len(watcher.processes), 1)
         finally:

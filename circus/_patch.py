@@ -1,7 +1,6 @@
 import threading
 from threading import (_active_limbo_lock, _limbo, _active, _sys, _trace_hook,
                        _profile_hook, _format_exc)
-import warnings
 import zmq     # NOQA
 
 
