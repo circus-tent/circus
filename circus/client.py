@@ -61,6 +61,7 @@ class CircusClient(object):
                 if e.errno == errno.EINTR:
                     continue
                 else:
+                    print str(e)
                     raise CallError(str(e))
             else:
                 break

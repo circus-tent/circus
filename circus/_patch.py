@@ -1,8 +1,10 @@
 import threading
 from threading import (_active_limbo_lock, _limbo, _active, _sys, _trace_hook,
                        _profile_hook, _format_exc)
-import zmq     # NOQA
-
+try:
+    import zmq     # NOQA
+except ImportError:
+    zmq = None     # NOQA
 
 # see http://bugs.python.org/issue1596321
 def _bootstrap_inner(self):
