@@ -6,6 +6,7 @@ try:
 except ImportError:
     zmq = None     # NOQA
 
+
 # see http://bugs.python.org/issue1596321
 def _bootstrap_inner(self):
     try:
