@@ -222,6 +222,9 @@ class Arbiter(object):
             # initialize processes
             logger.debug('Initializing watchers')
             for watcher in self.iter_watchers():
+                opts = dict(watcher.options())
+                if opts.get('start') is False:
+                    continue
                 watcher.start()
                 sleep(self.warmup_delay)
 

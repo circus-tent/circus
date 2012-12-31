@@ -36,7 +36,8 @@ def watcher_defaults():
         'copy_env': False,
         'copy_path': False,
         'hooks': dict(),
-        'respawn': True}
+        'respawn': True,
+        'start': True}
 
 
 _BOOL_STATES = {'1': True, 'yes': True, 'true': True, 'on': True,
@@ -218,6 +219,9 @@ def get_config(config_file):
                     logger.warning('the env option is deprecated the use of '
                                    'env sections is recommended')
                     watcher['env'] = parse_env_str(val)
+
+                elif opt == 'start':
+                    watcher['start'] = dget(section, "start", True, bool)
 
                 else:
                     # freeform
