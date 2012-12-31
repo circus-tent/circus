@@ -25,11 +25,9 @@ The Web Console lets you:
 
    By default, this option is not activated.
 
-The web console needs a few dependencies that you can install them using the
-web-requirements.txt file. Additionally, you will need to have gevent (and thus
-libevent) installed on your system to make this working::
+The web console is its own package, you need to install::
 
-    $ bin/pip install -r web-requirements.txt
+    $ pip install circus-web
 
 To enable the console, add a few options in the Circus ini file::
 
