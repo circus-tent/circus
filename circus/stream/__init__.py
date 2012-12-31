@@ -37,18 +37,47 @@ class StdoutStream(object):
 
 
 class FancyStdoutStream(StdoutStream):
+    """
+    Write output from watchers using different colors along with a
+    timestamp.
+
+    If no color is selected a color will be chosen at random. The
+    available ascii colors are:
+
+      - red
+      - green
+      - yellow
+      - blue
+      - magenta
+      - cyan
+      - white
+
+    You may also configure the timestamp format as defined by
+    datetime.strftime. The default is: ::
+
+      %Y-%M-%d %H:%M:%S
+
+    Here is an example: ::
+
+      [watcher:foo]
+      cmd = python -m myapp.server
+      stdout_stream.class = FancyStdoutStream
+      stdout_stream.color = green
+      stdout_stream.time_format = '%Y/%M/%d | %H:%M:%S'
+    """
 
     colors = ['red', 'green', 'yellow', 'blue',
               'magenta', 'cyan', 'white']
 
-    def __init__(self, color=None, *args, **kwargs):
+    def __init__(self, color=None, time_format=None, *args, **kwargs):
         color_name = color
+        self.time_format = time_format or '%Y-%M-%d %H:%M:%S'
         if color_name not in self.colors:
             color_name = random.choice(self.colors)
         self.color = self.colors.index(color_name) + 1  # ansi code
 
     def prefix(self, pid):
-        time = datetime.now().strftime('%Y-%M-%d %H:%M:%S')
+        time = datetime.now().strftime(self.time_format)
         color = '\033[0;3%s;40m' % self.color
         prefix = '{time} [{pid}] | '.format(pid=pid, time=time)
         return color + prefix
