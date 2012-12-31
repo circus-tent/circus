@@ -4,6 +4,8 @@ import textwrap
 import time
 
 from circus.exc import MessageError, ArgumentError
+from circus.commands import errors
+
 
 KNOWN_COMMANDS = []
 
@@ -23,12 +25,13 @@ def ok(props=None):
     return resp
 
 
-def error(reason="unknown", tb=None):
+def error(reason="unknown", tb=None, errno=errors.NOT_SPECIFIED):
     return {
         "status": "error",
         "reason": reason,
         "tb": tb,
-        "time": time.time()
+        "time": time.time(),
+        "errno": errno
     }
 
 
@@ -87,8 +90,8 @@ class Command(object):
             raise MessageError("program %s not found" % watcher_name)
 
     def _get_signal(self, sig):
-        if sig.lower() in ('quit', 'hup', 'kill', 'term', 'ttin',
-                'ttou', 'usr1', 'usr2'):
+        if sig.lower() in ('quit', 'hup', 'kill', 'term', 'ttin', 'ttou',
+                           'usr1', 'usr2'):
             return getattr(signal, "SIG%s" % sig.upper())
         elif sig.isdigit():
             return int(sig)
@@ -100,7 +103,6 @@ class Command(object):
 
         for propname in self.properties:
             if propname not in props:
-                raise MessageError("message invalid %r is missing" %
-                        propname)
+                raise MessageError("message invalid %r is missing" % propname)
 
 Command = CommandMeta('Command', (Command,), {})

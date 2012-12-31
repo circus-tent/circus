@@ -2,7 +2,7 @@
 Circus
 ======
 
-Circus is a program that runs and watches several processes.
+Circus is a program that runs and watches processes and sockets.
 
 Circus can be used as a library or through the command line.
 
@@ -14,7 +14,9 @@ For more information about the motivation for this project, see `this blog post 
 
 Links:
 
-- The full documentation is located at : http://circus.readthedocs.org
-- You can reach us for any feedback, bug report, or to contribute, at
-  https://github.com/mozilla-services/circus
-
+- The full documentation is located at : http://circus.io
+- Have a look at our how to contribute page if you are interested:
+  http://circus.readthedocs.org/en/latest/contributing/
+- There's a mailing list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
+- The repository and issue tracker are at GitHub : https://github.com/mozilla-services/circus
+- Join us on the IRC : Freenode, channel #mozilla-circus

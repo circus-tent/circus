@@ -21,7 +21,7 @@ be helpful to configure the app that is flapping to use a
     cmd = python -m myapp.wsgi
     warmup_delay = 5
 
-By default, `stdout` and `stderr` are captured by the `curcusd`
+By default, `stdout` and `stderr` are captured by the `circusd`
 process. If you are testing your config and want to see the output in
 line with the circusd output, you can configure your watcher to use
 the `StdoutStream` class. ::

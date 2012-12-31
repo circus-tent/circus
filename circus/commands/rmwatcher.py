@@ -51,5 +51,6 @@ class RmWatcher(Command):
 
         return self.make_message(name=args[0])
 
-    def execute(self, arbiter, args):
-        arbiter.rm_watcher(args['name'])
+    def execute(self, arbiter, props):
+        self._get_watcher(arbiter, props['name'])
+        arbiter.rm_watcher(props['name'])

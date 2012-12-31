@@ -1,9 +1,10 @@
 import fcntl
 import errno
 import os
-import select
 import sys
-import time
+
+from gevent import sleep
+from zmq.eventloop import ioloop
 
 
 class NamedPipe(object):
@@ -23,9 +24,9 @@ class NamedPipe(object):
         return self.pipe.read(buffer)
 
 
-class BaseRedirector(object):
+class Redirector(object):
     def __init__(self, redirect, refresh_time=0.3, extra_info=None,
-            buffer=1024, selector=None):
+                 buffer=1024, loop=None):
         self.pipes = []
         self._names = {}
         self.redirect = redirect
@@ -35,10 +36,19 @@ class BaseRedirector(object):
         if extra_info is None:
             extra_info = {}
         self.extra_info = extra_info
-        if selector is None:
-            selector = select.select
-        self.selector = selector
-        self.refresh_time = refresh_time
+        self.refresh_time = refresh_time * 1000
+        self.loop = loop or ioloop.IOLoop.instance()
+        self.caller = None
+
+    def start(self):
+        self.caller = ioloop.PeriodicCallback(self._select, self.refresh_time,
+                                              self.loop)
+        self.caller.start()
+
+    def kill(self):
+        if self.caller is None:
+            return
+        self.caller.stop()
 
     def add_redirection(self, name, process, pipe):
         npipe = NamedPipe(pipe, process, name)
@@ -46,26 +56,26 @@ class BaseRedirector(object):
         self._names[process.pid, name] = npipe
 
     def remove_redirection(self, name, process):
-        pipe = self._names[process.pid, name]
+        key = process.pid, name
+        if key not in self._names:
+            return
+        pipe = self._names[key]
         self.pipes.remove(pipe)
-        del self._names[process.pid, name]
+        del self._names[key]
 
     def _select(self):
         if len(self.pipes) == 0:
-            time.sleep(.1)
+            sleep(.1)
             return
 
+        # we just try to read, if we see some data
+        # we just redirect it.
         try:
-            try:
-                rlist, __, __ = self.selector(self.pipes, [], [], 1.0)
-            except select.error:     # need a non specific error
-                return
-
-            for pipe in rlist:
+            for pipe in self.pipes:
                 data = pipe.read(self.buffer)
                 if data:
                     datamap = {'data': data, 'pid': pipe.process.pid,
-                                'name': pipe.name}
+                               'name': pipe.name}
                     datamap.update(self.extra_info)
                     self.redirect(datamap)
         except IOError, ex:

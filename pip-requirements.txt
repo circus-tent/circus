@@ -1,4 +1,4 @@
-psutil==0.4.1
-pyzmq==2.1.11
-coverage
-nose
+iowait==0.1
+psutil==0.6.1
+pyzmq==2.2.0.1
+gevent

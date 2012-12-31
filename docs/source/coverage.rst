@@ -5,48 +5,60 @@ Code coverage
 
 ::
 
-    Name                                                              Stmts   Miss  Cover   Missing
-    -----------------------------------------------------------------------------------------------
-    /Users/tarek/Dev/github.com/circus/circus/__init__                   30     19    37%   1-13, 69-81, 87
-    /Users/tarek/Dev/github.com/circus/circus/arbiter                   139     24    83%   60-74, 125-129, 153-156, 168, 172-177, 196, 211, 235-236, 240
-    /Users/tarek/Dev/github.com/circus/circus/client                     49     11    78%   36-37, 41-42, 47-51, 62-63, 71
-    /Users/tarek/Dev/github.com/circus/circus/commands/addwatcher        16     15     6%   1-65
-    /Users/tarek/Dev/github.com/circus/circus/commands/base              72     55    24%   1-11, 19, 26, 35-79, 82, 86-97, 103-106
-    /Users/tarek/Dev/github.com/circus/circus/commands/decrproc          16     14    13%   1-53, 57-60
-    /Users/tarek/Dev/github.com/circus/circus/commands/get               25     19    24%   1-66, 76, 80-86
-    /Users/tarek/Dev/github.com/circus/circus/commands/incrproc          16     14    13%   1-51, 55-58
-    /Users/tarek/Dev/github.com/circus/circus/commands/list              23     17    26%   1-52, 61-67
-    /Users/tarek/Dev/github.com/circus/circus/commands/numprocesses      19     17    11%   1-57, 59-60, 67-70
-    /Users/tarek/Dev/github.com/circus/circus/commands/numwatchers       14     13     7%   1-42, 45-48
-    /Users/tarek/Dev/github.com/circus/circus/commands/options           20     18    10%   1-98, 102-108
-    /Users/tarek/Dev/github.com/circus/circus/commands/quit               7      6    14%   1-36
-    /Users/tarek/Dev/github.com/circus/circus/commands/reload            17     15    12%   1-68, 70-71
-    /Users/tarek/Dev/github.com/circus/circus/commands/rmwatcher         11     10     9%   1-54
-    /Users/tarek/Dev/github.com/circus/circus/commands/sendsignal        47     33    30%   1-109, 114, 118, 124, 127, 130, 138-147
-    /Users/tarek/Dev/github.com/circus/circus/commands/set               83     62    25%   1-74, 78, 82, 85-86, 89-90, 93-94, 98, 104-121, 132
-    /Users/tarek/Dev/github.com/circus/circus/commands/stats             49     44    10%   1-89, 91-102, 109-135
-    /Users/tarek/Dev/github.com/circus/circus/commands/status            23     20    13%   1-65, 70-80
-    /Users/tarek/Dev/github.com/circus/circus/commands/stop              10      6    40%   1-48
-    /Users/tarek/Dev/github.com/circus/circus/config                    121    109    10%   10, 35-44, 48-66, 70-97, 101-196
-    /Users/tarek/Dev/github.com/circus/circus/controller                113     15    87%   75, 85-86, 93-95, 103, 115-118, 121, 141, 147, 152-153
-    /Users/tarek/Dev/github.com/circus/circus/flapping                  109     20    82%   50-60, 101-105, 129, 135-142
-    /Users/tarek/Dev/github.com/circus/circus/process                   117     37    68%   3-9, 91, 96, 99-119, 132, 183-184, 188, 194, 200, 206-209, 214-219, 237, 252
-    /Users/tarek/Dev/github.com/circus/circus/sighandler                 36     10    72%   39-44, 47, 50, 53, 59
-    /Users/tarek/Dev/github.com/circus/circus/stream/__init__            35     11    69%   16, 21-22, 25-26, 29, 34, 37-38, 41, 68
-    /Users/tarek/Dev/github.com/circus/circus/stream/base                61     10    84%   22, 39, 55-56, 61-62, 71-74
-    /Users/tarek/Dev/github.com/circus/circus/stream/sthread             19      0   100%   
-    /Users/tarek/Dev/github.com/circus/circus/tests/__init__              0      0   100%   
-    /Users/tarek/Dev/github.com/circus/circus/tests/support              71      8    89%   24, 31-34, 37-39
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_arbiter        130     19    85%   13-19, 22-23, 26-27, 30, 33-36, 40-42
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_client          45      5    89%   8-12
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_process         37      0   100%   
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_runner          13      3    77%   6-8
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_sighandler      42     24    43%   8-15, 18-19, 22-27, 30-31, 34-37, 41-43
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_util            63      4    94%   81-84
-    /Users/tarek/Dev/github.com/circus/circus/tests/test_watcher         52      8    85%   12-19
-    /Users/tarek/Dev/github.com/circus/circus/util                      193    110    43%   1-54, 58-61, 67-69, 75, 89-92, 96-97, 113-114, 124-125, 129-130, 134-137, 141-142, 149, 158, 167, 180, 188, 200, 208, 210, 214-220, 226-231, 236-289
-    /Users/tarek/Dev/github.com/circus/circus/watcher                   269     68    75%   121, 183, 205, 211, 236, 252, 272, 279-280, 283-284, 292, 302, 318-320, 330-332, 338-343, 349-350, 356, 360-361, 378, 397, 406, 415-418, 425, 428, 431-433, 455, 471, 473-474, 476-477, 479-480, 482, 484-485, 489-503
-    -----------------------------------------------------------------------------------------------
-    TOTAL                                                              2212    893    60%   
+    Name                           Stmts   Miss  Cover   Missing
+    ------------------------------------------------------------
+    /Users/tarek/Dev/github.com/circus/bin/bottle                      1613    875    46%   25-36, 95-96, 117, 121, 129, 133, 160-161, 164-165, 191-193, 231-233, 236, 298, 301, 310, 320-322, 353-354, 373-374, 378-384, 403-404, 412-417, 420, 424-431, 465-468, 479, 483, 487-488, 512-514, 563-588, 597, 607-615, 622-623, 626, 631-633, 639, 643-645, 693, 697, 701, 705, 709-712, 716-719, 727-730, 740-749, 765, 776-780, 786-815, 828-829, 832-845, 892, 896, 902-904, 911-915, 923-927, 945-950, 969-973, 981-984, 1024, 1035-1036, 1057-1060, 1073, 1091-1092, 1106-1107, 1112, 1122-1126, 1134-1137, 1143-1144, 1148, 1158-1172, 1175, 1192-1193, 1196-1197, 1227-1228, 1232-1235, 1238, 1241-1242, 1247, 1257-1261, 1267-1269, 1295, 1300-1303, 1307, 1315, 1320-1321, 1324-1325, 1330, 1340, 1346-1349, 1384-1405, 1410-1412, 1415-1418, 1459-1462, 1485-1487, 1491-1494, 1504-1509, 1523, 1525-1526, 1528, 1548, 1551-1558, 1611-1613, 1621, 1625, 1649-1653, 1671, 1677-1679, 1697, 1701-1704, 1708, 1711, 1714, 1717, 1720-1724, 1745-1747, 1750-1754, 1757, 1760-1761, 1782-1784, 1787-1791, 1805, 1823-1858, 1874, 1879-1883, 1888-1895, 1901, 1906-1908, 1913-1918, 1923, 1928, 1934, 1948-1956, 1968-1987, 1995-2008, 2014-2022, 2052-2054, 2060-2061, 2114-2116, 2155-2161, 2167-2175, 2181-2183, 2194-2198, 2204-2216, 2222-2223, 2229-2231, 2237-2238, 2245-2249, 2292-2298, 2305-2312, 2332-2399, 2407-2410, 2413-2432, 2435, 2438-2440, 2453, 2473-2486, 2492-2499, 2504-2508, 2515, 2524, 2529-2537, 2540-2543, 2548-2555, 2558-2563, 2568-2578, 2581-2584, 2587-2590, 2596-2602, 2605-2615, 2627, 2637-2642, 2647-2650, 2654, 2658-2740, 2743-2746, 2749-2762, 2766-2769, 2779-2794, 2812-2822, 2909-2929
+    circus/__init__                   31     15    52%   1-14, 100-106, 112
+    circus/_patch                     76     59    22%   1-8, 17, 19, 23-47, 55-69, 73, 77-119
+    circus/arbiter                   218     49    78%   92, 94, 105-124, 145-174, 194-195, 231-235, 243, 276-277, 282, 302, 306-310, 330, 346, 371-373, 377, 387-388
+    circus/circusctl                 216    169    22%   17-18, 34-45, 53-69, 72-74, 81-90, 96, 99-115, 118-134, 139-142, 145-148, 152-167, 176-182, 185, 189-195, 199-210, 213, 216, 239-258, 261-289, 293-349, 354-365, 368
+    circus/client                     56      9    84%   17, 21, 49-50, 55, 62-64, 75-76
+    circus/commands/addwatcher        24     14    42%   1-66, 73, 78
+    circus/commands/base              73     55    25%   1-13, 21, 28, 38-74, 77-82, 85, 89-100, 106-108
+    circus/commands/incrproc          21     16    24%   1-53, 61-68
+    circus/commands/list              28     13    54%   1-54, 66
+    circus/commands/numprocesses      19     17    11%   1-57, 59-60, 67-70
+    circus/commands/numwatchers       14     13     7%   1-42, 45-48
+    circus/commands/options           20     18    10%   1-101, 105-111
+    circus/commands/quit               7      6    14%   1-36
+    circus/commands/reload            17     15    12%   1-68, 70-71
+    circus/commands/rmwatcher         12     10    17%   1-54
+    circus/commands/sendsignal        52     34    35%   1-137, 148, 150, 157-162, 167, 169, 175-182
+    circus/commands/set               34     22    35%   1-61, 72, 77
+    circus/commands/start             15     12    20%   1-53, 58
+    circus/commands/stats             51     46    10%   1-89, 91-102, 109-138
+    circus/commands/status            23     20    13%   1-65, 70-80
+    circus/commands/stop              12      9    25%   1-50, 55
+    circus/commands/util              62     53    15%   1-43, 49, 54, 59, 62-63, 66-67, 70-75, 78-81
+    circus/config                    158     31    80%   11-12, 49, 61-64, 91-92, 109-112, 143, 159, 162, 165, 167, 173, 176, 179, 181, 185-186, 188-189, 191, 193, 196, 199, 202, 208, 215
+    circus/consumer                   43     33    23%   10-20, 23, 27, 30, 34-46, 49-57
+    circus/controller                118     17    86%   76, 86-87, 96-98, 105, 108, 122-124, 128, 149, 152, 158, 163-164
+    circus/plugins/__init__          146    105    28%   36-46, 50-58, 62-84, 88-96, 108-111, 121-122, 134, 139, 144, 152-163, 179, 183, 189-257, 261
+    circus/process                   146     37    75%   3-9, 105-125, 160-165, 183, 225-226, 232, 244, 250-253, 258-263, 282, 306
+    circus/py3compat                  47     44     6%   1-38, 43-67
+    circus/sighandler                 39     11    72%   29, 43-48, 51, 54, 57, 63
+    circus/sockets                    76     10    87%   27, 62, 68, 74-76, 109-110, 120, 131
+    circus/stats/__init__             41     28    32%   34-85, 89
+    circus/stats/client              168    146    13%   20, 24-53, 58-167, 172-178, 181, 184-187, 191-233, 237
+    circus/stats/collector           107     59    45%   7-8, 29-31, 35, 40-68, 71-95, 132-133, 139-140, 143, 150, 157, 161-174
+    circus/stats/publisher            27     20    26%   9-14, 17-30, 33-35
+    circus/stats/streamer            150    124    17%   21-40, 43, 46, 49-53, 57-67, 70-81, 84-114, 117-123, 126-137, 140-162, 168-192, 196-204
+    circus/stream/__init__            44     16    64%   4-5, 18, 21, 26, 29-30, 33, 42, 45-51, 77
+    circus/stream/file_stream         46     30    35%   40-43, 46, 52-69, 78-84
+    circus/stream/redirector          66      6    91%   19, 61, 77-80, 83
+    circus/util                      372    164    56%   1-10, 12, 16-49, 52-66, 70-88, 94-96, 102, 116-123, 129-137, 144-145, 149-150, 154-155, 163-164, 170-171, 175-176, 181-186, 190-191, 195, 207-208, 213, 215, 225, 234, 247, 255, 267, 302, 310-319, 325-332, 335-339, 345-347, 377-382, 400, 403, 411, 419, 425-428, 465-485, 497, 500, 503-505, 515, 524, 529-530, 540-542, 546, 550-558, 561, 572, 576-584
+    circus/watcher                   406     86    79%   191, 221, 234, 243, 269, 294, 317-318, 324, 335, 349-350, 380, 389, 414, 443-444, 447-448, 455, 471-472, 480-482, 494-496, 507-512, 518-523, 529-530, 540-541, 591, 620, 634-636, 652-657, 664, 667, 670-672, 683, 691-694, 709-710, 712-715, 717, 719-720, 722-723, 725-726, 728, 730-731, 733-734, 736-737, 739-740, 760
+    circus/web/__init__                0      0   100%   
+    circus/web/circushttpd            79     41    48%   9-12, 38, 48, 56, 66, 74, 80, 89, 94, 112, 116-119, 124-126, 131, 135-167, 171-174
+    circus/web/controller            113     69    39%   9-11, 32, 46-63, 67-70, 73-74, 80-81, 84-86, 89-91, 94, 97-101, 104-105, 108-111, 114-122, 128-137, 140-149
+    circus/web/namespace              41     32    22%   11-12, 39-88, 102-104, 110
+    circus/web/server                 22     17    23%   7-10, 13-33
+    circus/web/session                32     17    47%   19, 24-34, 40-45
+    circus/web/util                   52     22    58%   12-14, 18, 24-44, 87
+    base_html   NoSource: No source for code: '/Users/tarek/Dev/github.com/circus/docs/base_html': [Errno 2] No such file or directory: '/Users/tarek/Dev/github.com/circus/docs/base_html'
+    connect_html   NoSource: No source for code: '/Users/tarek/Dev/github.com/circus/docs/connect_html': [Errno 2] No such file or directory: '/Users/tarek/Dev/github.com/circus/docs/connect_html'
+    index_html   NoSource: No source for code: '/Users/tarek/Dev/github.com/circus/docs/index_html': [Errno 2] No such file or directory: '/Users/tarek/Dev/github.com/circus/docs/index_html'
+    ------------------------------------------------------------
+    TOTAL                           5233   2714    48%   
 
 

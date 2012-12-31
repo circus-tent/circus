@@ -19,16 +19,15 @@ class Pidfile(object):
         if oldpid:
             if oldpid == os.getpid():
                 return
-            raise RuntimeError("Already running on PID %s " \
-                "(or pid file '%s' is stale)" % (os.getpid(), self.fname))
+            raise RuntimeError("Already running on PID %s (or pid file '%s' "
+                               "is stale)" % (os.getpid(), self.fname))
 
         self.pid = pid
 
         # Write pidfile
         fdir = os.path.dirname(self.fname)
         if fdir and not os.path.isdir(fdir):
-            raise RuntimeError("%s doesn't exist. Can't create pidfile." \
-                                    % fdir)
+            raise RuntimeError("%s doesn't exist. Can't create pidfile" % fdir)
         fd, fname = tempfile.mkstemp(dir=fdir)
         os.write(fd, "%s\n" % self.pid)
         if self.fname:

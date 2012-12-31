@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -
-
+import argparse
+import cmd
 import getopt
 import json
+import os
 import sys
+import textwrap
 import traceback
+import shlex
 
 # import pygments if here
 try:
@@ -13,20 +17,16 @@ try:
 except ImportError:
     pygments = False    # NOQA
 
+from circus import __version__
 from circus.client import CircusClient
-from circus.consumer import CircusConsumer
 from circus.commands import get_commands
+from circus.consumer import CircusConsumer
 from circus.exc import CallError, ArgumentError
+from circus.util import DEFAULT_ENDPOINT_SUB, DEFAULT_ENDPOINT_DEALER
 
 
-globalopts = [
-    ('', 'endpoint', "", "connection endpointt"),
-    ('', 'timeout', 5, "connection timeout"),
-    ('', 'json', False, "output to JSON"),
-    ('', 'prettify', False, "prettify output"),
-    ('h', 'help', None, "display help and exit"),
-    ('v', 'version', None, "display version and exit")
-]
+USAGE = 'circusctl [options] command [args]'
+VERSION = 'circusctl ' + __version__
 
 
 def prettify(jsonobj, prettify=True):
@@ -43,6 +43,35 @@ def prettify(jsonobj, prettify=True):
             pass
 
     return json_str
+
+
+class _Help(argparse.HelpFormatter):
+
+    commands = None
+
+    def _metavar_formatter(self, action, default_metavar):
+        if action.dest != 'command':
+            return super(_Help, self)._metavar_formatter(action,
+                                                         default_metavar)
+
+        commands = self.commands.items()
+        commands.sort()
+        max_len = max([len(name) for name, help in commands])
+
+        output = []
+        for name, cmd in commands:
+            output.append('\t%-*s\t%s' % (max_len, name, cmd.short))
+
+        def format(tuple_size):
+            res = '\n'.join(output)
+            return (res, ) * tuple_size
+
+        return format
+
+    def start_section(self, heading):
+        if heading == 'positional arguments':
+            heading = 'Commands'
+        super(_Help, self).start_section(heading)
 
 
 def _get_switch_str(opt):
@@ -63,95 +92,50 @@ def _get_switch_str(opt):
 
 class ControllerApp(object):
 
-    def __init__(self):
-        self.commands = get_commands()
+    def __init__(self, commands):
+        self.commands = commands
 
     def run(self, args):
         try:
-            sys.exit(self.dispatch(args))
+            return self.dispatch(args)
         except getopt.GetoptError as e:
             print("Error: %s\n" % str(e))
             self.display_help()
-            sys.exit(2)
+            return 2
         except CallError as e:
             sys.stderr.write("%s\n" % str(e))
-            sys.exit(1)
+            return 1
         except ArgumentError as e:
             sys.stderr.write("%s\n" % str(e))
-            sys.exit(1)
+            return 1
         except KeyboardInterrupt:
-            sys.exit(1)
+            return 1
         except Exception, e:
             sys.stderr.write(traceback.format_exc())
-            sys.exit(1)
+            return 1
 
     def dispatch(self, args):
-        cmd, globalopts, opts, args = self._parse(args)
-
-        if globalopts['help'] or cmd == "help":
-            del globalopts["help"]
-            return self.display_help(*args, **globalopts)
-        elif globalopts['version'] or cmd == "version":
-            return self.display_version()
-
-        else:
-            if cmd not in self.commands:
-                raise ArgumentError('Unknown command %r' % cmd)
-
-            cmd = self.commands[cmd]
-
-        endpoint = globalopts.get('endpoint')
-        if not endpoint:
-            if cmd.msg_type == "sub":
-                endpoint = "tcp://127.0.0.1:5556"
-            else:
-                endpoint = "tcp://127.0.0.1:5555"
-
-        timeout = globalopts.get("timeout", 5.0)
-        msg = cmd.message(*args, **opts)
-        return getattr(self, "handle_%s" % cmd.msg_type)(cmd, globalopts,
-                msg, endpoint, timeout)
-
-    def display_help(self, *args, **opts):
-        if opts.get('version', False):
-            self.display_version(*args, **opts)
-
-        if len(args) >= 1:
-            if args[0] in  self.commands:
-                cmd = self.commands[args[0]]
-                print(cmd.desc)
+        opts = {}
+        cmd = self.commands[args.command]
+        if args.help:
+            print textwrap.dedent(cmd.__doc__)
             return 0
+        else:
+            if hasattr(args, 'start'):
+                opts['start'] = args.start
 
-        print("usage: circusctl [--version] [--endpoint=<endpoint>]")
-        print("                 [--timeout=<timeout>] [--json]")
-        print("                 [--prettify] [--help]")
-        print("                 <command> [<args>]")
-        print("")
-        print("Commands:")
-        commands = sorted([name for name in self.commands] + ["help"])
+            if args.endpoint is None:
+                if cmd.msg_type == 'sub':
+                    args.endpoint = DEFAULT_ENDPOINT_SUB
+                else:
+                    args.endpoint = DEFAULT_ENDPOINT_DEALER
+            msg = cmd.message(*args.args, **opts)
+            handler = getattr(self, "handle_%s" % cmd.msg_type)
+            return handler(cmd, self.globalopts, msg, args.endpoint,
+                           int(args.timeout), args.ssh, args.ssh_keyfile)
 
-        max_len = len(max(commands, key=len))
-        for name in commands:
-            if name == "help":
-                desc = "Get help on a command"
-                print("\t%-*s\t%s" % (max_len, name, desc))
-            else:
-                cmd = self.commands[name]
-                # Command name is max_len characters.
-                # Used by the %-*s formatting code
-                print("\t%-*s\t%s" % (max_len, name, cmd.short))
-
-        return 0
-
-    def display_version(self, *args, **opts):
-        from circus import __version__
-
-        print("Circus (version %s)" % __version__)
-        print("Licensed under the Apache License, Version 2.0.")
-        print("")
-        return 0
-
-    def handle_sub(self, cmd, opts, topics, endpoint, timeout):
+    def handle_sub(self, cmd, opts, topics, endpoint, timeout, ssh_server,
+                   ssh_keyfile):
         consumer = CircusConsumer(topics, endpoint=endpoint)
         for topic, msg in consumer:
             print("%s: %s" % (topic, msg))
@@ -163,8 +147,10 @@ class ControllerApp(object):
         else:
             return cmd.console_msg(client.call(msg))
 
-    def handle_dealer(self, cmd, opts, msg, endpoint, timeout):
-        client = CircusClient(endpoint=endpoint, timeout=timeout)
+    def handle_dealer(self, cmd, opts, msg, endpoint, timeout, ssh_server,
+                      ssh_keyfile):
+        client = CircusClient(endpoint=endpoint, timeout=timeout,
+                              ssh_server=ssh_server, ssh_keyfile=ssh_keyfile)
         try:
             if isinstance(msg, list):
                 for i, command in enumerate(msg):
@@ -174,88 +160,209 @@ class ControllerApp(object):
             else:
                 print(self._console(client, cmd, opts, msg))
         except CallError as e:
-
-            sys.stderr.write(str(e))
+            sys.stderr.write(str(e) + " Try to raise the --timeout value\n")
             return 1
         finally:
             client.stop()
         return 0
 
-    def _parse(self, args):
-        options = {}
-        cmdoptions = {}
-        args = self._parseopts(args, globalopts, options)
 
-        if args:
-            cmd, args = args[0], args[1:]
-            cmd = cmd.lower()
+class CircusCtl(cmd.Cmd, object):
+    """CircusCtl tool."""
+    prompt = '(circusctl) '
 
-            if cmd in self.commands:
-                cmdopts = self.commands[cmd].options
+    def __new__(cls, client, commands, *args, **kw):
+        """Auto add do and complete methods for all known commands."""
+        cls.commands = commands
+        cls.controller = ControllerApp(commands)
+        cls.client = client
+        for name, cmd in commands.iteritems():
+            cls._add_do_cmd(name, cmd)
+            cls._add_complete_cmd(name, cmd)
+        return  super(CircusCtl, cls).__new__(cls, *args, **kw)
+
+    def __init__(self, client, *args, **kwargs):
+        return super(CircusCtl, self).__init__()
+
+    @classmethod
+    def _add_do_cmd(cls, cmd_name, cmd):
+        def inner_do_cmd(cls, line):
+            arguments = parse_arguments([cmd_name] + shlex.split(line),
+                                        cls.commands)
+            cls.controller.run(arguments['args'])
+        inner_do_cmd.__doc__ = textwrap.dedent(cmd.__doc__)
+        inner_do_cmd.__name__ = "do_%s" % cmd_name
+        setattr(cls, inner_do_cmd.__name__, inner_do_cmd)
+
+    @classmethod
+    def _add_complete_cmd(cls, cmd_name, cmd):
+        def inner_complete_cmd(cls, *args, **kwargs):
+            if hasattr(cmd, 'autocomplete'):
+                try:
+                    return cmd.autocomplete(cls.client, *args, **kwargs)
+                except Exception, e:
+                    sys.stderr.write(e.message + "\n")
+                    traceback.print_exc(file=sys.stderr)
             else:
-                cmdopts = []
-        else:
-            cmd = "help"
-            cmdopts = []
+                return []
+        inner_complete_cmd.__doc__ = "Complete the %s command" % cmd_name
+        inner_complete_cmd.__name__ = "complete_%s" % cmd_name
+        setattr(cls, inner_complete_cmd.__name__, inner_complete_cmd)
 
-        for opt in globalopts:
-            cmdopts.append((opt[0], opt[1], options[opt[1]], opt[3]))
+    def do_EOF(self, line):
+        return True
 
-        args = self._parseopts(args, cmdopts, cmdoptions)
+    def postloop(self):
+        sys.stdout.write('\n')
 
-        for opt, val in cmdoptions.items():
-            if opt in options:
-                options[opt] = val
-                del cmdoptions[opt]
+    def autocomplete(self, autocomplete=False, words=None, cword=None):
+        """
+        Output completion suggestions for BASH.
 
-        return cmd, options, cmdoptions, args
+        The output of this function is passed to BASH's `COMREPLY` variable and
+        treated as completion suggestions. `COMREPLY` expects a space
+        separated string as the result.
 
-    def _parseopts(self, args, options, state):
-        namelist = []
-        shortlist = ''
-        argmap = {}
-        defmap = {}
+        The `COMP_WORDS` and `COMP_CWORD` BASH environment variables are used
+        to get information about the cli input. Please refer to the BASH
+        man-page for more information about this variables.
 
-        for short, name, default, comment in options:
-            oname = name
-            name = name.replace('-', '_')
-            argmap['-' + short] = argmap['--' + oname] = name
-            defmap[name] = default
+        Subcommand options are saved as pairs. A pair consists of
+        the long option string (e.g. '--exclude') and a boolean
+        value indicating if the option requires arguments. When printing to
+        stdout, a equal sign is appended to options which require arguments.
 
-            if isinstance(default, list):
-                state[name] = default[:]
-            else:
-                state[name] = default
+        Note: If debugging this function, it is recommended to write the debug
+        output in a separate file. Otherwise the debug output will be treated
+        and formatted as potential completion suggestions.
+        """
+        autocomplete = autocomplete or 'AUTO_COMPLETE' in os.environ
 
-            if not (default is None or default is True or default is False):
-                if short:
-                    short += ':'
-                if oname:
-                    oname += '='
-            if short:
-                shortlist += short
-            if name:
-                namelist.append(oname)
+        # Don't complete if user hasn't sourced bash_completion file.
+        if not autocomplete:
+            return
 
-        opts, args = getopt.getopt(args, shortlist, namelist)
-        for opt, val in opts:
-            name = argmap[opt]
-            t = type(defmap[name])
-            if t is type(1):
-                state[name] = int(val)
-            elif t is type(''):
-                state[name] = val
-            elif t is type([]):
-                state[name].append(val)
-            elif t is type(None) or t is type(False):
-                state[name] = True
+        words = words or os.environ['COMP_WORDS'].split()[1:]
+        cword = cword or int(os.environ['COMP_CWORD'])
 
-        return args
+        try:
+            curr = words[cword - 1]
+        except IndexError:
+            curr = ''
+
+        subcommands = get_commands()
+
+        if cword == 1:  # if completing the command name
+            print(' '.join(sorted(filter(lambda x: x.startswith(curr),
+                                         subcommands))))
+        sys.exit(1)
+
+    def start(self, globalopts):
+        self.autocomplete()
+
+        if globalopts['timeout'] < 30:
+            globalopts['args'].timeout = globalopts['timeout'] = 30
+
+        self.controller.globalopts = globalopts
+
+        args = globalopts['args']
+        parser = globalopts['parser']
+
+        if hasattr(args, 'command'):
+            sys.exit(self.controller.run(globalopts['args']))
+
+        if args.help:
+            for command in self.commands:
+                doc = textwrap.dedent(self.commands[command].__doc__)
+                help = doc.split('\n')[0]
+                parser.add_argument(command, help=help)
+            parser.print_help()
+            sys.exit(0)
+
+        # no command, no --help: enter the CLI
+        print VERSION
+
+        try:
+            self.cmdloop()
+        except KeyboardInterrupt:
+            sys.stdout.write('\n')
+        sys.exit(0)
+
+
+def parse_arguments(args, commands):
+    _Help.commands = commands
+
+    options = {
+        'endpoint': {'default': None, 'help': 'connection endpoint'},
+        'timeout': {'default': 5, 'help': 'connection timeout'},
+
+        'help': {
+            'default': False,
+            'action': 'store_true',
+            'help': 'Show help and exit'},
+
+        'json': {'default': False, 'action': 'store_true',
+                 'help': 'output to JSON'},
+
+        'prettify': {
+            'default': False,
+            'action': 'store_true',
+            'help': 'prettify output'},
+
+        'ssh': {
+            'default': None,
+            'help': 'SSH Server in the format user@host:port'},
+
+        'ssh_keyfile': {
+            'default': None,
+            'help': 'the path to the keyfile to authorise the user'},
+
+        'version': {
+            'default': False,
+            'action': 'version',
+            'version': VERSION,
+            'help': 'display version and exit'},
+    }
+
+    parser = argparse.ArgumentParser(
+        description="Controls a Circus daemon",
+        formatter_class=_Help, usage=USAGE, add_help=False)
+
+    for option in options:
+        parser.add_argument('--' + option, **options[option])
+
+    if any([value in commands for value in args]):
+        subparsers = parser.add_subparsers(dest='command')
+        for command in commands:
+            subparser = subparsers.add_parser(command)
+            subparser.add_argument('args', nargs="*",
+                                   help=argparse.SUPPRESS)
+            if command == 'add':
+                subparser.add_argument('--start', action='store_true',
+                                       default=False)
+
+    args = parser.parse_args(args)
+
+    globalopts = {'args': args, 'parser': parser}
+    for option in options:
+        globalopts[option] = getattr(args, option)
+    return globalopts
 
 
 def main():
-    controller = ControllerApp()
-    controller.run(sys.argv[1:])
+    # TODO, we should ask the server for its command list
+    commands = get_commands()
+
+    globalopts = parse_arguments(sys.argv[1:], commands)
+    if globalopts['endpoint'] is None:
+        globalopts['endpoint'] = DEFAULT_ENDPOINT_DEALER
+
+    client = CircusClient(endpoint=globalopts['endpoint'],
+                          timeout=globalopts['timeout'],
+                          ssh_server=globalopts['ssh'],
+                          ssh_keyfile=globalopts['ssh_keyfile'])
+
+    CircusCtl(client, commands).start(globalopts)
 
 if __name__ == '__main__':
     main()

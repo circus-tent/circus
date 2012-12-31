@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="copyright" content="Copyright 2012, Circus Team" />
+    <meta name="description" content="Control panel for the Circus Process Watcher" />
+    <title>Circus Control Panel</title>
+    <!--
+    <link href="http://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,400italic" rel="stylesheet" type="text/css" />
+    -->
+    <!--[if IE]>
+        <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link rel="stylesheet" href="/media/circus.css" type="text/css" />
+    <link rel="shortcut icon" href="/media/favicon.ico"/>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <script type="text/javascript" src="/media/socket.io.js"></script>
+    <script type="text/javascript" src="/media/jquery.min.js"></script>
+    
+    <script type="text/javascript" src="/media/rickshaw.min.js"></script>
+    <script type="text/javascript" src="/media/d3.v2.js"></script>
+    <script type="text/javascript" src="/media/circus.js"></script>
+</head>
+<body>
+    % if client:
+    <div id="overlay" style="display:none;">
+        <div class="overlay">
+            <div class="dialog-header">
+                <h3>Add Watcher</h3>
+            </div>
+            <form action="add_watcher" method="POST">
+
+                <p>
+                    <label for="name">Name</label>
+                    <input type="text" name="name" required></input>
+                </p>
+                <p>
+                    <label for="cmd">Command</label>
+                    <input type="text" name="cmd" required></input>
+                </p>
+                <p>
+                    <label for="working_dir">Working directory</label>
+                    <input type="text" name="working_dir" required></input>
+                </p>
+                <p>
+                    <label for="numprocesses">Number of processes</label>
+                    <input type="text" name="numprocesses" required></input>
+                </p>
+                <p>
+                    <label for="shell">Run in Shell ?</label>
+                    <input type="checkbox" name="shell"></input>
+                </p>
+
+                <p>
+                    <input class="add_watcher_btn" type="submit"></input>
+                    <input class="add_watcher_btn" type="button" id="cancel_watcher_btn" value="Cancel"></input>
+                </p>
+                <p>
+                </p>
+
+            </form>
+        </div>
+    </div>
+    % endif
+    <header>
+        <img id="logo" src="/media/circus.png" border="0" />
+        % if client:
+            <a href="/disconnect" class="disconnect">Logout</a>
+        % endif
+    </header>
+    <section id="wrapper">
+        % if client:
+            <aside> 
+              <a href="#" class="add_watcher">Add Watcher</a>
+              <nav>
+                <ul>
+                  <li><a href="/">Home</a></li>
+                  <li><a href="/#overview">Overview</a></li>
+                  <li><a href="/#options">Options</a></li>
+                  <li><a href="#">Help</a></li>
+                </ul>
+              </nav>
+            </aside>
+            <section id="content">
+        % else:
+            <section id="login">
+        % endif
+        % if 'message' in session:
+            <div class="note">
+                ${session.pop('message')}
+            </div>
+        %endif
+        ${self.body()}
+        </section>  
+    </section>
+
+    <footer> 
+        &copy; Copyright 2012, The Mozilla Foundation - circushttpd v.${version}
+    </footer>
+
+    </body>
+</html>

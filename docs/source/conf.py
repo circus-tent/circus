@@ -13,7 +13,32 @@
 
 import sys, os
 
+class Mock(object):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return Mock()
+
+    @classmethod
+    def __getattr__(self, name):
+        if name in ('__file__', '__path__'):
+            return '/dev/null'
+        elif name[0] == name[0].upper():
+            return type(name, (), {})
+
+        return Mock()
+
+
+MOCK_MODULES = ['zmq', 'zmq.eventloop', 'zmq.utils.jsonapi', 'zmq.utils']
+
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+skip_coverage = os.environ.get('SKIP_COVERAGE', None) == 'True'
+
+if on_rtd:
+    for mod_name in MOCK_MODULES:
+        sys.modules[mod_name] = Mock()
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -35,7 +60,8 @@ sys.path.append(os.path.join(CURDIR, '..'))
 import circus
 extensions = ['sphinx.ext.autodoc', 'circus_ext']
 
-if not on_rtd:
+
+if not skip_coverage and not on_rtd:
     extensions.append('coverage_ext')
 
 # Add any paths that contain templates here, relative to this directory.
@@ -52,7 +78,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Circus'
-copyright = u'2012, Mozilla Foundation - 2012, Benoit Chesneau'
+copyright = u''
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -91,9 +117,6 @@ exclude_patterns = []
 # output. They are ignored by default.
 #show_authors = False
 
-# The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
-
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
@@ -105,10 +128,7 @@ pygments_style = 'sphinx'
 sys.path.append(os.path.abspath('_themes'))
 html_theme_path = ['_themes']
 html_short_title = "Circus"
-if on_rtd:
-    html_theme = 'default'
-else:
-    html_theme = 'bootstrap'
+html_theme = 'mozilla'
 
 #html_logo = "images/circus32.png"
 

@@ -1,12 +1,12 @@
 import grp
 import os
-import platform
 import pwd
 import unittest
 from psutil import Popen
 
-from circus.util import (get_info, bytes2human, to_bool, parse_env,
-                         env_to_str, to_uid, to_gid)
+from circus.util import (get_info, bytes2human, to_bool, parse_env_str,
+                         env_to_str, to_uid, to_gid, replace_gnu_args,
+                         StrictConfigParser)
 
 
 class TestUtil(unittest.TestCase):
@@ -37,9 +37,10 @@ class TestUtil(unittest.TestCase):
         for value in ('Fal', '344', ''):
             self.assertRaises(ValueError, to_bool, value)
 
-    def test_parse_env(self):
+    def test_parse_env_str(self):
         env = 'test=1,booo=2'
-        parsed = parse_env(env)
+        parsed = parse_env_str(env)
+        self.assertEqual(parsed, {'test': '1', 'booo': '2'})
         self.assertEqual(env_to_str(parsed), env)
 
     def test_to_uidgid(self):
@@ -51,11 +52,9 @@ class TestUtil(unittest.TestCase):
         self.assertRaises(TypeError, to_gid, None)
 
     def test_negative_uid_gid(self):
-        # OSX allows negative uid/gid and throws KeyError on a miss.  On
-        # x86_64 Linux, the range is (-1, 2^32-1), throwing OverflowError
-        # outside that range, and KeyError on a miss. On 32-bit Linux, all
-        # negative values throw KeyError as do requests for non-existent
-        # uid/gid.
+        # OSX allows negative uid/gid and throws KeyError on a miss. On
+        # 32-bit and 64-bit Linux, all negative values throw KeyError as do
+        # requests for non-existent uid/gid.
         def int32(val):
             if (val & 0x80000000):
                 val = -0x100000000 + val
@@ -77,13 +76,41 @@ class TestUtil(unittest.TestCase):
         getpwuid = lambda pid: pwd.getpwuid(pid)
         getgrgid = lambda gid: grp.getgrgid(gid)
 
-        if os.uname()[0] == 'Linux' and platform.machine() == 'x86_64':
-            self.assertRaises(KeyError, getpwuid, uid_max + 1)
-            self.assertRaises(OverflowError, getpwuid, uid_min - 1)
-            self.assertRaises(KeyError, getgrgid, gid_max + 1)
-            self.assertRaises(OverflowError, getgrgid, gid_min - 1)
-        else:
-            self.assertRaises(KeyError, getpwuid, uid_max + 1)
-            self.assertRaises(KeyError, getpwuid, uid_min - 1)
-            self.assertRaises(KeyError, getgrgid, gid_max + 1)
-            self.assertRaises(KeyError, getgrgid, gid_min - 1)
+        self.assertRaises(KeyError, getpwuid, uid_max + 1)
+        self.assertRaises(KeyError, getpwuid, uid_min - 1)
+        self.assertRaises(KeyError, getgrgid, gid_max + 1)
+        self.assertRaises(KeyError, getgrgid, gid_min - 1)
+
+    def test_replace_gnu_args(self):
+        repl = replace_gnu_args
+
+        self.assertEquals('dont change --fd $(circus.me) please',
+                          repl('dont change --fd $(circus.me) please'))
+
+        self.assertEquals('thats an int 2',
+                          repl('thats an int $(circus.me)',
+                          me=2))
+
+        self.assertEquals('foobar', replace_gnu_args('$(circus.test)',
+                          test='foobar'))
+        self.assertEquals('foobar', replace_gnu_args('$(circus.test)',
+                          test='foobar'))
+        self.assertEquals('foo, foobar, baz',
+                          replace_gnu_args('foo, $(circus.test), baz',
+                                           test='foobar'))
+
+        self.assertEquals('foobar', replace_gnu_args('$(cir.test)',
+                                                     prefix='cir',
+                                                     test='foobar'))
+        self.assertEquals('thats an int 2',
+                          repl('thats an int $(s.me)', prefix='s',
+                          me=2))
+
+        self.assertEquals('thats an int 2',
+                          repl('thats an int $(me)', prefix=None,
+                          me=2))
+
+    def test_strict_parser(self):
+        cp = StrictConfigParser()
+        bad_ini = os.path.join(os.path.dirname(__file__), 'bad.ini')
+        self.assertRaises(ValueError, cp.read, bad_ini)

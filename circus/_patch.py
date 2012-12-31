@@ -1,0 +1,119 @@
+import threading
+from threading import (_active_limbo_lock, _limbo, _active, _sys, _trace_hook,
+                       _profile_hook, _format_exc)
+import warnings
+
+
+# see http://bugs.python.org/issue1596321
+def _bootstrap_inner(self):
+    try:
+        self._set_ident()
+        self._Thread__started.set()
+        with _active_limbo_lock:
+            _active[self._Thread__ident] = self
+            del _limbo[self]
+
+        if _trace_hook:
+            _sys.settrace(_trace_hook)
+        if _profile_hook:
+            _sys.setprofile(_profile_hook)
+
+        try:
+            self.run()
+        except SystemExit:
+            pass
+        except:
+            if _sys:
+                _sys.stderr.write("Exception in thread %s:\n%s\n" %
+                                  (self.name, _format_exc()))
+            else:
+                exc_type, exc_value, exc_tb = self._exc_info()
+                try:
+                    self._stderr.write(
+                        "Exception in thread " + self.name + " (most likely "
+                        "raised during interpreter shutdown):")
+
+                    self._stderr.write("Traceback (most recent call last):")
+                    while exc_tb:
+                        self._stderr.write(
+                            '  File "%s", line %s, in %s' %
+                            (exc_tb.tb_frame.f_code.co_filename,
+                                exc_tb.tb_lineno,
+                                exc_tb.tb_frame.f_code.co_name))
+
+                        exc_tb = exc_tb.tb_next
+                    self._stderr.write("%s: %s" % (exc_type, exc_value))
+                finally:
+                    del exc_type, exc_value, exc_tb
+        finally:
+            pass
+    finally:
+        with _active_limbo_lock:
+            self._Thread__stop()
+            try:
+                del _active[self._Thread__ident]
+            except:
+                pass
+
+
+def _delete(self):
+    try:
+        with _active_limbo_lock:
+            del _active[self._Thread__ident]
+    except KeyError:
+        if 'dummy_threading' not in _sys.modules:
+            raise
+
+
+# http://bugs.python.org/issue14308
+def _stop(self):
+    # DummyThreads delete self.__block, but they have no waiters to
+    # notify anyway (join() is forbidden on them).
+    if not hasattr(self, '_Thread__block'):
+        return
+    self._Thread__stop_old()
+
+
+threading.Thread._Thread__bootstrap_inner = _bootstrap_inner
+threading.Thread._Thread__delete = _delete
+threading.Thread._Thread__stop_old = threading.Thread._Thread__stop
+threading.Thread._Thread__stop = _stop
+
+#
+# zmq patching
+#
+_MSG = """\
+We have detected that you have gevent in your
+environment. In order to have Circus working, you *must*
+install PyZMQ >= 2.2.0.1.
+"""
+
+USING_GEVENT = False
+
+try:
+    import gevent                   # NOQA
+    from gevent import monkey       # NOQA
+    try:
+        import zmq.eventloop as old_io
+        import zmq.green as zmq         # NOQA
+        old_io.ioloop.Poller = zmq.Poller
+    except ImportError:
+        # older version
+        import zmq
+        try:
+            from gevent_zeromq import (  # NOQA
+                monkey_patch, IOLOOP_IS_MONKEYPATCHED)
+            monkey_patch()
+            warnings.warn("gevent_zeromq is deprecated, please "
+                          "use PyZMQ >= 2.2.0.1")
+        except ImportError:
+            raise ImportError(_MSG)
+
+    monkey.patch_all()
+    USING_GEVENT = True
+except ImportError:
+    try:
+        import zmq      # NOQA
+    except ImportError:
+        # lazy loading
+        zmq = None      # NOQA

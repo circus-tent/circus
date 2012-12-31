@@ -18,6 +18,7 @@ class DecrProcess(Command):
                 "command": "decr",
                 "propeties": {
                     "name": "<watchername>"
+                    "nb": <nbprocess>
                 }
             }
 
@@ -31,12 +32,13 @@ class DecrProcess(Command):
 
         ::
 
-            $ circusctl descr <name>
+            $ circusctl descr <name> [<nbprocess>]
 
         Options
         +++++++
 
         - <name>: name of the watcher
+        - <nbprocess>: the number of processes to remove.
 
     """
 
@@ -52,7 +54,8 @@ class DecrProcess(Command):
 
     def execute(self, arbiter, props):
         watcher = self._get_watcher(arbiter, props.get('name'))
-        return {"numprocesses": watcher.decr()}
+        nb = props.get('nb', 1)
+        return {"numprocesses": watcher.decr(nb)}
 
     def console_msg(self, msg):
         if msg.get("status") == "ok":

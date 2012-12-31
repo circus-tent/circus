@@ -19,26 +19,23 @@ class Options(Command):
                 "command": "options",
                 "properties": {
                     "name": "nameofwatcher",
-                    "key1": "val1",
-                    ..
                 }
             }
 
-        A message contains 2 properties:
+        A message contains 1 property:
 
-        - keys: list, The option keys for which you want to get the values
         - name: name of watcher
 
         The response return an object with a property "options"
-        containing the list of key/value returned by circus.
+        containing a dictionary of key/value returned by circus.
 
         eg::
 
             {
                 "status": "ok",
                 "options": {
-                    "within": 1,
-                    "times": 2,
+                    "flapping_window": 1,
+                    "flapping_attempts": 2,
                     ...
                 },
                 time': 1332202594.754644
@@ -73,16 +70,22 @@ class Options(Command):
         - cmd: string, The command line used to launch the process
         - env: object, define the environnement in which the process will be
           launch
-        - times: integer, number of times we try to relaunch a process in
-          the within time before we stop the watcher during the retry_in time.
-        - within: integer or number, times in seconds in which we test
+        - flapping_attempts: integer, number of times we try to relaunch a
+          process in the flapping_window time before we stop the watcher
+          during the retry_in time.
+        - flapping_window: integer or number, times in seconds in which we test
           the number of process restart.
-        - retry_in: integer or number, times we wait before we retry to
-          launch the process if macium of times have been reach.
+        - retry_in: integer or number, time in seconds we wait before we retry
+          to launch the process if the maximum number of attempts
+          has been reach.
         - max_retry: integer, The maximum of retries loops
         - graceful_timeout: integer or number, time we wait before we
           definitely kill a process.
-
+        - priority: used to sort watchers in the arbiter
+        - singleton: if True, a singleton watcher.
+        - max_age: time a process can live before being restarted
+        - max_age_variance: variable additional time to live, avoids
+          stampeding herd.
     """
 
     name = "options"

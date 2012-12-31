@@ -11,7 +11,7 @@ class Stats(Command):
        =================
 
        You can get at any time some statistics about your processes
-       with teh stat command.
+       with the stat command.
 
        ZMQ Message
        -----------
@@ -43,7 +43,7 @@ class Stats(Command):
                 }
             }
 
-       The response retun an object per process with the property "infos"
+       The response retun an object per process with the property "info"
        containing some process informations::
 
             {
@@ -96,8 +96,8 @@ class Stats(Command):
                         "info": watcher.process_info(props['process'])
                     }
                 except KeyError:
-                    raise MessageError("process %r not found in %r" % \
-                            (props['process'], props['name']))
+                    raise MessageError("process %r not found in %r" % (
+                        props['process'], props['name']))
             else:
                 return {"name": props['name'], "info": watcher.info()}
         else:
@@ -107,6 +107,9 @@ class Stats(Command):
             return {"infos": infos}
 
     def _to_str(self, info):
+        if isinstance(info, basestring):
+            return info
+
         children = info.pop("children", [])
         ret = [_INFOLINE % info]
         for child in children:

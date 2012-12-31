@@ -2,25 +2,20 @@ import os
 from circus.commands import get_commands
 
 _HEADER = """\
-.. _cli:
 
-circusctl
-=========
+.. _commands:
 
-*circusctl* can be used to run any command listed below. For
-example, you can get a list of all the watchers::
+Commands
+########
 
-    $ circusctl list
-
-
-*circusctl* is just a zeromq client, and if needed you can
-drive programmaticaly the Circus system by writing your
-own zmq client.
+At the epicenter of circus lives the command systems.  *circusctl* is just a
+zeromq client, and if needed you can drive programmaticaly the Circus system by
+writing your own zmq client.
 
 All messages are Json mappings.
 
-For each command below, we provide a usage example with
-circusctl but also the input / output zmq messages.
+For each command below, we provide a usage example with circusctl but also the
+input / output zmq messages.
 
 """
 
@@ -33,13 +28,17 @@ def generate_commands(app):
 
     tocname = os.path.join(app.srcdir, "commands%s" % ext)
 
+    commands = get_commands()
+    items = commands.items()
+    items.sort()
+
     with open(tocname, "w") as toc:
         toc.write(_HEADER)
-        toc.write("Circus commands\n")
-        toc.write("---------------\n\n")
+        toc.write("circus-ctl commands\n")
+        toc.write("-------------------\n\n")
 
         commands = get_commands()
-        for name, cmd in commands.items():
+        for name, cmd in items:
             toc.write("- **%s**: :doc:`commands/%s`\n" % (name, name))
 
             # write the command file

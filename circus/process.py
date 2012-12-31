@@ -7,17 +7,20 @@ except MemoryError:
 except ImportError:
     # Python on Solaris compiled with Sun Studio doesn't have ctypes
     ctypes = None       # NOQA
+
 import errno
 import os
 import resource
 from subprocess import PIPE
 import time
 import shlex
+import warnings
 
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
-from circus.py3compat import bytestring
-from circus.util import get_info, to_uid, to_gid, debuglog, get_working_dir
+from circus.py3compat import bytestring, string_types
+from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
+                         ObjectDict, replace_gnu_args)
 from circus import logger
 
 
@@ -27,7 +30,8 @@ _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
 
 RUNNING = 0
 DEAD_OR_ZOMBIE = 1
-OTHER = 2
+UNEXISTING = 2
+OTHER = 3
 
 
 class Process(object):
@@ -38,8 +42,9 @@ class Process(object):
     - **wid**: the process unique identifier. This value will be used to
       replace the *$WID* string in the command line if present.
 
-    - **cmd**: the command to run. May contain *$WID*, which will be
-      replaced by **wid**.
+    - **cmd**: the command to run. May contain any of the variables available
+      that are being passed to this class. They will be replaced using the
+      python format syntax.
 
     - **args**: the arguments for the command to run. Can be a list or
       a string. If **args** is  a string, it's splitted using
@@ -69,32 +74,32 @@ class Process(object):
 
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
+
+    - **use_fds**: if True, will not close the fds in the subprocess.
+      default: False.
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
-                 uid=None, gid=None, env=None, rlimits=None, executable=None):
+                 uid=None, gid=None, env=None, rlimits=None, executable=None,
+                 use_fds=False, watcher=None, spawn=True):
+
         self.wid = wid
-        if working_dir is None:
-            self.working_dir = get_working_dir()
-        else:
-            self.working_dir = working_dir
+        self.cmd = cmd
+        self.args = args
+        self.working_dir = working_dir or get_working_dir()
         self.shell = shell
-        self.env = env
+        self.uid = to_uid(uid) if uid else None
+        self.gid = to_gid(gid) if gid else None
+        self.env = env or {}
+        self.rlimits = rlimits or {}
+        self.executable = executable
+        self.use_fds = use_fds
+        self.watcher = watcher
 
-        if rlimits is not None:
-            self.rlimits = rlimits
-        else:
-            self.rlimits = {}
+        if spawn:
+            self.spawn()
 
-        self.cmd = cmd.replace('$WID', str(self.wid))
-        if uid is None:
-            self.uid = None
-        else:
-            self.uid = to_uid(uid)
-
-        if gid is None:
-            self.gid = None
-        else:
-            self.gid = to_gid(gid)
+    def spawn(self):
+        args = self.format_args()
 
         def preexec_fn():
             os.setsid()
@@ -119,27 +124,59 @@ class Process(object):
             if self.uid:
                 os.setuid(self.uid)
 
-        logger.debug('cmd: ' + cmd)
-        logger.debug('args: ' + str(args))
-
-        if args is not None:
-            if isinstance(args, str):
-                args_ = shlex.split(bytestring(args))
-            else:
-                args_ = args[:]
-
-            args_ = shlex.split(bytestring(cmd)) + args_
-        else:
-            args_ = shlex.split(bytestring(cmd))
-
-        logger.debug('Running %r' % ' '.join(args_))
-
-        self._worker = Popen(args_, cwd=self.working_dir,
+        self._worker = Popen(args, cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
-                             env=self.env, close_fds=True, stdout=PIPE,
-                             stderr=PIPE, executable=executable)
+                             env=self.env, close_fds=not self.use_fds,
+                             stdout=PIPE, stderr=PIPE,
+                             executable=self.executable)
 
         self.started = time.time()
+
+    def format_args(self):
+        """ It's possible to use environment variables and some other variables
+        that are available in this context, when spawning the processes.
+        """
+        logger.debug('cmd: ' + bytestring(self.cmd))
+        logger.debug('args: ' + str(self.args))
+
+        current_env = ObjectDict(self.env.copy())
+
+        format_kwargs = {
+            'wid': self.wid, 'shell': self.shell, 'args': self.args,
+            'env': current_env, 'working_dir': self.working_dir,
+            'uid': self.uid, 'gid': self.gid, 'rlimits': self.rlimits,
+            'executable': self.executable, 'use_fds': self.use_fds}
+
+        if self.watcher is not None:
+            format_kwargs['sockets'] = self.watcher._get_sockets_fds()
+            for option in self.watcher.optnames:
+                if option not in format_kwargs\
+                        and hasattr(self.watcher, option):
+                    format_kwargs[option] = getattr(self.watcher, option)
+
+        cmd = replace_gnu_args(self.cmd, **format_kwargs)
+
+        if '$WID' in cmd or (self.args and '$WID' in self.args):
+            msg = "Using $WID in the command is deprecated. You should use "\
+                  "the python string format instead. In you case, this means "\
+                  "replacing the $WID in your command by $(WID)."
+
+            warnings.warn(msg, DeprecationWarning)
+            self.cmd = cmd.replace('$WID', str(self.wid))
+
+        if self.args is not None:
+            if isinstance(self.args, string_types):
+                args = shlex.split(bytestring(replace_gnu_args(
+                    self.args, **format_kwargs)))
+            else:
+                args = [bytestring(replace_gnu_args(arg, **format_kwargs))
+                        for arg in self.args]
+            args = shlex.split(bytestring(cmd)) + args
+        else:
+            args = shlex.split(bytestring(cmd))
+
+        logger.debug("process args: %s", args)
+        return args
 
     @debuglog
     def poll(self):
@@ -148,17 +185,21 @@ class Process(object):
     @debuglog
     def send_signal(self, sig):
         """Sends a signal **sig** to the process."""
+        logger.debug("sending signal %s to %s" % (sig, self.pid))
         return self._worker.send_signal(sig)
 
     @debuglog
     def stop(self):
         """Terminate the process."""
         try:
-            if self._worker.poll() is None:
-                return self._worker.terminate()
-        finally:
-            self._worker.stderr.close()
-            self._worker.stdout.close()
+            try:
+                if self._worker.poll() is None:
+                    return self._worker.terminate()
+            finally:
+                self._worker.stderr.close()
+                self._worker.stdout.close()
+        except NoSuchProcess:
+            pass
 
     def age(self):
         """Return the age of the process in seconds."""
@@ -184,6 +225,8 @@ class Process(object):
         except NoSuchProcess:
             return "No such process (stopped?)"
 
+        info["age"] = self.age()
+        info["started"] = self.started
         info["children"] = []
         for child in self._worker.get_children():
             info["children"].append(get_info(child))
@@ -204,8 +247,8 @@ class Process(object):
     @debuglog
     def send_signal_child(self, pid, signum):
         """Send signal *signum* to child *pid*."""
-        children = dict([(child.pid, child) \
-                for child in self._worker.get_children()])
+        children = dict([(child.pid, child)
+                         for child in self._worker.get_children()])
 
         children[pid].send_signal(signum)
 
@@ -225,13 +268,14 @@ class Process(object):
 
         - RUNNING
         - DEAD_OR_ZOMBIE
+        - UNEXISTING
         - OTHER
         """
         try:
             if self._worker.status in (STATUS_ZOMBIE, STATUS_DEAD):
                 return DEAD_OR_ZOMBIE
         except NoSuchProcess:
-            return OTHER
+            return UNEXISTING
 
         if self._worker.is_running():
             return RUNNING
@@ -251,3 +295,12 @@ class Process(object):
     def stderr(self):
         """Return the *stdout* stream"""
         return self._worker.stderr
+
+    def __eq__(self, other):
+        return self is other
+
+    def __lt__(self, other):
+        return self.started < other.started
+
+    def __gt__(self, other):
+        return self.started > other.started

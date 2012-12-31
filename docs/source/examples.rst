@@ -1,7 +1,7 @@
 .. _examples:
 
 Examples
---------
+########
 
 The **examples** directory in the Circus repository contains a
 few examples to get you started.
@@ -43,5 +43,3 @@ the web page.
 
 .. image:: images/websocket.png
    :align: center
-
-

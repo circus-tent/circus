@@ -1,0 +1,177 @@
+<%inherit file="base.html"/>
+
+<% goptions = dict(client.get_global_options()) %>
+
+<div class="title">
+    <div style="float: left;" class="watcher_name">Watchers</div>
+
+    <div class="graph_home">
+        <span id="circusd" class="sparklines"></span>
+    </div>
+</div>
+
+
+<div class="watchers">
+    <div class="header">
+        <div style="width: 300px;">Name</div>
+        <div style="width: 80px;">Processes</div>
+        <div style="width: 342px;">Command</div>
+        <div style="width: 50px;">Shell</div>
+        <div style="width: 50px;">uid</div>
+        <div style="width: 50px;">gid</div>
+        <div style="width: 50px;">Status</div>
+    </div>
+% for watcher, options in client.watchers:
+    % if watcher not in client.plugins:
+    <div class="watcher">
+        <div style="width: 300px;"><a class="link" href="/watchers/${watcher}">${watcher}</a></div>
+        <div style="width: 80px;">${options['numprocesses']}</div>
+        <div style="width: 342px;">${options['cmd']} ${options['args']}</div>
+        <div style="width: 50px;">${options['shell']}</div>
+        <div style="width: 50px;">${options['uid']}</div>
+        <div style="width: 50px;">${options['gid']}</div>
+        <div style="width: 50px;"><a class="${client.get_status(watcher)}" title="${client.get_status(watcher)}" href="/watchers/${watcher}/switch_status"></a></div>
+    </div>
+    %endif
+%endfor
+</div>
+
+<div class="title">
+   <div class="watcher_name">Circus Daemons</div>
+</div>
+
+<div class="legend">
+    <div class="legend_cpu">
+        <span class="legend_indicator"></span>
+        <span class="">CPU</span>
+    </div>
+    <div class="legend_mem">
+        <span class="legend_indicator"></span>
+        <span class="">Memory</span>
+    </div>
+    %if client.use_sockets:
+    <div class="legend_reads">
+        <span class="legend_indicator"></span>
+        <span class="">Socket reads</span>
+    </div>
+    %endif
+</div>
+
+<div>
+    <%def name='draw_graph_div(watcher, name=None, display_status=False, socket=False)'>
+
+   <div class="process" style="margin-bottom: 15px">
+    <div>
+        <span style="display: inline-block; float: left;" class="label">${name or watcher}</span>
+	<span class="age-stat" id="${watcher}_last_age"></span>
+
+        %if display_status:
+        <div style="width: 20px; float: right; margin-right: 10px;"><a class="${client.get_status(watcher)}" title="${client.get_status(watcher)}" href="/watchers/${watcher}/switch_status"></a></div>
+        %endif
+    </div>
+
+    <div class="stat">
+        <div id="${watcher}" class="graph"></div>
+        %if socket:
+         <div class="metrics" >
+            <span class="metric_label">Reads</span>
+            <span class="metric_value" id="${watcher}_last_reads">0</span>
+         </div>
+        %else:
+        <div class="metrics cpu">
+            <span class="metric_label">CPU</span>
+            <span class="metric_value" id="${watcher}_last_cpu">0 %</span>
+         </div>
+         <div class="metrics mem">
+            <span class="metric_label">Mem</span>
+            <span class="metric_value" id="${watcher}_last_mem">0 %</span>
+         </div>
+        %endif
+    </div>
+ </div>
+ </%def>
+
+ ${draw_graph_div('circus')}
+ ${draw_graph_div('circusd-stats')}
+
+ %if client.embed_httpd:
+ ${draw_graph_div('circushttpd', 'circushttpd')}
+ %endif
+
+ %if client.use_sockets:
+ ${draw_graph_div('socket-stats', 'Socket Activity (<a href="/sockets">see all the sockets</a>)', socket=True)}
+ %endif
+
+ %for plugin in client.plugins:
+     ${draw_graph_div(plugin, plugin.split(':')[1].replace('-', '.'), True)}
+ %endfor
+
+</div>
+<div style="clear:both"></div>
+
+<div class="title">
+   <div class="watcher_name">Options</div>
+</div>
+
+<table class="options">
+    <tr>
+        <td>
+            ZeroMQ endpoint used to connect clients like <i>circusctl</i> or
+            <i>circushttpd</i>
+        </td>
+        <td>
+            <span class="label">${goptions.get('endpoint', 'N/A')}</span>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            ZeroMQ endpoint used for pub/sub
+        </td>
+        <td>
+            <span class="label">${goptions.get('pubsub_endpoint', 'N/A')}</span>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            ZeroMQ endpoint used for the pub/sub stats
+        </td>
+        <td>
+            <span class="label">${goptions.get('stats_endpoint', 'N/A')}</span>
+        </td>
+    </tr>
+
+    <tr>
+        <td>
+            Delay in seconds for the ZMQ polling.
+        </td>
+        <td>
+            <span class="label">${goptions.get('check_delay', 'N/A')}</span>
+        </td>
+    </tr>
+
+</table>
+
+</div>
+
+<script type="text/javascript">
+$(document).ready(function () {
+    var socket = io.connect('${SERVER}');
+    var watchers = ['circusd-stats', 'circus'];
+
+    %if client.use_sockets:
+        watchers.push('sockets');
+    %endif
+
+    %if client.embed_httpd:
+        watchers.push('circushttpd');
+    %endif
+
+
+    %for plugin in client.plugins:
+        watchers.push('${plugin}');
+    %endfor
+
+    supervise(socket, watchers);
+});
+
+</script>

@@ -1,0 +1,42 @@
+<%inherit file="base.html"/>
+
+% if client:
+    <div class="title">
+     <div class="watcher_name">All sockets activity</div>
+    </div>
+
+    <div class="legend">
+        <div class="legend_reads">
+            <span class="legend_indicator"></span>
+            <span class="">Socket reads</span>
+        </div>
+    </div>
+
+    <div class="box">
+    %for socket in client.get_sockets():
+    <div class="process">
+        <div>
+            <span style="display: inline-block; float: left;"
+                class="label">${socket['host']}:${socket['port']} (fd: ${socket['fd']})</span>
+        </div>
+
+        <div class="stat">
+            <div id="socket-stats-${socket['fd']}" class="graph"></div>
+            <div class="metrics">
+                <span class="metric_label">Reads</span>
+                <span class="metric_value" id="socket-stats-${socket['fd']}_last_reads">0.0</span>
+             </div>
+        </div>
+    </div>
+    %endfor
+
+<script src="/media/socket.io.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var socket = io.connect('${SERVER}');
+        supervise(socket, [], ['sockets']);
+    });
+</script>
+
+% endif
+

@@ -1,0 +1,35 @@
+<%inherit file="base.html"/>
+
+<h1>Connect to a Circus system</h1>
+<p id="countdown">Autoconnect in <strong id="countdown-value"></strong>s</p>
+<form id='connector' action="/connect" method="POST">
+<input id="endpoint" type="text" name="endpoint" value="tcp://127.0.0.1:5555"/>
+<input type="submit" class="connect" value="Connect"/>
+</form>
+
+<!-- autoconnect -->
+<script type="text/javascript" charset="utf-8">
+
+  var autoconnect = true;
+
+  $('#endpoint').focus(function(){
+    autoconnect = false;
+    $('#countdown').hide();
+  });
+
+  var countdown = 10;
+
+  $('#countdown-value').text(countdown);
+  setInterval(function(){
+    if (autoconnect == true) {
+        countdown -= 1;
+        $('#countdown-value').text(countdown);
+
+        if (countdown == 0){
+            $('#countdown').hide();
+            $('#connector').submit();
+        }
+    }
+  }, 1000);
+  
+</script>

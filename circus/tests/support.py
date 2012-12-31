@@ -1,10 +1,18 @@
-import unittest
 from tempfile import mkstemp
 import os
+import signal
 import sys
-import time
+from time import time
 
+import cProfile
+import pstats
+
+import unittest2 as unittest
+
+from gevent import sleep
 from circus import get_arbiter
+from circus.util import DEFAULT_ENDPOINT_STATS
+from circus.client import CircusClient, make_message
 
 
 def resolve_name(name):
@@ -50,12 +58,14 @@ class TestCircus(unittest.TestCase):
         self.arbiters = []
         self.files = []
         self.tmpfiles = []
+        self.cli = CircusClient()
 
     def tearDown(self):
         self._stop_runners()
         for file in self.files + self.tmpfiles:
             if os.path.exists(file):
                 os.remove(file)
+        self.cli.stop()
 
     def get_tmpfile(self, content=None):
         fd, file = mkstemp()
@@ -66,18 +76,30 @@ class TestCircus(unittest.TestCase):
                 f.write(content)
         return file
 
-    def _run_circus(self, callable, **kw):
+    @classmethod
+    def _create_circus(cls, callable, plugins=None, stats=False, **kw):
         resolve_name(callable)   # used to check the callable
         fd, testfile = mkstemp()
         os.close(fd)
         wdir = os.path.dirname(__file__)
         args = ['generic.py', callable, testfile]
         worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
-                  'name': 'test'}
+                  'name': 'test', 'graceful_timeout': 4}
         worker.update(kw)
-        arbiter = get_arbiter([worker], background=True)
+        if stats:
+            arbiter = get_arbiter([worker], background=True, plugins=plugins,
+                                  stats_endpoint=DEFAULT_ENDPOINT_STATS,
+                                  debug=kw.get('debug', False))
+        else:
+            arbiter = get_arbiter([worker], background=True, plugins=plugins,
+                                  debug=kw.get('debug', False))
         arbiter.start()
-        time.sleep(.3)
+        return testfile, arbiter
+
+    def _run_circus(self, callable, plugins=None, stats=False, **kw):
+
+        testfile, arbiter = TestCircus._create_circus(callable, plugins, stats,
+                                                      **kw)
         self.arbiters.append(arbiter)
         self.files.append(testfile)
         return testfile
@@ -86,3 +108,83 @@ class TestCircus(unittest.TestCase):
         for arbiter in self.arbiters:
             arbiter.stop()
         self.arbiters = []
+
+    def call(self, cmd, **props):
+        msg = make_message(cmd, **props)
+        return self.cli.call(msg)
+
+
+def profile(func):
+    """Can be used to dump profile stats"""
+    def _profile(*args, **kw):
+        profiler = cProfile.Profile()
+        try:
+            return profiler.runcall(func, *args, **kw)
+        finally:
+            pstats.Stats(profiler).sort_stats('time').print_stats(30)
+    return _profile
+
+
+class Process(object):
+
+    def __init__(self, testfile):
+        self.testfile = testfile
+        # init signal handling
+        signal.signal(signal.SIGQUIT, self.handle_quit)
+        signal.signal(signal.SIGTERM, self.handle_quit)
+        signal.signal(signal.SIGINT, self.handle_quit)
+        signal.signal(signal.SIGCHLD, self.handle_chld)
+        self.alive = True
+
+    def _write(self, msg):
+        with open(self.testfile, 'a+') as f:
+            f.write(msg)
+
+    def handle_quit(self, *args):
+        self._write('QUIT')
+        sys.exit(0)
+
+    def handle_chld(self, *args):
+        self._write('CHLD')
+        return
+
+    def run(self):
+        self._write('START')
+        while self.alive:
+            sleep(0.1)
+        self._write('STOP')
+
+
+def run_process(test_file):
+    process = Process(test_file)
+    process.run()
+    return 1
+
+
+class TimeoutException(Exception):
+    pass
+
+
+def poll_for(filename, needle, timeout=5):
+    """Poll a file for a given string.
+
+    Raises a TimeoutException if the string isn't found after timeout seconds
+    of polling.
+
+    """
+    start = time()
+    while (time() - start) < 5:
+        with open(filename) as f:
+            content = f.read()
+        if needle in content:
+            return True
+        # When using gevent this will make sure the redirector greenlets are
+        # scheduled.
+        sleep(0)
+    raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
+        filename, needle, content))
+
+
+def truncate_file(filename):
+    """Truncate a file (empty it)."""
+    open(filename, 'w').close()  # opening as 'w' overwrites the file

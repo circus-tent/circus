@@ -1,11 +1,13 @@
-
 from circus.commands import (   # NOQA
     addwatcher,
     decrproc,
+    dstats,
     get,
+    globaloptions,
     incrproc,
     list,
     listen,
+    listsockets,
     numprocesses,
     numwatchers,
     options,
