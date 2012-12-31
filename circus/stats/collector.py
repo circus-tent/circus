@@ -4,8 +4,8 @@ from collections import defaultdict
 from circus import util
 from circus import logger
 
-from gevent.select import select
-from gevent import socket
+from select import select
+import socket
 from zmq.eventloop import ioloop
 
 
@@ -154,8 +154,19 @@ class SocketStatsCollector(BaseStatsCollector):
         if len(sockets) == 0:
             yield None
         else:
-            fds = [(address, sock.fileno(), fd)
-                   for sock, address, fd in sockets]
+            fds = []
+
+            for sock, address, fd in sockets:
+                try:
+                    fileno = sock.fileno()
+                except socket.error, err:
+                    if err.errno == errno.EBADF:
+                        continue
+                    else:
+                        raise
+
+                fds.append((address, fileno, fd))
+
             total = {'addresses': [], 'reads': 0}
 
             # we might lose a few hits here but it's ok

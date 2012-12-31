@@ -2,8 +2,8 @@ import fcntl
 import errno
 import os
 import sys
+from time import sleep
 
-from gevent import sleep
 from zmq.eventloop import ioloop
 
 
