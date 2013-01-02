@@ -25,7 +25,7 @@ class NamedPipe(object):
 
 
 class Redirector(object):
-    def __init__(self, redirect, refresh_time=0.3, extra_info=None,
+    def __init__(self, redirect, refresh_time=1.0, extra_info=None,
                  buffer=1024, loop=None):
         self.pipes = []
         self._names = {}
@@ -65,7 +65,6 @@ class Redirector(object):
 
     def _select(self):
         if len(self.pipes) == 0:
-            sleep(.1)
             return
 
         # we just try to read, if we see some data
