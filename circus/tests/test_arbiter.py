@@ -1,7 +1,12 @@
 import os
 import sys
+import unittest
 from tempfile import mkstemp
 
+from mock import patch
+
+from circus.arbiter import Arbiter, sleep
+from circus.watcher import Watcher
 from circus.client import CallError, CircusClient, make_message
 from circus.tests.support import TestCircus, poll_for, truncate_file
 from circus.plugins import CircusPlugin
@@ -282,3 +287,43 @@ class TestTrainer(TestCircus):
         # adding more than one process should fail
         res = cli.send_message('incr', name='test')
         self.assertEqual(res['numprocesses'], 1)
+
+
+class MockWatcher(Watcher):
+
+    def start(self):
+        self.started = True
+
+
+class TestArbiter(unittest.TestCase):
+    """
+    Unit tests for the arbiter class to codify requirements within
+    behavior.
+    """
+
+    def test_start_watcher(self):
+        watcher = MockWatcher(name='foo', cmd='serve', priority=1)
+        arbiter = Arbiter([], None, None)
+        arbiter.start_watcher(watcher)
+        self.assertTrue(watcher.started)
+
+    def test_start_watchers_with_autostart(self):
+        watcher = MockWatcher(name='foo', cmd='serve', priority=1,
+                              autostart=False)
+        arbiter = Arbiter([], None, None)
+        arbiter.start_watcher(watcher)
+        self.assertFalse(getattr(watcher, 'started', False))
+
+    def test_start_watchers_warmup_delay(self):
+        watcher = MockWatcher(name='foo', cmd='serve', priority=1)
+        arbiter = Arbiter([], None, None, warmup_delay=10)
+        with patch('circus.arbiter.sleep') as mock_sleep:
+            arbiter.start_watcher(watcher)
+            mock_sleep.assert_called_with(10)
+
+        # now make sure we don't sleep when there is a autostart
+        watcher = MockWatcher(name='foo', cmd='serve', priority=1,
+                              autostart=False)
+        with patch('circus.arbiter.sleep') as mock_sleep:
+            arbiter.start_watcher(watcher)
+            assert not mock_sleep.called

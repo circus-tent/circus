@@ -123,6 +123,11 @@ watcher:NAME - as many sections as you want
         (Default: False)
     **warmup_delay**
         The delay (in seconds) between running processes.
+    **autostart**
+        If set to true, the watcher will not be started automatically
+        when the arbiter starts. The watcher can be started explicitly
+        (example: `circusctrl start myprogram`).
+	(Default: True)
     **numprocesses**
         The number of processes to run for this watcher.
     **rlimit_LIMIT**
