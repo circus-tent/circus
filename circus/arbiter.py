@@ -4,8 +4,7 @@ import os
 from threading import Thread, RLock
 from thread import get_ident
 import sys
-
-from gevent import sleep
+from time import sleep
 
 from circus import zmq
 from zmq.eventloop import ioloop
@@ -102,7 +101,7 @@ class Arbiter(object):
 
         # adding the httpd
         if httpd:
-            cmd = ("%s -c 'from circus.web import circushttpd; "
+            cmd = ("%s -c 'from circusweb import circushttpd; "
                    "circushttpd.main()'") % sys.executable
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --fd $(circus.sockets.circushttpd)'
@@ -139,6 +138,9 @@ class Arbiter(object):
 
         self.sockets = CircusSockets(sockets)
         self.warmup_delay = warmup_delay
+        self.loop = ioloop.IOLoop.instance()
+        self.ctrl = Controller(self.endpoint, self.context, self.loop, self,
+                               self.check_delay)
 
     @classmethod
     def load_from_config(cls, config_file):
@@ -156,7 +158,11 @@ class Arbiter(object):
         if httpd:
             # controlling that we have what it takes to run the web UI
             # if something is missing this will tell the user
-            from circus.web import circushttpd      # NOQA
+            try:
+                import circusweb     # NOQA
+            except ImportError:
+                logger.error('You need to install circus-web')
+                sys.exit(1)
 
         # creating arbiter
         arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
@@ -209,10 +215,6 @@ class Arbiter(object):
         """
         logger.info("Starting master on pid %s", self.pid)
         self.initialize()
-
-        self.loop = ioloop.IOLoop.instance()
-        self.ctrl = Controller(self.endpoint, self.context, self.loop, self,
-                               self.check_delay)
 
         # start controller
         self.ctrl.start()

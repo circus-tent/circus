@@ -2,10 +2,7 @@ import sys
 import random
 
 from datetime import datetime
-try:
-    from gevent.queue import Queue
-except ImportError:
-    from Queue import Queue
+from Queue import Queue
 
 from circus.util import resolve_name
 from circus.stream.file_stream import FileStream

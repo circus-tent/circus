@@ -38,18 +38,6 @@ of those libraries pulled for you::
     $ pip install -r pip-requirements.txt
 
 
-If you want to run the Web console you will need more things:
+If you want to run the Web console you will need to install **circus-web**::
 
-- Mako 0.7.0
-- MarkupSafe 0.15
-- bottle 0.10.9
-- anyjson 0.3.1
-- gevent 0.13.7
-- gevent-socketio 0.3.5-beta
-- gevent-websocket 0.3.6
-- greenlet 0.3.4
-- beaker 1.6.3
-
-Those can be installed with::
-
-    $ pip install -r web-requirements.txt
+    $ pip install circus-web

@@ -40,14 +40,13 @@ setup(name='circus',
           "License :: OSI Approved :: Apache Software License",
           "Development Status :: 3 - Alpha"],
       install_requires=install_requires,
-      tests_require=['webtest', 'unittest2'],
+      tests_require=['unittest2'],
       test_suite='circus.tests',
       entry_points="""
       [console_scripts]
       circusd = circus.circusd:main
       circusd-stats = circus.stats:main
       circusctl = circus.circusctl:main
-      circushttpd = circus.web.circushttpd:main
       circus-top = circus.stats.client:main
       circus-plugin = circus.plugins:main
       """)

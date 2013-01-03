@@ -1,7 +1,6 @@
-from _patch import zmq, USING_GEVENT  # NOQA
+from _patch import zmq  # NOQA
 import logging
 import os
-import sys
 
 
 version_info = (0, 7, 0)
@@ -94,15 +93,6 @@ def get_arbiter(watchers, controller=None,
         controller = DEFAULT_ENDPOINT_DEALER
     if pubsub_endpoint is None:
         pubsub_endpoint = DEFAULT_ENDPOINT_SUB
-
-    if stream_backend == 'gevent':
-        try:
-            import gevent                   # NOQA
-        except ImportError:
-            sys.stderr.write("stream_backend set to gevent, " +
-                             "but gevent isn't installed\n")
-            sys.stderr.write("Exiting...")
-            sys.exit(1)
 
     from circus.watcher import Watcher
     if background:

@@ -282,32 +282,25 @@ def oneshot_process(test_file):
 
 
 class RespawnTest(TestCircus):
-    runner = None
-
-    @classmethod
-    def setUpClass(cls):
-        # Create a watcher which doesn't respawn its processes.
-        oneshot_process = 'circus.tests.test_watcher.oneshot_process'
-        testfile, arbiter = cls._create_circus(oneshot_process, respawn=False)
-        cls.arbiter = arbiter
-        cls.test_file = testfile
-        cls.watcher = arbiter.watchers[-1]
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.arbiter.stop()
-
     def test_not_respawning(self):
-        # Per default, we shouldn't respawn processes, so we should have one
-        # process, even if in a dead state.
-        self.assertEquals(len(self.watcher.processes), 1)
+        oneshot_process = 'circus.tests.test_watcher.oneshot_process'
+        testfile, arbiter = self._create_circus(oneshot_process, respawn=False)
+        watcher = arbiter.watchers[-1]
+        try:
+            # Per default, we shouldn't respawn processes,
+            # so we should have one process, even if in a dead state.
+            resp = self.call("numprocesses", name="test")
+            self.assertEquals(resp['numprocesses'], 1)
 
-        # let's reap processes and explicitely ask for process management
-        self.watcher.reap_and_manage_processes()
-        # we should have zero processes (the process shouldn't respawn)
-        self.assertEquals(len(self.watcher.processes), 0)
+            # let's reap processes and explicitely ask for process management
+            watcher.reap_and_manage_processes()
 
-        # If we explicitely ask the watcher to respawn its processes, ensure
-        # it's doing so.
-        self.watcher.spawn_processes()
-        self.assertEquals(len(self.watcher.processes), 1)
+            # we should have zero processes (the process shouldn't respawn)
+            self.assertEquals(len(watcher.processes), 0)
+
+            # If we explicitely ask the watcher to respawn its processes,
+            # ensure it's doing so.
+            watcher.spawn_processes()
+            self.assertEquals(len(watcher.processes), 1)
+        finally:
+            arbiter.stop()
