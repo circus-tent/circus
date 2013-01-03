@@ -37,7 +37,7 @@ def watcher_defaults():
         'copy_path': False,
         'hooks': dict(),
         'respawn': True,
-        'start': True}
+        'autostart': True}
 
 
 _BOOL_STATES = {'1': True, 'yes': True, 'true': True, 'on': True,
@@ -220,8 +220,8 @@ def get_config(config_file):
                                    'env sections is recommended')
                     watcher['env'] = parse_env_str(val)
 
-                elif opt == 'start':
-                    watcher['start'] = dget(section, "start", True, bool)
+                elif opt == 'autostart':
+                    watcher['autostart'] = dget(section, "autostart", True, bool)
 
                 else:
                     # freeform
