@@ -17,7 +17,7 @@ from circus import logger
 
 class StatsStreamer(object):
     def __init__(self, endpoint, pubsub_endoint, stats_endpoint, ssh_server,
-                 delay=1.):
+                 delay=1., loop=None):
         self.topic = 'watcher.'
         self.delay = delay
         self.ctx = zmq.Context()
@@ -25,7 +25,7 @@ class StatsStreamer(object):
         self.sub_socket = self.ctx.socket(zmq.SUB)
         self.sub_socket.setsockopt(zmq.SUBSCRIBE, self.topic)
         self.sub_socket.connect(self.pubsub_endpoint)
-        self.loop = ioloop.IOLoop.instance()  # events coming from circusd
+        self.loop = loop or ioloop.IOLoop.instance()
         self.substream = zmqstream.ZMQStream(self.sub_socket, self.loop)
         self.substream.on_recv(self.handle_recv)
         self.client = CircusClient(context=self.ctx, endpoint=endpoint,
@@ -50,20 +50,26 @@ class StatsStreamer(object):
             if watcher == 'circus':
                 return self.circus_pids.keys()
             return self._pids[watcher]
-        return chain(self._pid.values())
+        return chain(self._pids.values())
 
     def get_circus_pids(self):
+        watchers = self.client.send_message('list').get('watchers', [])
+
         # getting the circusd, circusd-stats and circushttpd pids
         res = self.client.send_message('dstats')
-        pids = {os.getpid(): 'circusd-stats',
-                res['info']['pid']: 'circusd'}
+        pids = {os.getpid(): 'circusd-stats'}
 
-        httpd_pids = self.client.send_message('list', name='circushttpd')
+        if 'info' in res:
+            pids[res['info']['pid']] = 'circusd'
 
-        if 'pids' in httpd_pids:
-            httpd_pids = httpd_pids['pids']
-            if len(httpd_pids) == 1:
-                pids[httpd_pids[0]] = 'circushttpd'
+        if 'circushttpd' in watchers:
+            httpd_pids = self.client.send_message('list', name='circushttpd')
+
+            if 'pids' in httpd_pids:
+                httpd_pids = httpd_pids['pids']
+                if len(httpd_pids) == 1:
+                    pids[httpd_pids[0]] = 'circushttpd'
+
         return pids
 
     def _add_callback(self, name, start=True, kind='watcher'):
@@ -91,9 +97,10 @@ class StatsStreamer(object):
                 # this is dealt by the special 'circus' collector
                 continue
 
-            pids = self.client.send_message('list', name=watcher)['pids']
+            pid_list = self.client.send_message('list', name=watcher)
+            pids = pid_list.get('pids', [])
             for pid in pids:
-                self.append_pid(watcher, pid)
+                self._append_pid(watcher, pid)
 
         # getting the circus pids
         self.circus_pids = self.get_circus_pids()
@@ -104,7 +111,7 @@ class StatsStreamer(object):
 
         # getting the initial list of sockets
         res = self.client.send_message('listsockets')
-        for sock in res['sockets']:
+        for sock in res.get('sockets', []):
             fd = sock['fd']
             address = '%s:%s' % (sock['host'], sock['port'])
             # XXX type / family ?
@@ -122,7 +129,7 @@ class StatsStreamer(object):
                     'Stopping the periodic callback for {0}' .format(watcher))
                 self._callbacks[watcher].stop()
 
-    def append_pid(self, watcher, pid):
+    def _append_pid(self, watcher, pid):
         if watcher not in self._pids or len(self._pids[watcher]) == 0:
             logger.debug(
                 'Starting the periodic callback for {0}'.format(watcher))
@@ -180,7 +187,7 @@ class StatsStreamer(object):
                 self.remove_pid(watcher, pid)
             elif action == 'spawn':
                 pid = msg['process_pid']
-                self.append_pid(watcher, pid)
+                self._append_pid(watcher, pid)
             elif action == 'start':
                 self._init()
             elif action == 'stop':
