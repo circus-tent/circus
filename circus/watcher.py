@@ -156,7 +156,7 @@ class Watcher(object):
                  stderr_stream=None, priority=0, loop=None,
                  singleton=False, use_sockets=False, copy_env=False,
                  copy_path=False, max_age=0, max_age_variance=30,
-                 hooks=None, respawn=True, **options):
+                 hooks=None, respawn=True, autostart=True, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.res_name = name.lower().replace(" ", "_")
@@ -185,6 +185,7 @@ class Watcher(object):
         self.ignore_hook_failure = ['before_stop', 'after_stop']
         self.hooks = self._resolve_hooks(hooks)
         self.respawn = respawn
+        self.autostart = autostart
         self.loop = loop or ioloop.IOLoop.instance()
 
         if singleton and self.numprocesses not in (0, 1):

@@ -1,4 +1,7 @@
 import sys
+import random
+
+from datetime import datetime
 from Queue import Queue
 
 from circus.util import resolve_name
@@ -28,6 +31,83 @@ class StdoutStream(object):
 
     def close(self):
         pass
+
+
+class FancyStdoutStream(StdoutStream):
+    """
+    Write output from watchers using different colors along with a
+    timestamp.
+
+    If no color is selected a color will be chosen at random. The
+    available ascii colors are:
+
+      - red
+      - green
+      - yellow
+      - blue
+      - magenta
+      - cyan
+      - white
+
+    You may also configure the timestamp format as defined by
+    datetime.strftime. The default is: ::
+
+      %Y-%M-%d %H:%M:%S
+
+    Here is an example: ::
+
+      [watcher:foo]
+      cmd = python -m myapp.server
+      stdout_stream.class = FancyStdoutStream
+      stdout_stream.color = green
+      stdout_stream.time_format = '%Y/%M/%d | %H:%M:%S'
+    """
+
+    # colors in order according to the ascii escape sequences
+    colors = ['red', 'green', 'yellow', 'blue',
+              'magenta', 'cyan', 'white']
+
+    # Where we write output
+    out = sys.stdout
+
+    # Generate a datetime object
+    now = datetime.now
+
+    def __init__(self, color=None, time_format=None, *args, **kwargs):
+        self.time_format = time_format or '%Y-%M-%d %H:%M:%S'
+
+        # If no color is provided we pick one at random
+        if color not in self.colors:
+            color = random.choice(self.colors)
+
+        self.color_code = self.colors.index(color) + 1
+
+    def prefix(self, pid):
+        """
+        Create a prefix for each line.
+
+        This includes the ansi escape sequence for the color. This
+        will not work on windows. For something more robust there is a
+        good discussion over on Stack Overflow:
+
+        http://stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
+        """
+        time = self.now().strftime(self.time_format)
+
+        # start the coloring with the ansi escape sequence
+        color = '\033[0;3%s;40m' % self.color_code
+
+        prefix = '{time} [{pid}] | '.format(pid=pid, time=time)
+        return color + prefix
+
+    def __call__(self, data):
+        for line in data['data'].split('\n'):
+            if line:
+                self.out.write(self.prefix(data['pid']))
+                self.out.write(line)
+                # stop coloring
+                self.out.write('\033[0m\n')
+                self.out.flush()
 
 
 def get_stream(conf):

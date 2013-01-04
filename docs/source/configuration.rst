@@ -123,6 +123,11 @@ watcher:NAME - as many sections as you want
         (Default: False)
     **warmup_delay**
         The delay (in seconds) between running processes.
+    **autostart**
+        If set to true, the watcher will not be started automatically
+        when the arbiter starts. The watcher can be started explicitly
+        (example: `circusctrl start myprogram`).
+	(Default: True)
     **numprocesses**
         The number of processes to run for this watcher.
     **rlimit_LIMIT**
@@ -137,11 +142,12 @@ watcher:NAME - as many sections as you want
         will receive the **stderr** stream of all processes in its
         :func:`__call__` method.
 
-        Circus provides three classes you can use without prefix:
+        Circus provides some stream classes you can use without prefix:
 
         - :class:`FileStream`: writes in a file
         - :class:`QueueStream`: write in a memory Queue
         - :class:`StdoutStream`: writes in the stdout
+        - :class:`FancyStdoutStream`: writes colored output with time prefixes in the stdout
 
     **stderr_stream.***
         All options starting with *stderr_stream.* other than *class* will
@@ -151,11 +157,13 @@ watcher:NAME - as many sections as you want
         A fully qualified Python class name that will be instanciated, and
         will receive the **stdout** stream of all processes in its
         :func:`__call__` method.
-        Circus provides three classes you can use without prefix:
+
+        Circus provides soem stream classes you can use without prefix:
 
         - :class:`FileStream`: writes in a file
         - :class:`QueueStream`: write in a memory Queue
         - :class:`StdoutStream`: writes in the stdout
+        - :class:`FancyStdoutStream`: writes colored output with time prefixes in the stdout
 
     **stdout_stream.***
         All options starting with *stdout_stream.* other than *class* will
