@@ -20,9 +20,8 @@ def get_arbiter(watchers, controller=None,
 
     Options:
 
-    - **watchers** -- a list of watchers. A watcher in that case is a
-      dict containing:
-
+      - **watchers** -- a list of watchers. A watcher in that case is a
+                        dict containing:
         - **name** -- the name of the watcher (default: None)
         - **cmd** -- the command line used to run the Watcher.
         - **args** -- the args for the command (list or string).
@@ -47,9 +46,9 @@ def get_arbiter(watchers, controller=None,
           the stdout stream. Default to None. When provided, may contain:
 
             - **class**: the fully qualified name of the class to use for
-              streaming. Defaults to circus.stream.FileStream
+                         streaming. Defaults to circus.stream.FileStream
             - **refresh_time**: the delay between two stream checks. Defaults
-              to 0.3 seconds.
+                                to 0.3 seconds.
             - any other key will be passed the class constructor.
         - **stderr_stream**: a mapping containing the options for configuring
           the stderr stream. Default to None. When provided, may contain:
@@ -57,7 +56,7 @@ def get_arbiter(watchers, controller=None,
             - **class**: the fully qualified name of the class to use for
               streaming. Defaults to circus.stream.FileStream
             - **refresh_time**: the delay between two stream checks. Defaults
-              to 0.3 seconds.
+                                to 0.3 seconds.
             - any other key will be passed the class constructor.
         - **max_retry**: the number of times we attempt to start a process,
           before we abandon and stop the whole watcher. (default: 5)

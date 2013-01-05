@@ -2,3 +2,4 @@
 
 flake8==1.5
 unittest2==0.5.1
+mock

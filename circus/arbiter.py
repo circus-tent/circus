@@ -205,6 +205,13 @@ class Arbiter(object):
             self._watchers_names[watcher.name.lower()] = watcher
             watcher.initialize(self.evpub_socket, self.sockets, self)
 
+    def start_watcher(self, watcher):
+        """Aska a specific watcher to start and wait for the specified
+        warmup delay."""
+        if watcher.autostart:
+            watcher.start()
+            sleep(self.warmup_delay)
+
     @debuglog
     def start(self):
         """Starts all the watchers.
@@ -222,8 +229,7 @@ class Arbiter(object):
             # initialize processes
             logger.debug('Initializing watchers')
             for watcher in self.iter_watchers():
-                watcher.start()
-                sleep(self.warmup_delay)
+                self.start_watcher(watcher)
 
             logger.info('Arbiter now waiting for commands')
 
