@@ -1,5 +1,5 @@
 -r pip-requirements.txt
 
-flake8==1.5
+flake8==1.7.0
 unittest2==0.5.1
-mock
+mock==1.0.1
