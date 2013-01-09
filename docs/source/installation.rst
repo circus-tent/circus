@@ -13,9 +13,20 @@ Or download the archive on PyPI, extract and install it manually with::
 
 If you want to try out Circus, see the :ref:`examples`.
 
-If you are using debian or any debian based distributoin, you also can use the
+If you are using debian or any debian based distribution, you also can use the
 ppa to install circus, it's at
 https://launchpad.net/~roman-imankulov/+archive/circus
+
+
+zc.buildout
+===========
+
+We provide a `zc.buildout <http://www.buildout.org/>`_ configuration, you can
+use it by simply running the bootstrap script, then calling buildout::
+
+    $ python bootstrap.py
+    $ bin/buildout
+
 
 More on Requirements
 ====================
