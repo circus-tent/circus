@@ -16,3 +16,8 @@ examples/test.log
 man/
 .tox/
 build/
+# ignore patterns for buildout
+.installed.cfg
+develop-eggs/*
+eggs/*
+parts/*
