@@ -90,7 +90,7 @@ class FancyStdoutStream(StdoutStream):
         will not work on windows. For something more robust there is a
         good discussion over on Stack Overflow:
 
-        http://stackoverflow.com/questions/287871/print-in-terminal-with-colors-using-python
+        http://stackoverflow.com/questions/287871
         """
         time = self.now().strftime(self.time_format)
 

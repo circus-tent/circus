@@ -221,8 +221,8 @@ def get_config(config_file):
                     watcher['env'] = parse_env_str(val)
 
                 elif opt == 'autostart':
-                    watcher['autostart'] = dget(section, "autostart", True, bool)
-
+                    watcher['autostart'] = dget(section, "autostart", True,
+                                                bool)
                 else:
                     # freeform
                     watcher[opt] = val

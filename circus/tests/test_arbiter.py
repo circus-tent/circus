@@ -5,7 +5,7 @@ from tempfile import mkstemp
 
 from mock import patch
 
-from circus.arbiter import Arbiter, sleep
+from circus.arbiter import Arbiter
 from circus.watcher import Watcher
 from circus.client import CallError, CircusClient, make_message
 from circus.tests.support import TestCircus, poll_for, truncate_file
