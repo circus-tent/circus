@@ -1,6 +1,13 @@
 Circus: A Process & Socket Manager
 ##################################
 
+.. warning::
+
+   Starting at 0.7, Circus does not include the web console anymore.
+   It's now located in a standlone package called
+   `circus-web <http://pypi.python.org/pypi/circus-web>`_
+
+
 .. image:: images/circus-medium.png
    :align: right
 
@@ -189,6 +196,7 @@ More documentation
    glossary
    contributing
    adding_new_commands
+   changes
    copyright
 
 

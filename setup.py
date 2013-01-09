@@ -1,3 +1,4 @@
+import os
 import sys
 from setuptools import setup, find_packages
 from circus import __version__
@@ -19,7 +20,9 @@ except ImportError:
 with open("README.rst") as f:
     README = f.read()
 
-with open("CHANGES.rst") as f:
+changes = os.path.join('docs', 'source', 'changes.rst')
+
+with open(changes) as f:
     CHANGES = f.read()
 
 

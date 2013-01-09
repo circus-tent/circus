@@ -1,5 +1,6 @@
 include NOTICE
 include README.rst
 include LICENSE
-include CHANGES.rst
 include pip-requirements.txt
+recursive-include docs *.py *.rst *.png
+
