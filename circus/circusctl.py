@@ -179,7 +179,7 @@ class CircusCtl(cmd.Cmd, object):
         for name, cmd in commands.iteritems():
             cls._add_do_cmd(name, cmd)
             cls._add_complete_cmd(name, cmd)
-        return  super(CircusCtl, cls).__new__(cls, *args, **kw)
+        return super(CircusCtl, cls).__new__(cls, *args, **kw)
 
     def __init__(self, client, *args, **kwargs):
         return super(CircusCtl, self).__init__()

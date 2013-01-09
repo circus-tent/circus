@@ -21,7 +21,7 @@ def convert_option(key, val):
     elif key == "env":
         return util.parse_env(val)
     elif key == "cmd":
-        return  val
+        return val
     elif key == "flapping_attempts":
         return int(val)
     elif key == "flapping_window":
