@@ -87,7 +87,7 @@ Running a Django application
 
 Running a Django application is done exactly like running a WSGI application. Use the
 *PYTHONPATH* to import the directory the project is in, the directory that contains the 
-directory that has settings.py in it (with Django 1.4+ this directory has manage.py in it)
+directory that has settings.py in it (with Django 1.4+ this directory has manage.py in it) ::
 
     [socket:dwebapp]
     host = 127.0.0.1
@@ -102,7 +102,7 @@ directory that has settings.py in it (with Django 1.4+ this directory has manage
     PYTHONPATH = /path/to/parent-of-dproject
 
 If you need to pass the *DJANGO_SETTINGS_MODULE* for a backend worker for example, you can pass that also though
-the *env* configation option:
+the *env* configation option::
     
     [watcher:dbackend]
     cmd = /path/to/script.py
