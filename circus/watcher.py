@@ -155,8 +155,9 @@ class Watcher(object):
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, priority=0, loop=None,
                  singleton=False, use_sockets=False, copy_env=False,
-                 copy_path=False, max_age=0, max_age_variance=30,
-                 hooks=None, respawn=True, autostart=True, **options):
+                 copy_path=False, virtualenv=None, max_age=0,
+                 max_age_variance=30, hooks=None, respawn=True,
+                 autostart=True, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.res_name = name.lower().replace(" ", "_")
@@ -180,6 +181,7 @@ class Watcher(object):
         self.singleton = singleton
         self.copy_env = copy_env
         self.copy_path = copy_path
+        self.virtualenv = virtualenv
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
         self.ignore_hook_failure = ['before_stop', 'after_stop']
@@ -210,6 +212,43 @@ class Watcher(object):
         self.uid = uid
         self.gid = gid
 
+        if self.virtualenv:
+            py_ver = sys.version.split()[0][:3]
+
+            # XXX Posix scheme - need to add others
+            sitedir = os.path.join(self.virtualenv, 'lib', 'python' + py_ver,
+                                   'site-packages')
+
+            if not os.path.exists(sitedir):
+                raise ValueError("%s does not exist" % sitedir)
+
+            def process_pth(sitedir, name):
+                packages = set()
+                fullname = os.path.join(sitedir, name)
+                try:
+                    f = open(fullname, "rU")
+                except IOError:
+                    return
+                with f:
+                    for n, line in enumerate(f):
+                        if line.startswith(("#", "import ", "import\t")):
+                            continue
+                        line = line.rstrip()
+                        pkg_path = os.path.abspath(os.path.join(sitedir, line))
+                        if os.path.exists(pkg_path):
+                            packages.add(pkg_path)
+                return packages
+
+            venv_pkgs = set()
+            try:
+                names = os.listdir(sitedir)
+                dotpth = os.extsep + "pth"
+                names = [name for name in names if name.endswith(dotpth)]
+                for name in sorted(names):
+                    venv_pkgs |= process_pth(sitedir, name)
+            except os.error:
+                pass
+
         if self.copy_env:
             self.env = os.environ.copy()
             if self.copy_path:
@@ -217,10 +256,20 @@ class Watcher(object):
                 self.env['PYTHONPATH'] = path
             if env is not None:
                 self.env.update(env)
+            if self.virtualenv:
+                venv_path = os.pathsep.join(venv_pkgs)
+                py_path = self.env.get('PYTHONPATH')
+                if py_path:
+                    path = os.pathsep.join([venv_path, py_path])
+                else:
+                    path = venv_path
+                self.env['PYTHONPATH'] = path
         else:
             if self.copy_path:
                 raise ValueError(('copy_env and copy_path must have the '
                                   'same value'))
+            if self.virtualenv:
+                raise ValueError('copy_env must be True to to use virtualenv')
             self.env = env
 
         self.rlimits = rlimits
