@@ -302,11 +302,10 @@ INDENTATION_LEVEL = 0
 def debuglog(func):
     @wraps(func)
     def _log(self, *args, **kw):
-        from circus import logger
-
         if os.environ.get('DEBUG') is None:
             return func(self, *args, **kw)
 
+        from circus import logger
         cls = self.__class__.__name__
         global INDENTATION_LEVEL
         logger.debug("    " * INDENTATION_LEVEL +
