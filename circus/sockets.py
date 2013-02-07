@@ -32,7 +32,7 @@ class CircusSocket(socket.socket):
     """
     def __init__(self, name='', host='localhost', port=8080,
                  family=socket.AF_INET, type=socket.SOCK_STREAM,
-                 proto=0, backlog=2048, path=None):
+                 proto=0, backlog=2048, path=None, umask=None):
         if path is not None:
             family = socket.AF_UNIX
 
@@ -41,6 +41,7 @@ class CircusSocket(socket.socket):
         self.name = name
         self.socktype = type
         self.path = path
+        self.umask = umask
 
         if family == socket.AF_UNIX:
             self.host = self.port = None
@@ -68,7 +69,9 @@ class CircusSocket(socket.socket):
                     raise OSError("%r already exists. You might want to "
                                   "remove it. If it's a stalled socket "
                                   "file, just restart Circus" % self.path)
+                old_mask = os.umask(self.umask)
                 self.bind(self.path)
+                os.umask(old_mask)
             else:
                 self.bind((self.host, self.port))
         except socket.error:
@@ -93,7 +96,8 @@ class CircusSocket(socket.socket):
                   'path': config.get('path'),
                   'family': _FAMILY[config.get('family', 'AF_INET').upper()],
                   'type': _TYPE[config.get('type', 'SOCK_STREAM').upper()],
-                  'backlog': int(config.get('backlog', 2048))}
+                  'backlog': int(config.get('backlog', 2048)),
+                  'umask': int(config.get('umask', 8))}
         proto_name = config.get('proto')
         if proto_name is not None:
             params['proto'] = socket.getprotobyname(proto_name)

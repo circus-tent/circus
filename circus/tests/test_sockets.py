@@ -1,4 +1,5 @@
 import os
+import stat
 import socket
 import tempfile
 
@@ -46,15 +47,30 @@ class TestSockets(unittest.TestCase):
         self.assertRaises(socket.error, CircusSocket.load_from_config, config)
 
     @unittest.skipIf(TRAVIS, "Running in Travis")
+    def test_load_from_config_umask(self):
+        fd, sockfile = tempfile.mkstemp()
+        os.close(fd)
+        os.remove(sockfile)
+
+        config = {'name': 'somename', 'path': sockfile, 'umask': 0}
+        sock = CircusSocket.load_from_config(config)
+        try:
+            self.assertEqual(sock.umask, 0)
+        finally:
+            sock.close()
+
+    @unittest.skipIf(TRAVIS, "Running in Travis")
     def test_unix_socket(self):
         fd, sockfile = tempfile.mkstemp()
         os.close(fd)
         os.remove(sockfile)
 
-        sock = CircusSocket('somename', path=sockfile)
+        sock = CircusSocket('somename', path=sockfile, umask=0)
         try:
             sock.bind_and_listen()
             self.assertTrue(os.path.exists(sockfile))
+            permissions = oct(os.stat(sockfile).st_mode)[-3:]
+            self.assertEqual(permissions, '777')
         finally:
             sock.close()
             os.remove(sockfile)
