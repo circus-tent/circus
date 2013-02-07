@@ -18,6 +18,8 @@ def convert_option(key, val):
         return util.to_bool(val)
     elif key == "shell":
         return util.to_bool(val)
+    elif key == "copy_env":
+        return util.to_bool(val)
     elif key == "env":
         return util.parse_env(val)
     elif key == "cmd":
@@ -42,7 +44,7 @@ def convert_option(key, val):
 
 def validate_option(key, val):
     if key not in ('numprocesses', 'warmup_delay', 'working_dir', 'uid',
-                   'gid', 'send_hup', 'shell', 'env', 'cmd',
+                   'gid', 'send_hup', 'shell', 'env', 'cmd', 'copy_env',
                    'flapping_attempts', 'flapping_window', 'retry_in',
                    'max_retry', 'graceful_timeout', 'stdout_stream',
                    'stderr_stream', 'max_age', 'max_age_variance'):
@@ -62,7 +64,7 @@ def validate_option(key, val):
         if not isinstance(val, int) or not isinstance(val, string_types):
             raise MessageError("%r isn't an integer or string" % key)
 
-    if key in ('send_hup', 'shell', ):
+    if key in ('send_hup', 'shell', 'copy_env'):
         if not isinstance(val, bool):
             raise MessageError("%r isn't a valid boolean" % key)
 
