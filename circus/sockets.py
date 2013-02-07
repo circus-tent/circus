@@ -69,9 +69,12 @@ class CircusSocket(socket.socket):
                     raise OSError("%r already exists. You might want to "
                                   "remove it. If it's a stalled socket "
                                   "file, just restart Circus" % self.path)
-                old_mask = os.umask(self.umask)
-                self.bind(self.path)
-                os.umask(old_mask)
+                if self.umask is None:
+                    self.bind(self.path)
+                else:
+                    old_mask = os.umask(self.umask)
+                    self.bind(self.path)
+                    os.umask(old_mask)
             else:
                 self.bind((self.host, self.port))
         except socket.error:

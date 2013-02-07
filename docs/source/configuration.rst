@@ -240,6 +240,10 @@ socket:NAME - as many sections as you want
         When provided a path to a file that will be used as a unix socket
         file. If a path is provided, **family** is forced to AF_UNIX and
         **host** and **port** are ignored.
+    **umask**
+        When provided, sets the umask that will be used to create an
+        AF_UNIX socket. For example, `umask=000` will produce a socket with
+        permission `777`.
 
 
 Once a socket is created, the *${circus.sockets.NAME}* string can be used in the
