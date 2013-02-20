@@ -176,7 +176,8 @@ class StatsStreamer(object):
 
         topic, msg = data
         try:
-            __, watcher, action = topic.split('.')
+            watcher = topic.split('.')[1:-1]
+            action = topic.split('.')[-1]
             msg = json.loads(msg)
             if action == 'start' or (action != 'start' and self.stopped):
                 self._init()
