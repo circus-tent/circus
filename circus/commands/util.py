@@ -21,7 +21,7 @@ def convert_option(key, val):
     elif key == "copy_env":
         return util.to_bool(val)
     elif key == "env":
-        return util.parse_env(val)
+        return util.parse_env_dict(val)
     elif key == "cmd":
         return val
     elif key == "flapping_attempts":
