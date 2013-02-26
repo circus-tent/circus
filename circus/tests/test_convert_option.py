@@ -1,4 +1,4 @@
-import unittest2 as unittest
+from circus.tests.support import unittest
 
 from circus.commands.util import convert_option
 
