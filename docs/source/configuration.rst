@@ -17,9 +17,9 @@ Example::
     warmup_delay = 0
     numprocesses = 5
 
-	[env:myprogram]
-	PATH = $PATH:/bin
-	CAKE = lie
+    [env:myprogram]
+    PATH = $PATH:/bin
+    CAKE = lie
 
     # hook
     hooks.before_start = my.hooks.control_redis
