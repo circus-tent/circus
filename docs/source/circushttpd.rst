@@ -120,7 +120,7 @@ Then add a new *watcher* and a *socket* sections in your ini file::
     use_sockets = 1
 
     [socket:webconsole]
-    host = 127.0.0.0
+    host = 127.0.0.1
     port = 8080
 
 That's it !
