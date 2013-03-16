@@ -205,6 +205,11 @@ watcher:NAME - as many sections as you want
         max_age + random(0, max_age_variance) seconds. This avoids restarting
         all processes for a watcher at once. Defaults to 30 seconds.
 
+    **on_demand**
+        If set to True, the processes will be started only after the first
+        connection to one of the configured sockets (see below). If a restart
+        is needed, it will be only triggered at the next socket event.
+
     **hooks.***
         Available hooks: **before_start**, **after_start**, **before_stop**, **after_stop**
 

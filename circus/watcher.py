@@ -117,6 +117,10 @@ class Watcher(object):
       descriptors, thus can reuse the sockets opened by circusd.
       (default: False)
 
+    - **on_demand** -- If True, the processes will be started only
+      at the first connection to the socket
+      (default: False)
+
     - **copy_env** -- If True, the environment in which circus is running
       run will be reproduced for the workers. (default: False)
 
@@ -156,9 +160,10 @@ class Watcher(object):
                  stderr_stream=None, priority=0, loop=None,
                  singleton=False, use_sockets=False, copy_env=False,
                  copy_path=False, max_age=0, max_age_variance=30,
-                 hooks=None, respawn=True, autostart=True, **options):
+                 hooks=None, respawn=True, autostart=True, on_demand=False, **options):
         self.name = name
         self.use_sockets = use_sockets
+        self.on_demand = on_demand
         self.res_name = name.lower().replace(" ", "_")
         self.numprocesses = int(numprocesses)
         self.warmup_delay = warmup_delay
@@ -196,7 +201,7 @@ class Watcher(object):
                           "uid", "gid", "send_hup", "shell", "env",
                           "max_retry", "cmd", "args", "graceful_timeout",
                           "executable", "use_sockets", "priority", "copy_env",
-                          "singleton", "stdout_stream_conf",
+                          "singleton", "stdout_stream_conf", "on_demand"
                           "stderr_stream_conf", "max_age", "max_age_variance")
                          + tuple(options.keys()))
 
@@ -395,6 +400,10 @@ class Watcher(object):
     def spawn_processes(self):
         """Spawn processes.
         """
+        # when an on_demand process dies, do not restart it until the next event
+        if self.on_demand and not self.arbiter.socket_event:
+            self.stopped = True
+            return
         for i in range(self.numprocesses - len(self.processes)):
             self.spawn_process()
             time.sleep(self.warmup_delay)
@@ -618,6 +627,9 @@ class Watcher(object):
         """Start.
         """
         if not self.stopped:
+            return
+
+        if self.on_demand and not self.arbiter.socket_event:
             return
 
         self.stopped = False
