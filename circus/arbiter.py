@@ -18,6 +18,8 @@ from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
 
+import select
+
 
 class Arbiter(object):
     """Class used to control a list of watchers.
@@ -66,6 +68,7 @@ class Arbiter(object):
         self.proc_name = proc_name
 
         self.ctrl = self.loop = None
+        self.socket_event = False
 
         # initialize zmq context
         self.context = context or zmq.Context.instance()
@@ -294,10 +297,20 @@ class Arbiter(object):
             return
 
         with self._lock:
+            need_on_demand = False
             # manage and reap processes
             self.reap_processes()
             for watcher in self.iter_watchers():
+                if watcher.on_demand and watcher.stopped:
+                    need_on_demand = True
                 watcher.manage_processes()
+            if need_on_demand:
+                 (rlist, wlist, xlist) = select.select([x.fileno() for x in self.sockets.values()], [], [], 0)
+                 if rlist:
+                     self.socket_event = True
+                     self.start_watchers()
+                     self.socket_event = False
+            
 
     @debuglog
     def reload(self, graceful=True):
