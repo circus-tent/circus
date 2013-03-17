@@ -84,12 +84,6 @@ circus - single section
         If set to False, the processes handled by a watcher will not be
         respawned automatically. (default: True)
 
-.. note::
-
-   If you use the gevent backend for **stream_backend**, you need to install the
-   forked version of gevent_zmq that's located at
-   https://github.com/tarekziade/gevent-zeromq because it contains a fix that has
-   not made it upstream yet.
 
 
 watcher:NAME - as many sections as you want
@@ -293,16 +287,16 @@ Example::
 
 	[watcher:worker1]
 	cmd = ping 127.0.0.1
-	
+
 	[watcher:worker2]
 	cmd = ping 127.0.0.1
-	
+
 	[env:worker1,worker2]
 	PATH = /bin
-	
+
 	[env:worker1]
 	PATH = $PATH
-	
+
 	[env:worker2]
 	CAKE = lie
 
