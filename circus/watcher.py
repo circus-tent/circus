@@ -201,7 +201,7 @@ class Watcher(object):
                           "uid", "gid", "send_hup", "shell", "env",
                           "max_retry", "cmd", "args", "graceful_timeout",
                           "executable", "use_sockets", "priority", "copy_env",
-                          "singleton", "stdout_stream_conf", "on_demand"
+                          "singleton", "stdout_stream_conf", "on_demand",
                           "stderr_stream_conf", "max_age", "max_age_variance")
                          + tuple(options.keys()))
 
