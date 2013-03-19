@@ -94,8 +94,8 @@ class Controller(object):
         try:
             cmd = self.commands[cmd_name.lower()]
         except KeyError:
-            error = "unknown command: %r" % cmd_name
-            return self.send_error(cid, msg, error, cast=cast,
+            error_ = "unknown command: %r" % cmd_name
+            return self.send_error(cid, msg, error_, cast=cast,
                                    errno=errors.UNKNOWN_COMMAND)
 
         try:

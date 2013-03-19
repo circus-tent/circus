@@ -304,13 +304,14 @@ class Arbiter(object):
                 if watcher.on_demand and watcher.stopped:
                     need_on_demand = True
                 watcher.manage_processes()
+
             if need_on_demand:
-                 (rlist, wlist, xlist) = select.select([x.fileno() for x in self.sockets.values()], [], [], 0)
-                 if rlist:
-                     self.socket_event = True
-                     self.start_watchers()
-                     self.socket_event = False
-            
+                sockets = [x.fileno() for x in self.sockets.values()]
+                rlist, wlist, xlist = select.select(sockets, [], [], 0)
+                if rlist:
+                    self.socket_event = True
+                    self.start_watchers()
+                    self.socket_event = False
 
     @debuglog
     def reload(self, graceful=True):

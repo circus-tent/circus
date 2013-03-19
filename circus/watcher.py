@@ -160,7 +160,8 @@ class Watcher(object):
                  stderr_stream=None, priority=0, loop=None,
                  singleton=False, use_sockets=False, copy_env=False,
                  copy_path=False, max_age=0, max_age_variance=30,
-                 hooks=None, respawn=True, autostart=True, on_demand=False, **options):
+                 hooks=None, respawn=True, autostart=True, on_demand=False,
+                 **options):
         self.name = name
         self.use_sockets = use_sockets
         self.on_demand = on_demand
@@ -400,7 +401,8 @@ class Watcher(object):
     def spawn_processes(self):
         """Spawn processes.
         """
-        # when an on_demand process dies, do not restart it until the next event
+        # when an on_demand process dies, do not restart it until
+        # the next event
         if self.on_demand and not self.arbiter.socket_event:
             self.stopped = True
             return
