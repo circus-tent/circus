@@ -92,8 +92,9 @@ def _get_switch_str(opt):
 
 class ControllerApp(object):
 
-    def __init__(self, commands):
+    def __init__(self, commands, client=None):
         self.commands = commands
+        self.client = client
 
     def run(self, args):
         try:
@@ -124,11 +125,12 @@ class ControllerApp(object):
             if hasattr(args, 'start'):
                 opts['start'] = args.start
 
-            if args.endpoint is None:
+            if args.endpoint is None and cmd.msg_type != 'dealer':
                 if cmd.msg_type == 'sub':
                     args.endpoint = DEFAULT_ENDPOINT_SUB
                 else:
                     args.endpoint = DEFAULT_ENDPOINT_DEALER
+
             msg = cmd.message(*args.args, **opts)
             handler = getattr(self, "handle_%s" % cmd.msg_type)
             return handler(cmd, self.globalopts, msg, args.endpoint,
@@ -149,8 +151,13 @@ class ControllerApp(object):
 
     def handle_dealer(self, cmd, opts, msg, endpoint, timeout, ssh_server,
                       ssh_keyfile):
-        client = CircusClient(endpoint=endpoint, timeout=timeout,
-                              ssh_server=ssh_server, ssh_keyfile=ssh_keyfile)
+        if endpoint is not None:
+            client = CircusClient(endpoint=endpoint, timeout=timeout,
+                                  ssh_server=ssh_server,
+                                  ssh_keyfile=ssh_keyfile)
+        else:
+            client = self.client
+
         try:
             if isinstance(msg, list):
                 for i, command in enumerate(msg):
@@ -163,7 +170,9 @@ class ControllerApp(object):
             sys.stderr.write(str(e) + " Try to raise the --timeout value\n")
             return 1
         finally:
-            client.stop()
+            if endpoint is not None:
+                client.stop()
+
         return 0
 
 
@@ -174,7 +183,7 @@ class CircusCtl(cmd.Cmd, object):
     def __new__(cls, client, commands, *args, **kw):
         """Auto add do and complete methods for all known commands."""
         cls.commands = commands
-        cls.controller = ControllerApp(commands)
+        cls.controller = ControllerApp(commands, client)
         cls.client = client
         for name, cmd in commands.iteritems():
             cls._add_do_cmd(name, cmd)
@@ -372,6 +381,7 @@ def main():
                           ssh_keyfile=globalopts['ssh_keyfile'])
 
     CircusCtl(client, commands).start(globalopts)
+
 
 if __name__ == '__main__':
     main()
