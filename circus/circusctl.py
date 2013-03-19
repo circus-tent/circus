@@ -333,13 +333,22 @@ def parse_arguments(args, commands):
 
     if any([value in commands for value in args]):
         subparsers = parser.add_subparsers(dest='command')
-        for command in commands:
+
+        for command, klass in commands.items():
+
             subparser = subparsers.add_parser(command)
             subparser.add_argument('args', nargs="*",
                                    help=argparse.SUPPRESS)
-            if command == 'add':
-                subparser.add_argument('--start', action='store_true',
-                                       default=False)
+            for option in klass.options:
+                __, name, default, desc = option
+
+                if isinstance(default, bool):
+                    action = 'store_true'
+                else:
+                    action = 'store'
+
+                subparser.add_argument('--' + name, action=action,
+                                       default=default, help=desc)
 
     args = parser.parse_args(args)
 
