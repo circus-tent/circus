@@ -107,15 +107,16 @@ compatible with that protocol. By default it uses the standard library
 You can use `Chaussette <http://chaussette.readthedocs.org>`_ to bind a WSGI
 server and have *circushttpd* managed by Circus itself.
 
-To do so, make sure Chaussette is installed::
+To do so, make sure Chaussette & the socketio backend are installed::
 
     $ pip install chaussette
+    $ pip install gevent-socketio
 
 
 Then add a new *watcher* and a *socket* sections in your ini file::
 
     [watcher:webconsole]
-    cmd = chaussette --fd $(circus.sockets.webconsole) circus.web.circushttpd.app
+    cmd = chaussette --backend socketio --fd $(circus.sockets.webconsole) circus.web.circushttpd.app
     singleton = 1
     use_sockets = 1
 
