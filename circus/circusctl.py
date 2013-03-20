@@ -290,7 +290,7 @@ class CircusCtl(cmd.Cmd, object):
 
         # no command, no --help: enter the CLI
         print VERSION
-
+        self.do_status('')
         try:
             self.cmdloop()
         except KeyboardInterrupt:
