@@ -606,8 +606,8 @@ def load_virtualenv(watcher):
         except IOError:
             return
         with f:
-            for n, line in enumerate(f):
-                if line.startswith(("#", "import ", "import\t")):
+            for line in f.readlines():
+                if line.startswith(("#", "import")):
                     continue
                 line = line.rstrip()
                 pkg_path = os.path.abspath(os.path.join(sitedir, line))
@@ -616,14 +616,15 @@ def load_virtualenv(watcher):
         return packages
 
     venv_pkgs = set()
-    try:
-        names = os.listdir(sitedir)
-        dotpth = os.extsep + "pth"
-        names = [name for name in names if name.endswith(dotpth)]
-        for name in sorted(names):
-            venv_pkgs |= process_pth(sitedir, name)
-    except OSError:
-        pass
+    dotpth = os.extsep + "pth"
+    for name in os.listdir(sitedir):
+        if name.endswith(dotpth):
+            try:
+                packages = process_pth(sitedir, name)
+                if packages:
+                    venv_pkgs |= packages
+            except OSError:
+                continue
 
     if venv_pkgs:
         venv_path = os.pathsep.join(venv_pkgs)
