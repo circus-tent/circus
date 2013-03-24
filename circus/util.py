@@ -625,11 +625,13 @@ def load_virtualenv(watcher):
     except OSError:
         pass
 
-    venv_path = os.pathsep.join(venv_pkgs)
+    if venv_pkgs:
+        venv_path = os.pathsep.join(venv_pkgs)
 
-    py_path = watcher.env.get('PYTHONPATH')
-    if py_path:
-        path = os.pathsep.join([venv_path, py_path])
-    else:
-        path = venv_path
-    watcher.env['PYTHONPATH'] = path
+        py_path = watcher.env.get('PYTHONPATH')
+        if py_path:
+            path = os.pathsep.join([venv_path, py_path])
+        else:
+            path = venv_path
+
+        watcher.env['PYTHONPATH'] = path
