@@ -212,43 +212,6 @@ class Watcher(object):
         self.uid = uid
         self.gid = gid
 
-        if self.virtualenv:
-            py_ver = sys.version.split()[0][:3]
-
-            # XXX Posix scheme - need to add others
-            sitedir = os.path.join(self.virtualenv, 'lib', 'python' + py_ver,
-                                   'site-packages')
-
-            if not os.path.exists(sitedir):
-                raise ValueError("%s does not exist" % sitedir)
-
-            def process_pth(sitedir, name):
-                packages = set()
-                fullname = os.path.join(sitedir, name)
-                try:
-                    f = open(fullname, "rU")
-                except IOError:
-                    return
-                with f:
-                    for n, line in enumerate(f):
-                        if line.startswith(("#", "import ", "import\t")):
-                            continue
-                        line = line.rstrip()
-                        pkg_path = os.path.abspath(os.path.join(sitedir, line))
-                        if os.path.exists(pkg_path):
-                            packages.add(pkg_path)
-                return packages
-
-            venv_pkgs = set()
-            try:
-                names = os.listdir(sitedir)
-                dotpth = os.extsep + "pth"
-                names = [name for name in names if name.endswith(dotpth)]
-                for name in sorted(names):
-                    venv_pkgs |= process_pth(sitedir, name)
-            except os.error:
-                pass
-
         if self.copy_env:
             self.env = os.environ.copy()
             if self.copy_path:
@@ -256,21 +219,14 @@ class Watcher(object):
                 self.env['PYTHONPATH'] = path
             if env is not None:
                 self.env.update(env)
-            if self.virtualenv:
-                venv_path = os.pathsep.join(venv_pkgs)
-                py_path = self.env.get('PYTHONPATH')
-                if py_path:
-                    path = os.pathsep.join([venv_path, py_path])
-                else:
-                    path = venv_path
-                self.env['PYTHONPATH'] = path
         else:
             if self.copy_path:
                 raise ValueError(('copy_env and copy_path must have the '
                                   'same value'))
-            if self.virtualenv:
-                raise ValueError('copy_env must be True to to use virtualenv')
             self.env = env
+
+        if self.virtualenv:
+            util.load_virtualenv(self)
 
         self.rlimits = rlimits
         self.send_hup = send_hup
