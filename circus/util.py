@@ -622,7 +622,7 @@ def load_virtualenv(watcher):
         names = [name for name in names if name.endswith(dotpth)]
         for name in sorted(names):
             venv_pkgs |= process_pth(sitedir, name)
-    except os.error:
+    except OSError:
         pass
 
     venv_path = os.pathsep.join(venv_pkgs)
