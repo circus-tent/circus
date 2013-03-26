@@ -151,6 +151,9 @@ class Watcher(object):
 
     - **respawn** -- If set to False, the processes handled by a watcher will
       not be respawned automatically. (default: True)
+
+    - **virtualenv** -- The root directory of a virtualenv. If provided, the
+      watcher will load the environment for its execution. (default: None)
     """
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None, max_retry=5,
@@ -161,7 +164,7 @@ class Watcher(object):
                  singleton=False, use_sockets=False, copy_env=False,
                  copy_path=False, max_age=0, max_age_variance=30,
                  hooks=None, respawn=True, autostart=True, on_demand=False,
-                 **options):
+                 virtualenv=None, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.on_demand = on_demand
@@ -186,6 +189,7 @@ class Watcher(object):
         self.singleton = singleton
         self.copy_env = copy_env
         self.copy_path = copy_path
+        self.virtualenv = virtualenv
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
         self.ignore_hook_failure = ['before_stop', 'after_stop']
@@ -228,6 +232,9 @@ class Watcher(object):
                 raise ValueError(('copy_env and copy_path must have the '
                                   'same value'))
             self.env = env
+
+        if self.virtualenv:
+            util.load_virtualenv(self)
 
         self.rlimits = rlimits
         self.send_hup = send_hup

@@ -582,3 +582,56 @@ def get_connection(socket, endpoint, ssh_server=None, ssh_keyfile=None):
         except ImportError:
             raise ImportError("pexpect was not found, and failed to use "
                               "Paramiko.  You need to install Paramiko")
+
+
+def load_virtualenv(watcher):
+    if not watcher.copy_env:
+        raise ValueError('copy_env must be True to to use virtualenv')
+
+    py_ver = sys.version.split()[0][:3]
+
+    # XXX Posix scheme - need to add others
+    sitedir = os.path.join(watcher.virtualenv, 'lib', 'python' + py_ver,
+                           'site-packages')
+
+    if not os.path.exists(sitedir):
+        raise ValueError("%s does not exist" % sitedir)
+
+    def process_pth(sitedir, name):
+        packages = set()
+        fullname = os.path.join(sitedir, name)
+        try:
+            f = open(fullname, "rU")
+        except IOError:
+            return
+        with f:
+            for line in f.readlines():
+                if line.startswith(("#", "import")):
+                    continue
+                line = line.rstrip()
+                pkg_path = os.path.abspath(os.path.join(sitedir, line))
+                if os.path.exists(pkg_path):
+                    packages.add(pkg_path)
+        return packages
+
+    venv_pkgs = set()
+    dotpth = os.extsep + "pth"
+    for name in os.listdir(sitedir):
+        if name.endswith(dotpth):
+            try:
+                packages = process_pth(sitedir, name)
+                if packages:
+                    venv_pkgs |= packages
+            except OSError:
+                continue
+
+    if venv_pkgs:
+        venv_path = os.pathsep.join(venv_pkgs)
+
+        py_path = watcher.env.get('PYTHONPATH')
+        if py_path:
+            path = os.pathsep.join([venv_path, py_path])
+        else:
+            path = venv_path
+
+        watcher.env['PYTHONPATH'] = path
