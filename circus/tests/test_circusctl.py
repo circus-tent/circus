@@ -59,7 +59,11 @@ class CommandlineTest(TestCircus):
         self.assertEqual(stdout, 'active\n')
 
 
-class CLITest(TestCase):
+class CLITest(TestCircus):
+
+    def setUp(self):
+        super(CLITest, self).setUp()
+        self._run_circus('circus.tests.support.run_process')
 
     def run_ctl(self, command=''):
         """Send the given command to the CLI, and ends with EOF."""
@@ -73,7 +77,7 @@ class CLITest(TestCase):
         output = stdout.splitlines()
         self.assertEqual(output[0], VERSION)
         # strip of term escape characters, if any
-        prompt = output[1][-len(CircusCtl.prompt):]
+        prompt = output[2][-len(CircusCtl.prompt):]
         self.assertEqual(prompt, CircusCtl.prompt)
 
     def test_cli_help(self):
@@ -81,4 +85,4 @@ class CLITest(TestCase):
         self.assertEqual(stderr, '')
         prompt = stdout.splitlines()
         # first two lines are VERSION and prompt, followed by a blank line
-        self.assertEqual(prompt[2], "Documented commands (type help <topic>):")
+        self.assertEqual(prompt[3], "Documented commands (type help <topic>):")
