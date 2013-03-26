@@ -1,7 +1,6 @@
 import subprocess
 import sys
 import shlex
-from unittest import TestCase
 
 from circus.circusctl import USAGE, VERSION, CircusCtl
 from circus.tests.support import TestCircus

@@ -120,8 +120,7 @@ watcher:NAME - as many sections as you want
     **autostart**
         If set to true, the watcher will not be started automatically
         when the arbiter starts. The watcher can be started explicitly
-        (example: `circusctrl start myprogram`).
-	(Default: True)
+        (example: `circusctrl start myprogram`). (Default: True)
     **numprocesses**
         The number of processes to run for this watcher.
     **rlimit_LIMIT**
@@ -221,6 +220,13 @@ watcher:NAME - as many sections as you want
         will return **False**.
 
         More on :ref:`hooks`.
+
+    **virtualenv**
+        When provided, points to the root of a Virtualenv directory. The
+        watcher will scan the local **site-packages** and loads its content
+        into the execution environment. Must be used with **copy_env** set
+        to True. Defaults to None.
+
 
 
 socket:NAME - as many sections as you want

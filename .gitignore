@@ -2,10 +2,10 @@
 *.pyc
 *.pyo
 circus.egg-info
-bin
-lib
-lib64
-include
+^bin
+^lib
+^lib64
+^include
 .Python
 .coverage
 html

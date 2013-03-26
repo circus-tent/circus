@@ -2,6 +2,7 @@ import signal
 import sys
 import os
 import threading
+import time
 
 from zmq.eventloop import ioloop
 
@@ -145,13 +146,25 @@ class TestWatcherInitialization(TestCircus):
         data = ''.join(data)
         self.assertTrue('XYZ' in data, data)
 
+    def test_venv(self):
+        venv = os.path.join(os.path.dirname(__file__), 'venv')
+        watcher = SomeWatcher(virtualenv=venv)
+        watcher.start()
+        time.sleep(.1)
+        wanted = os.path.join(venv, 'lib', 'python2.7', 'site-packages',
+                              'pip-7.7-py2.7.egg')
+        ppath = watcher.watcher.env['PYTHONPATH']
+        watcher.stop()
+        self.assertTrue(wanted in ppath)
+
 
 class SomeWatcher(threading.Thread):
 
-    def __init__(self):
+    def __init__(self, **kw):
         threading.Thread.__init__(self)
         self.stream = QueueStream()
         self.loop = self.watcher = None
+        self.kw = kw
 
     def run(self):
         qstream = {'stream': self.stream}
@@ -166,7 +179,8 @@ class SomeWatcher(threading.Thread):
 
             self.loop = ioloop.IOLoop.instance()
             self.watcher = Watcher('xx', cmd, copy_env=True, copy_path=True,
-                                   stdout_stream=qstream, loop=self.loop)
+                                   stdout_stream=qstream, loop=self.loop,
+                                   **self.kw)
             self.watcher.start()
             self.loop.start()
         finally:
