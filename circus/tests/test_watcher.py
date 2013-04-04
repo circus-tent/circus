@@ -150,11 +150,15 @@ class TestWatcherInitialization(TestCircus):
         venv = os.path.join(os.path.dirname(__file__), 'venv')
         watcher = SomeWatcher(virtualenv=venv)
         watcher.start()
-        time.sleep(.1)
-        wanted = os.path.join(venv, 'lib', 'python2.7', 'site-packages',
-                              'pip-7.7-py2.7.egg')
-        ppath = watcher.watcher.env['PYTHONPATH']
-        watcher.stop()
+        try:
+            time.sleep(.1)
+            minor = sys.version_info[1]
+            wanted = os.path.join(venv, 'lib', 'python2.%d' % minor,
+                                'site-packages',
+                                'pip-7.7-py2.%d.egg' % minor)
+            ppath = watcher.watcher.env['PYTHONPATH']
+        finally:
+            watcher.stop()
         self.assertTrue(wanted in ppath)
 
 
