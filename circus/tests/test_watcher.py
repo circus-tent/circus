@@ -154,8 +154,8 @@ class TestWatcherInitialization(TestCircus):
             time.sleep(.1)
             minor = sys.version_info[1]
             wanted = os.path.join(venv, 'lib', 'python2.%d' % minor,
-                                'site-packages',
-                                'pip-7.7-py2.%d.egg' % minor)
+                                  'site-packages',
+                                  'pip-7.7-py2.%d.egg' % minor)
             ppath = watcher.watcher.env['PYTHONPATH']
         finally:
             watcher.stop()
