@@ -120,6 +120,10 @@ class StatsStreamer(object):
 
         self._add_callback('sockets', kind='socket')
 
+    def stop_watcher(self, watcher):
+        for pid in self._pids[watcher]:
+            self.remove_pid(watcher, pid)
+
     def remove_pid(self, watcher, pid):
         if pid in self._pids[watcher]:
             logger.debug('Removing %d from %s' % (pid, watcher))
@@ -173,26 +177,23 @@ class StatsStreamer(object):
         # maintains a periodic callback to compute mem and cpu consumption for
         # each pid.
         logger.debug('Received an event from circusd: %s' % data)
-
         topic, msg = data
         try:
-            watcher = topic.split('.')[1:-1]
+            watcher = topic.split('.')[1:-1][0]
             action = topic.split('.')[-1]
             msg = json.loads(msg)
-            if action == 'start' or (action != 'start' and self.stopped):
-                self._init()
 
             if action in ('reap', 'kill'):
                 # a process was reaped
                 pid = msg['process_pid']
                 self.remove_pid(watcher, pid)
             elif action == 'spawn':
+                # a process was added
                 pid = msg['process_pid']
                 self._append_pid(watcher, pid)
-            elif action == 'start':
-                self._init()
             elif action == 'stop':
-                self.stop()
+                # the whole watcher was stopped.
+                self.stop_watcher(watcher)
             else:
                 logger.debug('Unknown action: %r' % action)
                 logger.debug(msg)
