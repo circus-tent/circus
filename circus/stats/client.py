@@ -159,8 +159,9 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
                 line += 1
             line += 1
 
-    if line <= current_h and len(watchers) > 0:
+    if line < current_h and len(watchers) > 0:
         stdscr.addstr(line, 0, '-' * current_w)
+
     stdscr.refresh()
     return current_h, current_w
 
