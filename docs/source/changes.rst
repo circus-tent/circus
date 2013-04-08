@@ -2,11 +2,24 @@ History
 =======
 
 
-0.7
----
+0.7 - 2013-04-08
+----------------
 
-???
-
+* Fix get_arbiter example to use a dict for the watchers argument. #304
+* Add some troubleshooting documentation #323
+* Add python buildout support
+* Removed the gevent and the thread redirectors. now using the ioloop - fixes
+  #346. Relates #340
+* circus.web is now its own project
+* removed the pyzmq patching
+* Allow the watcher to be configured but not started #283
+* Add an option to load a virtualenv site dir
+* added on_demand watchers
+* added doc about nginx+websockets #371
+* now properly parsing the options list of each command #369
+* Fixed circusd-stats events handling #372
+* fixed the overflow issue in circus-top #378
+* many more things...
 
 0.6 - 2012-12-18
 ----------------
