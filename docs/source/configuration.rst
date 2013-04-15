@@ -80,10 +80,6 @@ circus - single section
     **debug**
         If set to True, all Circus stout/stderr daemons are redirected to circusd
         stdout/stderr (default: False)
-    **respawn**
-        If set to False, the processes handled by a watcher will not be
-        respawned automatically. (default: True)
-
 
 
 watcher:NAME - as many sections as you want
@@ -226,6 +222,10 @@ watcher:NAME - as many sections as you want
         watcher will scan the local **site-packages** and loads its content
         into the execution environment. Must be used with **copy_env** set
         to True. Defaults to None.
+
+    **respawn**
+        If set to False, the processes handled by a watcher will not be
+        respawned automatically. (default: True)
 
 
 
