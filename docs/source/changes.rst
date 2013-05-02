@@ -1,6 +1,15 @@
 History
 =======
 
+0.7.1 - 2013-05-2
+-----------------
+
+* Fixed the respawn option - #382
+* Make sure we use an int for the timeout - #380
+* display the unix sockets as well -  #381
+* Make sure it works with the latest pyzmq
+* introduced a second syntax for the fd notation
+
 
 0.7 - 2013-04-08
 ----------------
