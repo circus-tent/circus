@@ -257,8 +257,7 @@ class Arbiter(object):
         if self.alive:
             self.stop_watchers(stop_alive=True)
 
-        if self.loop.running():
-            self.loop.stop()
+        self.loop.stop()
 
         # close sockets
         self.sockets.close_all()
