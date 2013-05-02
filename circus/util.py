@@ -421,7 +421,10 @@ def resolve_name(import_name, silent=False):
             raise ImportStringError(import_name, e), None, sys.exc_info()[2]
 
 
-_CIRCUS_VAR = re.compile(r'\$\(circus\.([\w\.]+)\)', re.I)
+_PATTERN1 = r'\$\(%s\.([\w\.]+)\)'
+_PATTERN2 = r'\(\(%s\.([\w\.]+)\)\)'
+_CIRCUS_VAR = re.compile(_PATTERN1 % 'circus' + '|' +
+                         _PATTERN2 % 'circus', re.I)
 
 
 def replace_gnu_args(data, prefix='circus', **options):
@@ -441,14 +444,20 @@ def replace_gnu_args(data, prefix='circus', **options):
             fmt_options[key] = value
 
     if prefix is None:
-        match = re.compile(r'\$\(([\w\.]+)\)', re.I)
+        match = re.compile(r'\$\(([\w\.]+)\)|\(\(([\w\.]+)\)\)', re.I)
     elif prefix == 'circus':
         match = _CIRCUS_VAR
     else:
-        match = re.compile(r'\$\(%s\.([\w\.]+)\)' % prefix, re.I)
+        match = re.compile(_PATTERN1 % prefix + '|' + _PATTERN2 % prefix,
+                           re.I)
 
     def _repl(matchobj):
-        option = matchobj.group(1).lower()
+        option = None
+
+        for result in matchobj.groups():
+            if result is not None:
+                option = result.lower()
+                break
 
         if prefix is not None and not option.startswith(prefix):
             option = '%s.%s' % (prefix, option)
@@ -456,7 +465,7 @@ def replace_gnu_args(data, prefix='circus', **options):
         if option in fmt_options:
             return str(fmt_options[option])
 
-        return matchobj.group(0)
+        return matchobj.group()
 
     return match.sub(_repl, data)
 

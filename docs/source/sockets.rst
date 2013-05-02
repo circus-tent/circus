@@ -86,6 +86,13 @@ Then Circus could run like this:
 *$(circus.sockets.foo)* will be replaced by the FD value once the socket is
 created and bound on the 8888 *port*.
 
+.. note::
+
+   Starting at Circus 0.8 there's an alternate syntax to avoid some
+   conflicts with some config parsers. You can write::
+
+       *((circus.sockets.foo))*
+
 
 Real-world example
 ==================
