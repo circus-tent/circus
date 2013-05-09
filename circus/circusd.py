@@ -61,7 +61,7 @@ def main():
                         help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-', help=(
         "The location where the logs will be written. The default behavior "
-        "is to write to stdout (you can " "force it by passing '-' to "
+        "is to write to stdout (you can force it by passing '-' to "
         "this option). Takes a filename otherwise."))
 
     parser.add_argument('--daemon', dest='daemonize', action='store_true',
