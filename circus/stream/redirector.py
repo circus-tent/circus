@@ -1,4 +1,3 @@
-import fcntl
 import errno
 import os
 import sys
@@ -6,6 +5,7 @@ import sys
 from zmq.eventloop import ioloop
 
 class RedirectorHandler(object):
+
     def __init__(self, redirector, name, process, pipe):
         self.redirector = redirector
         self.name = name
@@ -18,7 +18,7 @@ class RedirectorHandler(object):
         try:
             data = os.read(fd, self.redirector.buffer)
             if len(data) == 0:
-                self.redirector.remove_redirection(name, process)
+                self.redirector.remove_redirection(self.name, self.process)
             else:
                 datamap = {'data': data, 'pid': self.process.pid,
                            'name': self.name}
@@ -50,7 +50,7 @@ class Redirector(object):
             handler = RedirectorHandler(self, name, process, pipe)
             self.loop.add_handler(fd, handler, ioloop.IOLoop.READ)
             self._active[fd] = handler
-        
+
     def start(self):
         for name, process, pipe in self.pipes.values():
             self._start_one(name, process, pipe)
@@ -60,7 +60,7 @@ class Redirector(object):
         if fd in self._active:
             self.loop.remove_handler(fd)
             del self._active[fd]
-        
+
     def stop(self):
         for fd in self._active.keys():
             self._stop_one(fd)
@@ -78,5 +78,3 @@ class Redirector(object):
         self._stop_one(fd)
         if fd in self.pipes:
             del self.pipes[fd]
-
-        
