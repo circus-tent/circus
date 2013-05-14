@@ -4,8 +4,8 @@ import sys
 
 from zmq.eventloop import ioloop
 
-class RedirectorHandler(object):
 
+class RedirectorHandler(object):
     def __init__(self, redirector, name, process, pipe):
         self.redirector = redirector
         self.name = name
