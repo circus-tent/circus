@@ -243,19 +243,16 @@ class Watcher(object):
 
     def _create_redirectors(self):
         if self.stdout_stream:
-            if (self.stdout_redirector is not None and
-                    self.stdout_redirector.running):
-                self.stdout_redirector.kill()
+            if self.stdout_redirector is not None:
+                self.stdout_redirector.stop()
             self.stdout_redirector = get_pipe_redirector(
                 self.stdout_stream, loop=self.loop)
         else:
             self.stdout_redirector = None
 
         if self.stderr_stream:
-            if (self.stderr_redirector is not None and
-                    self.stderr_redirector.running):
-                self.stderr_redirector.kill()
-
+            if self.stderr_redirector is not None:
+                self.stderr_redirector.stop()
             self.stderr_redirector = get_pipe_redirector(
                 self.stderr_stream, loop=self.loop)
         else:
@@ -478,10 +475,12 @@ class Watcher(object):
         """
         # remove redirections
         if self.stdout_redirector is not None:
-            self.stdout_redirector.remove_redirection('stdout', process)
+            self.stdout_redirector.stop()
+            self.stdout_redirector = None
 
         if self.stderr_redirector is not None:
-            self.stderr_redirector.remove_redirection('stderr', process)
+            self.stderr_redirector.stop()
+            self.stderr_redirector = None
 
         logger.debug("%s: kill process %s", self.name, process.pid)
         try:
@@ -571,10 +570,12 @@ class Watcher(object):
         logger.debug('stopping the %s watcher' % self.name)
         # stop redirectors
         if self.stdout_redirector is not None:
-            self.stdout_redirector.kill()
+            self.stdout_redirector.stop()
+            self.stdout_redirector = None
 
         if self.stderr_redirector is not None:
-            self.stderr_redirector.kill()
+            self.stderr_redirector.stop()
+            self.stderr_redirector = None
 
         limit = time.time() + self.graceful_timeout
 
