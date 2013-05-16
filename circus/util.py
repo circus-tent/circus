@@ -253,7 +253,9 @@ def to_gid(name):
         try:
             grp.getgrgid(name)
             return name
-        except KeyError:
+        # getgrid may raises overflow error on mac/os x, fixed in python2.7.5
+        # see http://bugs.python.org/issue17531
+        except (KeyError, OverflowError):
             raise ValueError("No such group: %r" % name)
 
     if not isinstance(name, str):
