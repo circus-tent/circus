@@ -78,8 +78,10 @@ class TestUtil(unittest.TestCase):
 
         self.assertRaises(KeyError, getpwuid, uid_max + 1)
         self.assertRaises(KeyError, getpwuid, uid_min - 1)
-        self.assertRaises(KeyError, getgrgid, gid_max + 1)
-        self.assertRaises(KeyError, getgrgid, gid_min - 1)
+        # getgrid may raises overflow error on mac/os x, fixed in python2.7.5
+        # see http://bugs.python.org/issue17531
+        self.assertRaises((KeyError, OverflowError), getgrgid, gid_max + 1)
+        self.assertRaises((KeyError, OverflowError), getgrgid, gid_min - 1)
 
     def test_replace_gnu_args(self):
         repl = replace_gnu_args
