@@ -7,9 +7,9 @@ except ImportError:
 
 
 import zmq
-from zmq.eventloop import ioloop, zmqstream
 from zmq.utils.jsonapi import jsonmod as json
 
+from circus._zmq import ioloop, zmqstream
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError

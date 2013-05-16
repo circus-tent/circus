@@ -7,9 +7,9 @@ import uuid
 import argparse
 
 import zmq
-from zmq.eventloop import ioloop, zmqstream
 from zmq.utils.jsonapi import jsonmod as json
 
+from circus._zmq import ioloop, zmqstream
 from circus import logger, __version__
 from circus.client import make_message, cast_message
 from circus.util import (debuglog, to_bool, resolve_name, close_on_exec,

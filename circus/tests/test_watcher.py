@@ -4,8 +4,7 @@ import os
 import threading
 import time
 
-from zmq.eventloop import ioloop
-
+from circus._zmq import ioloop
 from circus.tests.support import TestCircus, poll_for, truncate_file
 from circus.stream import QueueStream
 from circus.watcher import Watcher

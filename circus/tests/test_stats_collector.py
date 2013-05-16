@@ -5,8 +5,7 @@ import os
 
 from circus.stats.collector import SocketStatsCollector
 from circus.tests.support import unittest
-
-from zmq.eventloop import ioloop
+from circus._zmq import ioloop
 
 
 TRAVIS = os.getenv('TRAVIS', False)

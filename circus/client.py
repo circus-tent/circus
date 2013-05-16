@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -
 import errno
 import uuid
+
 import zmq
+from zmq.utils.jsonapi import jsonmod as json
 
 from circus.exc import CallError
 from circus.py3compat import string_types
 from circus.util import DEFAULT_ENDPOINT_DEALER, get_connection
-from zmq.utils.jsonapi import jsonmod as json
 
 
 def make_message(command, **props):

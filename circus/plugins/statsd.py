@@ -1,7 +1,7 @@
-from circus.plugins import CircusPlugin
-from zmq.eventloop import ioloop
-
 import socket
+
+from circus.plugins import CircusPlugin
+from circus._zmq import ioloop
 
 
 class StatsdClient(object):

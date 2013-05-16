@@ -7,8 +7,8 @@ import sys
 from time import sleep
 
 import zmq
-from zmq.eventloop import ioloop
 
+from circus._zmq import ioloop
 from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
