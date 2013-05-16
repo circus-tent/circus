@@ -38,7 +38,7 @@ class RmWatcher(Command):
         Options
         +++++++
 
-        - <name>: name of the watcher to create
+        - <name>: name of the watcher to remove
 
     """
 
