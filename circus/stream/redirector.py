@@ -18,7 +18,7 @@ class RedirectorHandler(object):
         try:
             data = os.read(fd, self.redirector.buffer)
             if len(data) == 0:
-                self.redirector.remove_redirection(self.name, self.process)
+                self.redirector.remove_redirection(self.pipe)
             else:
                 datamap = {'data': data, 'pid': self.process.pid,
                            'name': self.name}
