@@ -21,3 +21,4 @@ build/
 develop-eggs/*
 eggs/*
 parts/*
+*.un~
