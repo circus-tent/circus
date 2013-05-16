@@ -13,7 +13,7 @@ Example::
 
     [watcher:myprogram]
     cmd = python
-    args = -u myprogram.py $(WID) $(ENV.VAR)
+    args = -u myprogram.py $(circus.wid) $(ENV.VAR)
     warmup_delay = 0
     numprocesses = 5
 
