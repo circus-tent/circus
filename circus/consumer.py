@@ -1,5 +1,5 @@
 import errno
-from circus import zmq
+import zmq
 
 from circus.util import DEFAULT_ENDPOINT_SUB, get_connection
 

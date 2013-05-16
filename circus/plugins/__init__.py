@@ -6,7 +6,7 @@ import errno
 import uuid
 import argparse
 
-from circus import zmq
+import zmq
 from zmq.eventloop import ioloop, zmqstream
 from zmq.utils.jsonapi import jsonmod as json
 

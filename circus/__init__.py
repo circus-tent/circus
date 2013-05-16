@@ -1,4 +1,4 @@
-from _patch import zmq  # NOQA
+import _patch   # NOQA
 import logging
 import os
 

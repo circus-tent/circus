@@ -1,4 +1,4 @@
-from circus import zmq
+import zmq
 import json
 
 from circus import logger

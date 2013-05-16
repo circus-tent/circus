@@ -6,7 +6,7 @@ from thread import get_ident
 import sys
 from time import sleep
 
-from circus import zmq
+import zmq
 from zmq.eventloop import ioloop
 
 from circus.controller import Controller
