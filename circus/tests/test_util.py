@@ -5,6 +5,8 @@ import unittest
 from psutil import Popen
 from mock import Mock, patch
 
+from __future__ import unicode_literals
+
 from circus.util import (get_info, bytes2human, to_bool, parse_env_str,
                          env_to_str, to_uid, to_gid, replace_gnu_args,
                          StrictConfigParser)
@@ -14,7 +16,7 @@ class TestUtil(unittest.TestCase):
 
     def test_get_info(self):
 
-        worker = Popen(['python -c 'import time;time.sleep(5)''], shell=True)
+        worker = Popen(["python -c 'import time;time.sleep(5)'"], shell=True)
         try:
             info = get_info(worker)
         finally:
