@@ -1,9 +1,11 @@
 import unittest
 import os
+
 from circus.config import get_config
 from circus.watcher import Watcher
 from circus.process import Process
 from circus.sockets import CircusSocket
+
 
 HERE = os.path.join(os.path.dirname(__file__))
 
@@ -12,6 +14,7 @@ _CONF = {
     'include': os.path.join(HERE, 'include.ini'),
     'issue210': os.path.join(HERE, 'issue210.ini'),
     'issue310': os.path.join(HERE, 'issue310.ini'),
+    'issue395': os.path.join(HERE, 'issue395.ini'),
     'hooks': os.path.join(HERE, 'hooks.ini'),
     'env_var': os.path.join(HERE, 'env_var.ini'),
     'env_section': os.path.join(HERE, 'env_section.ini'),
@@ -89,3 +92,8 @@ class TestConfig(unittest.TestCase):
         for watcher in [watcher1, watcher2]:
             self.assertEquals("%s:/bin" % os.getenv('PATH'),
                               watcher.env['PATH'])
+
+    def test_issue395(self):
+        conf = get_config(_CONF['issue395'])
+        watcher = conf['watchers'][0]
+        self.assertEqual(watcher['graceful_timeout'], '88')
