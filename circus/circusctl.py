@@ -374,6 +374,8 @@ def main():
 
     globalopts = parse_arguments(sys.argv[1:], commands)
     if globalopts['endpoint'] is None:
+        globalopts['endpoint'] = os.environ.get('CIRCUSCTL_ENDPOINT')
+    if globalopts['endpoint'] is None:
         globalopts['endpoint'] = DEFAULT_ENDPOINT_DEALER
 
     client = CircusClient(endpoint=globalopts['endpoint'],
