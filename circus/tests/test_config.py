@@ -96,4 +96,4 @@ class TestConfig(unittest.TestCase):
     def test_issue395(self):
         conf = get_config(_CONF['issue395'])
         watcher = conf['watchers'][0]
-        self.assertEqual(watcher['graceful_timeout'], '88')
+        self.assertEqual(watcher['graceful_timeout'], 88)
