@@ -53,7 +53,7 @@ class TestSocketCollector(unittest.TestCase):
             def __init__(self, streamer):
                 Thread.__init__(self)
                 self.streamer = streamer
-                self.loop = ioloop.IOLoop.instance()
+                self.loop = ioloop.IOLoop()
                 self.daemon = True
 
             def run(self):

@@ -180,7 +180,7 @@ class SomeWatcher(threading.Thread):
                    'sys.stdout.write(\':\'.join(sys.path)); '
                    ' sys.stdout.flush()"') % sys.executable
 
-            self.loop = ioloop.IOLoop.instance()
+            self.loop = ioloop.IOLoop()
             self.watcher = Watcher('xx', cmd, copy_env=True, copy_path=True,
                                    stdout_stream=qstream, loop=self.loop,
                                    **self.kw)
