@@ -3,6 +3,9 @@ import os
 import pwd
 import unittest
 from psutil import Popen
+from mock import Mock, patch
+
+from __future__ import unicode_literals
 
 from circus.util import (get_info, bytes2human, to_bool, parse_env_str,
                          env_to_str, to_uid, to_gid, replace_gnu_args,
@@ -42,6 +45,16 @@ class TestUtil(unittest.TestCase):
         parsed = parse_env_str(env)
         self.assertEqual(parsed, {'test': '1', 'booo': '2'})
         self.assertEqual(env_to_str(parsed), env)
+
+    def test_to_uid(self):
+        with patch('pwd.getpwnam') as getpw:
+            m = Mock()
+            m.pw_uid = '1000'
+            getpw.return_value = m
+            uid = to_uid(u'user')
+            self.assertEqual('1000', uid)
+            uid = to_uid('user')
+            self.assertEqual('1000', uid)
 
     def test_to_uidgid(self):
         self.assertRaises(ValueError, to_uid, 'xxxxxxx')
