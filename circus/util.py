@@ -260,8 +260,9 @@ def to_gid(name):
         except (KeyError, OverflowError):
             raise ValueError("No such group: %r" % name)
 
-    if not isinstance(name, str):
+    if not isinstance(name, string_types):
         raise TypeError(name)
+
     try:
         return grp.getgrnam(name).gr_gid
     except KeyError:
