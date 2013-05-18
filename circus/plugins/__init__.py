@@ -47,7 +47,6 @@ class CircusPlugin(object):
 
     @debuglog
     def initialize(self):
-        import pdb; pdb.set_trace()
         self.client = self.context.socket(zmq.DEALER)
         self.client.setsockopt(zmq.IDENTITY, self._id)
         get_connection(self.client, self.endpoint, self.ssh_server)

@@ -70,7 +70,7 @@ class BaseObserver(StatsdEmitter):
 
     def __init__(self, *args, **config):
         super(BaseObserver, self).__init__(*args, **config)
-        self.loop_rate = config.get("loop_rate", 60)  # in seconds
+        self.loop_rate = float(config.get("loop_rate", 60))  # in seconds
 
     def handle_init(self):
         self.period = ioloop.PeriodicCallback(self.look_after,
@@ -84,7 +84,7 @@ class BaseObserver(StatsdEmitter):
         pass
 
     def look_after(self):
-        raise NotImplemented
+        raise NotImplementedError()
 
 
 class FullStats(BaseObserver):
