@@ -28,8 +28,8 @@ class FileStream(object):
         '''
         super(FileStream, self).__init__()
         self._filename = filename
-        self._max_bytes = max_bytes
-        self._backup_count = backup_count
+        self._max_bytes = int(max_bytes)
+        self._backup_count = int(backup_count)
         self._file = self._open()
         self._buffer = []
 
