@@ -103,7 +103,7 @@ ResourceWatcher
         the frequency the plugin should ask for the stats in seconds. Default: 60.
 
     **service**
-        the service (read: watcher) this resource watcher should be looking after
+        the service (the watcher name) this resource watcher should be looking after
 
     **max_cpu**
         The maximum cpu one process is allowed to consume (in %). Default: 90
@@ -117,3 +117,19 @@ ResourceWatcher
     **max_count**
         How often these limits (each one is counted separately) are allowed to be exceeded before a restart will be triggered. Default: 3
 
+Example::
+
+    [circus]
+    check_delay = 5
+    endpoint = tcp://127.0.0.1:5555
+    pubsub_endpoint = tcp://127.0.0.1:5556
+
+    [watcher:myprogram]
+    cmd = python
+    args = -u myprogram.py $(circus.wid) $(ENV.VAR)
+    warmup_delay = 0
+    numprocesses = 5
+
+    [plugin:ressource-watcher]
+    use = circus.plugins.resource_watcher.ResourceWatcher
+    service = myprogram
