@@ -17,10 +17,6 @@ Example::
     warmup_delay = 0
     numprocesses = 5
 
-    [env:myprogram]
-    PATH = $PATH:/bin
-    CAKE = lie
-
     # hook
     hooks.before_start = my.hooks.control_redis
 
@@ -33,6 +29,10 @@ Example::
     # and save 5 copied of rotated files
     stdout_stream.max_bytes = 1073741824
     stdout_stream.backup_count = 5
+
+    [env:myprogram]
+    PATH = $PATH:/bin
+    CAKE = lie
 
     [plugin:statsd]
     use = circus.plugins.statsd.StatsdEmitter
