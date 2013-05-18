@@ -3,15 +3,17 @@ import os
 import signal
 import sys
 from time import time, sleep
-
+from collections import defaultdict
 import cProfile
 import pstats
 
 import unittest2 as unittest
 
 from circus import get_arbiter
-from circus.util import DEFAULT_ENDPOINT_STATS
+from circus.util import (DEFAULT_ENDPOINT_STATS, DEFAULT_ENDPOINT_DEALER,
+                         DEFAULT_ENDPOINT_SUB)
 from circus.client import CircusClient, make_message
+from circus._zmq import ioloop
 
 
 def resolve_name(name):
@@ -187,3 +189,30 @@ def poll_for(filename, needle, timeout=5):
 def truncate_file(filename):
     """Truncate a file (empty it)."""
     open(filename, 'w').close()  # opening as 'w' overwrites the file
+
+
+def run_plugin(klass, config, duration=300):
+    endpoint = DEFAULT_ENDPOINT_DEALER
+    pubsub_endpoint = DEFAULT_ENDPOINT_SUB
+    check_delay = 1
+    ssh_server = None
+
+    class _Statsd(object):
+        gauges = []
+        increments = defaultdict(int)
+
+        def gauge(self, name, value):
+            self.gauges.append((name, value))
+
+        def increment(self, name):
+            self.increments[name] += 1
+
+    _statsd = _Statsd()
+    plugin = klass(endpoint, pubsub_endpoint, check_delay, ssh_server,
+                    **config)
+    plugin.statsd = _statsd
+
+    end = ioloop.DelayedCallback(plugin.loop.stop, duration, plugin.loop)
+    end.start()
+    plugin.start()
+    return _statsd
