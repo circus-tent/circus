@@ -3,7 +3,7 @@ import sys
 import shlex
 
 from circus.circusctl import USAGE, VERSION, CircusCtl
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, poll_for
 
 
 def run_ctl(args, stdin=''):
@@ -12,13 +12,20 @@ def run_ctl(args, stdin=''):
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
-    return proc.communicate(stdin)
+    if stdin:
+        proc.stdin.write(stdin)
+
+    stderr = proc.stderr.read()
+    stdout = proc.stdout.read()
+    proc.wait()
+    return stdout, stderr
 
 
 class CommandlineTest(TestCircus):
     def setUp(self):
         super(CommandlineTest, self).setUp()
-        self._run_circus('circus.tests.support.run_process')
+        test_file = self._run_circus('circus.tests.support.run_process')
+        poll_for(test_file, 'START')
 
     def test_help_switch_no_command(self):
         stdout, stderr = run_ctl('--help')
@@ -62,7 +69,8 @@ class CLITest(TestCircus):
 
     def setUp(self):
         super(CLITest, self).setUp()
-        self._run_circus('circus.tests.support.run_process')
+        test_file = self._run_circus('circus.tests.support.run_process')
+        poll_for(test_file, 'START')
 
     def run_ctl(self, command=''):
         """Send the given command to the CLI, and ends with EOF."""
