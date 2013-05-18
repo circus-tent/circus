@@ -14,6 +14,8 @@ class RedirectorHandler(object):
 
     def __call__(self, fd, events):
         if not (events & ioloop.IOLoop.READ):
+            if events == ioloop.IOLoop.ERROR:
+                self.redirector.remove_redirection(self.pipe)
             return
         try:
             data = os.read(fd, self.redirector.buffer)
