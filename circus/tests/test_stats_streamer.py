@@ -23,7 +23,7 @@ class _StatsStreamer(StatsStreamer):
 
 class TestStatsStreamer(TestCircus):
 
-    def test_socketstats(self):
+    def _test_socketstats(self):
         if TRAVIS:
             return
 
