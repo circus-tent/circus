@@ -7,7 +7,7 @@ Circus comes with a few pre-shipped plugins you can use easily. The configuratio
 
 Statsd
 ======
-    
+
     **use**
          set to 'circus.plugins.statsd.StatsdEmitter'
 
@@ -116,4 +116,14 @@ ResourceWatcher
 
     **max_count**
         How often these limits (each one is counted separately) are allowed to be exceeded before a restart will be triggered. Default: 3
+
+
+
+    Example::
+
+        [circus]
+        ...
+
+        [watcher:program]
+        c
 

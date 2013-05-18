@@ -15,6 +15,8 @@ class ResourceWatcher(BaseObserver):
         self._count_cpu = self._count_mem = self._count_health = 0
 
     def look_after(self):
+        print 'looking'
+
         info = self.call("stats", name=self.service)
         if info["status"] == "error":
             self.statsd.increment("_resource_watcher.%s.error" % self.service)
@@ -48,6 +50,7 @@ class ResourceWatcher(BaseObserver):
             self._count_cpu = 0
 
         if self.max_mem and max_mem > self.max_mem:
+            print 'WDWWDDWDWDWDW'
             self.statsd.increment("_resource_watcher.%s.over_memory" %
                                   self.service)
             self._count_mem += 1
