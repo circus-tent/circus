@@ -53,7 +53,7 @@ class TestStatsStreamer(TestCircus):
         pubsub = util.DEFAULT_ENDPOINT_SUB
         statspoint = util.DEFAULT_ENDPOINT_STATS
 
-        loop = ioloop.IOLoop.instance()
+        loop = ioloop.IOLoop()
         streamer = _StatsStreamer(endpoint, pubsub, statspoint,
                                   loop=loop)
 
@@ -83,4 +83,7 @@ class TestStatsStreamer(TestCircus):
         streamer.start()
 
         # let's see what we got
-        self.assertTrue(len(streamer.msgs) > 1)
+        try:
+            self.assertTrue(len(streamer.msgs) > 1)
+        finally:
+            streamer.stop()

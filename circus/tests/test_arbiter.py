@@ -35,6 +35,7 @@ class TestTrainer(TestCircus):
         super(TestTrainer, self).setUp()
         dummy_process = 'circus.tests.support.run_process'
         self.test_file = self._run_circus(dummy_process)
+        poll_for(self.test_file, 'START')
 
     def test_numwatchers(self):
         msg = make_message("numwatchers")
@@ -178,7 +179,6 @@ class TestTrainer(TestCircus):
         self.assertEqual(resp.get("status"), "ok")
 
     def test_reload1(self):
-        self.assertTrue(poll_for(self.test_file, 'START'))  # process started
         msg1 = make_message("list", name="test")
         resp = self.cli.call(msg1)
         processes1 = resp.get('pids')
@@ -194,7 +194,6 @@ class TestTrainer(TestCircus):
         self.assertNotEqual(processes1, processes2)
 
     def test_reload2(self):
-        self.assertTrue(poll_for(self.test_file, 'START'))  # process started
         msg1 = make_message("list", name="test")
         resp = self.cli.call(msg1)
         processes1 = resp.get('pids')
