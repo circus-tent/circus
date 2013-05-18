@@ -16,6 +16,8 @@ from ConfigParser import (ConfigParser, MissingSectionHeaderError,
 from psutil.error import AccessDenied, NoSuchProcess
 from psutil import Process
 
+from circus.py3compat import string_types
+
 
 # default endpoints
 DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
@@ -235,7 +237,7 @@ def to_uid(name):
         except KeyError:
             raise ValueError("%r isn't a valid user id" % name)
 
-    if not isinstance(name, str):
+    if not isinstance(name, string_types):
         raise TypeError(name)
 
     try:
