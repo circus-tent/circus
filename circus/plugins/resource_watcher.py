@@ -6,6 +6,8 @@ class ResourceWatcher(BaseObserver):
     def __init__(self, *args, **config):
         super(ResourceWatcher, self).__init__(*args, **config)
         self.service = config.get("service", None)
+        if self.service is None:
+            raise NotImplementedError('service is mandatory for now.')
         self.max_cpu = float(config.get("max_cpu", 90))  # in %
         self.max_mem = float(config.get("max_mem", 90))  # in %
         self.health_threshold = float(config.get("health_threshold",
