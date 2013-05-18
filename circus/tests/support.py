@@ -209,7 +209,7 @@ def run_plugin(klass, config, duration=300):
 
     _statsd = _Statsd()
     plugin = klass(endpoint, pubsub_endpoint, check_delay, ssh_server,
-                    **config)
+                   **config)
     plugin.statsd = _statsd
 
     end = ioloop.DelayedCallback(plugin.loop.stop, duration, plugin.loop)

@@ -1,4 +1,4 @@
-from circus.tests.support import TestCircus, poll_for, Process, run_plugin
+from circus.tests.support import TestCircus, poll_for, run_plugin
 from circus.plugins.statsd import FullStats
 
 
