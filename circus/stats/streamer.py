@@ -176,7 +176,7 @@ class StatsStreamer(object):
         """called each time circusd sends an event"""
         # maintains a periodic callback to compute mem and cpu consumption for
         # each pid.
-        logger.debug('Received an event from circusd: %s' % data)
+        logger.debug('Received an event from circusd: %s' % str(data))
         topic, msg = data
         try:
             watcher = topic.split('.')[1:-1][0]

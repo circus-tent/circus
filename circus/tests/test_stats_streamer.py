@@ -1,15 +1,30 @@
-import time
 import os
-import functools
+import json
 
 from circus.stats.collector import SocketStatsCollector
 from circus.tests.support import TestCircus
 from circus._zmq import ioloop
 from circus.stats.streamer import StatsStreamer
 from circus import util
+from circus import client
 
 
 TRAVIS = os.getenv('TRAVIS', False)
+
+
+def _call(self, cmd):
+    what = cmd['command']
+    if what == 'list':
+        name = cmd['properties'].get('name')
+        if name is None:
+            return {'watchers': ['one', 'two', 'three']}
+        return {'pids': [123, 456]}
+    elif what == 'dstats':
+        return {'info': {'pid': 789}}
+    elif what == 'listsockets':
+        return {}
+
+    raise NotImplementedError(cmd)
 
 
 class _StatsStreamer(StatsStreamer):
@@ -23,12 +38,17 @@ class _StatsStreamer(StatsStreamer):
 
 class TestStatsStreamer(TestCircus):
 
-    def _test_socketstats(self):
+    def setUp(self):
+        self.old = client.CircusClient.call
+        client.CircusClient.call = _call
+
+    def tearDown(self):
+        client.CircusClient.call = self.old
+
+    def test_socketstats(self):
         if TRAVIS:
             return
 
-        dummy_process = 'circus.tests.support.run_process'
-        self.test_file = self._run_circus(dummy_process)
         endpoint = util.DEFAULT_ENDPOINT_DEALER
         pubsub = util.DEFAULT_ENDPOINT_SUB
         statspoint = util.DEFAULT_ENDPOINT_STATS
@@ -45,13 +65,22 @@ class TestStatsStreamer(TestCircus):
         self._collector.start()
         loop.add_callback(streamer._init)
 
+        # events
+        def _events():
+            msg = 'one.spawn', json.dumps({'process_pid': 187})
+            for i in range(5):
+                streamer.handle_recv(msg)
+
+        events = ioloop.DelayedCallback(_events, 500, loop)
+        events.start()
+
         def _stop():
-            streamer.stop()
             self._collector.stop()
-            loop.stop()
+            streamer.stop()
 
         stopper = ioloop.DelayedCallback(_stop, 500, loop)
         stopper.start()
-        loop.start()
+        streamer.start()
+
         # let's see what we got
         self.assertTrue(len(streamer.msgs) > 1)
