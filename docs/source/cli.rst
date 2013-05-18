@@ -43,3 +43,6 @@ circusctl
 example, you can get a list of all the watchers, you can do ::
 
     $ circusctl list
+
+Besides supporting a handful of options you can also specify the endpoint
+*circusctl* should use using the ``CIRCUSCTL_ENDPOINT`` environment variable.
