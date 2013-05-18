@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import grp
 import os
 import pwd
@@ -5,7 +7,6 @@ import unittest
 from psutil import Popen
 from mock import Mock, patch
 
-from __future__ import unicode_literals
 
 from circus.util import (get_info, bytes2human, to_bool, parse_env_str,
                          env_to_str, to_uid, to_gid, replace_gnu_args,
