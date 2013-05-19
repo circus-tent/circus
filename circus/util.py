@@ -13,8 +13,7 @@ from zmq import ssh
 from ConfigParser import (ConfigParser, MissingSectionHeaderError,
                           ParsingError, DEFAULTSECT)
 
-from psutil.error import AccessDenied, NoSuchProcess
-from psutil import Process
+from psutil import AccessDenied, NoSuchProcess, Process
 
 from circus.py3compat import string_types
 
