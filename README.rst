@@ -14,7 +14,7 @@ For more information about the motivation for this project, see `this blog post 
 
 Links:
 
-- The full documentation is located at : http://circus.io
+- The full documentation is located at : http://circus.readthedocs.org
 - Have a look at our how to contribute page if you are interested:
   http://circus.readthedocs.org/en/latest/contributing/
 - There's a mailing list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
