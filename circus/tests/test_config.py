@@ -22,6 +22,7 @@ _CONF = {
 
 
 def hook(watcher, hook_name):
+    "Yeah that's me"
     pass
 
 
@@ -69,7 +70,7 @@ class TestConfig(unittest.TestCase):
     def test_hooks(self):
         conf = get_config(_CONF['hooks'])
         watcher = Watcher.load_from_config(conf['watchers'][0])
-        self.assertEqual(watcher.hooks['before_start'], hook)
+        self.assertEqual(watcher.hooks['before_start'].__doc__, hook.__doc__)
         self.assertTrue('before_start' not in watcher.ignore_hook_failure)
 
     def test_watcher_env_var(self):
