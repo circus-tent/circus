@@ -50,6 +50,11 @@ class TestWatcher(TestCircus):
         os.remove(self.stdout)
         os.remove(self.stderr)
 
+    def test_file_stream(self):
+        stream = FileStream(self.stdout, max_bytes='12', backup_count='3')
+        self.assertTrue(isinstance(stream._max_bytes), int)
+        self.assertTrue(isinstance(stream._backup_count), int)
+
     def test_stream(self):
         # wait for the process to be started
         self.assertTrue(poll_for(self.stdout, 'stdout'))
