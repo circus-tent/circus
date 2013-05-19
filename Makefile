@@ -17,7 +17,7 @@ docs: bin/coverage
 	SPHINXBUILD=../bin/sphinx-build $(MAKE) -C docs html $^
 
 coverage: bin/coverage
-	bin/nosetests --with-coverage --cover-html --cover-html-dir=html --cover-package=circus
+	bin/nosetests --with-coverage --cover-html --cover-html-dir=html --cover-package=circus circus/tests
 
 bin/coverage: bin/python
 	bin/pip install -r test-requirements.txt --use-mirrors
