@@ -33,14 +33,19 @@ class TestResourceWatcher(TestCircus):
 
         # Test that service is deprecated
         config['service'] = 'test'
+        found = False
 
-        with warnings.catch_warnings(record=True) as w:
+        with warnings.catch_warnings(record=True) as ws:
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
             _statsd = run_plugin(ResourceWatcher, config)
-            assert len(w) == 1
-            assert issubclass(w[-1].category, DeprecationWarning)
-            assert "deprecated" in str(w[-1].message)
+            numws = len(ws)
+            for w in ws:
+                if not found:
+                    found = 'ResourceWatcher' in str(w.message)
+
+        if not found:
+            raise AssertionError('ResourceWatcher not found')
 
         res = _statsd.increments.items()
         self.assertEqual(res, [('_resource_watcher.test.over_memory', 1)])
@@ -53,6 +58,6 @@ class TestResourceWatcher(TestCircus):
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
             _statsd = run_plugin(ResourceWatcher, config)
-            assert len(w) == 0
+            assert len(w) == numws - 1
 
         # XXX need to cover cpu, health etc
