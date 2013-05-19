@@ -1,3 +1,4 @@
+import warnings
 from circus.plugins.statsd import BaseObserver
 
 
@@ -5,9 +6,16 @@ class ResourceWatcher(BaseObserver):
 
     def __init__(self, *args, **config):
         super(ResourceWatcher, self).__init__(*args, **config)
+        self.watcher = config.get("watcher", None)
         self.service = config.get("service", None)
-        if self.service is None:
-            raise NotImplementedError('service is mandatory for now.')
+        if self.service is not None:
+            warnings.warn("ResourceWatcher.service is deprecated "
+                          "please use ResourceWatcher.watcher instead.",
+                          category=DeprecationWarning)
+            if self.watcher is None:
+                self.watcher = self.service
+        if self.watcher is None:
+            raise NotImplementedError('watcher is mandatory for now.')
         self.max_cpu = float(config.get("max_cpu", 90))  # in %
         self.max_mem = float(config.get("max_mem", 90))  # in %
         self.health_threshold = float(config.get("health_threshold",
@@ -16,9 +24,9 @@ class ResourceWatcher(BaseObserver):
         self._count_cpu = self._count_mem = self._count_health = 0
 
     def look_after(self):
-        info = self.call("stats", name=self.service)
+        info = self.call("stats", name=self.watcher)
         if info["status"] == "error":
-            self.statsd.increment("_resource_watcher.%s.error" % self.service)
+            self.statsd.increment("_resource_watcher.%s.error" % self.watcher)
             return
 
         stats = info['info']
@@ -42,14 +50,14 @@ class ResourceWatcher(BaseObserver):
 
         if self.max_cpu and max_cpu > self.max_cpu:
             self.statsd.increment("_resource_watcher.%s.over_cpu" %
-                                  self.service)
+                                  self.watcher)
             self._count_cpu += 1
         else:
             self._count_cpu = 0
 
         if self.max_mem and max_mem > self.max_mem:
             self.statsd.increment("_resource_watcher.%s.over_memory" %
-                                  self.service)
+                                  self.watcher)
             self._count_mem += 1
         else:
             self._count_mem = 0
@@ -57,7 +65,7 @@ class ResourceWatcher(BaseObserver):
         if self.health_threshold and \
                 (max_cpu + max_mem) / 2.0 > self.health_threshold:
             self.statsd.increment("_resource_watcher.%s.over_health" %
-                                  self.service)
+                                  self.watcher)
             self._count_health += 1
         else:
             self._count_health = 0
@@ -65,6 +73,6 @@ class ResourceWatcher(BaseObserver):
         if max([self._count_health, self._count_health,
                 self._count_mem]) > self.max_count:
             self.statsd.increment("_resource_watcher.%s.restarting" %
-                                  self.service)
-            self.cast("restart", name=self.service)
+                                  self.watcher)
+            self.cast("restart", name=self.watcher)
             self._count_mem = self._count_health = self._count_mem = 0

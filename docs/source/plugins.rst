@@ -41,7 +41,7 @@ RedisObserver
 =============
 
     This services observers a redis process for you, publishes the information to statsd
-    and offers to restart the service when it doesn't react in a given timeout. This
+    and offers to restart the watcher when it doesn't react in a given timeout. This
     plugin requires `redis-py <https://github.com/andymccurdy/redis-py>`_  to run.
 
     It has the same configuration as statsd and adds the following:
@@ -65,9 +65,10 @@ RedisObserver
 HttpObserver
 ============
 
-    This services observers a http process for you by pinging a certain website
-    regularly. Similar to the redis observer it offers to restart the service on an
-    error. It requires `tornado <http://www.tornadoweb.org>`_  to run.
+    This services observers a http process for you by pinging a
+    certain website regularly. Similar to the redis observer it offers
+    to restart the watcher on an error. It requires `tornado
+    <http://www.tornadoweb.org>`_ to run.
 
     It has the same configuration as statsd and adds the following:
 
@@ -102,8 +103,9 @@ ResourceWatcher
     **loop_rate**
         the frequency the plugin should ask for the stats in seconds. Default: 60.
 
-    **service**
-        the service (read: watcher) this resource watcher should be looking after
+    **watcher**
+        the watcher this resource watcher should be looking after.
+        (previously called ``service`` but ``service`` is now deprecated)
 
     **max_cpu**
         The maximum cpu one process is allowed to consume (in %). Default: 90

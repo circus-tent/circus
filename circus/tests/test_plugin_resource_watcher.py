@@ -1,3 +1,4 @@
+import warnings
 from circus.tests.support import TestCircus, poll_for, Process, run_plugin
 from circus.plugins.resource_watcher import ResourceWatcher
 
@@ -26,12 +27,32 @@ class TestResourceWatcher(TestCircus):
 
     def test_resource_watcher(self):
         config = {'loop_rate': 0.2, 'max_mem': 0.1}
+
         self.assertRaises(NotImplementedError, run_plugin,
                           ResourceWatcher, config)
+
+        # Test that service is deprecated
         config['service'] = 'test'
 
-        _statsd = run_plugin(ResourceWatcher, config)
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            _statsd = run_plugin(ResourceWatcher, config)
+            assert len(w) == 1
+            assert issubclass(w[-1].category, DeprecationWarning)
+            assert "deprecated" in str(w[-1].message)
+
         res = _statsd.increments.items()
         self.assertEqual(res, [('_resource_watcher.test.over_memory', 1)])
+
+        # Test that watcher is ok and not deprecated
+        config['watcher'] = config['service']
+        del config['service']
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            _statsd = run_plugin(ResourceWatcher, config)
+            assert len(w) == 0
 
         # XXX need to cover cpu, health etc
