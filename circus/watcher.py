@@ -447,11 +447,15 @@ class Watcher(object):
                     self.stdout_redirector.add_redirection('stdout',
                                                            process,
                                                            process.stdout)
+                else:
+                    process.stdout.close()
 
                 if self.stderr_redirector is not None:
                     self.stderr_redirector.add_redirection('stderr',
                                                            process,
                                                            process.stderr)
+                else:
+                    process.stderr.close()
 
                 self.processes[process.pid] = process
                 logger.debug('running %s process [pid %d]', self.name,
