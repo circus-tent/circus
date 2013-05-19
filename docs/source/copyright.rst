@@ -30,4 +30,5 @@ Licence
 Contributors
 ============
 
-See https://github.com/mozilla-services/circus/graphs/contributors
+See the full list at https://github.com/mozilla-services/circus/blob/master/NOTICE
+
