@@ -9,6 +9,7 @@ except ImportError:
 import zmq
 from zmq.utils.jsonapi import jsonmod as json
 
+from circus.util import create_udp_socket
 from circus._zmq import ioloop, zmqstream
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
@@ -18,9 +19,12 @@ from circus.sighandler import SysHandler
 
 
 class Controller(object):
-    def __init__(self, endpoint, context, loop, arbiter, check_delay=1.0):
+
+    def __init__(self, endpoint, multicast_endpoint, context, loop, arbiter,
+                 check_delay=1.0):
         self.arbiter = arbiter
         self.endpoint = endpoint
+        self.multicast_endpoint = multicast_endpoint
         self.context = context
         self.loop = loop
         self.check_delay = check_delay * 1000
@@ -35,11 +39,23 @@ class Controller(object):
 
     def initialize(self):
         # initialize controller
+
+        # Initialize ZMQ Sockets
         self.ctrl_socket = self.context.socket(zmq.ROUTER)
         self.ctrl_socket.bind(self.endpoint)
         self.ctrl_socket.linger = 0
         self.stream = zmqstream.ZMQStream(self.ctrl_socket, self.loop)
         self.stream.on_recv(self.handle_message)
+
+        # Initialize UDP Socket
+        multicast_addr, multicast_port = self.multicast_endpoint \
+            .lstrip('udp://') \
+            .rstrip('/') \
+            .split(':')
+        self.udp_socket = create_udp_socket(multicast_addr, multicast_port)
+        self.loop.add_handler(self.udp_socket.fileno(),
+                              self.handle_autodiscover_message,
+                              ioloop.IOLoop.READ)
 
     def start(self):
         self.initialize()
@@ -77,6 +93,12 @@ class Controller(object):
         else:
             logger.debug("got message %s", msg)
             self.add_job(cid, msg)
+
+    def handle_autodiscover_message(self, fd_no, type):
+        data, address = self.udp_socket.recvfrom(1024)
+        data = json.loads(data)
+        self.udp_socket.sendto(json.dumps({'endpoint': self.endpoint}),
+                               address)
 
     def dispatch(self, job):
         cid, msg = job
@@ -144,7 +166,7 @@ class Controller(object):
         resp = ok(props)
         self.send_response(cid, msg, resp, cast=cast)
 
-    def send_response(self, cid,  msg, resp, cast=False):
+    def send_response(self, cid, msg, resp, cast=False):
         if cast:
             return
 

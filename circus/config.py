@@ -4,6 +4,7 @@ import sys
 
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
+                         DEFAULT_ENDPOINT_MULTICAST,
                          StrictConfigParser, parse_env_str)
 try:
     import gevent       # NOQA
@@ -122,6 +123,9 @@ def get_config(config_file):
     config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
                                      DEFAULT_ENDPOINT_SUB)
     config['stats_endpoint'] = dget('circus', 'stats_endpoint', None, str)
+
+    config['multicast_endpoint'] = dget('circus', 'multicast_endpoint',
+                                        DEFAULT_ENDPOINT_MULTICAST)
     config['warmup_delay'] = dget('circus', 'warmup_delay', 0, int)
     config['httpd'] = dget('circus', 'httpd', False, bool)
     config['httpd_host'] = dget('circus', 'httpd_host', 'localhost', str)

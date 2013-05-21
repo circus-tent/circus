@@ -31,6 +31,10 @@ class Arbiter(object):
     - **pubsub_endpoint** -- the pubsub endpoint
     - **stats_endpoint** -- the stats endpoint. If not provided,
       the *circusd-stats* process will not be launched.
+    - **multicast_endpoint** -- the multicast endpoint for circusd cluster
+      auto-discovery (default: udp://237.219.251.97:12027)
+      Multicast addr should be between 224.0.0.0 to 239.255.255.255 and the
+      same for the all cluster.
     - **check_delay** -- the delay between two controller points
       (default: 1 s)
     - **prereload_fn** -- callable that will be executed on each reload
@@ -56,15 +60,16 @@ class Arbiter(object):
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=.5,
                  prereload_fn=None, context=None, loop=None,
-                 stats_endpoint=None, plugins=None, sockets=None,
-                 warmup_delay=0, httpd=False, httpd_host='localhost',
-                 httpd_port=8080, debug=False, ssh_server=None,
-                 proc_name='circusd'):
+                 stats_endpoint=None, multicast_endpoint=None, plugins=None,
+                 sockets=None, warmup_delay=0, httpd=False,
+                 httpd_host='localhost', httpd_port=8080, debug=False,
+                 ssh_server=None, proc_name='circusd'):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
         self.pubsub_endpoint = pubsub_endpoint
+        self.multicast_endpoint = multicast_endpoint
         self.proc_name = proc_name
 
         self.ctrl = self.loop = None
@@ -84,6 +89,7 @@ class Arbiter(object):
 
         # initializing circusd-stats as a watcher when configured
         self.stats_endpoint = stats_endpoint
+
         if self.stats_endpoint is not None:
             cmd = "%s -c 'from circus import stats; stats.main()'" % \
                 sys.executable
@@ -142,8 +148,8 @@ class Arbiter(object):
         self.sockets = CircusSockets(sockets)
         self.warmup_delay = warmup_delay
         self.loop = ioloop.IOLoop.instance()
-        self.ctrl = Controller(self.endpoint, self.context, self.loop, self,
-                               self.check_delay)
+        self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
+                               self.context, self.loop, self, self.check_delay)
 
     @classmethod
     def load_from_config(cls, config_file):
@@ -162,7 +168,7 @@ class Arbiter(object):
             # controlling that we have what it takes to run the web UI
             # if something is missing this will tell the user
             try:
-                import circusweb     # NOQA
+                import circusweb  # NOQA
             except ImportError:
                 logger.error('You need to install circus-web')
                 sys.exit(1)
@@ -172,6 +178,7 @@ class Arbiter(object):
                       check_delay=cfg.get('check_delay', 1.),
                       prereload_fn=cfg.get('prereload_fn'),
                       stats_endpoint=cfg.get('stats_endpoint'),
+                      multicast_endpoint=cfg.get('multicast_endpoint'),
                       plugins=cfg.get('plugins'), sockets=sockets,
                       warmup_delay=cfg.get('warmup_delay', 0),
                       httpd=httpd,
