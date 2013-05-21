@@ -54,9 +54,10 @@ circus - single section
     **pubsub_endpoint**
         The ZMQ PUB/SUB socket receiving publications of events.
         (default: *tcp://127.0.0.1:5556*)
+    **statsd**
+        If set to True, Circus runs the circusd-stats daemon. (default: False)
     **stats_endpoint**
         The ZMQ PUB/SUB socket receiving publications of stats.
-        If not configured, this feature is deactivated.
         (default: *tcp://127.0.0.1:5557*)
     **check_delay**
         The polling interval in seconds for the ZMQ socket. (default: 5)

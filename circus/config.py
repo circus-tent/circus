@@ -1,10 +1,11 @@
+import glob
 import os
 import sys
-import glob
+import warnings
 
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                         DEFAULT_ENDPOINT_MULTICAST,
+                         DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
                          StrictConfigParser, parse_env_str)
 try:
     import gevent       # NOQA
@@ -113,10 +114,19 @@ def get_config(config_file):
     config['endpoint'] = dget('circus', 'endpoint', DEFAULT_ENDPOINT_DEALER)
     config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
                                      DEFAULT_ENDPOINT_SUB)
-    config['stats_endpoint'] = dget('circus', 'stats_endpoint', None, str)
-
     config['multicast_endpoint'] = dget('circus', 'multicast_endpoint',
                                         DEFAULT_ENDPOINT_MULTICAST)
+    config['stats_endpoint'] = dget('circus', 'stats_endpoint', None)
+    config['statsd'] = dget('circus', 'statsd', False, bool)
+
+    if config['stats_endpoint'] is None:
+        config['stats_endpoint'] = DEFAULT_ENDPOINT_STATS
+    elif not config['statsd']:
+        warnings.warn("You defined a stats_endpoint without "
+                      "setting up statsd to True.",
+                      DeprecationWarning)
+        config['statsd'] = True
+
     config['warmup_delay'] = dget('circus', 'warmup_delay', 0, int)
     config['httpd'] = dget('circus', 'httpd', False, bool)
     config['httpd_host'] = dget('circus', 'httpd_host', 'localhost', str)
