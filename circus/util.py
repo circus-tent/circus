@@ -14,9 +14,10 @@ from zmq import ssh
 from ConfigParser import (ConfigParser, MissingSectionHeaderError,
                           ParsingError, DEFAULTSECT)
 
-from psutil import Process, AccessDenied, NoSuchProcess
+from psutil import AccessDenied, NoSuchProcess, Process
 
 from circus.py3compat import string_types
+
 
 # default endpoints
 DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
@@ -660,7 +661,7 @@ def create_udp_socket(mcast_addr, mcast_port):
         mcast_port = int(mcast_port)
     except ValueError:
         raise ValueError('Wrong UDP multicast_endpoint configuration. Should '
-                         'looks like: "%s"' % DEFAULT_ENDPOINT_MULTICAST)
+                         'looks like: "%r"' % DEFAULT_ENDPOINT_MULTICAST)
 
     if ip_splitted[0] < 224 or ip_splitted[0] > 239:
         raise ValueError('The multicast address is not valid should be '

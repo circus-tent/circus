@@ -1,15 +1,20 @@
+import json
 import os
+import socket
 import sys
 import unittest
-from tempfile import mkstemp
 
 from mock import patch
+from tempfile import mkstemp
+from time import time
+from urlparse import urlparse
 
 from circus.arbiter import Arbiter
-from circus.watcher import Watcher
 from circus.client import CallError, CircusClient, make_message
-from circus.tests.support import TestCircus, poll_for, truncate_file
 from circus.plugins import CircusPlugin
+from circus.tests.support import TestCircus, poll_for, truncate_file
+from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST
+from circus.watcher import Watcher
 
 
 class Plugin(CircusPlugin):
@@ -286,6 +291,48 @@ class TestTrainer(TestCircus):
         # adding more than one process should fail
         res = cli.send_message('incr', name='test')
         self.assertEqual(res['numprocesses'], 1)
+
+    def test_udp_discovery(self):
+        """test_udp_discovery: Test that when the circusd answer UDP call.
+
+        """
+        self._stop_runners()
+
+        dummy_process = 'circus.tests.support.run_process'
+        self._run_circus(dummy_process)
+
+        ANY = '0.0.0.0'
+
+        multicast_addr, multicast_port = urlparse(DEFAULT_ENDPOINT_MULTICAST)\
+            .netloc.split(':')
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,
+                             socket.IPPROTO_UDP)
+        sock.bind((ANY, 0))
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        sock.sendto(json.dumps(''),
+                    (multicast_addr, int(multicast_port)))
+
+        timer = time()
+        resp = False
+        endpoints = []
+        while time() - timer < 10:
+            data, address = sock.recvfrom(1024)
+            data = json.loads(data)
+            endpoint = data.get('endpoint', "")
+
+            if endpoint == DEFAULT_ENDPOINT_DEALER:
+                resp = True
+                break
+
+            endpoints.append(endpoint)
+
+        if not resp:
+            print endpoints
+
+        self.assertTrue(resp)
 
 
 class MockWatcher(Watcher):

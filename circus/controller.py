@@ -5,6 +5,7 @@ try:
 except ImportError:
     from Queue import Queue, Empty  # NOQA
 
+from urlparse import urlparse
 
 import zmq
 from zmq.utils.jsonapi import jsonmod as json
@@ -48,10 +49,8 @@ class Controller(object):
         self.stream.on_recv(self.handle_message)
 
         # Initialize UDP Socket
-        multicast_addr, multicast_port = self.multicast_endpoint \
-            .lstrip('udp://') \
-            .rstrip('/') \
-            .split(':')
+        multicast_addr, multicast_port = urlparse(self.multicast_endpoint)\
+            .netloc.split(':')
         self.udp_socket = create_udp_socket(multicast_addr, multicast_port)
         self.loop.add_handler(self.udp_socket.fileno(),
                               self.handle_autodiscover_message,
