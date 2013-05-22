@@ -13,6 +13,7 @@ logger = logging.getLogger('circus')
 def get_arbiter(watchers, controller=None,
                 pubsub_endpoint=None,
                 stats_endpoint=None,
+                multicast_endpoint=None,
                 env=None, name=None, context=None,
                 background=False, stream_backend="thread",
                 plugins=None, debug=False, proc_name="circusd"):
@@ -88,11 +89,14 @@ def get_arbiter(watchers, controller=None,
       (default: False)
     - **proc_name** -- the arbiter process name (default: circusd)
     """
-    from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
+    from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
+                             DEFAULT_ENDPOINT_MULTICAST)
     if controller is None:
         controller = DEFAULT_ENDPOINT_DEALER
     if pubsub_endpoint is None:
         pubsub_endpoint = DEFAULT_ENDPOINT_SUB
+    if multicast_endpoint is None:
+        multicast_endpoint = DEFAULT_ENDPOINT_MULTICAST
 
     from circus.watcher import Watcher
     if background:
@@ -110,5 +114,6 @@ def get_arbiter(watchers, controller=None,
 
     return Arbiter(_watchers, controller, pubsub_endpoint,
                    stats_endpoint=stats_endpoint,
+                   multicast_endpoint=multicast_endpoint,
                    context=context, plugins=plugins, debug=debug,
                    proc_name=proc_name)

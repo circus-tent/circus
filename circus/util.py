@@ -9,6 +9,7 @@ import re
 import sys
 import shlex
 import time
+import socket
 from zmq import ssh
 from ConfigParser import (ConfigParser, MissingSectionHeaderError,
                           ParsingError, DEFAULTSECT)
@@ -22,6 +23,7 @@ from circus.py3compat import string_types
 DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
 DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
 DEFAULT_ENDPOINT_STATS = "tcp://127.0.0.1:5557"
+DEFAULT_ENDPOINT_MULTICAST = "upd://237.219.251.97:12027"
 
 
 try:
@@ -648,3 +650,35 @@ def load_virtualenv(watcher):
             path = venv_path
 
         watcher.env['PYTHONPATH'] = path
+
+
+def create_udp_socket(mcast_addr, mcast_port):
+    """Create an udp multicast socket for circusd cluster auto-discovery.
+    Mcas_addr must be between 224.0.0.0 and 239.255.255.255
+    """
+    try:
+        ip_splitted = map(int, mcast_addr.split('.'))
+        mcast_port = int(mcast_port)
+    except ValueError:
+        raise ValueError('Wrong UDP multicast_endpoint configuration. Should '
+                         'looks like: "%r"' % DEFAULT_ENDPOINT_MULTICAST)
+
+    if ip_splitted[0] < 224 or ip_splitted[0] > 239:
+        raise ValueError('The multicast address is not valid should be '
+                         'between 224.0.0.0 and 239.255.255.255')
+
+    any_addr = "0.0.0.0"
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    # Allow reutilization of addr
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    # Some platform exposes SO_REUSEPORT
+    if hasattr(socket, 'SO_REUSEPORT'):
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    # Put packet ttl to max
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
+    # Register socket to multicast group
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+                    socket.inet_aton(mcast_addr) + socket.inet_aton(any_addr))
+    # And finally bind all interfaces
+    sock.bind((any_addr, mcast_port))
+    return sock
