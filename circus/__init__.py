@@ -1,6 +1,7 @@
 import _patch   # NOQA
 import logging
 import os
+import warnings
 
 
 version_info = (0, 7, 1)
@@ -12,6 +13,7 @@ logger = logging.getLogger('circus')
 
 def get_arbiter(watchers, controller=None,
                 pubsub_endpoint=None,
+                statsd=False,
                 stats_endpoint=None,
                 multicast_endpoint=None,
                 env=None, name=None, context=None,
@@ -90,13 +92,21 @@ def get_arbiter(watchers, controller=None,
     - **proc_name** -- the arbiter process name (default: circusd)
     """
     from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                             DEFAULT_ENDPOINT_MULTICAST)
+                             DEFAULT_ENDPOINT_MULTICAST,
+                             DEFAULT_ENDPOINT_STATS)
     if controller is None:
         controller = DEFAULT_ENDPOINT_DEALER
     if pubsub_endpoint is None:
         pubsub_endpoint = DEFAULT_ENDPOINT_SUB
     if multicast_endpoint is None:
         multicast_endpoint = DEFAULT_ENDPOINT_MULTICAST
+    if stats_endpoint is None and statsd:
+        stats_endpoint = DEFAULT_ENDPOINT_STATS
+    elif stats_endpoint is not None and not statsd:
+        warnings.warn("You defined a stats_endpoint without "
+                      "setting up statsd to True.",
+                      DeprecationWarning)
+        statsd = True
 
     from circus.watcher import Watcher
     if background:
@@ -113,6 +123,7 @@ def get_arbiter(watchers, controller=None,
         _watchers.append(Watcher.load_from_config(watcher))
 
     return Arbiter(_watchers, controller, pubsub_endpoint,
+                   statsd=statsd,
                    stats_endpoint=stats_endpoint,
                    multicast_endpoint=multicast_endpoint,
                    context=context, plugins=plugins, debug=debug,
