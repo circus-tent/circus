@@ -19,7 +19,7 @@ If you are curious about what Circus brings compared to other projects, read :re
    :ref:`Security` page.
 
 
-To install it, check out :ref:`installation`
+To install it and try its features check out the :ref:`examples`.
 
 
 Running Circus
