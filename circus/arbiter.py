@@ -29,8 +29,8 @@ class Arbiter(object):
     - **watchers** -- a list of Watcher objects
     - **endpoint** -- the controller ZMQ endpoint
     - **pubsub_endpoint** -- the pubsub endpoint
-    - **stats_endpoint** -- the stats endpoint. If not provided,
-      the *circusd-stats* process will not be launched.
+    - **statsd** -- If True, a circusd-stats process is run (default: False)
+    - **stats_endpoint** -- the stats endpoint.
     - **multicast_endpoint** -- the multicast endpoint for circusd cluster
       auto-discovery (default: udp://237.219.251.97:12027)
       Multicast addr should be between 224.0.0.0 to 239.255.255.255 and the
@@ -59,7 +59,7 @@ class Arbiter(object):
     - **proc_name** -- the arbiter process name
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=.5,
-                 prereload_fn=None, context=None, loop=None,
+                 prereload_fn=None, context=None, loop=None, statsd=False,
                  stats_endpoint=None, multicast_endpoint=None, plugins=None,
                  sockets=None, warmup_delay=0, httpd=False,
                  httpd_host='localhost', httpd_port=8080, debug=False,
@@ -88,9 +88,10 @@ class Arbiter(object):
             stdout_stream = stderr_stream = None
 
         # initializing circusd-stats as a watcher when configured
+        self.statsd = statsd
         self.stats_endpoint = stats_endpoint
 
-        if self.stats_endpoint is not None:
+        if self.statsd:
             cmd = "%s -c 'from circus import stats; stats.main()'" % \
                 sys.executable
             cmd += ' --endpoint %s' % self.endpoint
@@ -177,6 +178,7 @@ class Arbiter(object):
         arbiter = cls(watchers, cfg['endpoint'], cfg['pubsub_endpoint'],
                       check_delay=cfg.get('check_delay', 1.),
                       prereload_fn=cfg.get('prereload_fn'),
+                      statsd=cfg.get('statsd', False),
                       stats_endpoint=cfg.get('stats_endpoint'),
                       multicast_endpoint=cfg.get('multicast_endpoint'),
                       plugins=cfg.get('plugins'), sockets=sockets,
