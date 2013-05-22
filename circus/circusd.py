@@ -55,11 +55,11 @@ def main():
     parser.add_argument('config', help='configuration file', nargs='?')
 
     # XXX we should be able to add all these options in the config file as well
-    parser.add_argument('--log-level', dest='loglevel', default='info',
+    parser.add_argument('--log-level', dest='loglevel',
                         choices=LOG_LEVELS.keys() + [key.upper() for key in
                                                      LOG_LEVELS.keys()],
                         help="log level")
-    parser.add_argument('--log-output', dest='logoutput', default='-', help=(
+    parser.add_argument('--log-output', dest='logoutput', help=(
         "The location where the logs will be written. The default behavior "
         "is to write to stdout (you can force it by passing '-' to "
         "this option). Takes a filename otherwise."))
@@ -83,9 +83,13 @@ def main():
     if args.daemonize:
         daemonize()
 
-    pidfile = None
-    if args.pidfile:
-        pidfile = Pidfile(args.pidfile)
+    # From here it can also come from the arbiter configuration
+    # load the arbiter from config
+    arbiter = Arbiter.load_from_config(args.config)
+
+    pidfile = args.pidfile or arbiter.pidfile or None
+    if pidfile:
+        pidfile = Pidfile(pidfile)
 
         try:
             pidfile.create(os.getpid())
@@ -94,10 +98,10 @@ def main():
             sys.exit(1)
 
     # configure the logger
-    configure_logger(logger, args.loglevel, args.logoutput)
+    loglevel = args.loglevel or arbiter.loglevel or 'info'
+    logoutput = args.logoutput or arbiter.logoutput or '-'
+    configure_logger(logger, loglevel, logoutput)
 
-    # load the arbiter from config
-    arbiter = Arbiter.load_from_config(args.config)
     try:
         arbiter.start()
     except KeyboardInterrupt:
