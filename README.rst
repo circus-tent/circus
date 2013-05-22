@@ -3,10 +3,7 @@ Circus
 ======
 
 Circus is a program that runs and watches processes and sockets.
-
 Circus can be used as a library or through the command line.
-
-For more information about the motivation for this project, see `this blog post <http://ziade.org/2012/02/24/circus-a-process-controller/>`_.
 
 .. image:: https://secure.travis-ci.org/mozilla-services/circus.png?branch=master
    :alt: Build Status
@@ -14,9 +11,8 @@ For more information about the motivation for this project, see `this blog post 
 
 Links:
 
-- The full documentation is located at : http://circus.readthedocs.org
-- Have a look at our how to contribute page if you are interested:
-  http://circus.readthedocs.org/en/latest/contributing/
-- There's a mailing list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
-- The repository and issue tracker are at GitHub : https://github.com/mozilla-services/circus
-- Join us on the IRC : Freenode, channel #mozilla-circus
+- Full Documentation : http://circus.readthedocs.org
+- How to Contribute : http://circus.readthedocs.org/en/latest/contributing/
+- Mailing List : http://tech.groups.yahoo.com/group/circus-dev/
+- Repository & Issue Tracker : https://github.com/mozilla-services/circus
+- IRC : Freenode, channel #mozilla-circus
