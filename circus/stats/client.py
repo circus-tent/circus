@@ -59,11 +59,11 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
         text_len = len(text)
 
         if x < current_h:
-            padding =  current_w - y
+            padding = current_w - y
             if text_len >= padding:
                 text = text[:padding - 1]
             else:
-                text +=  ' ' * (padding - text_len - 1)
+                text += ' ' * (padding - text_len - 1)
 
             if text == '':
                 return

@@ -77,9 +77,6 @@ class GlobalOptions(Command):
 
     def execute(self, arbiter, props):
         wanted = props.get('option')
-        available = ('endpoint', 'pubsub_endpoint',
-                     'check_delay')
-
         if wanted:
             if wanted not in _OPTIONS:
                 raise MessageError('%r not an existing option' % wanted)
