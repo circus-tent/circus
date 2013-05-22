@@ -3,6 +3,9 @@ from circus.exc import MessageError
 from circus.util import convert_opt
 
 
+_OPTIONS = ('endpoint', 'pubsub_endpoint', 'check_delay', 'multicast_endpoint')
+
+
 class GlobalOptions(Command):
     """\
         Get the arbiter options
@@ -59,6 +62,8 @@ class GlobalOptions(Command):
         - endpoint: the controller ZMQ endpoint
         - pubsub_endpoint: the pubsub endpoint
         - check_delay: the delay between two controller points
+        - multicast_endpoint: the multicast endpoint for circusd cluster
+          auto-discovery
     """
 
     name = "globaloptions"
@@ -76,12 +81,11 @@ class GlobalOptions(Command):
                      'check_delay')
 
         if wanted:
-            if wanted not in available:
+            if wanted not in _OPTIONS:
                 raise MessageError('%r not an existing option' % wanted)
             options = (wanted,)
         else:
-            options = ('endpoint', 'pubsub_endpoint', 'stats_endpoint',
-                       'check_delay')
+            options = _OPTIONS
 
         res = {}
 
