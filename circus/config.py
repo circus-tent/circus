@@ -1,6 +1,6 @@
 import os
-import fnmatch
 import sys
+import glob
 
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
@@ -78,20 +78,11 @@ def read_config(config_path):
     includes = []
 
     def include_filename(filename):
-        if '*' in filename:
-            include_dir = os.path.dirname(filename)
-            if os.path.abspath(filename) != filename:
-                include_dir = os.path.join(current_dir,
-                                           os.path.dirname(filename))
+        if os.path.abspath(filename) != filename:
+            filename = os.path.join(current_dir, filename)
 
-            wildcard = os.path.basename(filename)
-            for root, dirnames, filenames in os.walk(include_dir):
-                for filename in fnmatch.filter(filenames, wildcard):
-                    cfg_file = os.path.join(root, filename)
-                    includes.append(cfg_file)
-
-        elif os.path.isfile(filename):
-            includes.append(filename)
+        for path in glob.glob(filename):
+            includes.append(path)
 
     for include_file in cfg.dget('circus', 'include', '').split():
         include_filename(include_file)
