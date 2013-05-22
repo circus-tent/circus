@@ -53,11 +53,22 @@ class StatsClient(CircusConsumer):
 
 def _paint(stdscr, watchers=None, old_h=None, old_w=None):
 
-    def addstr(line, *args):
-        if line < current_h:
-            stdscr.addstr(line, *args)
-
     current_h, current_w = stdscr.getmaxyx()
+
+    def addstr(x, y, text):
+        text_len = len(text)
+
+        if x < current_h:
+            padding =  current_w - y
+            if text_len >= padding:
+                text = text[:padding - 1]
+            else:
+                text +=  ' ' * (padding - text_len - 1)
+
+            if text == '':
+                return
+
+            stdscr.addstr(x, y, text)
 
     if watchers is None:
         stdscr.erase()
@@ -81,7 +92,7 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
         if name in ('circusd-stats', 'circushttpd'):
             continue
 
-        stdscr.addstr(line, 0, name.replace('-', '.'))
+        addstr(line, 0, name.replace('-', '.'))
         line += 1
 
         if name == 'sockets':
@@ -160,7 +171,7 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
             line += 1
 
     if line < current_h and len(watchers) > 0:
-        stdscr.addstr(line, 0, '-' * current_w)
+        addstr(line, 0, '-' * current_w)
 
     stdscr.refresh()
     return current_h, current_w
