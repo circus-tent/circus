@@ -19,6 +19,7 @@ _CONF = {
     'env_var': os.path.join(HERE, 'env_var.ini'),
     'env_section': os.path.join(HERE, 'env_section.ini'),
     'multiple_wildcard': os.path.join(HERE, 'multiple_wildcard.ini'),
+    'circus': os.path.join(HERE, 'circus.ini'),
 }
 
 
@@ -104,3 +105,15 @@ class TestConfig(unittest.TestCase):
         conf = get_config(_CONF['issue395'])
         watcher = conf['watchers'][0]
         self.assertEqual(watcher['graceful_timeout'], 88)
+
+    def test_pidfile(self):
+        conf = get_config(_CONF['circus'])
+        self.assertEquals(conf['pidfile'], 'pidfile')
+
+    def test_logoutput(self):
+        conf = get_config(_CONF['circus'])
+        self.assertEquals(conf['logoutput'], 'logoutput')
+
+    def test_loglevel(self):
+        conf = get_config(_CONF['circus'])
+        self.assertEquals(conf['loglevel'], 'debug')

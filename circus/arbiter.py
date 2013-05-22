@@ -63,7 +63,8 @@ class Arbiter(object):
                  stats_endpoint=None, multicast_endpoint=None, plugins=None,
                  sockets=None, warmup_delay=0, httpd=False,
                  httpd_host='localhost', httpd_port=8080, debug=False,
-                 ssh_server=None, proc_name='circusd'):
+                 ssh_server=None, proc_name='circusd', pidfile=None,
+                 loglevel=None, logoutput=None):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -71,6 +72,10 @@ class Arbiter(object):
         self.pubsub_endpoint = pubsub_endpoint
         self.multicast_endpoint = multicast_endpoint
         self.proc_name = proc_name
+
+        self.pidfile = pidfile
+        self.loglevel = loglevel
+        self.logoutput = logoutput
 
         self.ctrl = self.loop = None
         self.socket_event = False
@@ -187,7 +192,10 @@ class Arbiter(object):
                       httpd_host=cfg.get('httpd_host', 'localhost'),
                       httpd_port=cfg.get('httpd_port', 8080),
                       debug=cfg.get('debug', False),
-                      ssh_server=cfg.get('ssh_server', None))
+                      ssh_server=cfg.get('ssh_server', None),
+                      pidfile=cfg.get('pidfile', None),
+                      loglevel=cfg.get('loglevel', None),
+                      logoutput=cfg.get('logoutput', None))
 
         return arbiter
 
