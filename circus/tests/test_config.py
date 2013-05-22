@@ -18,6 +18,7 @@ _CONF = {
     'hooks': os.path.join(HERE, 'hooks.ini'),
     'env_var': os.path.join(HERE, 'env_var.ini'),
     'env_section': os.path.join(HERE, 'env_section.ini'),
+    'multiple_wildcard': os.path.join(HERE, 'multiple_wildcard.ini'),
 }
 
 
@@ -61,6 +62,11 @@ class TestConfig(unittest.TestCase):
         conf = get_config(_CONF['include'])
         watchers = conf['watchers']
         self.assertEquals(len(watchers), 4)
+
+    def test_include_multiple_wildcards(self):
+        conf = get_config(_CONF['multiple_wildcard'])
+        watchers = conf['watchers']
+        self.assertEquals(len(watchers), 2)
 
     def test_watcher_graceful_timeout(self):
         conf = get_config(_CONF['issue210'])
