@@ -9,7 +9,7 @@ Example::
     check_delay = 5
     endpoint = tcp://127.0.0.1:5555
     pubsub_endpoint = tcp://127.0.0.1:5556
-    include = /path/to/configs/*.enabled.ini
+    include = *.more.config.ini
 
     [watcher:myprogram]
     cmd = python
@@ -62,11 +62,13 @@ circus - single section
     **check_delay**
         The polling interval in seconds for the ZMQ socket. (default: 5)
     **include**
-        List of config files to include. (default: None). You can use wildcards
-        (`*`) to include particular schemes for your files.
+        List of config files to include. You can use wildcards
+        (`*`) to include particular schemes for your files. The paths are
+        relative to the config file. (default: None)
     **include_dir**
         List of config directories. All files matching `*.ini` under each
-        directory will be included. (default: None)
+        directory will be included. The paths are relative to the config file.
+        (default: None)
     **stream_backend**
         Defines the type of backend to use for the streaming. Possible
         values are **thread** or **gevent**. (default: thread)
