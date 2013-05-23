@@ -67,7 +67,7 @@ class TestConfig(unittest.TestCase):
     def test_include_multiple_wildcards(self):
         conf = get_config(_CONF['multiple_wildcard'])
         watchers = conf['watchers']
-        self.assertEquals(len(watchers), 2)
+        self.assertEquals(len(watchers), 3)
 
     def test_watcher_graceful_timeout(self):
         conf = get_config(_CONF['issue210'])
@@ -117,3 +117,10 @@ class TestConfig(unittest.TestCase):
     def test_loglevel(self):
         conf = get_config(_CONF['circus'])
         self.assertEquals(conf['loglevel'], 'debug')
+
+    def test_override(self):
+        conf = get_config(_CONF['multiple_wildcard'])
+        watchers = conf['watchers']
+        self.assertEquals(len(watchers), 3)
+        self.assertEquals(conf['watchers'][0]['env'], {'INI': 'private.ini'})
+        self.assertEqual(conf['check'], 555)

@@ -524,7 +524,8 @@ class StrictConfigParser(ConfigParser):
                 if mo:
                     sectname = mo.group('header')
                     if sectname in self._sections:
-                        raise ValueError('Duplicate section %r' % sectname)
+                        # we're extending/overriding, we're good
+                        cursect = self._sections[sectname]
                     elif sectname == DEFAULTSECT:
                         cursect = self._defaults
                     else:
@@ -545,6 +546,9 @@ class StrictConfigParser(ConfigParser):
                     if mo:
                         optname, vi, optval = mo.group('option', 'vi', 'value')
                         optname = self.optionxform(optname.rstrip())
+                        # We don't want to override.
+                        if optname in cursect:
+                            continue
                         # This check is fine because the OPTCRE cannot
                         # match if it would set optval to None
                         if optval is not None:
