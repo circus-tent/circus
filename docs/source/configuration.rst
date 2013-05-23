@@ -64,11 +64,11 @@ circus - single section
     **include**
         List of config files to include. You can use wildcards
         (`*`) to include particular schemes for your files. The paths are
-        relative to the config file. (default: None)
+        absolute or relative to the config file. (default: None)
     **include_dir**
         List of config directories. All files matching `*.ini` under each
-        directory will be included. The paths are relative to the config file.
-        (default: None)
+        directory will be included. The paths are absolute or relative to the
+        config file. (default: None)
     **stream_backend**
         Defines the type of backend to use for the streaming. Possible
         values are **thread** or **gevent**. (default: thread)

@@ -71,31 +71,31 @@ def read_config(config_path):
     cfg = DefaultConfigParser()
     with open(config_path) as f:
         cfg.readfp(f)
-    cfg_files_read = [config_path]
 
     current_dir = os.path.dirname(config_path)
 
     # load included config files
     includes = []
 
-    def include_filename(filename):
+    def _scan(filename, includes):
         if os.path.abspath(filename) != filename:
             filename = os.path.join(current_dir, filename)
 
-        for path in glob.glob(filename):
-            includes.append(path)
+        paths = glob.glob(filename)
+        if paths == []:
+            raise IOError('%r does not lead to any config. Make sure '
+                          'include paths are relative to the main config '
+                          'file')
+        includes += paths
 
     for include_file in cfg.dget('circus', 'include', '').split():
-        include_filename(include_file)
+        _scan(include_file, includes)
 
     for include_dir in cfg.dget('circus', 'include_dir', '').split():
-        include_filename(os.path.join(include_dir, '*.ini'))
+        _scan(os.path.join(include_dir, '*.ini'), includes)
 
-    logger.debug('reading config files: %s' % includes)
-
-    cfg_files_read.extend(cfg.read(includes))
-
-    return cfg, cfg_files_read
+    logger.debug('Reading config files: %s' % includes)
+    return cfg,  [config_path] + cfg.read(includes)
 
 
 def get_config(config_file):

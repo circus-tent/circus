@@ -20,6 +20,7 @@ _CONF = {
     'env_section': os.path.join(HERE, 'env_section.ini'),
     'multiple_wildcard': os.path.join(HERE, 'multiple_wildcard.ini'),
     'circus': os.path.join(HERE, 'circus.ini'),
+    'nope': os.path.join(HERE, 'nope.ini')
 }
 
 
@@ -122,5 +123,10 @@ class TestConfig(unittest.TestCase):
         conf = get_config(_CONF['multiple_wildcard'])
         watchers = conf['watchers']
         self.assertEquals(len(watchers), 3)
-        self.assertEquals(conf['watchers'][0]['env'], {'INI': 'private.ini'})
+        watchers = conf['watchers']
+        watchers.sort()
+        self.assertEquals(watchers[2]['env'], {'INI': 'private.ini'})
         self.assertEqual(conf['check'], 555)
+
+    def test_config_unexistant(self):
+        self.assertRaises(IOError, get_config, _CONF['nope'])
