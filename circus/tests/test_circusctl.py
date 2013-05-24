@@ -18,6 +18,11 @@ def run_ctl(args, stdin=''):
     stderr = proc.stderr.read()
     stdout = proc.stdout.read()
     proc.wait()
+    try:
+        import gevent
+        gevent.shutdown()
+    except ImportError:
+        pass
     return stdout, stderr
 
 
