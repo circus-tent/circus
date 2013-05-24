@@ -154,6 +154,12 @@ class Watcher(object):
 
     - **virtualenv** -- The root directory of a virtualenv. If provided, the
       watcher will load the environment for its execution. (default: None)
+
+    - **close_child_stdout**: If True, closes the stdout after the fork.
+      default: False.
+
+    - **close_child_stderr**: If True, closes the stderr after the fork.
+      default: False.
     """
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None, max_retry=5,
@@ -164,7 +170,8 @@ class Watcher(object):
                  singleton=False, use_sockets=False, copy_env=False,
                  copy_path=False, max_age=0, max_age_variance=30,
                  hooks=None, respawn=True, autostart=True, on_demand=False,
-                 virtualenv=None, **options):
+                 virtualenv=None, close_child_stdout=False,
+                 close_child_stderr=False, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.on_demand = on_demand
@@ -196,6 +203,8 @@ class Watcher(object):
         self.hooks = self._resolve_hooks(hooks)
         self.respawn = respawn
         self.autostart = autostart
+        self.close_child_stdout = close_child_stdout
+        self.close_child_stderr = close_child_stderr
         self.loop = loop or ioloop.IOLoop.instance()
 
         if singleton and self.numprocesses not in (0, 1):
@@ -207,8 +216,9 @@ class Watcher(object):
                           "max_retry", "cmd", "args", "graceful_timeout",
                           "executable", "use_sockets", "priority", "copy_env",
                           "singleton", "stdout_stream_conf", "on_demand",
-                          "stderr_stream_conf", "max_age", "max_age_variance")
-                         + tuple(options.keys()))
+                          "stderr_stream_conf", "max_age", "max_age_variance",
+                          "close_child_stdout", "close_child_stderr")
+                          + tuple(options.keys()))
 
         if not working_dir:
             # working dir hasn't been set
@@ -445,7 +455,9 @@ class Watcher(object):
                                   executable=self.executable,
                                   use_fds=self.use_sockets, watcher=self,
                                   pipe_stdout=pipe_stdout,
-                                  pipe_stderr=pipe_stderr)
+                                  pipe_stderr=pipe_stderr,
+                                  close_child_stdout=self.close_child_stdout,
+                                  close_child_stderr=self.close_child_stderr)
 
                 # stream stderr/stdout if configured
                 if pipe_stdout:

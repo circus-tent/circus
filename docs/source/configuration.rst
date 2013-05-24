@@ -168,6 +168,14 @@ watcher:NAME - as many sections as you want
         be passed the constructor when creating an instance of the
         class defined in **stdout_stream.class**.
 
+    **close_child_stdout**
+        If set to True, the sdout file descriptor of each process will be closed
+        after the fork. Defaults to False.
+
+    **close_child_stderr**
+        If set to True, the sderr file descriptor of each process will be closed
+        after the fork. Defaults to False.
+
     **send_hup**
         if True, a process reload will be done by sending the SIGHUP signal.
         Defaults to False.

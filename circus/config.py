@@ -231,6 +231,14 @@ def get_config(config_file):
                 elif opt == 'autostart':
                     watcher['autostart'] = dget(section, "autostart", True,
                                                 bool)
+                elif opt == 'close_child_stdout':
+                    watcher['close_child_stdout'] = dget(section,
+                                                         "close_child_stdout",
+                                                         False, bool)
+                elif opt == 'close_child_stderr':
+                    watcher['close_child_stderr'] = dget(section,
+                                                         "close_child_stderr",
+                                                         False, bool)
                 else:
                     # freeform
                     watcher[opt] = val
