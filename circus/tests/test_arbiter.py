@@ -17,6 +17,9 @@ from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST
 from circus.watcher import Watcher
 
 
+_GENERIC = os.path.join(os.path.dirname(__file__), 'generic.py')
+
+
 class Plugin(CircusPlugin):
     name = 'dummy'
 
@@ -74,8 +77,8 @@ class TestTrainer(TestCircus):
     def _get_cmd(self):
         fd, testfile = mkstemp()
         os.close(fd)
-        cmd = '%s generic.py %s %s' % (
-            sys.executable,
+        cmd = '%s %s %s %s' % (
+            sys.executable, _GENERIC,
             'circus.tests.support.run_process',
             testfile)
 
@@ -83,7 +86,7 @@ class TestTrainer(TestCircus):
 
     def _get_cmd_args(self):
         cmd = sys.executable
-        args = ['generic.py', 'circus.tests.support.run_process']
+        args = [_GENERIC, 'circus.tests.support.run_process']
         return cmd, args
 
     def _get_options(self, **kwargs):
@@ -346,7 +349,6 @@ class TestArbiter(unittest.TestCase):
     Unit tests for the arbiter class to codify requirements within
     behavior.
     """
-
     def test_start_watcher(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1)
         arbiter = Arbiter([], None, None)
