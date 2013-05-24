@@ -139,11 +139,17 @@ class Process(object):
             if self.uid:
                 os.setuid(self.uid)
 
+        extra = {}
+        if self.pipe_stdout:
+            extra['stdout'] = PIPE
+
+        if self.pipe_stderr:
+            extra['stderr'] = PIPE
+
         self._worker = Popen(args, cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
                              env=self.env, close_fds=not self.use_fds,
-                             stdout=PIPE, stderr=PIPE,
-                             executable=self.executable)
+                             executable=self.executable, **extra)
 
         self.started = time.time()
 
@@ -211,8 +217,10 @@ class Process(object):
                 if self._worker.poll() is None:
                     return self._worker.terminate()
             finally:
-                self._worker.stderr.close()
-                self._worker.stdout.close()
+                if self._worker.stderr is not None:
+                    self._worker.stderr.close()
+                if self._worker.stdout is not None:
+                    self._worker.stdout.close()
         except NoSuchProcess:
             pass
 
