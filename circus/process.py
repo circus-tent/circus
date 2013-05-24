@@ -77,10 +77,17 @@ class Process(object):
 
     - **use_fds**: if True, will not close the fds in the subprocess.
       default: False.
+
+    - **pipe_stdout**: if True, will open a PIPE on stdout. If False, will
+      close it in the forked process. default: True.
+
+    - **pipe_stderr**: if True, will open a PIPE on stderr. If False, will
+      close it in the forked process. default: True.
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
                  uid=None, gid=None, env=None, rlimits=None, executable=None,
-                 use_fds=False, watcher=None, spawn=True):
+                 use_fds=False, watcher=None, spawn=True,
+                 pipe_stdout=True, pipe_stderr=True):
 
         self.wid = wid
         self.cmd = cmd
@@ -94,6 +101,8 @@ class Process(object):
         self.executable = executable
         self.use_fds = use_fds
         self.watcher = watcher
+        self.pipe_stdout = pipe_stdout
+        self.pipe_stderr = pipe_stderr
 
         if spawn:
             self.spawn()
@@ -102,6 +111,12 @@ class Process(object):
         args = self.format_args()
 
         def preexec_fn():
+            if not self.pipe_stdout:
+                os.close(1)
+
+            if not self.pipe_stderr:
+                os.close(2)
+
             os.setsid()
 
             for limit, value in self.rlimits.items():
