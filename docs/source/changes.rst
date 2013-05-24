@@ -1,8 +1,32 @@
 History
 =======
 
-0.7.1 - 2013-05-2
------------------
+
+0.8 - 2013-05-24
+----------------
+
+* Integrated log handlers into zmq io loop.
+* Make redirector restartable and subsequently more robust.
+* Uses zmq.green.eventloop when gevent is detected
+* Added support for CIRCUSCTL_ENDPOINT environment variable to circusctl - #396
+* util: fix bug in to_uid function - #397
+* Remove handler on ioloop error - #398.
+* Improved test coverage
+* Deprecated the 'service' option for the ResourceWatcher plugin - #404
+* removed psutil.error usage
+* Added UDP discovery in circusd - #407
+* Now allowing globs at arbitrary directory levels - #388
+* Added the 'statd' configuration option - #408
+* Add pidfile, logoutput and loglevel option to circus configuration file - #379
+* Added a tutorial in the docs.
+* make sure we're merging all sections when using include - #414
+* added pipe_stdout, pipe_stderr, close_child_stderr & close_child_stdout
+  options to the Process class
+* added close_child_stderr & close_child_stdout options to the watcher
+
+
+0.7.1 - 2013-05-02
+------------------
 
 * Fixed the respawn option - #382
 * Make sure we use an int for the timeout - #380
