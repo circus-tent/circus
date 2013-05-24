@@ -3,7 +3,8 @@ from circus.exc import MessageError
 from circus.util import convert_opt
 
 
-_OPTIONS = ('endpoint', 'pubsub_endpoint', 'check_delay', 'multicast_endpoint')
+_OPTIONS = ('endpoint', 'stats_endpoint', 'pubsub_endpoint',
+            'check_delay', 'multicast_endpoint')
 
 
 class GlobalOptions(Command):
