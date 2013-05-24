@@ -484,12 +484,10 @@ class Watcher(object):
         """
         # remove redirections
         if self.stdout_redirector is not None:
-            self.stdout_redirector.stop()
-            self.stdout_redirector = None
+            self.stdout_redirector.remove_redirection(process.stdout)
 
         if self.stderr_redirector is not None:
-            self.stderr_redirector.stop()
-            self.stderr_redirector = None
+            self.stderr_redirector.remove_redirection(process.stderr)
 
         logger.debug("%s: kill process %s", self.name, process.pid)
         try:

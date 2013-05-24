@@ -76,7 +76,10 @@ class Redirector(object):
             self._start_one(name, process, pipe)
 
     def remove_redirection(self, pipe):
-        fd = pipe.fileno()
+        try:
+            fd = pipe.fileno()
+        except ValueError:
+            return
         self._stop_one(fd)
         if fd in self.pipes:
             del self.pipes[fd]
