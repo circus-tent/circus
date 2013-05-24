@@ -218,7 +218,7 @@ class Watcher(object):
                           "singleton", "stdout_stream_conf", "on_demand",
                           "stderr_stream_conf", "max_age", "max_age_variance",
                           "close_child_stdout", "close_child_stderr")
-                          + tuple(options.keys()))
+                         + tuple(options.keys()))
 
         if not working_dir:
             # working dir hasn't been set

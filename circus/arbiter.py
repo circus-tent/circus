@@ -96,6 +96,9 @@ class Arbiter(object):
         self.statsd = statsd
         self.stats_endpoint = stats_endpoint
 
+        ch_stderr = stderr_stream is None
+        ch_stdout = stdout_stream is None
+
         if self.statsd:
             cmd = "%s -c 'from circus import stats; stats.main()'" % \
                 sys.executable
@@ -110,7 +113,9 @@ class Arbiter(object):
                                     singleton=True,
                                     stdout_stream=stdout_stream,
                                     stderr_stream=stderr_stream,
-                                    copy_env=True, copy_path=True)
+                                    copy_env=True, copy_path=True,
+                                    close_child_stderr=ch_stderr,
+                                    close_child_stdout=ch_stdout)
 
             self.watchers.append(stats_watcher)
 
@@ -122,11 +127,15 @@ class Arbiter(object):
             cmd += ' --fd $(circus.sockets.circushttpd)'
             if ssh_server is not None:
                 cmd += ' --ssh %s' % ssh_server
+
             httpd_watcher = Watcher('circushttpd', cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=stdout_stream,
                                     stderr_stream=stderr_stream,
-                                    copy_env=True, copy_path=True)
+                                    copy_env=True, copy_path=True,
+                                    close_child_stderr=ch_stderr,
+                                    close_child_stdout=ch_stdout)
+
             self.watchers.append(httpd_watcher)
             httpd_socket = CircusSocket(name='circushttpd', host=httpd_host,
                                         port=httpd_port)
@@ -148,7 +157,10 @@ class Arbiter(object):
                 plugin_watcher = Watcher(name, cmd, priority=1, singleton=True,
                                          stdout_stream=stdout_stream,
                                          stderr_stream=stderr_stream,
-                                         copy_env=True, copy_path=True)
+                                         copy_env=True, copy_path=True,
+                                         close_child_stderr=ch_stderr,
+                                         close_child_stdout=ch_stdout)
+
                 self.watchers.append(plugin_watcher)
 
         self.sockets = CircusSockets(sockets)
