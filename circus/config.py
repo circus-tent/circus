@@ -100,10 +100,8 @@ def read_config(config_path):
 
 def get_config(config_file):
     if not os.path.exists(config_file):
-        sys.stderr.write("the configuration file %r does not exist\n" %
-                         config_file)
-        sys.stderr.write("Exiting...\n")
-        sys.exit(1)
+        raise IOError("the configuration file %r does not exist\n" %
+                      config_file)
 
     cfg, cfg_files_read = read_config(config_file)
     dget = cfg.dget
