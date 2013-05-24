@@ -432,6 +432,9 @@ class Watcher(object):
         cmd = util.replace_gnu_args(self.cmd, sockets=self._get_sockets_fds())
         self._process_counter += 1
         nb_tries = 0
+        pipe_stdout = self.stdout_redirector is not None
+        pipe_stderr = self.stderr_redirector is not None
+
         while nb_tries < self.max_retry or self.max_retry == -1:
             process = None
             try:
@@ -440,17 +443,19 @@ class Watcher(object):
                                   shell=self.shell, uid=self.uid, gid=self.gid,
                                   env=self.env, rlimits=self.rlimits,
                                   executable=self.executable,
-                                  use_fds=self.use_sockets, watcher=self)
+                                  use_fds=self.use_sockets, watcher=self,
+                                  pipe_stdout=pipe_stdout,
+                                  pipe_stderr=pipe_stderr)
 
                 # stream stderr/stdout if configured
-                if self.stdout_redirector is not None:
+                if pipe_stdout:
                     self.stdout_redirector.add_redirection('stdout',
                                                            process,
                                                            process.stdout)
                 else:
                     process.stdout.close()
 
-                if self.stderr_redirector is not None:
+                if pipe_stderr:
                     self.stderr_redirector.add_redirection('stderr',
                                                            process,
                                                            process.stderr)
