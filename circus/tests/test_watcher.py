@@ -10,6 +10,11 @@ from circus.stream import QueueStream
 from circus.watcher import Watcher
 from circus.process import UNEXISTING
 
+import warnings
+
+warnings.filterwarnings('ignore',
+                        module='threading', message='sys.exc_clear')
+
 
 class TestWatcher(TestCircus):
 
@@ -106,7 +111,6 @@ class TestWatcher(TestCircus):
         truncate_file(self.test_file)  # make sure we have a clean slate
         # expect at least one restart (max_age and restart), in less than 5s
         self.assertTrue(poll_for(self.test_file, 'QUITSTART'))
-
         current_pids = self.pids()
         self.assertEqual(len(current_pids), 1)
         self.assertNotEqual(initial_pids, current_pids)

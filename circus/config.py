@@ -1,6 +1,5 @@
 import glob
 import os
-import sys
 import warnings
 
 from circus import logger
@@ -95,7 +94,7 @@ def read_config(config_path):
         _scan(os.path.join(include_dir, '*.ini'), includes)
 
     logger.debug('Reading config files: %s' % includes)
-    return cfg,  [config_path] + cfg.read(includes)
+    return cfg, [config_path] + cfg.read(includes)
 
 
 def get_config(config_file):
