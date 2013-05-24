@@ -83,11 +83,18 @@ class Process(object):
 
     - **pipe_stderr**: if True, will open a PIPE on stderr. If False, will
       close it in the forked process. default: True.
+
+    - **close_child_stdout**: If True, closes the stdout after the fork.
+      default: False.
+
+    - **close_child_stderr**: If True, closes the stderr after the fork.
+      default: False.
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
                  uid=None, gid=None, env=None, rlimits=None, executable=None,
                  use_fds=False, watcher=None, spawn=True,
-                 pipe_stdout=True, pipe_stderr=True):
+                 pipe_stdout=True, pipe_stderr=True,
+                 close_child_stdout=False, close_child_stderr=False):
 
         self.wid = wid
         self.cmd = cmd
@@ -103,6 +110,8 @@ class Process(object):
         self.watcher = watcher
         self.pipe_stdout = pipe_stdout
         self.pipe_stderr = pipe_stderr
+        self.close_child_stdout = close_child_stdout
+        self.close_child_stderr = close_child_stderr
 
         if spawn:
             self.spawn()
@@ -111,10 +120,10 @@ class Process(object):
         args = self.format_args()
 
         def preexec_fn():
-            if not self.pipe_stdout:
+            if not self.close_child_stdout:
                 os.close(1)
 
-            if not self.pipe_stderr:
+            if not self.close_child_stderr:
                 os.close(2)
 
             os.setsid()
