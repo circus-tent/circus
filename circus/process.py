@@ -120,10 +120,10 @@ class Process(object):
         args = self.format_args()
 
         def preexec_fn():
-            if not self.close_child_stdout:
+            if self.close_child_stdout:
                 os.close(1)
 
-            if not self.close_child_stderr:
+            if self.close_child_stderr:
                 os.close(2)
 
             os.setsid()
