@@ -330,6 +330,23 @@ Example::
 `worker1` will be run with PATH = $PATH (expanded from the environment circusd was run in)
 `worker2` will be run with PATH = /bin and CAKE = lie
 
+It possible to use wildcards as well.
+
+Example::
+
+	[watcher:worker1]
+	cmd = ping 127.0.0.1
+
+	[watcher:worker2]
+	cmd = ping 127.0.0.1
+
+	[env:worker*]
+	PATH = /bin
+
+
+Both `worker1` and `worker2` will be run with PATH = /bin
+
+
 .. _formating_cmd:
 
 Formating the commands and arguments with dynamic variables
