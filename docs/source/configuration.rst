@@ -59,6 +59,8 @@ circus - single section
     **stats_endpoint**
         The ZMQ PUB/SUB socket receiving publications of stats.
         (default: *tcp://127.0.0.1:5557*)
+    **statsd_close_outputs**
+        If True closes circusd-stats stdout/stderr. (default: False)
     **check_delay**
         The polling interval in seconds for the ZMQ socket. (default: 5)
     **include**
@@ -80,6 +82,8 @@ circus - single section
         The host ran by the circushttpd daemon. (default: localhost)
     **httpd_port**
         The port ran by the circushttpd daemon. (default: 8080)
+    **httpd_close_outputs**
+        If True closes circushttpd stdout/stderr. (default: False)
     **debug**
         If set to True, all Circus stout/stderr daemons are redirected to circusd
         stdout/stderr (default: False)
