@@ -113,7 +113,12 @@ class StatsStreamer(object):
         res = self.client.send_message('listsockets')
         for sock in res.get('sockets', []):
             fd = sock['fd']
-            address = '%s:%s' % (sock['host'], sock['port'])
+            if 'path' in sock:
+                # unix socket
+                address = sock['path']
+            else:
+                address = '%s:%s' % (sock['host'], sock['port'])
+
             # XXX type / family ?
             sock = socket.fromfd(fd, socket.AF_INET, socket.SOCK_STREAM)
             self.sockets.append((sock, address, fd))

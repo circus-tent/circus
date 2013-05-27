@@ -1,5 +1,6 @@
 import os
 import json
+import tempfile
 
 from circus.stats.collector import SocketStatsCollector
 from circus.tests.support import TestCircus
@@ -10,21 +11,6 @@ from circus import client
 
 
 TRAVIS = os.getenv('TRAVIS', False)
-
-
-def _call(self, cmd):
-    what = cmd['command']
-    if what == 'list':
-        name = cmd['properties'].get('name')
-        if name is None:
-            return {'watchers': ['one', 'two', 'three']}
-        return {'pids': [123, 456]}
-    elif what == 'dstats':
-        return {'info': {'pid': 789}}
-    elif what == 'listsockets':
-        return {}
-
-    raise NotImplementedError(cmd)
 
 
 class _StatsStreamer(StatsStreamer):
@@ -40,10 +26,32 @@ class TestStatsStreamer(TestCircus):
 
     def setUp(self):
         self.old = client.CircusClient.call
-        client.CircusClient.call = _call
+        client.CircusClient.call = self._call
+        fd, self._unix = tempfile.mkstemp()
+        os.close(fd)
 
     def tearDown(self):
         client.CircusClient.call = self.old
+        os.remove(self._unix)
+
+    def _call(self, cmd):
+        what = cmd['command']
+        if what == 'list':
+            name = cmd['properties'].get('name')
+            if name is None:
+                return {'watchers': ['one', 'two', 'three']}
+            return {'pids': [123, 456]}
+        elif what == 'dstats':
+            return {'info': {'pid': 789}}
+        elif what == 'listsockets':
+            return {'status': u'ok',
+                    'sockets': [{'path': self._unix,
+                                'fd': 5,
+                                'name': u'XXXX',
+                                'backlog': 2048}],
+                    'time': 1369647058.967524}
+
+        raise NotImplementedError(cmd)
 
     def test_socketstats(self):
         if TRAVIS:
