@@ -31,6 +31,8 @@ class Arbiter(object):
     - **pubsub_endpoint** -- the pubsub endpoint
     - **statsd** -- If True, a circusd-stats process is run (default: False)
     - **stats_endpoint** -- the stats endpoint.
+    - **statsd_close_outputs** -- if True closes circusd-stats stdout/stderr.
+      (default: False)
     - **multicast_endpoint** -- the multicast endpoint for circusd cluster
       auto-discovery (default: udp://237.219.251.97:12027)
       Multicast addr should be between 224.0.0.0 to 239.255.255.255 and the
@@ -54,15 +56,19 @@ class Arbiter(object):
     - **httpd** -- If True, a circushttpd process is run (default: False)
     - **httpd_host** -- the circushttpd host (default: localhost)
     - **httpd_port** -- the circushttpd port (default: 8080)
+    - **httpd_close_outputs** -- if True closes circushttpd stdout/stderr.
+      (default: False)
     - **debug** -- if True, adds a lot of debug info in the stdout (default:
       False)
     - **proc_name** -- the arbiter process name
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=.5,
                  prereload_fn=None, context=None, loop=None, statsd=False,
-                 stats_endpoint=None, multicast_endpoint=None, plugins=None,
+                 stats_endpoint=None, statsd_close_outputs=False,
+                 multicast_endpoint=None, plugins=None,
                  sockets=None, warmup_delay=0, httpd=False,
-                 httpd_host='localhost', httpd_port=8080, debug=False,
+                 httpd_host='localhost', httpd_port=8080,
+                 httpd_close_outputs=False, debug=False,
                  ssh_server=None, proc_name='circusd', pidfile=None,
                  loglevel=None, logoutput=None):
         self.watchers = watchers
@@ -96,9 +102,6 @@ class Arbiter(object):
         self.statsd = statsd
         self.stats_endpoint = stats_endpoint
 
-        ch_stderr = stderr_stream is None
-        ch_stdout = stdout_stream is None
-
         if self.statsd:
             cmd = "%s -c 'from circus import stats; stats.main()'" % \
                 sys.executable
@@ -114,8 +117,8 @@ class Arbiter(object):
                                     stdout_stream=stdout_stream,
                                     stderr_stream=stderr_stream,
                                     copy_env=True, copy_path=True,
-                                    close_child_stderr=ch_stderr,
-                                    close_child_stdout=ch_stdout)
+                                    close_child_stderr=statsd_close_outputs,
+                                    close_child_stdout=statsd_close_outputs)
 
             self.watchers.append(stats_watcher)
 
@@ -133,8 +136,8 @@ class Arbiter(object):
                                     stdout_stream=stdout_stream,
                                     stderr_stream=stderr_stream,
                                     copy_env=True, copy_path=True,
-                                    close_child_stderr=ch_stderr,
-                                    close_child_stdout=ch_stdout)
+                                    close_child_stderr=httpd_close_outputs,
+                                    close_child_stdout=httpd_close_outputs)
 
             self.watchers.append(httpd_watcher)
             httpd_socket = CircusSocket(name='circushttpd', host=httpd_host,
@@ -147,6 +150,9 @@ class Arbiter(object):
                 sockets.append(httpd_socket)
 
         # adding each plugin as a watcher
+        ch_stderr = stderr_stream is None
+        ch_stdout = stdout_stream is None
+
         if plugins is not None:
             for plugin in plugins:
                 fqnd = plugin['use']
