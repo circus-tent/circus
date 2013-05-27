@@ -330,7 +330,7 @@ Example::
 `worker1` will be run with PATH = $PATH (expanded from the environment circusd was run in)
 `worker2` will be run with PATH = /bin and CAKE = lie
 
-It possible to use wildcards as well.
+It's possible to use wildcards as well.
 
 Example::
 
