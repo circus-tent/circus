@@ -1,14 +1,15 @@
 History
 =======
 
-0.8.1 - 2013-05-27
+0.8.1 - 2013-05-28
 ------------------
 
 * circusd-stats was choking on unix sockets - #415
 * circusd-stats & circushttpd child processes stdout/stderr are now left open
   by default. Python <= 2.7.5 would choke in the logging module in case
   the 2/3 fds were closed - #415
-
+* Now redirecting to /dev/null in the child process instead of closing.
+  #417
 
 0.8 - 2013-05-24
 ----------------
