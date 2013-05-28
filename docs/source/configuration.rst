@@ -60,7 +60,8 @@ circus - single section
         The ZMQ PUB/SUB socket receiving publications of stats.
         (default: *tcp://127.0.0.1:5557*)
     **statsd_close_outputs**
-        If True closes circusd-stats stdout/stderr. (default: False)
+        If True sends the circusd-stats stdout/stderr to /dev/null.
+        (default: False)
     **check_delay**
         The polling interval in seconds for the ZMQ socket. (default: 5)
     **include**
@@ -83,7 +84,8 @@ circus - single section
     **httpd_port**
         The port ran by the circushttpd daemon. (default: 8080)
     **httpd_close_outputs**
-        If True closes circushttpd stdout/stderr. (default: False)
+        If True, sends the circushttpd stdout/stderr to /dev/null.
+        (default: False)
     **debug**
         If set to True, all Circus stout/stderr daemons are redirected to circusd
         stdout/stderr (default: False)
@@ -173,12 +175,12 @@ watcher:NAME - as many sections as you want
         class defined in **stdout_stream.class**.
 
     **close_child_stdout**
-        If set to True, the sdout file descriptor of each process will be closed
-        after the fork. Defaults to False.
+        If set to True, the sdout stream of each process will be sent to
+        /dev/null after the fork. Defaults to False.
 
     **close_child_stderr**
-        If set to True, the sderr file descriptor of each process will be closed
-        after the fork. Defaults to False.
+        If set to True, the sderr stream of each process will be sent to
+        /dev/null after the fork. Defaults to False.
 
     **send_hup**
         if True, a process reload will be done by sending the SIGHUP signal.

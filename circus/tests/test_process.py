@@ -6,13 +6,25 @@ from circus.process import Process, RUNNING
 from circus.tests.support import TestCircus
 
 
-RLIMIT = """
+RLIMIT = """\
 import resource, sys
 
 with open(sys.argv[1], 'w') as f:
     for limit in ('NOFILE', 'NPROC'):
         res = getattr(resource, 'RLIMIT_%s' % limit)
         f.write('%s=%s\\n' % (limit, resource.getrlimit(res)))
+"""
+
+
+VERBOSE = """\
+import sys
+
+
+for i in range(1000):
+    for stream in (sys.stdout, sys.stderr):
+        stream.write(str(i))
+        stream.flush()
+
 """
 
 
@@ -92,3 +104,44 @@ class TestProcess(TestCircus):
                      env={'type': 'macchiato'})
         self.assertEquals(['yeah', 'macchiato'], p3.format_args())
         os.environ.pop('coffee_type')
+
+    def test_streams(self):
+        script_file = self.get_tmpfile(VERBOSE)
+        cmd = sys.executable
+        args = [script_file]
+
+        # 1. streams sent to /dev/null
+        process = Process('test', cmd, args=args, close_child_stdout=True,
+                          close_child_stderr=True)
+
+        # wait for the process to finish
+        while process.status == RUNNING:
+            time.sleep(1)
+
+        # the pipes should be empty
+        self.assertEqual(process.stdout.read(), '')
+        self.assertEqual(process.stderr.read(), '')
+
+        # 2. streams sent to /dev/null, no PIPEs
+        process = Process('test', cmd, args=args, close_child_stdout=True,
+                          close_child_stderr=True, pipe_stdout=False,
+                          pipe_stderr=False)
+
+        # wait for the process to finish
+        while process.status == RUNNING:
+            time.sleep(1)
+
+        # the pipes should be unexistant
+        self.assertTrue(process.stdout is None)
+        self.assertTrue(process.stderr is None)
+
+        # 3. streams & pipes open
+        process = Process('test', cmd, args=args)
+
+        # wait for the process to finish
+        while process.status == RUNNING:
+            time.sleep(1)
+
+        # the pipes should be unexistant
+        self.assertEqual(len(process.stdout.read()), 2890)
+        self.assertEqual(len(process.stderr.read()), 2890)

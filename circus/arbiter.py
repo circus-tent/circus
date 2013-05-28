@@ -31,8 +31,8 @@ class Arbiter(object):
     - **pubsub_endpoint** -- the pubsub endpoint
     - **statsd** -- If True, a circusd-stats process is run (default: False)
     - **stats_endpoint** -- the stats endpoint.
-    - **statsd_close_outputs** -- if True closes circusd-stats stdout/stderr.
-      (default: False)
+    - **statsd_close_outputs** -- if True sends the circusd-stats stdout/stderr
+      to /dev/null (default: False)
     - **multicast_endpoint** -- the multicast endpoint for circusd cluster
       auto-discovery (default: udp://237.219.251.97:12027)
       Multicast addr should be between 224.0.0.0 to 239.255.255.255 and the
@@ -56,8 +56,8 @@ class Arbiter(object):
     - **httpd** -- If True, a circushttpd process is run (default: False)
     - **httpd_host** -- the circushttpd host (default: localhost)
     - **httpd_port** -- the circushttpd port (default: 8080)
-    - **httpd_close_outputs** -- if True closes circushttpd stdout/stderr.
-      (default: False)
+    - **httpd_close_outputs** -- if True, sends circushttpd stdout/stderr
+      to /dev/null. (default: False)
     - **debug** -- if True, adds a lot of debug info in the stdout (default:
       False)
     - **proc_name** -- the arbiter process name

@@ -8,6 +8,7 @@ except ImportError:
     # Python on Solaris compiled with Sun Studio doesn't have ctypes
     ctypes = None       # NOQA
 
+import sys
 import errno
 import os
 import resource
@@ -78,17 +79,15 @@ class Process(object):
     - **use_fds**: if True, will not close the fds in the subprocess.
       default: False.
 
-    - **pipe_stdout**: if True, will open a PIPE on stdout. If False, will
-      close it in the forked process. default: True.
+    - **pipe_stdout**: if True, will open a PIPE on stdout. default: True.
 
-    - **pipe_stderr**: if True, will open a PIPE on stderr. If False, will
-      close it in the forked process. default: True.
+    - **pipe_stderr**: if True, will open a PIPE on stderr. default: True.
 
-    - **close_child_stdout**: If True, closes the stdout after the fork.
-      default: False.
+    - **close_child_stdout**: If True, redirects the child process' stdout
+      to /dev/null after the fork. default: False.
 
-    - **close_child_stderr**: If True, closes the stderr after the fork.
-      default: False.
+    - **close_child_stderr**: If True, redirects the child process' stdout
+      to /dev/null after the fork. default: False.
     """
     def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
                  uid=None, gid=None, env=None, rlimits=None, executable=None,
@@ -116,16 +115,35 @@ class Process(object):
         if spawn:
             self.spawn()
 
+    def _null_streams(self, streams):
+        devnull = os.open(os.devnull, os.O_RDWR)
+        try:
+            for stream in streams:
+                if not hasattr(stream, 'fileno'):
+                    # we're probably dealing with a file-like
+                    continue
+                try:
+                    stream.flush()
+                    os.dup2(devnull, stream.fileno())
+                except IOError:
+                    # some streams, like stdin - might be already closed.
+                    pass
+        finally:
+            os.close(devnull)
+
     def spawn(self):
         args = self.format_args()
 
         def preexec_fn():
+            streams = [sys.stdin]
+
             if self.close_child_stdout:
-                os.close(1)
+                streams.append(sys.stdout)
 
             if self.close_child_stderr:
-                os.close(2)
+                streams.append(sys.stderr)
 
+            self._null_streams(streams)
             os.setsid()
 
             for limit, value in self.rlimits.items():
