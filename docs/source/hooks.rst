@@ -64,14 +64,14 @@ Available hooks are:
 - **before_start**: called before the watcher is started. If the hook
   returns **False** the startup is aborted.
 
-- **after_start**: called before the watcher is started. If the hook
+- **after_start**: called after the watcher is started. If the hook
   returns **False** the watcher is immediatly stopped and the startup
   is aborted.
 
 - **before_stop**: called before the watcher is stopped. The hook result
   is ignored.
 
-- **after_stop**: called before the watcher is stopped. The hook result
+- **after_stop**: called after the watcher is stopped. The hook result
   is ignored.
 
 
