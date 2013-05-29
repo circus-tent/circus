@@ -19,9 +19,7 @@ The Web Console lets you:
    connect to has the stats enpoint enabled in its configuration::
 
      [circus]
-     ...
-     stats_endpoint = tcp://127.0.0.1:5557
-     ...
+     statsd = True
 
    By default, this option is not activated.
 
@@ -95,36 +93,6 @@ in the left menu:
    :target: ../_images/web-add-watcher.png
    :align: center
    :height: 400px
-
-
-Embedding circushttpd into Circus
-=================================
-
-*circushttpd* is a WSGI application so you can run it with any web server that's
-compatible with that protocol. By default it uses the standard library
-**wsgiref** server, but that server does not really support any load.
-
-You can use `Chaussette <http://chaussette.readthedocs.org>`_ to bind a WSGI
-server and have *circushttpd* managed by Circus itself.
-
-To do so, make sure Chaussette & the socketio backend are installed::
-
-    $ pip install chaussette
-    $ pip install gevent-socketio
-
-
-Then add a new *watcher* and a *socket* sections in your ini file::
-
-    [watcher:webconsole]
-    cmd = chaussette --backend socketio --fd $(circus.sockets.webconsole) circus.web.circushttpd.app
-    singleton = 1
-    use_sockets = 1
-
-    [socket:webconsole]
-    host = 127.0.0.1
-    port = 8080
-
-That's it !
 
 
 Running behind Nginx and Varnish
