@@ -102,6 +102,12 @@ class TestConfig(unittest.TestCase):
             self.assertEquals("%s:/bin" % os.getenv('PATH'),
                               watcher.env['PATH'])
 
+        self.assertEquals('test1', watcher1.env['TEST1'])
+        self.assertEquals('test1', watcher2.env['TEST1'])
+
+        self.assertEquals('test2', watcher1.env['TEST2'])
+        self.assertEquals('test2', watcher2.env['TEST2'])
+
     def test_issue395(self):
         conf = get_config(_CONF['issue395'])
         watcher = conf['watchers'][0]
