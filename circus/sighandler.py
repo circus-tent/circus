@@ -22,7 +22,7 @@ class SysHandler(object):
         self.controller = controller
 
         # init signals
-        logger.info('Registring signals...')
+        logger.info('Registering signals...')
         for sig in self.SIGNALS:
             signal.signal(sig, self.signal)
 
