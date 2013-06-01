@@ -108,6 +108,9 @@ class TestConfig(unittest.TestCase):
         self.assertEquals('test2', watcher1.env['TEST2'])
         self.assertEquals('test2', watcher2.env['TEST2'])
 
+        self.assertEquals('test3', watcher1.env['TEST3'])
+        self.assertEquals('test3', watcher2.env['TEST3'])
+
     def test_issue395(self):
         conf = get_config(_CONF['issue395'])
         watcher = conf['watchers'][0]

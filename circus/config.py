@@ -258,6 +258,11 @@ def get_config(config_file):
                     environs[watcher_name].update(
                         [(k.upper(), v) for k, v in cfg.items(section)])
 
+        if section == 'env':
+            for watcher in watchers:
+                environs[watcher['name']].update(
+                    [(k.upper(), v) for k, v in cfg.items(section)])
+
     for watcher in watchers:
         if watcher['name'] in environs:
             if not 'env' in watcher:
