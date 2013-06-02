@@ -9,6 +9,7 @@ __version__ = ".".join(map(str, version_info))
 
 
 logger = logging.getLogger('circus')
+logging.basicConfig()
 
 
 def get_arbiter(watchers, controller=None,
