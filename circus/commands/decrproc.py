@@ -1,8 +1,7 @@
-from circus.commands.base import Command
-from circus.exc import ArgumentError
+from circus.commands.incrproc import IncrProc
 
 
-class DecrProcess(Command):
+class DecrProcess(IncrProc):
     """\
         Decrement the number of processes in a watcher
         ==============================================
@@ -32,32 +31,19 @@ class DecrProcess(Command):
 
         ::
 
-            $ circusctl descr <name> [<nbprocess>]
+            $ circusctl descr <name> [<nb>]
 
         Options
         +++++++
 
         - <name>: name of the watcher
-        - <nbprocess>: the number of processes to remove.
+        - <nb>: the number of processes to remove.
 
     """
-
     name = "decr"
     properties = ['name']
-
-    def message(self, *args, **opts):
-
-        if len(args) < 1:
-            raise ArgumentError("number of arguments invalid")
-
-        return self.make_message(name=args[0])
 
     def execute(self, arbiter, props):
         watcher = self._get_watcher(arbiter, props.get('name'))
         nb = props.get('nb', 1)
         return {"numprocesses": watcher.decr(nb)}
-
-    def console_msg(self, msg):
-        if msg.get("status") == "ok":
-            return str(msg.get("numprocesses"))
-        return self.console_error(msg)

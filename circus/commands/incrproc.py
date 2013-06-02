@@ -32,13 +32,13 @@ class IncrProc(Command):
 
         ::
 
-            $ circusctl incr <name> [<nbprocess>]
+            $ circusctl incr <name> [<nb>]
 
         Options
         +++++++
 
         - <name>: name of the watcher.
-        - <nbprocess>: the number of processes to add.
+        - <nb>: the number of processes to add.
 
     """
 
@@ -48,7 +48,10 @@ class IncrProc(Command):
     def message(self, *args, **opts):
         if len(args) < 1:
             raise ArgumentError("number of arguments invalid")
-        return self.make_message(name=args[0])
+        options = {'name': args[0]}
+        if len(args) > 1:
+            options['nb'] = int(args[1])
+        return self.make_message(**options)
 
     def execute(self, arbiter, props):
         watcher = self._get_watcher(arbiter, props.get('name'))
@@ -61,7 +64,7 @@ class IncrProc(Command):
     def console_msg(self, msg):
         if msg.get("status") == "ok":
             if "singleton" in msg:
-                return ('This watcher is a Singleton - not raising the number '
+                return ('This watcher is a Singleton - not changing the number'
                         ' of processes')
             else:
                 return str(msg.get("numprocesses"))
