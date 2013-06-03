@@ -301,12 +301,27 @@ plugin:NAME - as many sections as you want
 Circus comes with a few pre-shipped :ref:`plugins <plugins>` but you can also extend them easily by :ref:`developing your own <develop_plugins>`.
 
 
-env:WATCHERS - as many sections as you want
+env or env[:WATCHERS] - as many sections as you want
 ===========================================
 	**anything**
 		The name of an environment variable to assign value to.
 		bash style environment substitutions are supported.
 		for example, append /bin to `PATH` 'PATH = $PATH:/bin'
+
+Section responsible for delivering environment variable to run processes. 
+
+Example::
+
+   	[watcher:worker1]
+	cmd = ping 127.0.0.1
+
+	[watcher:worker2]
+	cmd = ping 127.0.0.1
+
+	[env]
+	CAKE = lie
+
+The variable `CAKE` will propagated to all watchers defined in config file.
 
 WATCHERS can be a comma separated list of watcher sections to apply this environment to.
 if multiple env sections match a watcher, they will be combine in the order they appear in the configuration file.
@@ -331,6 +346,23 @@ Example::
 
 `worker1` will be run with PATH = $PATH (expanded from the environment circusd was run in)
 `worker2` will be run with PATH = /bin and CAKE = lie
+
+It's possible to use wildcards as well.
+
+Example::
+
+	[watcher:worker1]
+	cmd = ping 127.0.0.1
+
+	[watcher:worker2]
+	cmd = ping 127.0.0.1
+
+	[env:worker*]
+	PATH = /bin
+
+
+Both `worker1` and `worker2` will be run with PATH = /bin
+
 
 .. _formating_cmd:
 
