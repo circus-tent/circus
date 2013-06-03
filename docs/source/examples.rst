@@ -19,7 +19,7 @@ To run a full Circus, you will also need **libzmq**, **libevent** &
 
 Under Debuntu::
 
-    $ sudo apt-get install libzmq-dev libevent python-virtualenv
+    $ sudo apt-get install libzmq-dev libevent-dev python-dev python-virtualenv
 
 Create a virtualenv and install *circus*, *circus-web* and *chaussette*
 in it ::
