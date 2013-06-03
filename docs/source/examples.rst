@@ -26,6 +26,7 @@ in it ::
 
     $ virtualenv /tmp/circus
     $ cd /tmp/circus
+    $ source bin/activate
     $ bin/pip install circus
     $ bin/pip install circus-web
     $ bin/pip install chaussette
