@@ -303,23 +303,23 @@ Circus comes with a few pre-shipped :ref:`plugins <plugins>` but you can also ex
 
 env or env[:WATCHERS] - as many sections as you want
 ===========================================
-	**anything**
-		The name of an environment variable to assign value to.
-		bash style environment substitutions are supported.
-		for example, append /bin to `PATH` 'PATH = $PATH:/bin'
+    **anything**
+        The name of an environment variable to assign value to.
+        bash style environment substitutions are supported.
+        for example, append /bin to `PATH` 'PATH = $PATH:/bin'
 
-Section responsible for delivering environment variable to run processes. 
+Section responsible for delivering environment variable to run processes.
 
 Example::
 
-   	[watcher:worker1]
-	cmd = ping 127.0.0.1
+    [watcher:worker1]
+    cmd = ping 127.0.0.1
 
-	[watcher:worker2]
-	cmd = ping 127.0.0.1
+    [watcher:worker2]
+    cmd = ping 127.0.0.1
 
-	[env]
-	CAKE = lie
+    [env]
+    CAKE = lie
 
 The variable `CAKE` will propagated to all watchers defined in config file.
 
@@ -329,20 +329,20 @@ later entries will take precedence.
 
 Example::
 
-	[watcher:worker1]
-	cmd = ping 127.0.0.1
+    [watcher:worker1]
+    cmd = ping 127.0.0.1
 
-	[watcher:worker2]
-	cmd = ping 127.0.0.1
+    [watcher:worker2]
+    cmd = ping 127.0.0.1
 
-	[env:worker1,worker2]
-	PATH = /bin
+    [env:worker1,worker2]
+    PATH = /bin
 
-	[env:worker1]
-	PATH = $PATH
+    [env:worker1]
+    PATH = $PATH
 
-	[env:worker2]
-	CAKE = lie
+    [env:worker2]
+    CAKE = lie
 
 `worker1` will be run with PATH = $PATH (expanded from the environment circusd was run in)
 `worker2` will be run with PATH = /bin and CAKE = lie
@@ -351,14 +351,14 @@ It's possible to use wildcards as well.
 
 Example::
 
-	[watcher:worker1]
-	cmd = ping 127.0.0.1
+    [watcher:worker1]
+    cmd = ping 127.0.0.1
 
-	[watcher:worker2]
-	cmd = ping 127.0.0.1
+    [watcher:worker2]
+    cmd = ping 127.0.0.1
 
-	[env:worker*]
-	PATH = /bin
+    [env:worker*]
+    PATH = /bin
 
 
 Both `worker1` and `worker2` will be run with PATH = /bin
