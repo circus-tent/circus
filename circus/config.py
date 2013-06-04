@@ -1,6 +1,7 @@
 import glob
 import os
 import warnings
+from fnmatch import fnmatch
 
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
@@ -243,12 +244,24 @@ def get_config(config_file):
             watchers.append(watcher)
 
         if section.startswith('env:'):
-            for watcher in section.split("env:", 1)[1].split(','):
-                watcher = watcher.strip()
-                if not watcher in environs:
-                    environs[watcher] = dict()
-                environs[watcher].update([(k.upper(), v)
-                                          for k, v in cfg.items(section)])
+            section_elements = section.split("env:", 1)[1]
+            watcher_patterns = [s.strip() for s in section_elements.split(',')]
+
+            for pattern in watcher_patterns:
+                matching_watchers = [
+                    w for w in watchers if fnmatch(w['name'], pattern)
+                ]
+                for watcher in matching_watchers:
+                    watcher_name = watcher['name']
+                    if not watcher_name in environs:
+                        environs[watcher_name] = dict()
+                    environs[watcher_name].update(
+                        [(k.upper(), v) for k, v in cfg.items(section)])
+
+        if section == 'env':
+            for watcher in watchers:
+                environs[watcher['name']].update(
+                    [(k.upper(), v) for k, v in cfg.items(section)])
 
     for watcher in watchers:
         if watcher['name'] in environs:
