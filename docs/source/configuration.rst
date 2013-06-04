@@ -302,7 +302,7 @@ Circus comes with a few pre-shipped :ref:`plugins <plugins>` but you can also ex
 
 
 env or env[:WATCHERS] - as many sections as you want
-===========================================
+====================================================
     **anything**
         The name of an environment variable to assign value to.
         bash style environment substitutions are supported.
