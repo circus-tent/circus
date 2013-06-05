@@ -109,7 +109,7 @@ For example, if you want to run four processes forever, you could write:
 
     from circus import get_arbiter
 
-    myprogram = {"cmd": "python myprogram.py"}
+    myprogram = {"cmd": "python myprogram.py", "numprocesses": 4}
 
     arbiter = get_arbiter([myprogram])
     try:
