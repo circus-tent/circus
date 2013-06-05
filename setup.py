@@ -14,6 +14,11 @@ try:
 except ImportError:
     install_requires.append('argparse')
 
+try:
+    import six     # NOQA
+except ImportError:
+    install_requires.append('six')
+
 with open("README.rst") as f:
     README = f.read()
 

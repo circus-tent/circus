@@ -2,7 +2,10 @@ import sys
 import random
 
 from datetime import datetime
-from Queue import Queue
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
 
 from circus.util import resolve_name
 from circus.stream.file_stream import FileStream

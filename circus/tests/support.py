@@ -27,7 +27,7 @@ def resolve_name(name):
         try:
             ret = __import__('.'.join(module_name))
             break
-        except ImportError, exc:
+        except ImportError as exc:
             last_exc = exc
             if cursor == 0:
                 raise

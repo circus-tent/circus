@@ -1,8 +1,7 @@
 import sys
+import six
 
-PY3 = sys.version_info[0] == 3
-
-if PY3:
+if six.PY3:
     string_types = str
     integer_types = int
     text_type = str
@@ -19,9 +18,6 @@ if PY3:
     import io
     StringIO = io.StringIO      # NOQA
     BytesIO = io.BytesIO        # NOQA
-
-    def raise_with_tb(E, V, T):     # NOQA
-        raise E(V).with_traceback(T)
 
     MAXSIZE = sys.maxsize       # NOQA
 else:
@@ -48,9 +44,6 @@ else:
         StringIO = StringIO.StringIO    # NOQA
 
     BytesIO = StringIO
-
-    def raise_with_tb(E, V, T):     # NOQA
-        raise E, V, T
 
     # It's possible to have sizeof(long) != sizeof(Py_ssize_t).
     class X(object):

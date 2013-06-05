@@ -93,7 +93,7 @@ def main():
 
         try:
             pidfile.create(os.getpid())
-        except RuntimeError, e:
+        except RuntimeError as e:
             print(str(e))
             sys.exit(1)
 

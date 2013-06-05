@@ -1,3 +1,5 @@
+from __future__ import (unicode_literals, absolute_import,
+                        division, print_function)
 import json
 import os
 import socket
@@ -7,7 +9,11 @@ import unittest
 from mock import patch
 from tempfile import mkstemp
 from time import time
-from urlparse import urlparse
+
+try:
+    from urlparse import urlparse
+except ImportError:  # Python 3
+    from urllib.parse import urlparse
 
 from circus.arbiter import Arbiter
 from circus.client import CallError, CircusClient, make_message
@@ -333,7 +339,7 @@ class TestTrainer(TestCircus):
             endpoints.append(endpoint)
 
         if not resp:
-            print endpoints
+            print(endpoints)
 
         self.assertTrue(resp)
 

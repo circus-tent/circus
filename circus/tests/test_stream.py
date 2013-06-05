@@ -1,3 +1,5 @@
+from __future__ import (unicode_literals, absolute_import,
+                        division, print_function)
 import time
 import sys
 import os
@@ -5,7 +7,11 @@ import tempfile
 import unittest
 
 from datetime import datetime
-from cStringIO import StringIO
+try:
+    from cStringIO import StringIo
+except ImportError:
+    # P3K compat
+    from io import StringIO
 
 from circus.client import make_message
 from circus.tests.support import TestCircus, poll_for, truncate_file
@@ -15,7 +21,7 @@ from circus.stream import FancyStdoutStream
 
 def run_process(*args, **kw):
     try:
-        # print once, then wait
+        # print(once, then wait)
         sys.stdout.write('stdout')
         sys.stdout.flush()
         sys.stderr.write('stderr')

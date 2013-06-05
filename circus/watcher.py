@@ -1,3 +1,5 @@
+from __future__ import (unicode_literals, absolute_import,
+                        division, print_function)
 import copy
 import errno
 import os
@@ -15,6 +17,7 @@ from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
 from circus.util import parse_env_dict, resolve_name
+from circus.py3compat import string_types
 
 
 class Watcher(object):
@@ -311,15 +314,16 @@ class Watcher(object):
         """Publish a message on the event publisher channel"""
 
         json_msg = json.dumps(msg)
-        if isinstance(json_msg, unicode):
+        if isinstance(json_msg, string_types):
             json_msg = json_msg.encode('utf8')
 
-        if isinstance(self.res_name, unicode):
+        if isinstance(self.res_name, string_types):
             name = self.res_name.encode('utf8')
         else:
             name = self.res_name
 
-        multipart_msg = ["watcher.%s.%s" % (name, topic), json.dumps(msg)]
+        multipart_msg = [("watcher.%s.%s" % (name, topic)).encode('utf-8'),
+                         json.dumps(msg).encode('utf-8')]
 
         if self.evpub_socket is not None and not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)
@@ -371,7 +375,7 @@ class Watcher(object):
             return
 
         # reap_process changes our dict, look through the copy of keys
-        for pid in self.processes.keys():
+        for pid in list(self.processes.keys()):
             self.reap_process(pid)
 
     @util.debuglog
@@ -473,7 +477,7 @@ class Watcher(object):
                 self.processes[process.pid] = process
                 logger.debug('running %s process [pid %d]', self.name,
                              process.pid)
-            except OSError, e:
+            except OSError as e:
                 logger.warning('error in %r: %s', self.name, str(e))
 
             if process is None:
@@ -636,7 +640,7 @@ class Watcher(object):
                 error = None
                 self.notify_event("hook_success",
                                   {"name": hook_name, "time": time.time()})
-            except Exception, error:
+            except Exception as error:
                 logger.exception('Hook %r failed' % hook_name)
                 result = hook_name in self.ignore_hook_failure
                 self.notify_event("hook_failure",

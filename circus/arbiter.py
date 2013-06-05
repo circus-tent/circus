@@ -2,7 +2,10 @@ import errno
 import logging
 import os
 from threading import Thread, RLock
-from thread import get_ident
+try:
+    from thread import get_ident
+except ImportError:  # Python 3
+    from threading import get_ident
 import sys
 from time import sleep
 

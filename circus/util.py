@@ -11,8 +11,14 @@ import shlex
 import time
 import socket
 from zmq import ssh
-from ConfigParser import (ConfigParser, MissingSectionHeaderError,
-                          ParsingError, DEFAULTSECT)
+try:
+    from ConfigParser import (ConfigParser, MissingSectionHeaderError,
+                              ParsingError, DEFAULTSECT)
+except ImportError:
+    # Compat PY3
+    from configparser import (ConfigParser,
+                              MissingSectionHeaderError,
+                              ParsingError, DEFAULTSECT)
 
 from psutil import AccessDenied, NoSuchProcess, Process
 
@@ -422,9 +428,9 @@ def resolve_name(import_name, silent=False):
             modname = module + '.' + obj
             __import__(modname)
             return sys.modules[modname]
-    except ImportError, e:
+    except ImportError as e:
         if not silent:
-            raise ImportStringError(import_name, e), None, sys.exc_info()[2]
+            raise ImportStringError(import_name, e)(None, sys.exc_info()[2])
 
 
 _PATTERN1 = r'\$\(%s\.([\w\.]+)\)'
@@ -661,7 +667,7 @@ def create_udp_socket(mcast_addr, mcast_port):
     Mcas_addr must be between 224.0.0.0 and 239.255.255.255
     """
     try:
-        ip_splitted = map(int, mcast_addr.split('.'))
+        ip_splitted = list(map(int, mcast_addr.split('.')))
         mcast_port = int(mcast_port)
     except ValueError:
         raise ValueError('Wrong UDP multicast_endpoint configuration. Should '

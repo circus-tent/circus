@@ -5,7 +5,10 @@ try:
 except ImportError:
     from Queue import Queue, Empty  # NOQA
 
-from urlparse import urlparse
+try:
+    from urlparse import urlparse
+except ImportError:  # Python 3
+    from urllib.parse import urlparse
 
 import zmq
 from zmq.utils.jsonapi import jsonmod as json

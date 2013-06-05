@@ -81,7 +81,7 @@ class WatcherStatsCollector(BaseStatsCollector):
             except util.NoSuchProcess:
                 # the process is gone !
                 pass
-            except Exception, e:
+            except Exception as e:
                 logger.exception('Failed to get info for %d. %s' % (pid,
                                                                     str(e)))
 
@@ -126,7 +126,7 @@ class SocketStatsCollector(BaseStatsCollector):
     def _select(self):
         try:
             rlist, wlist, xlist = select(self.sockets, [], [], .01)
-        except socket.error, err:
+        except socket.error as err:
             if err.errno == errno.EBADF:
                 return
 
@@ -136,7 +136,7 @@ class SocketStatsCollector(BaseStatsCollector):
         for sock in rlist:
             try:
                 fileno = sock.fileno()
-            except socket.error, err:
+            except socket.error as err:
                 if err.errno == errno.EBADF:
                     continue
                 else:
@@ -159,7 +159,7 @@ class SocketStatsCollector(BaseStatsCollector):
             for sock, address, fd in sockets:
                 try:
                     fileno = sock.fileno()
-                except socket.error, err:
+                except socket.error as err:
                     if err.errno == errno.EBADF:
                         continue
                     else:

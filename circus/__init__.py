@@ -1,7 +1,13 @@
-import _patch   # NOQA
 import logging
 import os
 import warnings
+try:
+    import six
+except ImportError:
+    pass
+else:
+    if not six.PY3:
+        from circus import _patch  # NOQA
 
 
 version_info = (0, 8, 1)

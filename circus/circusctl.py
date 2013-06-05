@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -
+from __future__ import (unicode_literals, absolute_import,
+                        division, print_function)
 import argparse
 import cmd
 import getopt
@@ -111,7 +113,7 @@ class ControllerApp(object):
             return 1
         except KeyboardInterrupt:
             return 1
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write(traceback.format_exc())
             return 1
 
@@ -119,7 +121,7 @@ class ControllerApp(object):
         opts = {}
         cmd = self.commands[args.command]
         if args.help:
-            print textwrap.dedent(cmd.__doc__)
+            print(textwrap.dedent(cmd.__doc__))
             return 0
         else:
             if hasattr(args, 'start'):
@@ -209,7 +211,7 @@ class CircusCtl(cmd.Cmd, object):
             if hasattr(cmd, 'autocomplete'):
                 try:
                     return cmd.autocomplete(cls.client, *args, **kwargs)
-                except Exception, e:
+                except Exception as e:
                     sys.stderr.write(e.message + "\n")
                     traceback.print_exc(file=sys.stderr)
             else:
@@ -289,7 +291,7 @@ class CircusCtl(cmd.Cmd, object):
             sys.exit(0)
 
         # no command, no --help: enter the CLI
-        print VERSION
+        print(VERSION)
         self.do_status('')
         try:
             self.cmdloop()

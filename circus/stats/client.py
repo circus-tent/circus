@@ -35,7 +35,7 @@ class StatsClient(CircusConsumer):
 
                 try:
                     topic, stat = recv()
-                except zmq.core.error.ZMQError, e:
+                except zmq.core.error.ZMQError as e:
                     if e.errno != errno.EINTR:
                         raise
                     else:

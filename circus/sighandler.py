@@ -1,9 +1,11 @@
+from __future__ import (unicode_literals, absolute_import,
+                        division, print_function)
 import signal
 import traceback
 import sys
 
 from circus import logger
-from client import make_json
+from circus.client import make_json
 
 
 class SysHandler(object):
