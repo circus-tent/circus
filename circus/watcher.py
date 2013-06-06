@@ -727,7 +727,10 @@ class Watcher(object):
     @util.debuglog
     def decr(self, nb=1):
         if self.numprocesses > 0:
-            self.numprocesses -= nb
+            if nb > self.numprocesses:
+                self.numprocesses = 0
+            else:
+                self.numprocesses -= nb
             self.manage_processes()
         return self.numprocesses
 

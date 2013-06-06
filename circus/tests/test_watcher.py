@@ -44,6 +44,14 @@ class TestWatcher(TestCircus):
     def pids(self):
         return self.call('list', name='test').get('pids')
 
+    def test_decr_too_much(self):
+        res = self.numprocesses('decr', name='test', nb=100)
+        self.assertEqual(res, 0)
+        res = self.numprocesses('decr', name='test', nb=100)
+        self.assertEqual(res, 0)
+        res = self.numprocesses('incr', name='test', nb=1)
+        self.assertEqual(res, 1)
+
     def test_signal(self):
         self.assertEquals(self.numprocesses('incr', name='test'), 2)
         # wait for both to have started
