@@ -653,7 +653,11 @@ def load_virtualenv(watcher):
         else:
             path = venv_path
 
-        watcher.env['PYTHONPATH'] = path
+    # Add watcher virtualenv site-packages dir to the python path
+    if not sitedir in path.split(":"):
+        path = os.pathsep.join([path, sitedir])
+
+    watcher.env['PYTHONPATH'] = path
 
 
 def create_udp_socket(mcast_addr, mcast_port):
