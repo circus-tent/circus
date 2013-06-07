@@ -43,7 +43,7 @@ class IncrProcTest(TestCircus):
     def test_incr_proc(self):
         cmd = IncrProc()
         arbiter = FakeArbiter()
-        self.assertTrue(arbiter.watchers[0].nb, 1)
+        self.assertEqual(arbiter.watchers[0].nb, 1)
 
         props = cmd.message('dummy', 3)['properties']
         cmd.execute(arbiter, props)
