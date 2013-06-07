@@ -14,7 +14,7 @@ test: bin/python
 
 docs: bin/coverage
 	bin/pip install sphinx
-	SPHINXBUILD=../bin/sphinx-build $(MAKE) -C docs html $^
+	SPHINXBUILD=../bin/sphinx-build $(MAKE) -C docs html $^  2>/dev/null
 
 coverage: bin/coverage
 	bin/nosetests -s --with-coverage --cover-html --cover-html-dir=html --cover-package=circus circus/tests
