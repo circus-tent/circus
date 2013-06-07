@@ -243,6 +243,8 @@ def get_config(config_file):
 
             watchers.append(watcher)
 
+    # Second pass to make sure env sections apply to all watchers.
+    for section in cfg.sections():
         if section.startswith('env:'):
             section_elements = section.split("env:", 1)[1]
             watcher_patterns = [s.strip() for s in section_elements.split(',')]
