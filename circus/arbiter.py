@@ -317,7 +317,7 @@ class Arbiter(object):
 
             w = Watcher.load_from_config(new_watcher_cfg)
             w.initialize(self.evpub_socket, self.sockets, self)
-            w.start()
+            self.start_watcher(w)
             self.watchers.append(w)
             self._watchers_names[w.name.lower()] = w
 
