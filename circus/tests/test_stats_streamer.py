@@ -75,7 +75,7 @@ class TestStatsStreamer(TestCircus):
 
         # events
         def _events():
-            msg = 'one.spawn', json.dumps({'process_pid': 187})
+            msg = 'one.spawn.two', json.dumps({'process_pid': 187})
             for i in range(5):
                 streamer.handle_recv(msg)
 
