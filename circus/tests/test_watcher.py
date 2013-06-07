@@ -177,7 +177,7 @@ class TestWatcherInitialization(TestCircus):
         finally:
             watcher.stop()
 
-        self.assertTrue(wanted in ppath.split(":"))
+        self.assertTrue(wanted in ppath.split(os.pathsep))
 
 
 class SomeWatcher(threading.Thread):

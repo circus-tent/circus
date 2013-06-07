@@ -654,7 +654,7 @@ def load_virtualenv(watcher):
             path = venv_path
 
     # Add watcher virtualenv site-packages dir to the python path
-    if not sitedir in path.split(":"):
+    if not sitedir in path.split(os.pathsep):
         path = os.pathsep.join([path, sitedir])
 
     watcher.env['PYTHONPATH'] = path
