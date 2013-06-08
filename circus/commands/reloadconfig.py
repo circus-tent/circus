@@ -1,5 +1,4 @@
 from circus.commands.base import Command
-from circus.exc import ArgumentError
 
 
 class ReloadConfig(Command):
@@ -7,8 +6,9 @@ class ReloadConfig(Command):
         Reload the configuration file
         =============================
 
-        This command reloads the configuration file, so changes in the configuration file
-        will be reflected in the configuration of circus.
+        This command reloads the configuration file, so changes in the
+        configuration file will be reflected in the configuration of
+        circus.
 
 
         ZMQ Message

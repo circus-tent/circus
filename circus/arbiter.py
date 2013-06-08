@@ -20,8 +20,10 @@ from circus.sockets import CircusSocket, CircusSockets
 
 import select
 
+
 class ReloadArbiterException(Exception):
     pass
+
 
 class Arbiter(object):
     """Class used to control a list of watchers.
@@ -200,15 +202,10 @@ class Arbiter(object):
                                      self.pubsub_endpoint, self.check_delay,
                                      self.ssh_server, debug=self.debug)
 
-                cfg.update(dict(
-                        cmd=cmd,
-                        priority=1,
-                        singleton=True,
-                        stdout_stream=self.stdout_stream,
-                        stderr_stream=self.stderr_stream,
-                        copy_env=True,
-                        copy_path=True,
-                        ))
+                cfg.update(dict(cmd=cmd, priority=1, singleton=True,
+                                stdout_stream=self.stdout_stream,
+                                stderr_stream=self.stderr_stream,
+                                copy_env=True, copy_path=True))
                 return cfg
         return None
 
@@ -229,91 +226,105 @@ class Arbiter(object):
             self.stop()
             raise ReloadArbiterException
 
-        current_socket_names = set([i.name for i in self.sockets.values()])
-        new_socket_names = set([i['name'] for i in new_cfg.get('sockets', [])])
-        added_socket_names = new_socket_names - current_socket_names
-        deleted_socket_names = current_socket_names - new_socket_names
-        maybechanged_socket_names = current_socket_names - deleted_socket_names
-        changed_socket_names = set([])
-        watcher_names_with_changed_socket = set([])
-        watcher_names_with_deleted_socket = set([])
+        # Gather socket names.
+        current_sn = set([i.name for i in self.sockets.values()])
+        new_sn = set([i['name'] for i in new_cfg.get('sockets', [])])
+        added_sn = new_sn - current_sn
+        deleted_sn = current_sn - new_sn
+        maybechanged_sn = current_sn - deleted_sn
+        changed_sn = set([])
+        wn_with_changed_socket = set([])
+        wn_with_deleted_socket = set([])
 
         # get changed sockets
-        for n in maybechanged_socket_names:
+        for n in maybechanged_sn:
             s = self.get_socket(n)
             if self.get_socket_config(new_cfg, n) != s.cfg:
-                changed_socket_names.add(n)
+                changed_sn.add(n)
 
                 # just delete the socket and add it again
-                deleted_socket_names.add(n)
-                added_socket_names.add(n)
+                deleted_sn.add(n)
+                added_sn.add(n)
 
-                # Get the watchers whichs use these, so they could be deleted and added also
+                # Get the watchers whichs use these, so they could be
+                # deleted and added also
                 for w in self.iter_watchers():
                     if 'circus.sockets.%s' % n.lower() in w.cmd:
-                        watcher_names_with_changed_socket.add(w.name)
+                        wn_with_changed_socket.add(w.name)
 
         # get deleted sockets
-        for n in deleted_socket_names:
+        for n in deleted_sn:
             s = self.get_socket(n)
             s.close()
-            # Get the watchers whichs use these, these should not be active anymore
+            # Get the watchers whichs use these, these should not be
+            # active anymore
             for w in self.iter_watchers():
                 if 'circus.sockets.%s' % n.lower() in w.cmd:
-                    watcher_names_with_deleted_socket.add(w.name)
+                    wn_with_deleted_socket.add(w.name)
             del self.sockets[s.name]
 
         # get added sockets
-        for n in added_socket_names:
-            s = CircusSocket.load_from_config(self.get_socket_config(new_cfg, n))
+        for n in added_sn:
+            socket_config = self.get_socket_config(new_cfg, n)
+            s = CircusSocket.load_from_config(socket_config)
             s.bind_and_listen()
             self.sockets[s.name] = s
 
-        if added_socket_names or deleted_socket_names:
-            # make sure all existing watchers get the new sockets in their attributes and get the old removed
-            # XXX: is this necessary? self.sockets is an mutable object
+        if added_sn or deleted_sn:
+            # make sure all existing watchers get the new sockets in
+            # their attributes and get the old removed
+            # XXX: is this necessary? self.sockets is an mutable
+            # object
             for watcher in self.iter_watchers():
-                # XXX: What happens as initalize is called on a running watcher?
+                # XXX: What happens as initalize is called on a
+                # running watcher?
                 watcher.initialize(self.evpub_socket, self.sockets, self)
 
-        current_watcher_names = set([i.name for i in self.iter_watchers()])
-        new_watcher_names = set([i['name'] for i in new_cfg.get('watchers', [])]) | set([i['name'] for i in new_cfg.get('plugins', [])])
-        added_watcher_names = (new_watcher_names - current_watcher_names) | watcher_names_with_changed_socket
-        deleted_watcher_names = current_watcher_names - new_watcher_names - watcher_names_with_changed_socket
-        maybechanged_watcher_names = current_watcher_names - deleted_watcher_names
-        changed_watcher_names = set([])
+        # Gather watcher names.
+        current_wn = set([i.name for i in self.iter_watchers()])
+        new_wn = set([i['name'] for i in new_cfg.get('watchers', [])])
+        new_wn = new_wn | set([i['name'] for i in new_cfg.get('plugins', [])])
+        added_wn = (new_wn - current_wn) | wn_with_changed_socket
+        deleted_wn = current_wn - new_wn - wn_with_changed_socket
+        maybechanged_wn = current_wn - deleted_wn
+        changed_wn = set([])
 
-        if watcher_names_with_deleted_socket and watcher_names_with_deleted_socket not in new_watcher_names:
-            raise ValueError('Watchers %s uses a socket which is deleted' % watcher_names_with_deleted_socket)
+        if wn_with_deleted_socket and wn_with_deleted_socket not in new_wn:
+            raise ValueError('Watchers %s uses a socket which is deleted' %
+                             wn_with_deleted_socket)
 
-        #get changed watchers
-        for n in maybechanged_watcher_names:
+        # get changed watchers
+        for n in maybechanged_wn:
             w = self.get_watcher(n)
-            new_watcher_cfg = self.get_watcher_config(new_cfg, n) or self.get_plugin_config(new_cfg, n)
+            new_watcher_cfg = (self.get_watcher_config(new_cfg, n) or
+                               self.get_plugin_config(new_cfg, n))
             old_watcher_cfg = w.cfg.copy()
             if new_watcher_cfg != old_watcher_cfg:
                 if not w.name.startswith('plugin:'):
-                    old_watcher_cfg['numprocesses'] = new_watcher_cfg['numprocesses']
+                    num_procs = new_watcher_cfg['numprocesses']
+                    old_watcher_cfg['numprocesses'] = num_procs
                     if new_watcher_cfg == old_watcher_cfg:
-                        # if nothing but the number of processes is changed, just changes this
-                        w.set_numprocesses(int(new_watcher_cfg['numprocesses']))
+                        # if nothing but the number of processes is
+                        # changed, just changes this
+                        w.set_numprocesses(int(num_procs))
                         continue
 
                 # Others things are changed. Just delete and add the watcher.
-                changed_watcher_names.add(n)
-                deleted_watcher_names.add(n)
-                added_watcher_names.add(n)
+                changed_wn.add(n)
+                deleted_wn.add(n)
+                added_wn.add(n)
 
         # delete watchers
-        for n in deleted_watcher_names:
+        for n in deleted_wn:
             w = self.get_watcher(n)
             w.stop()
             del self._watchers_names[w.name.lower()]
             self.watchers.remove(w)
 
         # add watchers
-        for n in added_watcher_names:
-            new_watcher_cfg = self.get_plugin_config(new_cfg, n) or self.get_watcher_config(new_cfg, n)
+        for n in added_wn:
+            new_watcher_cfg = (self.get_plugin_config(new_cfg, n) or
+                               self.get_watcher_config(new_cfg, n))
 
             w = Watcher.load_from_config(new_watcher_cfg)
             w.initialize(self.evpub_socket, self.sockets, self)
@@ -363,7 +374,8 @@ class Arbiter(object):
                       loglevel=cfg.get('loglevel', None),
                       logoutput=cfg.get('logoutput', None))
 
-        # store the cfg which will be used, so it can be used later for checking if the cfg has been changed
+        # store the cfg which will be used, so it can be used later
+        # for checking if the cfg has been changed
         arbiter.cfg = cls.get_arbiter_config(cfg)
         arbiter.config_file = config_file
 

@@ -1,10 +1,6 @@
 import unittest
 import os
-from circus.config import get_config
 from circus.arbiter import Arbiter, ReloadArbiterException
-from circus.watcher import Watcher
-from circus.process import Process
-from circus.sockets import CircusSocket
 
 HERE = os.path.join(os.path.dirname(__file__))
 
@@ -38,7 +34,8 @@ class TestConfig(unittest.TestCase):
         self.a.stop()
 
     def test_watcher_names(self):
-        self.assertEqual([i.name for i in self.a.watchers], ['test1', 'test2', 'plugin:myplugin'])
+        watcher_names = [i.name for i in self.a.watchers]
+        self.assertEqual(watcher_names, ['test1', 'test2', 'plugin:myplugin'])
 
     def test_reload_numprocesses(self):
         w = self.a.get_watcher('test1')
@@ -109,5 +106,6 @@ class TestConfig(unittest.TestCase):
         self.assertNotEqual(self.a.get_socket('mysocket'), s)
 
     def test_reload_changearbiter(self):
-        a1 = self.a
-        self.assertRaises(ReloadArbiterException, self.a.reload_from_config, _CONF['reload_changearbiter'])
+        self.assertRaises(ReloadArbiterException,
+                          self.a.reload_from_config,
+                          _CONF['reload_changearbiter'])
