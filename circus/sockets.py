@@ -104,7 +104,12 @@ class CircusSocket(socket.socket):
         proto_name = config.get('proto')
         if proto_name is not None:
             params['proto'] = socket.getprotobyname(proto_name)
-        return cls(**params)
+        s = cls(**params)
+
+        # store the config for later checking if config has changed
+        s._cfg = config.copy()
+
+        return s
 
 
 class CircusSockets(dict):
