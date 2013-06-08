@@ -107,7 +107,7 @@ class CircusSocket(socket.socket):
         s = cls(**params)
 
         # store the config for later checking if config has changed
-        s.cfg = config.copy()
+        s._cfg = config.copy()
 
         return s
 

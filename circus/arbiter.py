@@ -222,7 +222,7 @@ class Arbiter(object):
         new_cfg = get_config(config_file if config_file else self.config_file)
 
         # if arbiter is changed, reload everything
-        if self.get_arbiter_config(new_cfg) != self.cfg:
+        if self.get_arbiter_config(new_cfg) != self._cfg:
             self.stop()
             raise ReloadArbiterException
 
@@ -239,7 +239,7 @@ class Arbiter(object):
         # get changed sockets
         for n in maybechanged_sn:
             s = self.get_socket(n)
-            if self.get_socket_config(new_cfg, n) != s.cfg:
+            if self.get_socket_config(new_cfg, n) != s._cfg:
                 changed_sn.add(n)
 
                 # just delete the socket and add it again
@@ -298,7 +298,7 @@ class Arbiter(object):
             w = self.get_watcher(n)
             new_watcher_cfg = (self.get_watcher_config(new_cfg, n) or
                                self.get_plugin_config(new_cfg, n))
-            old_watcher_cfg = w.cfg.copy()
+            old_watcher_cfg = w._cfg.copy()
             if new_watcher_cfg != old_watcher_cfg:
                 if not w.name.startswith('plugin:'):
                     num_procs = new_watcher_cfg['numprocesses']
@@ -376,7 +376,7 @@ class Arbiter(object):
 
         # store the cfg which will be used, so it can be used later
         # for checking if the cfg has been changed
-        arbiter.cfg = cls.get_arbiter_config(cfg)
+        arbiter._cfg = cls.get_arbiter_config(cfg)
         arbiter.config_file = config_file
 
         return arbiter

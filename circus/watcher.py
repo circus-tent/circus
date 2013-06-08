@@ -298,7 +298,7 @@ class Watcher(object):
         cfg = config.copy()
 
         w = cls(name=config.pop('name'), cmd=config.pop('cmd'), **config)
-        w.cfg = cfg
+        w._cfg = cfg
 
         return w
 
