@@ -20,7 +20,7 @@ from circus.sockets import CircusSocket, CircusSockets
 
 import select
 
-class ReloadArbiterException:
+class ReloadArbiterException(Exception):
     pass
 
 class Arbiter(object):
