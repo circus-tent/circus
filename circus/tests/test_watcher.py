@@ -172,6 +172,21 @@ class TestWatcherInitialization(TestCircus):
             watcher.stop()
         self.assertTrue(wanted in ppath)
 
+    def test_venv_site_packages(self):
+        venv = os.path.join(os.path.dirname(__file__), 'venv')
+        watcher = SomeWatcher(virtualenv=venv)
+        watcher.start()
+        try:
+            time.sleep(.1)
+            minor = sys.version_info[1]
+            wanted = os.path.join(venv, 'lib', 'python2.%d' % minor,
+                                  'site-packages')
+            ppath = watcher.watcher.env['PYTHONPATH']
+        finally:
+            watcher.stop()
+
+        self.assertTrue(wanted in ppath.split(os.pathsep))
+
 
 class SomeWatcher(threading.Thread):
 
