@@ -72,4 +72,18 @@ class TestSockets(unittest.TestCase):
             self.assertEqual(permissions, '777')
         finally:
             sock.close()
-            os.remove(sockfile)
+
+    @unittest.skipIf(TRAVIS, "Running in Travis")
+    def test_unix_cleanup(self):
+        sockets = CircusSockets()
+        fd, sockfile = tempfile.mkstemp()
+        os.close(fd)
+        os.remove(sockfile)
+
+        try:
+            sockets.add('unix', path=sockfile)
+            sockets.bind_and_listen_all()
+            self.assertTrue(os.path.exists(sockfile))
+        finally:
+            sockets.close_all()
+            self.assertTrue(not os.path.exists(sockfile))
