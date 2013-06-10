@@ -62,6 +62,11 @@ class CircusSocket(socket.socket):
     def __str__(self):
         return 'socket %r at %s' % (self.name, self.location)
 
+    def close(self):
+        socket.socket.close(self)
+        if self.is_unix and os.path.exists(self.path):
+            os.remove(self.path)
+
     def bind_and_listen(self):
         try:
             if self.is_unix:
@@ -134,8 +139,6 @@ class CircusSockets(dict):
     def close_all(self):
         for sock in self.values():
             sock.close()
-            if sock.is_unix and os.path.exists(sock.path):
-                os.remove(sock.path)
 
     def bind_and_listen_all(self):
         for sock in self.values():
