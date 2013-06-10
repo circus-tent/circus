@@ -644,16 +644,26 @@ def load_virtualenv(watcher):
             except OSError:
                 continue
 
+    py_path = watcher.env.get('PYTHONPATH')
+
     if venv_pkgs:
         venv_path = os.pathsep.join(venv_pkgs)
 
-        py_path = watcher.env.get('PYTHONPATH')
         if py_path:
             path = os.pathsep.join([venv_path, py_path])
         else:
             path = venv_path
 
-        watcher.env['PYTHONPATH'] = path
+    # Add watcher virtualenv site-packages dir to the python path
+    if path and not sitedir in path.split(os.pathsep):
+        path = os.pathsep.join([path, sitedir])
+    else:
+        if py_path:
+            path = os.pathsep.join([py_path, sitedir])
+        else:
+            path = sitedir
+
+    watcher.env['PYTHONPATH'] = path
 
 
 def create_udp_socket(mcast_addr, mcast_port):
