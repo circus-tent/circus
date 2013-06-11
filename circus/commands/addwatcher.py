@@ -58,7 +58,7 @@ class AddWatcher(Command):
 
     def message(self, *args, **opts):
         if len(args) < 2:
-            raise ArgumentError("number of arguments invalid")
+            raise ArgumentError("Invalid number of arguments")
 
         return self.make_message(name=args[0], cmd=" ".join(args[1:]),
                                  start=opts.get('start', False))

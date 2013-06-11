@@ -16,5 +16,5 @@ class CallError(Exception):
 
 class ArgumentError(Exception):
     """Exception raised when one argument or the number of
-    arguments invalid"""
+    arguments is invalid"""
     pass
