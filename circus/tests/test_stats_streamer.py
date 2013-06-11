@@ -82,14 +82,14 @@ class TestStatsStreamer(TestCircus):
                 streamer.handle_recv(msg)
 
         deadline = time.time() + 0.5
-        events = loop.add_timeout(deadline, _events)
+        loop.add_timeout(deadline, _events)
 
         def _stop():
             self._collector.stop()
             streamer.stop()
 
         deadline = time.time() + 0.5
-        stopper = loop.add_timeout(deadline, _stop)
+        loop.add_timeout(deadline, _stop)
         streamer.start()
 
         # let's see what we got

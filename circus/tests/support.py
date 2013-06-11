@@ -13,7 +13,6 @@ from circus import get_arbiter
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_STATS)
 from circus.client import CircusClient, make_message
-from zmq.eventloop import ioloop
 
 
 def resolve_name(name):
@@ -215,6 +214,6 @@ def run_plugin(klass, config, duration=300):
     plugin.statsd = _statsd
 
     deadline = time() + (duration / 1000.)
-    end = plugin.loop.add_timeout(deadline, plugin.loop.stop)
+    plugin.loop.add_timeout(deadline, plugin.loop.stop)
     plugin.start()
     return _statsd
