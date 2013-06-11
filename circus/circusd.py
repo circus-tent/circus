@@ -4,7 +4,6 @@ import os
 import resource
 
 from circus import logger
-from circus.arbiter import Arbiter
 from circus.pidfile import Pidfile
 from circus import __version__
 from circus.util import MAXFD, REDIRECT_TO, configure_logger, LOG_LEVELS
@@ -33,6 +32,11 @@ except ImportError:
 def daemonize():
     """Standard daemonization of a process.
     """
+    # guard to prevent daemonization with gevent loaded
+    for module in sys.modules.keys():
+        if module.startswith('gevent'):
+            raise ValueError('Cannot daemonize if gevent is loaded')
+
     #if not 'CIRCUS_PID' in os.environ:
     if os.fork():
         os._exit(0)
@@ -85,6 +89,8 @@ def main():
 
     # From here it can also come from the arbiter configuration
     # load the arbiter from config
+    from circus.arbiter import Arbiter
+
     arbiter = Arbiter.load_from_config(args.config)
 
     pidfile = args.pidfile or arbiter.pidfile or None
