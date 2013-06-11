@@ -7,11 +7,6 @@ from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
                          StrictConfigParser, parse_env_str)
-try:
-    import gevent       # NOQA
-    DEFAULT_STREAM = 'gevent'
-except ImportError:
-    DEFAULT_STREAM = 'thread'
 
 
 def watcher_defaults():
