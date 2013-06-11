@@ -3,12 +3,14 @@ import sys
 import os
 import threading
 import time
+from test.test_support import captured_output
 
 from zmq.eventloop import ioloop
 from circus.tests.support import TestCircus, poll_for, truncate_file
 from circus.stream import QueueStream
 from circus.watcher import Watcher
 from circus.process import UNEXISTING
+from circus import logger
 
 import warnings
 
@@ -234,9 +236,11 @@ class TestWatcherHooks(TestCircus):
 
     def run_with_hooks(self, hooks):
         self.stream = QueueStream()
+        self.errstream = QueueStream()
         dummy_process = 'circus.tests.support.run_process'
         return self._create_circus(dummy_process,
                                    stdout_stream={'stream': self.stream},
+                                   stderr_stream={'stream': self.errstream},
                                    hooks=hooks)
 
     def _stop(self):
@@ -264,6 +268,9 @@ class TestWatcherHooks(TestCircus):
 
             raise TypeError('beeeuuua')
 
+        old = logger.exception
+        logger.exception = lambda x: x
+
         hooks = {hook_name: (hook, False)}
         testfile, arbiter = self.run_with_hooks(hooks)
         try:
@@ -272,6 +279,7 @@ class TestWatcherHooks(TestCircus):
             self.assertEqual(self.get_status(), status)
         finally:
             arbiter.stop()
+            logger.execption = old
 
         self.assertTrue(events['before_start_called'])
         self.assertEqual(events['arbiter_in_hook'], arbiter)
@@ -290,8 +298,9 @@ class TestWatcherHooks(TestCircus):
         self._test_hooks(hook_name='after_start')
 
     def test_after_start_fails(self):
-        self._test_hooks(behavior=ERROR, status='stopped',
-                         hook_name='after_start')
+        with captured_output('stderr'):
+            self._test_hooks(behavior=ERROR, status='stopped',
+                             hook_name='after_start')
 
     def test_after_start_false(self):
         self._test_hooks(behavior=FAILURE, status='stopped',
@@ -302,9 +311,10 @@ class TestWatcherHooks(TestCircus):
                          call=self._stop)
 
     def test_before_stop_fails(self):
-        self._test_hooks(behavior=ERROR, status='stopped',
-                         hook_name='before_stop',
-                         call=self._stop)
+        with captured_output('stdout'):
+            self._test_hooks(behavior=ERROR, status='stopped',
+                             hook_name='before_stop',
+                             call=self._stop)
 
     def test_before_stop_false(self):
         self._test_hooks(behavior=FAILURE, status='stopped',
@@ -315,9 +325,10 @@ class TestWatcherHooks(TestCircus):
                          call=self._stop)
 
     def test_after_stop_fails(self):
-        self._test_hooks(behavior=ERROR, status='stopped',
-                         hook_name='after_stop',
-                         call=self._stop)
+        with captured_output('stdout'):
+            self._test_hooks(behavior=ERROR, status='stopped',
+                             hook_name='after_stop',
+                             call=self._stop)
 
     def test_after_stop_false(self):
         self._test_hooks(behavior=FAILURE, status='stopped',
