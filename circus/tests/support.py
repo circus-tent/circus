@@ -143,7 +143,7 @@ class Process(object):
 
     def handle_quit(self, *args):
         self._write('QUIT')
-        sys.exit(0)
+        self.alive = False
 
     def handle_chld(self, *args):
         self._write('CHLD')
