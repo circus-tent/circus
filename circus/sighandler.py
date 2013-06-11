@@ -23,13 +23,11 @@ class SysHandler(object):
 
         # init signals
         logger.info('Registering signals...')
-        try:
-            from gevent import signal as sigfunc    # NOQA
-        except ImportError:
-            from signal import signal as sigfunc    # NOQA
+        self._register()
 
+    def _register(self):
         for sig in self.SIGNALS:
-            sigfunc(sig, self.signal)
+            signal.signal(sig, self.signal)
 
         # Don't let SIGQUIT and SIGUSR1 disturb active requests
         # by interrupting system calls
@@ -37,7 +35,7 @@ class SysHandler(object):
             signal.siginterrupt(signal.SIGQUIT, False)
             signal.siginterrupt(signal.SIGUSR1, False)
 
-    def signal(self, sig, frame):
+    def signal(self, sig, frame=None):
         signame = self.SIG_NAMES.get(sig)
         logger.info('Got signal SIG_%s' % signame.upper())
 

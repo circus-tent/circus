@@ -15,7 +15,11 @@ class TestCircusd(unittest.TestCase):
     def test_daemon(self):
         # if gevent is loaded, we want to prevent
         # daemonize() to work
-        import gevent       # NOQA
+        try:
+            import gevent       # NOQA
+        except ImportError:
+            return
+
         self.assertRaises(ValueError, daemonize)
 
         for module in sys.modules.keys():

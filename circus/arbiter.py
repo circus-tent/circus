@@ -5,10 +5,11 @@ from threading import Thread, RLock
 from thread import get_ident
 import sys
 from time import sleep
+import select
 
 import zmq
+from zmq.eventloop import ioloop
 
-from circus._zmq import ioloop
 from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
@@ -17,8 +18,6 @@ from circus.util import debuglog, _setproctitle
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
-
-import select
 
 
 class Arbiter(object):
@@ -87,7 +86,7 @@ class Arbiter(object):
         self.socket_event = False
 
         # initialize zmq context
-        self.context = context or zmq.Context.instance()
+        self._init_context(context)
         self.pid = os.getpid()
         self._watchers_names = {}
         self.alive = True
@@ -171,6 +170,9 @@ class Arbiter(object):
 
         self.sockets = CircusSockets(sockets)
         self.warmup_delay = warmup_delay
+
+    def _init_context(self, context):
+        self.context = context or zmq.Context.instance()
         self.loop = ioloop.IOLoop.instance()
         self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
                                self.context, self.loop, self, self.check_delay)

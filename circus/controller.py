@@ -9,9 +9,9 @@ from urlparse import urlparse
 
 import zmq
 from zmq.utils.jsonapi import jsonmod as json
+from zmq.eventloop import ioloop, zmqstream
 
 from circus.util import create_udp_socket
-from circus._zmq import ioloop, zmqstream
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError
@@ -38,6 +38,10 @@ class Controller(object):
         # get registered commands
         self.commands = get_commands()
 
+    def _init_stream(self):
+        self.stream = zmqstream.ZMQStream(self.ctrl_socket, self.loop)
+        self.stream.on_recv(self.handle_message)
+
     def initialize(self):
         # initialize controller
 
@@ -45,8 +49,7 @@ class Controller(object):
         self.ctrl_socket = self.context.socket(zmq.ROUTER)
         self.ctrl_socket.bind(self.endpoint)
         self.ctrl_socket.linger = 0
-        self.stream = zmqstream.ZMQStream(self.ctrl_socket, self.loop)
-        self.stream.on_recv(self.handle_message)
+        self._init_stream()
 
         # Initialize UDP Socket
         multicast_addr, multicast_port = urlparse(self.multicast_endpoint)\
@@ -64,8 +67,11 @@ class Controller(object):
 
     def stop(self):
         self.caller.stop()
-        self.stream.flush()
-        self.stream.close()
+        try:
+            self.stream.flush()
+            self.stream.close()
+        except IOError:
+            pass
         self.ctrl_socket.close()
 
     def wakeup(self):

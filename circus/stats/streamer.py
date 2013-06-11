@@ -6,8 +6,8 @@ import errno
 import socket
 
 import zmq
+from zmq.eventloop import ioloop, zmqstream
 
-from circus._zmq import ioloop, zmqstream
 from circus.commands import get_commands
 from circus.client import CircusClient
 from circus.stats.collector import WatcherStatsCollector, SocketStatsCollector

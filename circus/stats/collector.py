@@ -1,12 +1,11 @@
 import errno
 from collections import defaultdict
+from select import select
+import socket
 
 from circus import util
 from circus import logger
-from circus._zmq import ioloop
-
-from select import select
-import socket
+from zmq.eventloop import ioloop
 
 
 class BaseStatsCollector(ioloop.PeriodicCallback):

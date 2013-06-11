@@ -2,9 +2,10 @@ import os
 import json
 import tempfile
 
+from zmq.eventloop import ioloop
+
 from circus.stats.collector import SocketStatsCollector
 from circus.tests.support import TestCircus
-from circus._zmq import ioloop
 from circus.stats.streamer import StatsStreamer
 from circus import util
 from circus import client

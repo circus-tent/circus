@@ -13,7 +13,7 @@ from circus import get_arbiter
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_STATS)
 from circus.client import CircusClient, make_message
-from circus._zmq import ioloop
+from zmq.eventloop import ioloop
 
 
 def resolve_name(name):
