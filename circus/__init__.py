@@ -16,6 +16,7 @@ def get_arbiter(watchers, controller=None,
                 pubsub_endpoint=None,
                 statsd=False,
                 stats_endpoint=None,
+                statsd_close_outputs=False,
                 multicast_endpoint=None,
                 env=None, name=None, context=None,
                 background=False, stream_backend="thread",
@@ -77,6 +78,8 @@ def get_arbiter(watchers, controller=None,
       (default: 'tcp://127.0.0.1:5556')
     - **stats_endpoint** -- the stats endpoint. If not provided,
       the *circusd-stats* process will not be launched. (default: None)
+    - **statsd_close_outputs** -- if True sends the circusd-stats stdout/stderr
+      to /dev/null (default: False)
     - **context** -- the zmq context (default: None)
     - **background** -- If True, the arbiter is launched in a thread in the
       background (default: False)
@@ -126,6 +129,7 @@ def get_arbiter(watchers, controller=None,
     return Arbiter(_watchers, controller, pubsub_endpoint,
                    statsd=statsd,
                    stats_endpoint=stats_endpoint,
+                   statsd_close_outputs=statsd_close_outputs,
                    multicast_endpoint=multicast_endpoint,
                    context=context, plugins=plugins, debug=debug,
                    proc_name=proc_name)

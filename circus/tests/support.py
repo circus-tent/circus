@@ -87,13 +87,15 @@ class TestCircus(unittest.TestCase):
         worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
                   'name': 'test', 'graceful_timeout': 4}
         worker.update(kw)
+        debug = kw.get('debug', False)
+
         if stats:
             arbiter = get_arbiter([worker], background=True, plugins=plugins,
                                   stats_endpoint=DEFAULT_ENDPOINT_STATS,
-                                  debug=kw.get('debug', False))
+                                  debug=debug, statsd_close_outputs=not debug)
         else:
             arbiter = get_arbiter([worker], background=True, plugins=plugins,
-                                  debug=kw.get('debug', False))
+                                  debug=debug)
         arbiter.start()
         return testfile, arbiter
 
