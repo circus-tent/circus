@@ -214,7 +214,7 @@ def run_plugin(klass, config, duration=300):
                    **config)
     plugin.statsd = _statsd
 
-    end = ioloop.DelayedCallback(plugin.loop.stop, duration, plugin.loop)
-    end.start()
+    deadline = time() + (duration / 1000.)
+    end = plugin.loop.add_timeout(deadline, plugin.loop.stop)
     plugin.start()
     return _statsd

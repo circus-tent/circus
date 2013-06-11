@@ -1,6 +1,7 @@
 import os
 import json
 import tempfile
+import time
 
 from zmq.eventloop import ioloop
 
@@ -80,15 +81,15 @@ class TestStatsStreamer(TestCircus):
             for i in range(5):
                 streamer.handle_recv(msg)
 
-        events = ioloop.DelayedCallback(_events, 500, loop)
-        events.start()
+        deadline = time.time() + 0.5
+        events = loop.add_timeout(deadline, _events)
 
         def _stop():
             self._collector.stop()
             streamer.stop()
 
-        stopper = ioloop.DelayedCallback(_stop, 500, loop)
-        stopper.start()
+        deadline = time.time() + 0.5
+        stopper = loop.add_timeout(deadline, _stop)
         streamer.start()
 
         # let's see what we got
