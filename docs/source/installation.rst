@@ -34,7 +34,7 @@ More on Requirements
 Circus uses:
 
 - Python 2.6, 2.7 (3.x needs to be tested)
-- zeromq >= 2.10
+- zeromq >= 2.10 (you need to use the 2.X series)
 
 And on Python side:
 
