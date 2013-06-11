@@ -46,7 +46,7 @@ class Restart(Command):
 
     def message(self, *args, **opts):
         if len(args) > 1:
-            raise ArgumentError("invalid number of arguments")
+            raise ArgumentError("Invalid number of arguments")
 
         if len(args) == 1:
             return self.make_message(name=args[0])

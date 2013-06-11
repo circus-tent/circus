@@ -36,7 +36,7 @@ class NumWatchers(Command):
 
     def message(self, *args, **opts):
         if len(args) > 0:
-            raise ArgumentError("invalid number of arguments")
+            raise ArgumentError("Invalid number of arguments")
         return self.make_message()
 
     def execute(self, arbiter, props):

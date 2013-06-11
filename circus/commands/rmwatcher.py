@@ -47,7 +47,7 @@ class RmWatcher(Command):
 
     def message(self, *args, **opts):
         if len(args) < 1 or len(args) > 1:
-            raise ArgumentError("number of arguments invalid")
+            raise ArgumentError("Invalid number of arguments")
 
         return self.make_message(name=args[0])
 

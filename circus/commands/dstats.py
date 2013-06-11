@@ -57,7 +57,7 @@ class Daemontats(Command):
 
     def message(self, *args, **opts):
         if len(args) > 0:
-            raise ArgumentError("message invalid")
+            raise ArgumentError("Invalid message")
         return self.make_message()
 
     def execute(self, arbiter, props):

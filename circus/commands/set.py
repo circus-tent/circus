@@ -43,7 +43,7 @@ class Set(Command):
 
     def message(self, *args, **opts):
         if len(args) < 3:
-            raise ArgumentError("number of arguments invalid")
+            raise ArgumentError("Invalid number of arguments")
 
         args = list(args)
         watcher_name = args.pop(0)
