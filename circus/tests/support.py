@@ -91,6 +91,7 @@ class TestCircus(unittest.TestCase):
         if stats:
             arbiter = get_arbiter([worker], background=True, plugins=plugins,
                                   stats_endpoint=DEFAULT_ENDPOINT_STATS,
+                                  statsd=True,
                                   debug=debug, statsd_close_outputs=not debug)
         else:
             arbiter = get_arbiter([worker], background=True, plugins=plugins,
