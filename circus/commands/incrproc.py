@@ -47,7 +47,7 @@ class IncrProc(Command):
 
     def message(self, *args, **opts):
         if len(args) < 1:
-            raise ArgumentError("number of arguments invalid")
+            raise ArgumentError("Invalid number of arguments")
         options = {'name': args[0]}
         if len(args) > 1:
             options['nb'] = int(args[1])

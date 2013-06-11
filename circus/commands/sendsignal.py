@@ -119,7 +119,7 @@ class Signal(Command):
     def message(self, *args, **opts):
         largs = len(args)
         if largs < 2 or largs > 4:
-            raise ArgumentError("number of arguments invalid")
+            raise ArgumentError("Invalid number of arguments")
 
         if len(args) == 4:
             signum = self._get_signal(args[3])
