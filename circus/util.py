@@ -16,8 +16,6 @@ from ConfigParser import (ConfigParser, MissingSectionHeaderError,
 
 from psutil import AccessDenied, NoSuchProcess, Process
 
-from circus.py3compat import string_types
-
 
 # default endpoints
 DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
@@ -238,6 +236,8 @@ def to_uid(name):
         except KeyError:
             raise ValueError("%r isn't a valid user id" % name)
 
+    from circus.py3compat import string_types  # circular import fix
+
     if not isinstance(name, string_types):
         raise TypeError(name)
 
@@ -260,6 +260,8 @@ def to_gid(name):
         # see http://bugs.python.org/issue17531
         except (KeyError, OverflowError):
             raise ValueError("No such group: %r" % name)
+
+    from circus.py3compat import string_types  # circular import fix
 
     if not isinstance(name, string_types):
         raise TypeError(name)
@@ -300,6 +302,11 @@ def close_on_exec(fd):
     flags = fcntl.fcntl(fd, fcntl.F_GETFD)
     flags |= fcntl.FD_CLOEXEC
     fcntl.fcntl(fd, fcntl.F_SETFD, flags)
+
+
+def get_python_version():
+    """Get a 3 element tuple with the python version"""
+    return sys.version_info[:3]
 
 
 INDENTATION_LEVEL = 0
