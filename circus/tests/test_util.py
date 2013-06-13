@@ -2,11 +2,11 @@ from __future__ import unicode_literals
 
 import grp
 import pwd
-import unittest
 from psutil import Popen
 from mock import Mock, patch
 
 
+from circus.tests.support import unittest
 from circus.util import (get_info, bytes2human, to_bool, parse_env_str,
                          env_to_str, to_uid, to_gid, replace_gnu_args,
                          get_python_version)

@@ -31,6 +31,7 @@ class TestWatcher(TestCircus):
             dummy_process, stdout_stream={'stream': cls.stream})
         cls.arbiter = arbiter
         cls.test_file = testfile
+        poll_for(testfile, 'START')
 
     @classmethod
     def tearDownClass(cls):
