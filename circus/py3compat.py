@@ -1,6 +1,9 @@
 import sys
 
-PY3 = sys.version_info[0] == 3
+from circus.util import get_python_version
+
+
+PY3 = get_python_version()[0] == 3
 
 if PY3:
     string_types = str

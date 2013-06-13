@@ -11,6 +11,7 @@ from circus.stream import QueueStream
 from circus.watcher import Watcher
 from circus.process import UNEXISTING
 from circus import logger
+from circus.util import get_python_version
 
 import warnings
 
@@ -165,10 +166,12 @@ class TestWatcherInitialization(TestCircus):
         watcher.start()
         try:
             time.sleep(.1)
-            minor = sys.version_info[1]
-            wanted = os.path.join(venv, 'lib', 'python2.%d' % minor,
+            py_version = get_python_version()
+            major = py_version[0]
+            minor = py_version[1]
+            wanted = os.path.join(venv, 'lib', 'python%d.%d' % (major, minor),
                                   'site-packages',
-                                  'pip-7.7-py2.%d.egg' % minor)
+                                  'pip-7.7-py%d.%d.egg' % (major, minor))
             ppath = watcher.watcher.env['PYTHONPATH']
         finally:
             watcher.stop()
@@ -180,8 +183,10 @@ class TestWatcherInitialization(TestCircus):
         watcher.start()
         try:
             time.sleep(.1)
-            minor = sys.version_info[1]
-            wanted = os.path.join(venv, 'lib', 'python2.%d' % minor,
+            py_version = get_python_version()
+            major = py_version[0]
+            minor = py_version[1]
+            wanted = os.path.join(venv, 'lib', 'python%d.%d' % (major, minor),
                                   'site-packages')
             ppath = watcher.watcher.env['PYTHONPATH']
         finally:

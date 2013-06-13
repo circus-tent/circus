@@ -8,7 +8,8 @@ from mock import Mock, patch
 
 
 from circus.util import (get_info, bytes2human, to_bool, parse_env_str,
-                         env_to_str, to_uid, to_gid, replace_gnu_args)
+                         env_to_str, to_uid, to_gid, replace_gnu_args,
+                         get_python_version)
 
 
 class TestUtil(unittest.TestCase):
@@ -142,3 +143,14 @@ class TestUtil(unittest.TestCase):
         self.assertEquals('thats an int 2',
                           repl('thats an int ((me))', prefix=None,
                           me=2))
+
+    def test_get_python_version(self):
+        py_version = get_python_version()
+
+        self.assertEquals(3, len(py_version))
+
+        map(lambda x: self.assertEquals(int, type(x)), py_version)
+
+        self.assertGreaterEqual(py_version[0], 2)
+        self.assertGreaterEqual(py_version[1], 0)
+        self.assertGreaterEqual(py_version[2], 0)
