@@ -364,6 +364,36 @@ Example::
 Both `worker1` and `worker2` will be run with PATH = /bin
 
 
+Using environment variables
+===========================
+
+When writing your configuration file, you can use environment
+variables defined in the *env* section or in *os.environ* itself.
+
+You just have to use the *circus.env.* prefix.
+
+Example::
+
+    [watcher:worker1]
+    cmd = $(circus.env.shell)
+
+    [watcher:worker2]
+    baz = $(circus.env.user)
+    bar = $(circus.env.yeah)
+    sup = $(circus.env.oh)
+
+    [env]
+    yeah = boo
+
+    [env:worker2]
+    oh = ok
+
+If a variable is defined in several places, the most specialized
+value has precedence: a variable defined in *env:XXX* will override
+a variable defined in *env*, which will override a variable
+defined in *os.environ*.
+
+
 .. _formating_cmd:
 
 Formating the commands and arguments with dynamic variables
@@ -391,3 +421,4 @@ This works with both `cmd` and `args`.
 
 - All variables are prefixed with `circus.`
 - The replacement is case insensitive.
+

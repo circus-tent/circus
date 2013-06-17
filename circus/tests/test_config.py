@@ -20,7 +20,8 @@ _CONF = {
     'env_section': os.path.join(HERE, 'env_section.ini'),
     'multiple_wildcard': os.path.join(HERE, 'multiple_wildcard.ini'),
     'circus': os.path.join(HERE, 'circus.ini'),
-    'nope': os.path.join(HERE, 'nope.ini')
+    'nope': os.path.join(HERE, 'nope.ini'),
+    'issue442': os.path.join(HERE, 'issue442.ini')
 }
 
 
@@ -134,8 +135,23 @@ class TestConfig(unittest.TestCase):
         self.assertEquals(len(watchers), 3)
         watchers = conf['watchers']
         watchers.sort()
-        self.assertEquals(watchers[2]['env'], {'INI': 'private.ini'})
+        self.assertEquals(watchers[2]['env']['INI'], 'private.ini')
         self.assertEqual(conf['check'], 555)
 
     def test_config_unexistant(self):
         self.assertRaises(IOError, get_config, _CONF['nope'])
+
+    def test_variables_everywhere(self):
+        os.environ['circus_stats_endpoint'] = 'tcp://0.0.0.0:9876'
+        os.environ['circus_statsd'] = 'True'
+
+        # these will be overriden
+        os.environ['circus_uid'] = 'ubuntu'
+        os.environ['circus_gid'] = 'ubuntu'
+
+        conf = get_config(_CONF['issue442'])
+
+        self.assertEqual(conf['stats_endpoint'], 'tcp://0.0.0.0:9876')
+        self.assertTrue(conf['statsd'])
+        self.assertEqual(conf['watchers'][0]['uid'], 'tarek')
+        self.assertEqual(conf['watchers'][0]['gid'], 'root')

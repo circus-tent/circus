@@ -2,11 +2,12 @@ import glob
 import os
 import warnings
 from fnmatch import fnmatch
+from collections import defaultdict
 
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
-                         StrictConfigParser, parse_env_str)
+                         StrictConfigParser, parse_env_str, replace_gnu_args)
 
 
 def watcher_defaults():
@@ -49,17 +50,45 @@ def to_boolean(value):
 
 
 class DefaultConfigParser(StrictConfigParser):
+
+    def __init__(self, *args, **kw):
+        StrictConfigParser.__init__(self, *args, **kw)
+        self._env = dict(os.environ)
+
+    def set_env(self, env):
+        self._env = dict(env)
+
+    def toboolean(self, value):
+        if value.lower() not in self._boolean_states:
+            raise ValueError('Not a boolean: %s' % value)
+        return self._boolean_states[value.lower()]
+
+    def get(self, section, option):
+        res = StrictConfigParser.get(self, section, option)
+        return replace_gnu_args(res, env=self._env)
+
+    def items(self, section, noreplace=False):
+        items = StrictConfigParser.items(self, section)
+        if noreplace:
+            return items
+        env = dict(os.environ)
+        return [(key, replace_gnu_args(value, env=env))
+                for key, value in items]
+
     def dget(self, section, option, default=None, type=str):
         if not self.has_option(section, option):
             return default
-        if type is str:
-            return self.get(section, option)
-        elif type is int:
-            return self.getint(section, option)
+
+        value = self.get(section, option)
+
+        if type is int:
+            value = int(value)
         elif type is bool:
-            return self.getboolean(section, option)
-        else:
+            value = self.toboolean(value)
+        elif type is not str:
             raise NotImplementedError()
+
+        return value
 
 
 def read_config(config_path):
@@ -102,6 +131,17 @@ def get_config(config_file):
     dget = cfg.dget
     config = {}
 
+    # reading the global environ first
+    def _upper(items):
+        return [(key.upper(), value) for key, value in items]
+
+    global_env = dict(_upper(os.environ.items()))
+
+    if 'env' in cfg.sections():
+        global_env.update(dict(_upper(cfg.items('env'))))
+
+    cfg.set_env(global_env)
+
     # main circus options
     config['check'] = dget('circus', 'check_delay', 5, int)
     config['endpoint'] = dget('circus', 'endpoint', DEFAULT_ENDPOINT_DEALER)
@@ -131,7 +171,6 @@ def get_config(config_file):
 
     # Initialize watchers, plugins & sockets to manage
     watchers = []
-    environs = {}
     plugins = []
     sockets = []
 
@@ -149,7 +188,7 @@ def get_config(config_file):
             watcher['name'] = section.split("watcher:", 1)[1]
 
             # create watcher options
-            for opt, val in cfg.items(section):
+            for opt, val in cfg.items(section, noreplace=True):
                 if opt == 'cmd':
                     watcher['cmd'] = val
                 elif opt == 'args':
@@ -239,32 +278,44 @@ def get_config(config_file):
             watchers.append(watcher)
 
     # Second pass to make sure env sections apply to all watchers.
+    environs = defaultdict(dict)
+
+    # global env first
+    def _extend(target, source):
+        for name, value in source:
+            if name in target:
+                continue
+            target[name] = value
+
+    for watcher in watchers:
+        _extend(environs[watcher['name']], global_env.items())
+
+    # then per-watcher env
     for section in cfg.sections():
         if section.startswith('env:'):
             section_elements = section.split("env:", 1)[1]
             watcher_patterns = [s.strip() for s in section_elements.split(',')]
 
             for pattern in watcher_patterns:
-                matching_watchers = [
-                    w for w in watchers if fnmatch(w['name'], pattern)
-                ]
-                for watcher in matching_watchers:
-                    watcher_name = watcher['name']
-                    if not watcher_name in environs:
-                        environs[watcher_name] = dict()
-                    environs[watcher_name].update(
-                        [(k.upper(), v) for k, v in cfg.items(section)])
+                match = [w for w in watchers if fnmatch(w['name'], pattern)]
 
-        if section == 'env':
-            for watcher in watchers:
-                environs[watcher['name']].update(
-                    [(k.upper(), v) for k, v in cfg.items(section)])
+                for watcher in match:
+                    watcher_name = watcher['name']
+                    extra = cfg.items(section, noreplace=True)
+                    environs[watcher_name].update(_upper(extra))
 
     for watcher in watchers:
         if watcher['name'] in environs:
             if not 'env' in watcher:
                 watcher['env'] = dict()
-            watcher['env'].update(environs[watcher['name']])
+            _extend(watcher['env'], environs[watcher['name']].items())
+
+        for option, value in watcher.items():
+            if option in ('name', 'env'):
+                continue
+            if not isinstance(value, str):
+                continue
+            watcher[option] = replace_gnu_args(value, env=watcher['env'])
 
     config['watchers'] = watchers
     config['plugins'] = plugins
