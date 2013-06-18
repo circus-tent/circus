@@ -299,6 +299,8 @@ class TestTrainer(TestCircus):
         """test_udp_discovery: Test that when the circusd answer UDP call.
 
         """
+        if 'TRAVIS' in os.environ:
+            return
         self._stop_runners()
 
         dummy_process = 'circus.tests.support.run_process'
