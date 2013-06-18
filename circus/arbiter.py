@@ -229,7 +229,6 @@ class Arbiter(object):
 
         # if arbiter is changed, reload everything
         if self.get_arbiter_config(new_cfg) != self._cfg:
-            self.stop()
             raise ReloadArbiterException
 
         # Gather socket names.
@@ -454,18 +453,14 @@ class Arbiter(object):
         finally:
             self.ctrl.stop()
             self.evpub_socket.close()
+            if len(self.sockets) > 0:
+                self.sockets.close_all()
 
     def stop(self):
-        self._stop()
-
-    def _stop(self):
-        if self.alive:
-            self.stop_watchers(stop_alive=True)
-
+        self.stop_watchers(stop_alive=True)
+        # this will stop the loop and the closing
+        # will finish in .start()
         self.loop.stop()
-
-        # close sockets
-        self.sockets.close_all()
 
     def reap_processes(self):
         # map watcher to pids
@@ -627,6 +622,6 @@ class ThreadedArbiter(Arbiter, Thread):
         return Arbiter.start(self)
 
     def stop(self):
-        self.loop.add_callback(self._stop)
-        if get_ident() != self.ident:
+        Arbiter.stop(self)
+        if get_ident() != self.ident and self.isAlive():
             self.join()

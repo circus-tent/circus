@@ -174,14 +174,17 @@ class TestTrainer(TestCircus):
         resp = self.cli.call(make_message("numwatchers"))
         self.assertEqual(resp.get("numwatchers"), 1)
 
-    def test_stop(self):
+    def _test_stop(self):
         resp = self.cli.call(make_message("quit"))
         self.assertEqual(resp.get("status"), "ok")
         self.assertRaises(CallError, self.cli.call, make_message("list"))
+
+        self._stop_runners()
+        cli = CircusClient()
         dummy_process = 'circus.tests.support.run_process'
         self.test_file = self._run_circus(dummy_process)
         msg = make_message("numprocesses")
-        resp = self.cli.call(msg)
+        resp = cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
     def test_reload(self):

@@ -29,6 +29,7 @@ class Controller(object):
         self.context = context
         self.loop = loop
         self.check_delay = check_delay * 1000
+        self.started = False
 
         self.jobs = Queue()
 
@@ -64,15 +65,18 @@ class Controller(object):
         self.caller = ioloop.PeriodicCallback(self.wakeup, self.check_delay,
                                               self.loop)
         self.caller.start()
+        self.started = True
 
     def stop(self):
-        self.caller.stop()
-        try:
-            self.stream.flush()
-            self.stream.close()
-        except IOError:
-            pass
-        self.ctrl_socket.close()
+        if self.started:
+            self.caller.stop()
+            try:
+                self.stream.flush()
+                self.stream.close()
+            except (IOError, zmq.ZMQError):
+                pass
+            self.ctrl_socket.close()
+        self.sys_hdl.stop()
 
     def wakeup(self):
         job = None

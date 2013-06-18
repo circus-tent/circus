@@ -90,8 +90,6 @@ def main():
 
     # From here it can also come from the arbiter configuration
     # load the arbiter from config
-    from circus.arbiter import Arbiter
-
     arbiter = Arbiter.load_from_config(args.config)
 
     pidfile = args.pidfile or arbiter.pidfile or None

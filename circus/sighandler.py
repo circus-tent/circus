@@ -23,10 +23,19 @@ class SysHandler(object):
 
         # init signals
         logger.info('Registering signals...')
+        self._old = {}
         self._register()
+
+    def stop(self):
+        for sig, callable in self._old.items():
+            try:
+                signal.signal(sig, callable)
+            except ValueError:
+                pass
 
     def _register(self):
         for sig in self.SIGNALS:
+            self._old[sig] = signal.getsignal(sig)
             signal.signal(sig, self.signal)
 
         # Don't let SIGQUIT and SIGUSR1 disturb active requests

@@ -1,6 +1,7 @@
 import unittest
 import os
-from circus.arbiter import ThreadedArbiter, ReloadArbiterException
+
+from circus.arbiter import Arbiter, ReloadArbiterException
 
 
 HERE = os.path.join(os.path.dirname(__file__))
@@ -21,21 +22,29 @@ _CONF = {
 }
 
 
+class FakeSocket(object):
+    closed = False
+
+    def send_multipart(self, *args):
+        pass
+    close = send_multipart
+
+
 class TestConfig(unittest.TestCase):
 
     def setUp(self):
         conf = _CONF['reload_base']
-        self.a = ThreadedArbiter.load_from_config(conf)
-        self.a.start()
+        self.a = Arbiter.load_from_config(conf)
+        self.a.evpub_socket = FakeSocket()
 
         # initialize watchers
         for watcher in self.a.iter_watchers():
             self.a._watchers_names[watcher.name.lower()] = watcher
 
     def tearDown(self):
-        self.a.stop()
+        for watcher in self.a.iter_watchers():
+            watcher.stop()
         self.a.sockets.close_all()
-        self.a.context.destroy()
 
     def test_watcher_names(self):
         watcher_names = [i.name for i in self.a.watchers]
