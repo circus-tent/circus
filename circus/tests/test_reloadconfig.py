@@ -35,7 +35,8 @@ class TestConfig(unittest.TestCase):
 
     def test_watcher_names(self):
         watcher_names = [i.name for i in self.a.watchers]
-        self.assertEqual(watcher_names, ['test1', 'test2', 'plugin:myplugin'])
+        watcher_names.sort()
+        self.assertEqual(watcher_names, ['plugin:myplugin', 'test1', 'test2'])
 
     def test_reload_numprocesses(self):
         w = self.a.get_watcher('test1')
