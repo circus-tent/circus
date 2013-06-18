@@ -142,7 +142,7 @@ class Watcher(object):
       or the callabled itself and a boolean flag indicating if an
       exception occuring in the hook should not be ignored.
       Possible values for the hook name: *before_start*, *after_start*,
-      *before_stop*, *after_stop*.
+      *befor_spawn*, *before_stop*, *after_stop*.
 
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
@@ -439,7 +439,12 @@ class Watcher(object):
         if self.stopped:
             return
 
-        cmd = util.replace_gnu_args(self.cmd, sockets=self._get_sockets_fds())
+        if not self.call_hook('before_spawn'):
+            self.stopped = True
+            return False
+
+        cmd = util.replace_gnu_args(self.cmd, sockets=self._get_sockets_fds(),
+                                    env=self.env)
         self._process_counter += 1
         nb_tries = 0
         pipe_stdout = self.stdout_redirector is not None

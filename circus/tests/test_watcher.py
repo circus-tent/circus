@@ -340,6 +340,19 @@ class TestWatcherHooks(TestCircus):
         self._test_hooks(behavior=FAILURE, status='stopped',
                          hook_name='after_stop', call=self._stop)
 
+    def test_before_spawn(self):
+        self._test_hooks(hook_name='before_spawn')
+
+    def test_before_spawn_failure(self):
+        with captured_output('stdout'):
+            self._test_hooks(behavior=ERROR, status='stopped',
+                             hook_name='before_spawn',
+                             call=self._stop)
+
+    def test_before_spawn_false(self):
+        self._test_hooks(behavior=FAILURE, status='stopped',
+                         hook_name='before_spawn', call=self._stop)
+
 
 def oneshot_process(test_file):
     pass
