@@ -4,6 +4,7 @@ import os
 import resource
 
 from circus import logger
+from circus.arbiter import Arbiter, ReloadArbiterException
 from circus.pidfile import Pidfile
 from circus import __version__
 from circus.util import MAXFD, REDIRECT_TO, configure_logger, LOG_LEVELS
@@ -109,7 +110,16 @@ def main():
     configure_logger(logger, loglevel, logoutput)
 
     try:
-        arbiter.start()
+        restart_after_stop = True
+        while restart_after_stop:
+            while True:
+                try:
+                    arbiter = Arbiter.load_from_config(args.config)
+                    restart_after_stop = arbiter.start()
+                except ReloadArbiterException:
+                    pass
+                else:
+                    break
     except KeyboardInterrupt:
         pass
     finally:

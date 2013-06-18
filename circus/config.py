@@ -181,7 +181,9 @@ def get_config(config_file):
             sockets.append(sock)
 
         if section.startswith("plugin:"):
-            plugins.append(dict(cfg.items(section)))
+            plugin = dict(cfg.items(section))
+            plugin['name'] = section
+            plugins.append(plugin)
 
         if section.startswith("watcher:"):
             watcher = watcher_defaults()
