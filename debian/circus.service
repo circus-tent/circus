@@ -4,7 +4,7 @@ After=syslog.target network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/circus /etc/circus/circusd.ini
+ExecStart=/usr/bin/circusd /etc/circus/circusd.ini
 
 [Install]
 WantedBy=multi-user.target
