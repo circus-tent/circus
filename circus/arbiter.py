@@ -159,6 +159,7 @@ class Arbiter(object):
 
         if plugins is not None:
             for plugin in plugins:
+                fqn = plugin['use']
                 cmd = get_plugin_cmd(plugin, self.endpoint,
                                      self.pubsub_endpoint, self.check_delay,
                                      ssh_server, debug=self.debug)
@@ -169,6 +170,9 @@ class Arbiter(object):
                                   close_child_stderr=ch_stderr,
                                   close_child_stdout=ch_stdout)
                 plugin_cfg.update(plugin)
+                if 'name' not in plugin_cfg:
+                    plugin_cfg['name'] = fqn
+
                 plugin_watcher = Watcher.load_from_config(plugin_cfg)
                 self.watchers.append(plugin_watcher)
 
