@@ -50,7 +50,14 @@ class TestStatsClient(TestCircus):
         self._run_circus('circus.tests.test_stats_client.run_process',
                          stdout_stream=stream, stderr_stream=stream,
                          stats=True)
-        time.sleep(.5)
+
+        # waiting for data to appear in the file stream
+        empty = True
+        while empty:
+            with open(log) as f:
+                empty = f.read() == ''
+
+            time.sleep(.1)
 
         # checking that our system is live and running
         client = CircusClient()
