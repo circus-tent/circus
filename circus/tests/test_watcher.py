@@ -28,7 +28,8 @@ class TestWatcher(TestCircus):
         dummy_process = 'circus.tests.support.run_process'
         cls.stream = QueueStream()
         testfile, arbiter = cls._create_circus(
-            dummy_process, stdout_stream={'stream': cls.stream})
+            dummy_process, stdout_stream={'stream': cls.stream},
+            debug=True)
         cls.arbiter = arbiter
         cls.test_file = testfile
         poll_for(testfile, 'START')
@@ -80,11 +81,16 @@ class TestWatcher(TestCircus):
         watcher = self.arbiter.get_watcher("test")
 
         to_kill = []
-        self.assertEquals(len(watcher.processes), 2)
+        nb_proc = len(watcher.processes)
+
         for process in watcher.processes.values():
             to_kill.append(process.pid)
             # the process is killed in an unsual way
-            os.kill(process.pid, signal.SIGSEGV)
+            try:
+                os.kill(process.pid, signal.SIGSEGV)
+            except OSError:
+                pass
+
             # and wait for it to die
             try:
                 pid, status = os.waitpid(process.pid, 0)
@@ -98,7 +104,7 @@ class TestWatcher(TestCircus):
         watcher.reap_and_manage_processes()
 
         # we should have a new process here now
-        self.assertEquals(len(watcher.processes), 2)
+        self.assertEquals(len(watcher.processes), nb_proc)
         for p in watcher.processes.values():
             # and that one needs to have a new pid.
             self.assertFalse(p.pid in to_kill)
@@ -122,7 +128,8 @@ class TestWatcher(TestCircus):
 
         truncate_file(self.test_file)  # make sure we have a clean slate
         # expect at least one restart (max_age and restart), in less than 5s
-        self.assertTrue(poll_for(self.test_file, 'QUITSTART'))
+        self.assertTrue(poll_for(self.test_file,
+                                 ('QUITSTOPSTART', 'QUITSTART')))
         current_pids = self.pids()
         self.assertEqual(len(current_pids), 1)
         self.assertNotEqual(initial_pids, current_pids)

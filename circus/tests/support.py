@@ -168,19 +168,23 @@ class TimeoutException(Exception):
     pass
 
 
-def poll_for(filename, needle, timeout=5):
+def poll_for(filename, needles, timeout=5):
     """Poll a file for a given string.
 
     Raises a TimeoutException if the string isn't found after timeout seconds
     of polling.
 
     """
+    if isinstance(needles, str):
+        needles = [needles]
+
     start = time()
-    while (time() - start) < 5:
+    while time() - start < 5:
         with open(filename) as f:
             content = f.read()
-        if needle in content:
-            return True
+        for needle in needles:
+            if needle in content:
+                return True
         # When using gevent this will make sure the redirector greenlets are
         # scheduled.
         sleep(0)

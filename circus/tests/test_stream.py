@@ -20,8 +20,7 @@ def run_process(*args, **kw):
         sys.stdout.flush()
         sys.stderr.write('stderr')
         sys.stderr.flush()
-        while True:
-            time.sleep(.25)
+        time.sleep(1.)
     except:
         return 1
 
@@ -63,6 +62,7 @@ class TestWatcher(TestCircus):
         # clean slate
         truncate_file(self.stdout)
         truncate_file(self.stderr)
+
         # restart and make sure streams are still working
         self.call('restart')
 
