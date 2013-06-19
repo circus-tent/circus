@@ -12,9 +12,9 @@ test: bin/python
 	bin/pip install tox
 	bin/tox
 
-docs: bin/coverage
+docs: 
 	bin/pip install sphinx
-	SPHINXBUILD=../bin/sphinx-build $(MAKE) -C docs html $^  2>/dev/null
+	SPHINXBUILD=../bin/sphinx-build $(MAKE) -C docs html $^ 
 
 coverage: bin/coverage
 	bin/nosetests -s --with-coverage --cover-html --cover-html-dir=html --cover-package=circus circus/tests

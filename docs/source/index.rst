@@ -164,7 +164,6 @@ More documentation
    examples
    usecases
    troubleshooting
-   coverage
    glossary
    contributing
    adding_new_commands
