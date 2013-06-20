@@ -34,10 +34,13 @@ class Controller(object):
         self.jobs = Queue()
 
         # initialize the sys handler
-        self.sys_hdl = SysHandler(self)
+        self._init_syshandler()
 
         # get registered commands
         self.commands = get_commands()
+
+    def _init_syshandler(self):
+        self.sys_hdl = SysHandler(self)
 
     def _init_stream(self):
         self.stream = zmqstream.ZMQStream(self.ctrl_socket, self.loop)
