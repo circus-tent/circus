@@ -22,7 +22,7 @@ class Stop(Command):
 
         The response return the status "ok".
 
-        If the property name is present, then the reload will be applied
+        If the property name is present, then the stop will be applied
         to the watcher.
 
 

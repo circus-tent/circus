@@ -18,7 +18,7 @@ class RmWatcher(Command):
             {
                 "command": "rm",
                 "properties": {
-                    "name": "nameofwatcher",
+                    "name": "<nameofwatcher>",
                 }
             }
 
