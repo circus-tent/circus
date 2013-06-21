@@ -1,9 +1,9 @@
-from circus import get_arbiter_handler as _get_arbiter_handler
+from circus import ArbiterHandler as _ArbiterHandler
 
 
-class get_arbiter_handler(_get_arbiter_handler):
+class ArbiterHandler(_ArbiterHandler):
     def __call__(self, watchers, **kwargs):
-        return super(get_arbiter_handler, self).__call__(watchers, **kwargs)
+        return super(ArbiterHandler, self).__call__(watchers, **kwargs)
 
     def _get_arbiter_klass(self, background):
         if background:
@@ -12,5 +12,8 @@ class get_arbiter_handler(_get_arbiter_handler):
             from circus.green.arbiter import Arbiter   # NOQA
         return Arbiter
 
+
+def get_arbiter_handler():
+    return ArbiterHandler()
 
 get_arbiter = get_arbiter_handler()

@@ -12,7 +12,7 @@ logger = logging.getLogger('circus')
 logging.basicConfig()
 
 
-class get_arbiter_handler(object):
+class ArbiterHandler(object):
     def __call__(self, watchers, controller=None,
                  pubsub_endpoint=None,
                  statsd=False,
@@ -147,5 +147,8 @@ class get_arbiter_handler(object):
             from circus.arbiter import Arbiter   # NOQA
         return Arbiter
 
+
+def get_arbiter_handler():
+    return ArbiterHandler()
 
 get_arbiter = get_arbiter_handler()
