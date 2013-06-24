@@ -38,6 +38,8 @@ def convert_option(key, val):
         return int(val)
     elif key == 'max_age_variance':
         return int(val)
+    elif key == 'respawn':
+        return util.to_bool(val)
 
     raise ArgumentError("unknown key %r" % key)
 
@@ -47,7 +49,7 @@ def validate_option(key, val):
                    'gid', 'send_hup', 'shell', 'env', 'cmd', 'copy_env',
                    'flapping_attempts', 'flapping_window', 'retry_in',
                    'max_retry', 'graceful_timeout', 'stdout_stream',
-                   'stderr_stream', 'max_age', 'max_age_variance'):
+                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn'):
         raise MessageError('unknown key %r' % key)
 
     if key in ('numprocesses', 'flapping_attempts', 'max_retry', 'max_age',
@@ -64,7 +66,7 @@ def validate_option(key, val):
         if not isinstance(val, int) and not isinstance(val, string_types):
             raise MessageError("%r isn't an integer or string" % key)
 
-    if key in ('send_hup', 'shell', 'copy_env'):
+    if key in ('send_hup', 'shell', 'copy_env', 'respawn'):
         if not isinstance(val, bool):
             raise MessageError("%r isn't a valid boolean" % key)
 
