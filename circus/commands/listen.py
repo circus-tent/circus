@@ -16,8 +16,6 @@ class Listen(Command):
 
         Events are pubsub topics:
 
-        Events are pubsub topics:
-
         - `watcher.<watchername>.reap`: when a process is reaped
         - `watcher.<watchername>.spawn`: when a process is spawned
         - `watcher.<watchername>.kill`: when a process is killed

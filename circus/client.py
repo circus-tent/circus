@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -
 import errno
 import uuid
@@ -25,17 +26,23 @@ def make_json(command, **props):
 class CircusClient(object):
     def __init__(self, context=None, endpoint=DEFAULT_ENDPOINT_DEALER,
                  timeout=5.0, ssh_server=None, ssh_keyfile=None):
-        self.context = context or zmq.Context.instance()
+        self._init_context(context)
         self.endpoint = endpoint
         self._id = uuid.uuid4().hex
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)
         get_connection(self.socket, endpoint, ssh_server, ssh_keyfile)
-        self.poller = zmq.Poller()
-        self.poller.register(self.socket, zmq.POLLIN)
+        self._init_poller()
         self._timeout = timeout
         self.timeout = timeout * 1000
+
+    def _init_context(self, context):
+        self.context = context or zmq.Context.instance()
+
+    def _init_poller(self):
+        self.poller = zmq.Poller()
+        self.poller.register(self.socket, zmq.POLLIN)
 
     def stop(self):
         self.socket.close()

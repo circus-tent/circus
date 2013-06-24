@@ -6,9 +6,7 @@ from zmq.green.eventloop import ioloop, zmqstream
 
 class Controller(_Controller):
 
-    def __init__(self, endpoint, multicast_endpoint, context, loop, arbiter,
-                 check_delay=1.0):
-        super(Controller, self).__init__(self)
+    def _init_syshandler(self):
         self.sys_hdl = SysHandler(self)
 
     def _init_stream(self):
