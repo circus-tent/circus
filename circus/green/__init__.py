@@ -13,7 +13,4 @@ class ArbiterHandler(_ArbiterHandler):
         return Arbiter
 
 
-def get_arbiter_handler():
-    return ArbiterHandler()
-
-get_arbiter = get_arbiter_handler()
+get_arbiter = ArbiterHandler()
