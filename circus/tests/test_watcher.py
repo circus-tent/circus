@@ -292,7 +292,7 @@ class TestWatcherHooks(TestCircus):
             self.assertEqual(self.get_status(), status)
         finally:
             arbiter.stop()
-            logger.execption = old
+            logger.exception = old
 
         self.assertTrue(events['before_start_called'])
         self.assertEqual(events['arbiter_in_hook'], arbiter)
