@@ -269,9 +269,6 @@ class CircusCtl(cmd.Cmd, object):
     def start(self, globalopts):
         self.autocomplete()
 
-        if globalopts['timeout'] < 30:
-            globalopts['args'].timeout = globalopts['timeout'] = 30
-
         self.controller.globalopts = globalopts
 
         args = globalopts['args']
@@ -303,7 +300,7 @@ def parse_arguments(args, commands):
 
     options = {
         'endpoint': {'default': None, 'help': 'connection endpoint'},
-        'timeout': {'default': 5, 'help': 'connection timeout',
+        'timeout': {'default': 30, 'help': 'connection timeout',
                     'type': int},
 
         'help': {
