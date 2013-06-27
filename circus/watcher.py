@@ -200,7 +200,8 @@ class Watcher(object):
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
         self.ignore_hook_failure = ['before_stop', 'after_stop']
-        self.hooks = self._resolve_hooks(hooks)
+        self.hooks = {}
+        self._resolve_hooks(hooks)
         self.respawn = respawn
         self.autostart = autostart
         self.close_child_stdout = close_child_stdout
@@ -251,6 +252,10 @@ class Watcher(object):
         self.sockets = self.evpub_socket = None
         self.arbiter = None
 
+    def _reload_hook(self, key, hook, ignore_error):
+        hook_name = key.split('.')[-1]
+        self._resolve_hook(hook_name, hook, ignore_error)
+
     def _reload_stream(self, key, val):
         parts = key.split('.', 1)
 
@@ -287,28 +292,23 @@ class Watcher(object):
         else:
             self.stderr_redirector = None
 
+    def _resolve_hook(self, name, callable_or_name, ignore_failure):
+        if callable(callable_or_name):
+            self.hooks[name] = callable_or_name
+        else:
+            # will raise ImportError on failure
+            self.hooks[name] = resolve_name(callable_or_name)
+
+        if ignore_failure:
+            self.ignore_hook_failure.append(name)
+
     def _resolve_hooks(self, hooks):
         """Check the supplied hooks argument to make sure we can find
         callables"""
-        if not hooks:
-            return {}
-
-        resolved_hooks = {}
-
-        for hook_name, hook_value in hooks.items():
-            callable_or_name, ignore_failure = hook_value
-
-            if callable(callable_or_name):
-                resolved_hooks[hook_name] = callable_or_name
-            else:
-                # will raise ImportError on failure
-                resolved_hook = resolve_name(callable_or_name)
-                resolved_hooks[hook_name] = resolved_hook
-
-            if ignore_failure:
-                self.ignore_hook_failure.append(hook_name)
-
-        return resolved_hooks
+        if hooks is None:
+            return
+        for name, (callable_or_name, ignore_failure) in hooks.items():
+            self._resolve_hook(name, callable_or_name, ignore_failure)
 
     @classmethod
     def load_from_config(cls, config):
@@ -817,6 +817,15 @@ class Watcher(object):
         elif (key.startswith('stdout_stream') or
               key.startswith('stderr_stream')):
             action = self._reload_stream(key, val)
+        elif key.startswith('hook'):
+            val = val.split(',')
+            if len(val) == 2:
+                ignore_error = util.to_bool(val[1])
+            else:
+                ignore_error = False
+            hook = val[0]
+            self._reload_hook(key, hook, ignore_error)
+            action = 1
 
         # send update event
         self.notify_event("updated", {"time": time.time()})

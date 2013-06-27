@@ -49,6 +49,12 @@ def convert_option(key, val):
             return int(val)
         elif subkey == 'refresh_time':
             return float(val)
+    elif key.startswith('hooks.'):
+        subkey = key.split('.', 1)[-1]
+
+        if subkey in ('before_start', 'after_start', 'before_stop',
+                      'after_stop', 'before_spawn'):
+            return val
 
     raise ArgumentError("unknown key %r" % key)
 
@@ -59,7 +65,7 @@ def validate_option(key, val):
                   'flapping_attempts', 'flapping_window', 'retry_in',
                   'max_retry', 'graceful_timeout', 'stdout_stream',
                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn')
-    valid_prefixes = ('stdout_stream', 'stderr_stream')
+    valid_prefixes = ('stdout_stream', 'stderr_stream', 'hooks')
 
     def _valid_prefix():
         for prefix in valid_prefixes:

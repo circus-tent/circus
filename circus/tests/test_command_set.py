@@ -23,6 +23,8 @@ class SetTest(TestCircus):
     def test_set_stream(self):
         arbiter = FakeArbiter()
         cmd = Set()
+
+        # setting streams
         props = cmd.message('dummy', 'stdout_stream.class', 'FileStream')
         props = props['properties']
         cmd.execute(arbiter, props)
@@ -30,3 +32,12 @@ class SetTest(TestCircus):
         self.assertEqual(watcher.options,
                          {'stdout_stream.class': 'FileStream'})
         self.assertEqual(watcher.actions, [0])
+
+        # setting hooks
+        props = cmd.message('dummy', 'hooks.before_start', 'some.hook')
+        props = props['properties']
+        cmd.execute(arbiter, props)
+        watcher = arbiter.watchers[0]
+        self.assertEqual(watcher.options['hooks.before_start'],
+                         'some.hook')
+        self.assertEqual(watcher.actions, [0, 0])
