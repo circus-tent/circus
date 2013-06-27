@@ -223,12 +223,14 @@ watcher:NAME - as many sections as you want
         is needed, it will be only triggered at the next socket event.
 
     **hooks.***
-        Available hooks: **before_start**, **after_start**, **before_stop**, **after_stop**
+        Available hooks: **before_start**, **before_spawn**, **after_start**,
+        **before_stop**, **after_stop**
 
         Define callback functions that hook into the watcher startup/shutdown process.
 
         If the hook returns **False** and if the hook is one of
-        **before_start** or **after_start**, the startup will be aborted.
+        **before_start**, **before_spawn** or  **after_start**, the startup
+        will be aborted.
 
         Notice that a hook that fails during the stopping process will not
         abort it.
