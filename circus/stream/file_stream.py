@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 from circus import logger
 
@@ -27,6 +28,9 @@ class FileStream(object):
         If max_bytes is zero, rollover never occurs.
         '''
         super(FileStream, self).__init__()
+        if filename is None:
+            fd, filename = tempfile.mkstemp()
+            os.close(fd)
         self._filename = filename
         self._max_bytes = int(max_bytes)
         self._backup_count = int(backup_count)

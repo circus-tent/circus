@@ -40,16 +40,34 @@ def convert_option(key, val):
         return int(val)
     elif key == 'respawn':
         return util.to_bool(val)
+    elif key.startswith('stderr_stream.') or key.startswith('stdout_stream.'):
+        subkey = key.split('.', 1)[-1]
+
+        if subkey in ('class', 'filename'):
+            return val
+        elif subkey in ('max_bytes', 'backup_count'):
+            return int(val)
+        elif subkey == 'refresh_time':
+            return float(val)
 
     raise ArgumentError("unknown key %r" % key)
 
 
 def validate_option(key, val):
-    if key not in ('numprocesses', 'warmup_delay', 'working_dir', 'uid',
-                   'gid', 'send_hup', 'shell', 'env', 'cmd', 'copy_env',
-                   'flapping_attempts', 'flapping_window', 'retry_in',
-                   'max_retry', 'graceful_timeout', 'stdout_stream',
-                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn'):
+    valid_keys = ('numprocesses', 'warmup_delay', 'working_dir', 'uid',
+                  'gid', 'send_hup', 'shell', 'env', 'cmd', 'copy_env',
+                  'flapping_attempts', 'flapping_window', 'retry_in',
+                  'max_retry', 'graceful_timeout', 'stdout_stream',
+                  'stderr_stream', 'max_age', 'max_age_variance', 'respawn')
+    valid_prefixes = ('stdout_stream', 'stderr_stream')
+
+    def _valid_prefix():
+        for prefix in valid_prefixes:
+            if key.startswith('%s.' % prefix):
+                return True
+        return False
+
+    if key not in valid_keys and not _valid_prefix():
         raise MessageError('unknown key %r' % key)
 
     if key in ('numprocesses', 'flapping_attempts', 'max_retry', 'max_age',

@@ -251,6 +251,25 @@ class Watcher(object):
         self.sockets = self.evpub_socket = None
         self.arbiter = None
 
+    def _reload_stream(self, key, val):
+        parts = key.split('.', 1)
+
+        if parts[0] == 'stdout':
+            self.stdout_stream_conf[parts[1]] = val
+            self.stdout_stream = get_stream(self.stdout_stream_conf)
+        else:
+            self.stderr_stream_conf[parts[1]] = val
+            self.stderr_stream = get_stream(self.stderr_stream_conf)
+
+        self._create_redirectors()
+        if self.stdout_redirector is not None:
+            self.stdout_redirector.start()
+
+        if self.stderr_redirector is not None:
+            self.stderr_redirector.start()
+
+        return 1
+
     def _create_redirectors(self):
         if self.stdout_stream:
             if self.stdout_redirector is not None:
@@ -500,10 +519,10 @@ class Watcher(object):
         """Kill process.
         """
         # remove redirections
-        if self.stdout_redirector is not None:
+        if self.stdout_redirector is not None and process.stdout is not None:
             self.stdout_redirector.remove_redirection(process.stdout)
 
-        if self.stderr_redirector is not None:
+        if self.stderr_redirector is not None and process.stderr is not None:
             self.stderr_redirector.remove_redirection(process.stderr)
 
         logger.debug("%s: kill process %s", self.name, process.pid)
@@ -752,7 +771,6 @@ class Watcher(object):
         - 0: trigger the process management
         - 1: trigger a graceful reload of the processes;
         """
-
         action = 0
 
         if key in self._options:
@@ -796,6 +814,9 @@ class Watcher(object):
         elif key == "max_age_variance":
             self.max_age_variance = int(val)
             action = 1
+        elif (key.startswith('stdout_stream') or
+              key.startswith('stderr_stream')):
+            action = self._reload_stream(key, val)
 
         # send update event
         self.notify_event("updated", {"time": time.time()})

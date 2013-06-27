@@ -23,8 +23,10 @@ class FakeWatcher(object):
 
 class FakeArbiter(object):
 
+    watcher_class = FakeWatcher
+
     def __init__(self):
-        self.watchers = [FakeWatcher()]
+        self.watchers = [self.watcher_class()]
 
     def get_watcher(self, name):
         return self.watchers[0]
