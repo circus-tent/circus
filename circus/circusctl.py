@@ -300,7 +300,7 @@ def parse_arguments(args, commands):
 
     options = {
         'endpoint': {'default': None, 'help': 'connection endpoint'},
-        'timeout': {'default': 30, 'help': 'connection timeout',
+        'timeout': {'default': 5, 'help': 'connection timeout',
                     'type': int},
 
         'help': {
