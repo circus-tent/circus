@@ -4,14 +4,14 @@ from circus.exc import MessageError
 
 class Listen(Command):
     """\
-        Suscribe to a watcher event
-        ===========================
+        Subscribe to a watcher event
+        ============================
 
         ZMQ
         ---
 
-        At any moment you can suscribe to circus event. Circus provide a
-        PUB/SUB feed on which any clients can suscribe. The suscriber
+        At any moment you can subscribe to a circus event. Circus provides
+        a PUB/SUB feed on which any clients can subscribe. The subscriber
         endpoint URI is set in the circus.ini configuration file.
 
         Events are pubsub topics:
@@ -24,7 +24,7 @@ class Listen(Command):
         - `watcher.<watchername>.stop`: when a watcher is stopped
         - `watcher.<watchername>.start`: when a watcher is started
 
-        All events messages are in a json.
+        All events messages are in a json struct.
 
         Command line
         ------------
@@ -32,7 +32,7 @@ class Listen(Command):
         The client has been updated to provide a simple way to listen on the
         events::
 
-            circusctl list [<topic>, ...]
+            circusctl listen [<topic>, ...]
 
         Example of result:
         ++++++++++++++++++
