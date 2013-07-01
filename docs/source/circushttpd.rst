@@ -197,10 +197,11 @@ An example Nginx config with websocket support:
       proxy_http_version 1.1;
       proxy_set_header Upgrade $http_upgrade;
       proxy_set_header Connection "upgrade";
-      proxy_set_header Host $host;
+      proxy_set_header Host $http_host;
+      proxy_set_header X-Forwarded-Host $http_host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto http;
+      proxy_set_header X-Forwarded-Proto $scheme;
       proxy_redirect off;
      }
 
@@ -223,18 +224,34 @@ Example::
     location / {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Host: $http_host;
+        proxy_set_header X-Forwarded-Proto: $scheme;
         proxy_redirect off;
         proxy_pass http://127.0.0.1:8080;
         auth_basic            "Restricted";
         auth_basic_user_file  /path/to/htpasswd;
     }
 
-
 The **htpasswd** file contains users and their passwords, and a password
 prompt will pop when you access the console.
 
 You can use Apache's htpasswd script to edit it, or the Python script they
 provide at: http://trac.edgewall.org/browser/trunk/contrib/htpasswd.py
+
+However, there's no native support for the combined use of HTTP Authentication and
+WebSockets (the server will throw HTTP 401 error codes). A workaround is to
+disable such authentication for the socket.io server.
+
+Example (needs to be added before the previous rule)::
+
+    location /socket.io {
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Host: $http_host;
+        proxy_set_header X-Forwarded-Proto: $scheme;
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:8080;
+    }
 
 Of course that's just one way to protect your web console, you could use
 many other techniques.
