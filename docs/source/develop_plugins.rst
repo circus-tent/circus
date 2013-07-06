@@ -100,8 +100,8 @@ Async requests
 
 In case you want to make any asynchronous operations (like a Tornado call or using
 periodicCall) make sure you are using the right loop. The loop you always want to 
-be using it self.loop as it gets set up by the base class. The default loop often
-isn't the same and therefore code might not get excuted as expected.
+be using is self.loop as it gets set up by the base class. The default loop often
+isn't the same and therefore code might not get executed as expected.
 
 
 Trying a plugin
