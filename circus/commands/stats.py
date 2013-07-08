@@ -107,13 +107,14 @@ class Stats(Command):
             return {"infos": infos}
 
     def _to_str(self, info):
-        if isinstance(info, basestring):
+        if isinstance(info, dict):
+            children = info.pop("children", [])
+            ret = [_INFOLINE % info]
+            for child in children:
+                ret.append("   " + _INFOLINE % child)
+            return "\n".join(ret)
+        else:  # basestring, int, ..
             return info
-        children = info.pop("children", [])
-        ret = [_INFOLINE % info]
-        for child in children:
-            ret.append("   " + _INFOLINE % child)
-        return "\n".join(ret)
 
     def console_msg(self, msg):
         if msg['status'] == "ok":

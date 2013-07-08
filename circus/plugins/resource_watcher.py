@@ -34,12 +34,9 @@ class ResourceWatcher(BaseObserver):
         mems = []
 
         for sub_info in stats.itervalues():
-            if isinstance(sub_info,  basestring):
-                # dead processes have a string instead of actual info
-                # ignore that
-                continue
-            cpus.append(sub_info['cpu'])
-            mems.append(sub_info['mem'])
+            if isinstance(sub_info,  dict):
+                cpus.append(sub_info['cpu'])
+                mems.append(sub_info['mem'])
 
         if cpus:
             max_cpu = max(cpus)
