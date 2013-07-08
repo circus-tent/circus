@@ -703,3 +703,14 @@ def create_udp_socket(mcast_addr, mcast_port):
     # And finally bind all interfaces
     sock.bind((any_addr, mcast_port))
     return sock
+
+
+class propertycache(object):
+    def __init__(self, func):
+        self.func = func
+        self.name = func.__name__
+
+    def __get__(self, obj, type=None):
+        result = self.func(obj)
+        self.cachevalue(obj, result)
+        return result
