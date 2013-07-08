@@ -114,7 +114,7 @@ class Arbiter(object):
 
         self.nodes_directory = {}
         # We add ourselves to the nods directory
-        self.nodes_direcotry[self.fqdn] = self.get_endpoint_info()
+        self.nodes_directory[self.fqdn] = self.get_endpoint_info()
 
         if self.statsd:
             cmd = "%s -c 'from circus import stats; stats.main()'" % \
