@@ -196,7 +196,7 @@ class Arbiter(object):
                                self.context, self.loop, self, self.check_delay)
 
     def get_endpoint_info(self):
-        return {'fqdn': socket.getfqdn,
+        return {'fqdn': self.fqdn,
                 'pubsub_endpoint': self.pubsub_endpoint,
                 'controller_endpoint': self.endpoint,
                 'stats_endpoint': self.stats_endpoint}
