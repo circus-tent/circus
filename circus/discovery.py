@@ -5,45 +5,39 @@ from urlparse import urlparse
 
 class AutoDiscovery(object):
 
-    def __init__(self, multicast_endpoint, loop, discovery_payload,
+    def __init__(self, multicast_endpoint, loop, nodes,
                  discovery_callback):
         """
-        :param discovery_payload: the payload that's sent to the other machines
-                                  via the UDP broadcast.
+        :param nodes: The list of nodes to send via UDP broadcast.
         :param discovery_callback: callabck called when a new node is detected
                                   on the cluster.
         """
         self.loop = loop
-        self.discovery_payload = discovery_payload
         self.discovery_callback = discovery_callback
 
         parsed = urlparse(multicast_endpoint).netloc.split(':')
-        self.multicast_addr, self.multicast_port = parsed[0], int(parsed[1])
+        addr = parsed[0], int(parsed[1])
 
-        self.sock = create_udp_socket(self.multicast_addr, self.multicast_port)
+        self.sock = create_udp_socket(*addr)
 
         self.loop.add_handler(self.sock.fileno(), self.get_message,
                               self.loop.READ)
-        self.discover()
+        # Send an UDP broadcast message to everyone, with our info.
+        self.send_message(addr, nodes=nodes, data_type='new-node')
 
-    def discover(self):
-        payload = json.dumps({'type': 'new-node',
-                              'data': self.discovery_payload})
-        self.sock.sendto(payload, (self.multicast_addr, self.multicast_port))
+    def send_message(self, addr, nodes, data_type):
+        payload = json.dumps({'type': data_type, 'nodes': nodes})
+        self.sock.sendto(payload, addr)
 
     def get_message(self, fd_no, type):
-        data, address = self.sock.recvfrom(1024)
+        data, emitter_addr = self.sock.recvfrom(1024)
+
         try:
-            data = json.loads(data)
+            self.discovery_callback(emitter_addr, json.loads(data),
+                                    self.send_message)
         except ValueError:
             self.log.warning('Unable to parse the message received from the '
                              'UDP socket')
-
-        if data.get('type') == 'new-node':
-            known_node = self.discovery_callback(data['data'])
-
-            if not known_node:
-                self.send_message(address)
 
 
 def create_udp_socket(multicast_addr, multicast_port, any_addr='0.0.0.0'):

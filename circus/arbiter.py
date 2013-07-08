@@ -112,6 +112,10 @@ class Arbiter(object):
         self.statsd = statsd
         self.stats_endpoint = stats_endpoint
 
+        self.nodes_directory = {}
+        # We add ourselves to the nods directory
+        self.nodes_direcotry[self.fqdn] = self.get_endpoint_info()
+
         if self.statsd:
             cmd = "%s -c 'from circus import stats; stats.main()'" % \
                 sys.executable
@@ -190,6 +194,28 @@ class Arbiter(object):
         self.loop = ioloop.IOLoop.instance()
         self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
                                self.context, self.loop, self, self.check_delay)
+
+    def get_endpoint_info(self):
+        return {'fqdn': socket.getfqdn,
+                'pubsub_endpoint': self.pubsub_endpoint,
+                'controller_endpoint': self.endpoint,
+                'stats_endpoint': self.stats_endpoint}
+
+    def add_new_node(self, data, emitter_addr, send_message):
+
+        data_type = data.get('type')
+
+        if data_type in ('new-node', 'new-node-ack'):
+            for node in data.pop('nodes'):
+                fqdn = data.pop('fqdn')
+
+                if fqdn != self.fqdn and fqdn not in self.nodes_directory:
+                    self.nodes_directory[fqdn] = data
+
+            if data_type == 'new-node':
+                send_message(emitter_addr, payload=self.nodes_directory,
+                             data_type='new-node-ack')
+            print self.nodes_directory
 
     def get_socket(self, name):
         return self.sockets.get(name, None)
