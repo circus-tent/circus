@@ -308,6 +308,13 @@ class Arbiter(object):
                 if not w.name.startswith('plugin:'):
                     num_procs = new_watcher_cfg['numprocesses']
                     old_watcher_cfg['numprocesses'] = num_procs
+                    # We need to remove 'env' from configs before
+                    # comparaison because 'env' is dynamic and may change
+                    # between old and new config (ex: $PS1)
+                    if 'env' in old_watcher_cfg:
+                        del old_watcher_cfg['env']
+                    if 'env' in new_watcher_cfg:
+                        del new_watcher_cfg['env']
                     if new_watcher_cfg == old_watcher_cfg:
                         # if nothing but the number of processes is
                         # changed, just changes this
