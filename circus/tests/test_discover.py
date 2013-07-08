@@ -1,6 +1,5 @@
 import unittest
 
-
 from circus.discovery import AutoDiscovery
 
 from zmq.eventloop import ioloop
@@ -12,16 +11,16 @@ class TestDiscover(unittest.TestCase):
         payload = "Beer. Now there's a temporary solution."
         loop = ioloop.IOLoop.instance()
 
-        self.callback_called = False
+        received_data = None
 
         def cb(data):
+            global received_data
             received_data = data
-            self.assertEquals(received_data, payload)
+            received_data = payload
             loop.stop()
-            self.callback_called = True
 
         AutoDiscovery('udp://237.219.251.97:12027', loop, payload, cb)
         loop.add_timeout(loop.time() + 1, loop.stop)
 
         loop.start()
-        self.assertTrue(self.callback_called)
+        self.assertEquals(received_data, payload)
