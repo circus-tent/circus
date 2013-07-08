@@ -675,7 +675,7 @@ def load_virtualenv(watcher):
 
 def create_udp_socket(mcast_addr, mcast_port):
     """Create an udp multicast socket for circusd cluster auto-discovery.
-    Mcas_addr must be between 224.0.0.0 and 239.255.255.255
+    mcast_addr must be between 224.0.0.0 and 239.255.255.255
     """
     try:
         ip_splitted = map(int, mcast_addr.split('.'))
