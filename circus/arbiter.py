@@ -6,6 +6,7 @@ from thread import get_ident
 import sys
 from time import sleep
 import select
+import socket
 
 import zmq
 from zmq.eventloop import ioloop
@@ -64,6 +65,7 @@ class Arbiter(object):
     - **debug** -- if True, adds a lot of debug info in the stdout (default:
       False)
     - **proc_name** -- the arbiter process name
+    - **fqdn** -- a unique identifier for the machine where circus runs.
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=.5,
                  prereload_fn=None, context=None, loop=None, statsd=False,
@@ -73,7 +75,7 @@ class Arbiter(object):
                  httpd_host='localhost', httpd_port=8080,
                  httpd_close_outputs=False, debug=False,
                  ssh_server=None, proc_name='circusd', pidfile=None,
-                 loglevel=None, logoutput=None):
+                 loglevel=None, logoutput=None, fqdn=None):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -86,6 +88,10 @@ class Arbiter(object):
         self.pidfile = pidfile
         self.loglevel = loglevel
         self.logoutput = logoutput
+
+        if fqdn is None:
+            fqdn = socket.getfqdn()
+        self.fqdn = fqdn
 
         self.ctrl = self.loop = None
         self.socket_event = False
@@ -377,7 +383,8 @@ class Arbiter(object):
                       ssh_server=cfg.get('ssh_server', None),
                       pidfile=cfg.get('pidfile', None),
                       loglevel=cfg.get('loglevel', None),
-                      logoutput=cfg.get('logoutput', None))
+                      logoutput=cfg.get('logoutput', None),
+                      fqdn=cfg.get('fqdn', None))
 
         # store the cfg which will be used, so it can be used later
         # for checking if the cfg has been changed
