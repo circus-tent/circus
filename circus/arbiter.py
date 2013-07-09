@@ -232,7 +232,6 @@ class Arbiter(object):
 
     def reload_from_config(self, config_file=None):
         new_cfg = get_config(config_file if config_file else self.config_file)
-
         # if arbiter is changed, reload everything
         if self.get_arbiter_config(new_cfg) != self._cfg:
             raise ReloadArbiterException
@@ -311,14 +310,14 @@ class Arbiter(object):
                                self.get_plugin_config(new_cfg, n))
             old_watcher_cfg = w._cfg.copy()
             if new_watcher_cfg != old_watcher_cfg:
-                if not w.name.startswith('plugin:'):
-                    num_procs = new_watcher_cfg['numprocesses']
-                    old_watcher_cfg['numprocesses'] = num_procs
-                    if new_watcher_cfg == old_watcher_cfg:
-                        # if nothing but the number of processes is
-                        # changed, just changes this
-                        w.set_numprocesses(int(num_procs))
-                        continue
+                num_procs = new_watcher_cfg.get('numprocesses')
+                old_watcher_cfg['numprocesses'] = num_procs
+
+                if new_watcher_cfg == old_watcher_cfg:
+                    # if nothing but the number of processes is
+                    # changed, just changes this
+                    w.set_numprocesses(int(num_procs))
+                    continue
 
                 # Others things are changed. Just delete and add the watcher.
                 changed_wn.add(n)
@@ -348,7 +347,6 @@ class Arbiter(object):
     @classmethod
     def load_from_config(cls, config_file):
         cfg = get_config(config_file)
-
         watchers = []
         for watcher in cfg.get('watchers', []):
             watchers.append(Watcher.load_from_config(watcher))
