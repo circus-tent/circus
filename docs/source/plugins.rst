@@ -110,8 +110,16 @@ ResourceWatcher
     **max_cpu**
         The maximum cpu one process is allowed to consume (in %). Default: 90
 
+    **min_cpu**
+	The minimum cpu one process should consume (in %). Default: None (no minimum)  
+	you can set the min_cpu to 0 (zero), in this case if one process consume exactly 0% cpu, it will trigger an exceeded limit.
+
     **max_mem**
         The amount of memory one process of this watcher is allowed to consume (in %). Default: 90
+
+    **min_mem**
+	The minimum memory one process should consume (in %). Default: None (no minimum)  
+	you can set the min_mem to 0 (zero), in this case if one process consume exactly 0% memory, it will trigger an exceeded limit.
 
     **health_threshold**
         The health is the average of cpu and memory (in %) the watchers processes are allowed to consume (in %). Default: 75
@@ -127,5 +135,13 @@ ResourceWatcher
         ...
 
         [watcher:program]
-        c
+        cmd = sleep 120
+
+	[plugin:myplugin]
+	use = circus.plugins.resource_watcher.ResourceWatcher
+	watcher = program
+	min_cpu = 10
+	max_cpu = 70
+	min_mem = 0
+	max_mem = 20
 
