@@ -53,7 +53,7 @@ class Controller(object):
         self.ctrl_socket.linger = 0
         self._init_stream()
 
-        node_data = {self.arbiter.fqdn: self.arbiter.get_endpoint_info()}
+        node_data = {self.arbiter.fqdn: self.arbiter.endpoint}
         AutoDiscovery(self.multicast_endpoint, self.loop,
                       node_data, self.arbiter.add_new_node)
 

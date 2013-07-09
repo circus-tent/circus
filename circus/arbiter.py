@@ -114,7 +114,7 @@ class Arbiter(object):
 
         self.nodes_directory = {}
         # We add ourselves to the nods directory
-        self.nodes_directory[self.fqdn] = self.get_endpoint_info()
+        self.nodes_directory[self.fqdn] = self.endpoint
 
         if self.statsd:
             cmd = "%s -c 'from circus import stats; stats.main()'" % \
@@ -195,23 +195,18 @@ class Arbiter(object):
         self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
                                self.context, self.loop, self, self.check_delay)
 
-    def get_endpoint_info(self):
-        return {'pubsub_endpoint': self.pubsub_endpoint,
-                'controller_endpoint': self.endpoint,
-                'stats_endpoint': self.stats_endpoint}
-
     def add_new_node(self, data, emitter_addr, send_message):
 
         data_type = data.get('type')
 
-        if data_type in ('new-node', 'new-node-ack'):
+        if data_type in ('hey', 'hey-back'):
             for fqdn, nodes in data.get('nodes').items():
                 if fqdn != self.fqdn and fqdn not in self.nodes_directory:
-                    self.nodes_directory[fqdn] = data
+                    self.nodes_directory[fqdn] = nodes
 
-            if data_type == 'new-node':
+            if data_type == 'hey':
                 send_message(emitter_addr, nodes=self.nodes_directory,
-                             data_type='new-node-ack')
+                             data_type='hey-back')
             print self.nodes_directory
 
     def get_socket(self, name):

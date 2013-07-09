@@ -23,7 +23,7 @@ class AutoDiscovery(object):
         self.loop.add_handler(self.sock.fileno(), self.get_message,
                               self.loop.READ)
         # Send an UDP broadcast message to everyone, with our info.
-        self.send_message(addr, nodes=nodes, data_type='new-node')
+        self.send_message(addr, nodes=nodes, data_type='hey')
 
     def send_message(self, addr, nodes, data_type):
         payload = json.dumps({'type': data_type, 'nodes': nodes})
