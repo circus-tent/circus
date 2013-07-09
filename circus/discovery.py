@@ -33,7 +33,7 @@ class AutoDiscovery(object):
         data, emitter_addr = self.sock.recvfrom(1024)
 
         try:
-            self.discovery_callback(emitter_addr, json.loads(data),
+            self.discovery_callback(json.loads(data), emitter_addr,
                                     self.send_message)
         except ValueError:
             self.log.warning('Unable to parse the message received from the '

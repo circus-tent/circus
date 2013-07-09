@@ -196,8 +196,7 @@ class Arbiter(object):
                                self.context, self.loop, self, self.check_delay)
 
     def get_endpoint_info(self):
-        return {'fqdn': self.fqdn,
-                'pubsub_endpoint': self.pubsub_endpoint,
+        return {'pubsub_endpoint': self.pubsub_endpoint,
                 'controller_endpoint': self.endpoint,
                 'stats_endpoint': self.stats_endpoint}
 
@@ -206,14 +205,12 @@ class Arbiter(object):
         data_type = data.get('type')
 
         if data_type in ('new-node', 'new-node-ack'):
-            for node in data.pop('nodes'):
-                fqdn = data.pop('fqdn')
-
+            for fqdn, nodes in data.get('nodes').items():
                 if fqdn != self.fqdn and fqdn not in self.nodes_directory:
                     self.nodes_directory[fqdn] = data
 
             if data_type == 'new-node':
-                send_message(emitter_addr, payload=self.nodes_directory,
+                send_message(emitter_addr, nodes=self.nodes_directory,
                              data_type='new-node-ack')
             print self.nodes_directory
 

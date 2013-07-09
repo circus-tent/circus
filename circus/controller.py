@@ -5,13 +5,10 @@ try:
 except ImportError:
     from Queue import Queue, Empty  # NOQA
 
-from urlparse import urlparse
-
 import zmq
 from zmq.utils.jsonapi import jsonmod as json
 from zmq.eventloop import ioloop, zmqstream
 
-from circus.util import create_udp_socket
 from circus.discovery import AutoDiscovery
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
@@ -56,9 +53,9 @@ class Controller(object):
         self.ctrl_socket.linger = 0
         self._init_stream()
 
+        node_data = {self.arbiter.fqdn: self.arbiter.get_endpoint_info()}
         AutoDiscovery(self.multicast_endpoint, self.loop,
-                      self.arbiter.get_endpoint_info(),
-                      self.arbiter.add_new_node)
+                      node_data, self.arbiter.add_new_node)
 
         # XXX handle arbiter heartbeat
 
