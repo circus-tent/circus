@@ -8,10 +8,6 @@ from circus import logger
 from zmq.eventloop import ioloop
 
 
-import logging
-logger = logging.getLogger('circus-stats')
-logging.basicConfig()
-
 class BaseStatsCollector(ioloop.PeriodicCallback):
 
     def __init__(self, streamer, name, callback_time=1., io_loop=None,
