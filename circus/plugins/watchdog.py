@@ -1,6 +1,5 @@
 import re
 import socket
-import select
 import time
 import json
 import signal
@@ -51,6 +50,7 @@ class WatchDog(CircusPlugin):
                  **config):
         super(WatchDog, self).__init__(endpoint, pubsub_endpoint,
                                        check_delay, ssh_server=ssh_server)
+
         self.loop_rate = float(config.get("loop_rate", 60))  # in seconds
         self.watchers_regex = config.get("watchers_regex", ".*")
         self.msg_regex = config.get("msg_regex",
@@ -61,7 +61,6 @@ class WatchDog(CircusPlugin):
 
         self.pid_status = dict()
         self.period = None
-        self.socket_period = None
         self.starting = True
 
         logger.info("Started circus plugin: watchdog")
@@ -81,9 +80,6 @@ class WatchDog(CircusPlugin):
     def handle_stop(self):
         if self.period is not None:
             self.period.stop()
-        if self.socket_period is not None:
-            self.socket_period.stop()
-
         self.sock = None
 
     def handle_recv(self, data):
@@ -143,8 +139,8 @@ class WatchDog(CircusPlugin):
                                     pid)
 
     def _bind_socket(self):
-        """bind the listening socket for watchdog udp and start a
-        periodic loop for handling udp received messages.
+        """bind the listening socket for watchdog udp and start an event
+        handler for handling udp received messages.
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
@@ -158,11 +154,9 @@ class WatchDog(CircusPlugin):
             self.sock = None
         else:
             self.sock.settimeout(1)
-            self.socket_period = ioloop.PeriodicCallback(
-                self.receive_udp_socket,
-                1000,
-                self.loop)
-            self.socket_period.start()
+            self.loop.add_handler(self.sock.fileno(),
+                                  self.receive_udp_socket,
+                                  ioloop.IOLoop.READ)
             logger.info("Watchdog listening UDP on %s:%s",
                         self.watchdog_ip, self.watchdog_port)
 
@@ -183,49 +177,26 @@ class WatchDog(CircusPlugin):
         if result is not None:
             return result.groupdict()
 
-    def receive_udp_socket(self):
+    def receive_udp_socket(self, fd, events):
         """Check the socket for received UDP message.
         This method is periodically called by the ioloop.
         If messages are received and parsed, update the status of
         the corresponing pid.
         """
-        if self.sock is not None:
-            try:
-                ready = select.select([self.sock], [], [], 0)
-            except select.error as select_error:
-                logger.error("Error in select in watchdog udp listen"
-                             " errno: %s", select_error.errno)
+        data, _ = self.sock.recvfrom(1024)
+        #logger.debug('received data:%s', data)
+        heartbeat = self._decode_received_udp_message(data)
+        if "pid" in heartbeat:
+            if heartbeat['pid'] in self.pid_status:
+                # TODO: check and compare received time
+                # with our own time.time()
+                self.pid_status[heartbeat["pid"]][
+                    'last_activity'] = time.time()
             else:
-                while ready[0]:
-                    try:
-                        # buffer size is 1024 bytes
-                        data, addr = self.sock.recvfrom(1024)
-                    except socket.errora as socket_error:
-                        logger.error("Error while receiving data on "
-                                     "socket: errno: [%s]",
-                                     socket_error.errno)
-                        # now rebind the udp server
-                        self._bind_socket()
-                    else:
-                        # here decode the watchdog message and update
-                        # the pid status
-                        #logger.debug('received data:%s', data)
-                        heartbeat = self._decode_received_udp_message(data)
-                        if "pid" in heartbeat:
-                            if heartbeat['pid'] in self.pid_status:
-                                # TODO: check and compare received time
-                                # with our own time.time()
-                                self.pid_status[heartbeat["pid"]][
-                                    'last_activity'] = time.time()
-                            else:
-                                logger.warning("received watchdog for a"
-                                               "non monitored process:%s",
-                                               heartbeat)
-                        logger.debug("watchdog message: %s", heartbeat)
-                    try:
-                        ready = select.select([self.sock], [], [], 0)
-                    except select.error as select_error:
-                        break
+                logger.warning("received watchdog for a"
+                               "non monitored process:%s",
+                               heartbeat)
+        logger.debug("watchdog message: %s", heartbeat)
 
     def look_after(self):
         """Checks for the watchdoged watchers and restart a process if no

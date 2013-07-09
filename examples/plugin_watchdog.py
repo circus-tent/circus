@@ -10,7 +10,7 @@ sock = socket.socket(socket.AF_INET,
 
 my_pid = os.getpid()
 
-for _ in range(5):
+for _ in range(25):
     message = "{pid};{time}".format(pid=my_pid, time=time.time())
     print('sending:{0}'.format(message))
     sock.sendto(message, (UDP_IP, UDP_PORT))
