@@ -171,7 +171,7 @@ class Watcher(object):
                  copy_path=False, max_age=0, max_age_variance=30,
                  hooks=None, respawn=True, autostart=True, on_demand=False,
                  virtualenv=None, close_child_stdout=False,
-                 close_child_stderr=False, **options):
+                 close_child_stderr=False, fqdn=None, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.on_demand = on_demand
@@ -207,6 +207,7 @@ class Watcher(object):
         self.close_child_stdout = close_child_stdout
         self.close_child_stderr = close_child_stderr
         self.loop = loop or ioloop.IOLoop.instance()
+        self.fqdn = fqdn
 
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
@@ -333,6 +334,7 @@ class Watcher(object):
     def notify_event(self, topic, msg):
         """Publish a message on the event publisher channel"""
 
+        msg['fqdn'] = self.fqdn
         json_msg = json.dumps(msg)
         if isinstance(json_msg, unicode):
             json_msg = json_msg.encode('utf8')

@@ -58,6 +58,8 @@ def main():
 
     parser.add_argument('--ssh', default=None, help='SSH Server')
 
+    parser.add_argument('--fqdn', help='FQDN of circus node')
+
     args = parser.parse_args()
 
     if args.version:
@@ -77,7 +79,7 @@ def main():
     logger.addHandler(h)
 
     stats = StatsStreamer(args.endpoint, args.pubsub, args.statspoint,
-                          args.ssh)
+                          args.ssh, fqdn=args.fqdn)
     try:
         stats.start()
     finally:
