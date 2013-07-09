@@ -1,39 +1,249 @@
-"""WatchDog plugin
-
-One process to watch several other processes
-
-2 methods:
-- uses of zmqueue to make a heartbeat between the processes
-  (see: https://github.com/mozilla-services/loads/blob/master/loads/transport/heartbeat.py)
-- bind on a udp socket and wait for watchdog messages
-
-Each watchdog message should have:
-    * the pid of the process generating the watchdog (used for identifying the
-      process in circus processes list)
-    * a timestamp ?
-
-"""
-
+import re
 import socket
+import select
+import time
+import json
+import signal
+
 from zmq.eventloop import ioloop
 from circus.plugins import CircusPlugin
+from circus import logger
 
 
 class WatchDog(CircusPlugin):
-    """Plugin that sends stuff to statsd
+    """Plugin that bind an udp socket and wait for watchdog messages.
+    For "watchdoged" processes, the watchdog will kill them if they
+    don't send heartbeat in a certain period of time materialized by
+    loop_rate * max_count. (circus will automatically restart the missing
+    processes in the watcher)
+
+    Each monitored process should send udp message at least at the loop_rate.
+    The udp message format is a line of text, decoded using **msg_regex**
+    parameter.
+    The heartbeat message MUST at least contain the pid of the process sending
+    the message.
+
+    The list of monitored watchers are determined by the parameter
+    **watchers_regex** in the configuration.
+
+    At startup, the plugin does not know all the circus watchers and pids,
+    so it's needed to discover all watchers and pids. After the discover, the
+    monitoring list is updated by messages from circusd handled in
+    self.handle_recv
+
+    Plugin Options --
+
+    - **loop_rate** -- watchdog loop rate in seconds. At each loop, WatchDog
+      will looks for "dead" processes.
+    - **watchers_regex** -- regex for matching watcher names that should be
+      monitored by the watchdog (default: ".*" all watchers are monitored)
+    - **msg_regex** -- regex for decoding the received heartbeat
+      message in udp (default: "^(?P<pid>.*);(?P<timestamp>.*)$")
+      the default format is a simple text message: "pid;timestamp"
+    - **max_count** -- max number of passed loop without receiving
+      any heartbeat before restarting process (default: 3)
+    - **ip** -- ip the watchdog will bind on (default: 127.0.0.1)
+    - **port** -- port the watchdog will bind on (default: 1664)
     """
     name = 'watchdog'
-    default_app_name = "app"
 
     def __init__(self, endpoint, pubsub_endpoint, check_delay, ssh_server,
                  **config):
         super(WatchDog, self).__init__(endpoint, pubsub_endpoint,
                                        check_delay, ssh_server=ssh_server)
-        self.app = config.get('application_name', self.default_app_name)
+        self.loop_rate = float(config.get("loop_rate", 60))  # in seconds
+        self.watchers_regex = config.get("watchers_regex", ".*")
+        self.msg_regex = config.get("msg_regex",
+                                    "^(?P<pid>.*);(?P<timestamp>.*)$")
+        self.max_count = config.get("max_count", 3)
+        self.watchdog_ip = config.get("ip", "127.0.0.1")
+        self.watchdog_port = config.get("port", 1664)
 
-        # initialize statsd
-        self.statsd = StatsdClient(host=config.get('host', 'localhost'),
-                                   port=int(config.get('port', '8125')),
-                                   prefix=self.prefix,
-                                   sample_rate=float(
-                                       config.get('sample_rate', '1.0')))
+        self.pid_status = dict()
+        self.period = None
+        self.socket_period = None
+        self.starting = True
+
+        logger.info("Started circus plugin: watchdog")
+
+    def handle_init(self):
+        """Initialization of plugin
+
+        - set the periodic call back for the process monitoring (at loop_rate)
+        - create the listening UDP socket
+        """
+        self.period = ioloop.PeriodicCallback(self.look_after,
+                                              self.loop_rate * 1000,
+                                              self.loop)
+        self.period.start()
+        self._bind_socket()
+
+    def handle_stop(self):
+        if self.period is not None:
+            self.period.stop()
+        if self.socket_period is not None:
+            self.socket_period.stop()
+
+        self.sock = None
+
+    def handle_recv(self, data):
+        """Handle received message from circusd
+
+        We need to handle two messages:
+        - spawn: add a new monitored child pid
+        - reap: remove a killed child pid from monitoring
+        """
+        topic, msg = data
+        topic_parts = topic.split(".")
+        logger.debug("received data from circusd: %s, %s", topic_parts, msg)
+        # check if monitored watchers:
+        if topic_parts[0] == 'watcher' and \
+                self._match_watcher_name(topic_parts[1]):
+            try:
+                message = json.loads(msg)
+            except ValueError:
+                logger.error("Error while decoding json for message: %s",
+                             msg)
+            else:
+                if "process_pid" not in message:
+                    logger.warning('no process_pid in message')
+                    return
+                pid = str(message.get("process_pid"))
+                if topic_parts[2] == "spawn":
+                    self.pid_status[pid] = dict(watcher=topic_parts[1],
+                                                last_activity=time.time())
+                    logger.info("added new monitored pid for %s:%s",
+                                topic_parts[1],
+                                pid)
+                elif topic_parts[2] == "reap":
+                    old_pid = self.pid_status.pop(pid)
+                    logger.info("removed monitored pid for %s:%s",
+                                old_pid['watcher'],
+                                pid)
+
+    def _discover_monitored_pids(self):
+        """Try to discover all the monitored pids.
+
+        This should be done only at startup time, because if new watchers or
+        pids are created in running time, we should receive the message
+        from circusd which is handled by self.handle_recv
+        """
+        self.pid_status = dict()
+        all_watchers = self.call("list")
+        for watcher_name in all_watchers['watchers']:
+            if self._match_watcher_name(watcher_name):
+                processes = self.call("list", name=watcher_name)
+                if 'pids' in processes:
+                    for pid in processes['pids']:
+                        pid = str(pid)
+                        self.pid_status[pid] = dict(watcher=watcher_name,
+                                                    last_activity=time.time())
+                        logger.info("discovered: %s, pid:%s",
+                                    watcher_name,
+                                    pid)
+
+    def _bind_socket(self):
+        """bind the listening socket for watchdog udp and start a
+        periodic loop for handling udp received messages.
+        """
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            self.sock.bind((self.watchdog_ip, self.watchdog_port))
+        except socket.error as socket_error:
+            logger.error(
+                "Problem while binding watchdog socket on %s:%s (err %s",
+                self.watchdog_ip,
+                self.watchdog_port,
+                str(socket_error))
+            self.sock = None
+        else:
+            self.sock.settimeout(1)
+            self.socket_period = ioloop.PeriodicCallback(
+                self.receive_udp_socket,
+                1000,
+                self.loop)
+            self.socket_period.start()
+            logger.info("Watchdog listening UDP on %s:%s",
+                        self.watchdog_ip, self.watchdog_port)
+
+    def _match_watcher_name(self, name):
+        """Match the given watcher name with the watcher_regex given in config
+
+        :return: re.match object or None
+        """
+        return re.match(self.watchers_regex, name)
+
+    def _decode_received_udp_message(self, data):
+        """decode the received message according to the msg_regex
+
+        :return: decoded message
+        :rtype: dict or None
+        """
+        result = re.match(self.msg_regex, data)
+        if result is not None:
+            return result.groupdict()
+
+    def receive_udp_socket(self):
+        """Check the socket for received UDP message.
+        This method is periodically called by the ioloop.
+        If messages are received and parsed, update the status of
+        the corresponing pid.
+        """
+        if self.sock is not None:
+            try:
+                ready = select.select([self.sock], [], [], 0)
+            except select.error as select_error:
+                logger.error("Error in select in watchdog udp listen"
+                             " errno: %s", select_error.errno)
+            else:
+                while ready[0]:
+                    try:
+                        # buffer size is 1024 bytes
+                        data, addr = self.sock.recvfrom(1024)
+                    except socket.errora as socket_error:
+                        logger.error("Error while receiving data on "
+                                     "socket: errno: [%s]",
+                                     socket_error.errno)
+                        # now rebind the udp server
+                        self._bind_socket()
+                    else:
+                        # here decode the watchdog message and update
+                        # the pid status
+                        #logger.debug('received data:%s', data)
+                        heartbeat = self._decode_received_udp_message(data)
+                        if "pid" in heartbeat:
+                            if heartbeat['pid'] in self.pid_status:
+                                # TODO: check and compare received time
+                                # with our own time.time()
+                                self.pid_status[heartbeat["pid"]][
+                                    'last_activity'] = time.time()
+                            else:
+                                logger.warning("received watchdog for a"
+                                               "non monitored process:%s",
+                                               heartbeat)
+                        logger.debug("watchdog message: %s", heartbeat)
+                    try:
+                        ready = select.select([self.sock], [], [], 0)
+                    except select.error as select_error:
+                        break
+
+    def look_after(self):
+        """Checks for the watchdoged watchers and restart a process if no
+        received watchdog after the loop_rate * max_count period.
+        """
+        # if first check, do a full discovery first.
+        if self.starting:
+            self._discover_monitored_pids()
+            self.starting = False
+
+        max_timeout = self.loop_rate * self.max_count
+        too_old_time = time.time() - max_timeout
+        for pid, detail in self.pid_status.iteritems():
+            if detail['last_activity'] < too_old_time:
+                logger.info("watcher:%s, pid:%s is not responding. Kill it !",
+                            detail['watcher'],
+                            pid)
+                self.cast("signal",
+                          name=detail['watcher'],
+                          pid=int(pid),
+                          signum=signal.SIGKILL)
