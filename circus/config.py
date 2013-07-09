@@ -168,7 +168,7 @@ def get_config(config_file):
     config['pidfile'] = dget('circus', 'pidfile')
     config['loglevel'] = dget('circus', 'loglevel')
     config['logoutput'] = dget('circus', 'logoutput')
-    config['fqdn'] = dget('circus', 'fqdn', None, str)
+    config['fqdn_prefix'] = dget('circus', 'fqdn_prefix', None, str)
 
     # Initialize watchers, plugins & sockets to manage
     watchers = []
