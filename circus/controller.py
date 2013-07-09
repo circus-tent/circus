@@ -5,13 +5,11 @@ try:
 except ImportError:
     from Queue import Queue, Empty  # NOQA
 
-from urlparse import urlparse
-
 import zmq
 from zmq.utils.jsonapi import jsonmod as json
 from zmq.eventloop import ioloop, zmqstream
 
-from circus.util import create_udp_socket
+from circus.discovery import AutoDiscovery
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError
@@ -55,13 +53,11 @@ class Controller(object):
         self.ctrl_socket.linger = 0
         self._init_stream()
 
-        # Initialize UDP Socket
-        multicast_addr, multicast_port = urlparse(self.multicast_endpoint)\
-            .netloc.split(':')
-        self.udp_socket = create_udp_socket(multicast_addr, multicast_port)
-        self.loop.add_handler(self.udp_socket.fileno(),
-                              self.handle_autodiscover_message,
-                              ioloop.IOLoop.READ)
+        node_data = {self.arbiter.fqdn: set([self.arbiter.endpoint])}
+        AutoDiscovery(self.multicast_endpoint, self.loop,
+                      node_data, self.arbiter.add_new_node)
+
+        # XXX handle arbiter heartbeat
 
     def start(self):
         self.initialize()
@@ -105,12 +101,6 @@ class Controller(object):
         else:
             logger.debug("got message %s", msg)
             self.add_job(cid, msg)
-
-    def handle_autodiscover_message(self, fd_no, type):
-        data, address = self.udp_socket.recvfrom(1024)
-        data = json.loads(data)
-        self.udp_socket.sendto(json.dumps({'endpoint': self.endpoint}),
-                               address)
 
     def dispatch(self, job):
         cid, msg = job
