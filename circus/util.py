@@ -10,6 +10,7 @@ import sys
 import shlex
 import time
 import socket
+import json
 from zmq import ssh
 from ConfigParser import (ConfigParser, MissingSectionHeaderError,
                           ParsingError, DEFAULTSECT)
@@ -705,12 +706,8 @@ def create_udp_socket(mcast_addr, mcast_port):
     return sock
 
 
-class propertycache(object):
-    def __init__(self, func):
-        self.func = func
-        self.name = func.__name__
-
-    def __get__(self, obj, type=None):
-        result = self.func(obj)
-        self.cachevalue(obj, result)
-        return result
+class ComplexEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        return json.JSONEncoder.default(self, obj)

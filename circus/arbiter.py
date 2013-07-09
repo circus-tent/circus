@@ -114,7 +114,7 @@ class Arbiter(object):
 
         self.nodes_directory = {}
         # We add ourselves to the nods directory
-        self.nodes_directory[self.fqdn] = self.endpoint
+        self.nodes_directory[self.fqdn] = set([self.endpoint])
 
         if self.statsd:
             cmd = "%s -c 'from circus import stats; stats.main()'" % \
@@ -201,8 +201,19 @@ class Arbiter(object):
 
         if data_type in ('hey', 'hey-back'):
             for fqdn, nodes in data.get('nodes').items():
-                if fqdn != self.fqdn and fqdn not in self.nodes_directory:
-                    self.nodes_directory[fqdn] = nodes
+                # Remove the localhost node addresses and replace 0.0.0.0 by
+                # the emitter address
+                if fqdn != self.fqdn:
+                    if fqdn not in self.nodes_directory:
+                        self.nodes_directory[fqdn] = set()
+
+                    for node in nodes:
+                        if node.startswith('tcp://127.'):
+                            continue
+                        elif node.startswith('tcp://0.0.0.0'):
+                            node = node.replace('0.0.0.0', emitter_addr[0])
+
+                        self.nodes_directory[fqdn].add(node)
 
             if data_type == 'hey':
                 send_message(emitter_addr, nodes=self.nodes_directory,
@@ -261,9 +272,9 @@ class Arbiter(object):
         added_sn = new_sn - current_sn
         deleted_sn = current_sn - new_sn
         maybechanged_sn = current_sn - deleted_sn
-        changed_sn = set([])
-        wn_with_changed_socket = set([])
-        wn_with_deleted_socket = set([])
+        changed_sn = set()
+        wn_with_changed_socket = set()
+        wn_with_deleted_socket = set()
 
         # get changed sockets
         for n in maybechanged_sn:

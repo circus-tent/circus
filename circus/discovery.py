@@ -2,6 +2,8 @@ import json
 import socket
 from urlparse import urlparse
 
+from circus.util import ComplexEncoder
+
 
 class AutoDiscovery(object):
 
@@ -26,7 +28,8 @@ class AutoDiscovery(object):
         self.send_message(addr, nodes=nodes, data_type='hey')
 
     def send_message(self, addr, nodes, data_type):
-        payload = json.dumps({'type': data_type, 'nodes': nodes})
+        payload = json.dumps({'type': data_type, 'nodes': nodes},
+                             cls=ComplexEncoder)
         self.sock.sendto(payload, addr)
 
     def get_message(self, fd_no, type):
