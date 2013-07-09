@@ -20,9 +20,12 @@ class AutoDiscovery(object):
         parsed = urlparse(multicast_endpoint).netloc.split(':')
         addr = parsed[0], int(parsed[1])
 
-        self.sock = create_udp_socket(*addr)
+        self.recv_sock = create_multicast_udp_socket(*addr)
+        self.send_sock = create_udp_socket()
 
-        self.loop.add_handler(self.sock.fileno(), self.get_message,
+        self.loop.add_handler(self.recv_sock.fileno(), self.get_message,
+                              self.loop.READ)
+        self.loop.add_handler(self.send_sock.fileno(), self.get_message,
                               self.loop.READ)
         # Send an UDP broadcast message to everyone, with our info.
         self.send_message(addr, nodes=nodes, data_type='hey')
@@ -30,10 +33,15 @@ class AutoDiscovery(object):
     def send_message(self, addr, nodes, data_type):
         payload = json.dumps({'type': data_type, 'nodes': nodes},
                              cls=ComplexEncoder)
-        self.sock.sendto(payload, addr)
+        self.send_sock.sendto(payload, addr)
 
     def get_message(self, fd_no, type):
-        data, emitter_addr = self.sock.recvfrom(1024)
+        if fd_no == self.recv_sock.fileno():
+            sock = self.recv_sock
+        elif fd_no == self.send_sock.fileno():
+            sock = self.send_sock
+
+        data, emitter_addr = sock.recvfrom(1024)
 
         try:
             self.discovery_callback(json.loads(data), emitter_addr,
@@ -43,10 +51,15 @@ class AutoDiscovery(object):
                              'UDP socket')
 
 
-def create_udp_socket(multicast_addr, multicast_port, any_addr='0.0.0.0'):
-    any_addr = '0.0.0.0'
+def create_udp_socket():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,
                          socket.IPPROTO_UDP)
+    return sock
+
+
+def create_multicast_udp_socket(multicast_addr, multicast_port,
+        any_addr='0.0.0.0'):
+    sock = create_udp_socket()
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     if hasattr(socket, 'SO_REUSEPORT'):
