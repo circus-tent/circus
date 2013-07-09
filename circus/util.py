@@ -706,7 +706,7 @@ def create_udp_socket(mcast_addr, mcast_port):
     return sock
 
 
-class ComplexEncoder(json.JSONEncoder):
+class SetEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, set):
             return list(obj)

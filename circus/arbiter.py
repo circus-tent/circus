@@ -204,7 +204,7 @@ class Arbiter(object):
 
         data_type = data.get('type')
 
-        if data_type in ('hey', 'hey-back'):
+        if data_type in ('new-node', 'new-node-ack'):
             for fqdn, nodes in data.get('nodes').items():
                 if fqdn != self.fqdn:
                     if fqdn not in self.nodes_directory:
@@ -221,9 +221,9 @@ class Arbiter(object):
 
                         self.nodes_directory[fqdn].add(node)
 
-            if data_type == 'hey':
+            if data_type == 'new-node':
                 send_message(emitter_addr, nodes=self.nodes_directory,
-                             data_type='hey-back')
+                             data_type='new-node-ack')
 
     def get_socket(self, name):
         return self.sockets.get(name, None)

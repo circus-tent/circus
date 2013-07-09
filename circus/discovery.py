@@ -2,7 +2,7 @@ import json
 import socket
 from urlparse import urlparse
 
-from circus.util import ComplexEncoder
+from circus.util import SetEncoder
 
 
 class AutoDiscovery(object):
@@ -11,7 +11,7 @@ class AutoDiscovery(object):
                  discovery_callback):
         """
         :param nodes: The list of nodes to send via UDP broadcast.
-        :param discovery_callback: callabck called when a new node is detected
+        :param discovery_callback: callback called when a new node is detected
                                   on the cluster.
         """
         self.loop = loop
@@ -25,11 +25,11 @@ class AutoDiscovery(object):
         self.loop.add_handler(self.sock.fileno(), self.get_message,
                               self.loop.READ)
         # Send an UDP broadcast message to everyone, with our info.
-        self.send_message(addr, nodes=nodes, data_type='hey')
+        self.send_message(addr, nodes=nodes, data_type='new-node')
 
     def send_message(self, addr, nodes, data_type):
         payload = json.dumps({'type': data_type, 'nodes': nodes},
-                             cls=ComplexEncoder)
+                             cls=SetEncoder)
         self.sock.sendto(payload, addr)
 
     def get_message(self, fd_no, type):

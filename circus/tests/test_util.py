@@ -4,12 +4,13 @@ import grp
 import pwd
 from psutil import Popen
 from mock import Mock, patch
+import json
 
 
 from circus.tests.support import unittest
 from circus.util import (get_info, bytes2human, to_bool, parse_env_str,
                          env_to_str, to_uid, to_gid, replace_gnu_args,
-                         get_python_version)
+                         get_python_version, SetEncoder)
 
 
 class TestUtil(unittest.TestCase):
@@ -154,3 +155,8 @@ class TestUtil(unittest.TestCase):
         self.assertGreaterEqual(py_version[0], 2)
         self.assertGreaterEqual(py_version[1], 0)
         self.assertGreaterEqual(py_version[2], 0)
+
+    def test_json_set_encoder(self):
+        encoded = json.dumps(set([1, 2, 3]), cls=SetEncoder)
+        decoded = json.loads(encoded)
+        self.assertEquals(sorted(decoded), [1, 2, 3])

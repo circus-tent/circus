@@ -38,13 +38,13 @@ class TestArbiterDiscovery(unittest.TestCase):
         self.arbiter.__class__ = Arbiter
         self.send_message = mock.MagicMock()
 
-    def test_add_new_node_hey(self):
+    def test_add_new_node(self):
         known_nodes = {'local': set(['tcp://127.0.0.1']),
                        'distant': set(['tcp://0.0.0.0:5555']),
                        'fixedip': set(['tcp://1.2.3.4:5678'])}
 
         Arbiter.add_new_node(self.arbiter,
-                             {'type': 'hey', 'nodes': known_nodes},
+                             {'type': 'new-node', 'nodes': known_nodes},
                              ('192.168.1.1', 12345), self.send_message)
         self.assertEquals(len(self.send_message.call_args_list), 1)
 
@@ -57,12 +57,12 @@ class TestArbiterDiscovery(unittest.TestCase):
                            'fixedip': set(['tcp://1.2.3.4:5678']),
                            'local': set()})
 
-    def test_add_new_node_hey_back(self):
+    def test_add_new_node_ack(self):
         known_nodes = {'local': set(['tcp://127.0.0.1']),
                        'distant': set(['tcp://0.0.0.0:5555']),
                        'fixedip': set(['tcp://1.2.3.4:5678'])}
 
         Arbiter.add_new_node(self.arbiter,
-                             {'type': 'hey-back', 'nodes': known_nodes},
+                             {'type': 'new-node-ack', 'nodes': known_nodes},
                              ('192.168.1.1', 12345), self.send_message)
         self.assertEquals(len(self.send_message.call_args_list), 0)
