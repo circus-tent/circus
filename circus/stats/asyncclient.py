@@ -41,10 +41,10 @@ class AsyncStatsConsumer(object):
         topic = topic.split('.')
         if len(topic) == 3:
             __, watcher, subtopic = topic
-            self.callback(watcher, subtopic, json.loads(stat), self.endpoint)
+            self.callback(watcher, subtopic, json.loads(stat))
         elif len(topic) == 2:
             __, watcher = topic
-            self.callback(watcher, None, json.loads(stat), self.endpoint)
+            self.callback(watcher, None, json.loads(stat))
 
     def stop(self):
         self.stream.stop_on_recv()
