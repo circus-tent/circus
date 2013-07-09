@@ -37,6 +37,8 @@ class Arbiter(object):
     - **stats_endpoint** -- the stats endpoint.
     - **statsd_close_outputs** -- if True sends the circusd-stats stdout/stderr
       to /dev/null (default: False)
+    - **udp_discovery** -- If True, the auto discovery is run on the
+      multicast_endpoint (default: False)
     - **multicast_endpoint** -- the multicast endpoint for circusd cluster
       auto-discovery (default: udp://237.219.251.97:12027)
       Multicast addr should be between 224.0.0.0 to 239.255.255.255 and the
@@ -75,12 +77,14 @@ class Arbiter(object):
                  httpd_host='localhost', httpd_port=8080,
                  httpd_close_outputs=False, debug=False,
                  ssh_server=None, proc_name='circusd', pidfile=None,
-                 loglevel=None, logoutput=None, fqdn=None):
+                 loglevel=None, logoutput=None, fqdn=None,
+                 udp_discovery=False):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.prereload_fn = prereload_fn
         self.pubsub_endpoint = pubsub_endpoint
+        self.udp_discovery = udp_discovery
         self.multicast_endpoint = multicast_endpoint
         self.proc_name = proc_name
         self.ssh_server = ssh_server
@@ -189,7 +193,9 @@ class Arbiter(object):
         self.context = context or zmq.Context.instance()
         self.loop = ioloop.IOLoop.instance()
         self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
-                               self.context, self.loop, self, self.check_delay)
+                               self.context, self.loop,
+                               self, check_delay=self.check_delay,
+                               udp_discovery=self.udp_discovery)
 
     def get_socket(self, name):
         return self.sockets.get(name, None)

@@ -22,9 +22,10 @@ from circus.sighandler import SysHandler
 class Controller(object):
 
     def __init__(self, endpoint, multicast_endpoint, context, loop, arbiter,
-                 check_delay=1.0):
+                 check_delay=1.0, udp_discovery=False):
         self.arbiter = arbiter
         self.endpoint = endpoint
+        self.udp_discovery = udp_discovery
         self.multicast_endpoint = multicast_endpoint
         self.context = context
         self.loop = loop
@@ -56,12 +57,14 @@ class Controller(object):
         self._init_stream()
 
         # Initialize UDP Socket
-        multicast_addr, multicast_port = urlparse(self.multicast_endpoint)\
-            .netloc.split(':')
-        self.udp_socket = create_udp_socket(multicast_addr, multicast_port)
-        self.loop.add_handler(self.udp_socket.fileno(),
-                              self.handle_autodiscover_message,
-                              ioloop.IOLoop.READ)
+        if self.udp_discovery:
+            logger.info('UDP Discovery started on %s' % self.multicast_endpoint)
+            multicast_addr, multicast_port = urlparse(self.multicast_endpoint)\
+                .netloc.split(':')
+            self.udp_socket = create_udp_socket(multicast_addr, multicast_port)
+            self.loop.add_handler(self.udp_socket.fileno(),
+                                  self.handle_autodiscover_message,
+                                  ioloop.IOLoop.READ)
 
     def start(self):
         self.initialize()

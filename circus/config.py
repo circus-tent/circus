@@ -169,13 +169,18 @@ def get_config(config_file):
     config['loglevel'] = dget('circus', 'loglevel')
     config['logoutput'] = dget('circus', 'logoutput')
     config['fqdn'] = dget('circus', 'fqdn', None, str)
+    config['udp_discovery'] = dget('circus', 'udp_discovery', False, bool)
 
     # Initialize watchers, plugins & sockets to manage
     watchers = []
     plugins = []
     sockets = []
+    cluster = {}
 
     for section in cfg.sections():
+        if section.startswith("cluster"):
+            cluster = dict(cfg.items(section))
+
         if section.startswith("socket:"):
             sock = dict(cfg.items(section))
             sock['name'] = section.split("socket:")[-1].lower()
@@ -323,4 +328,5 @@ def get_config(config_file):
     config['watchers'] = watchers
     config['plugins'] = plugins
     config['sockets'] = sockets
+    config['cluster'] = cluster
     return config
