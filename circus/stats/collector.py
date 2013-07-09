@@ -8,19 +8,26 @@ from circus import logger
 from zmq.eventloop import ioloop
 
 
+import logging
+logger = logging.getLogger('circus-stats')
+logging.basicConfig()
+
 class BaseStatsCollector(ioloop.PeriodicCallback):
 
-    def __init__(self, streamer, name, callback_time=1., io_loop=None):
+    def __init__(self, streamer, name, callback_time=1., io_loop=None,
+                 fqdn=None):
         ioloop.PeriodicCallback.__init__(self, self._callback,
                                          callback_time * 1000, io_loop)
         self.streamer = streamer
         self.name = name
+        self.fqdn = fqdn
 
     def _callback(self):
         logger.debug('Publishing stats about {0}'.format(self.name))
         for stats in self.collect_stats():
             if stats is None:
                 continue
+            stats['fqdn'] = self.fqdn
             self.streamer.publisher.publish(self.name, stats)
 
     def collect_stats(self):
@@ -105,9 +112,11 @@ _LOOP_RES = 10
 
 class SocketStatsCollector(BaseStatsCollector):
 
-    def __init__(self, streamer, name, callback_time=1., io_loop=None):
+    def __init__(self, streamer, name, callback_time=1., io_loop=None,
+                 fqdn=None):
         super(SocketStatsCollector, self).__init__(streamer, name,
-                                                   callback_time, io_loop)
+                                                   callback_time, io_loop,
+                                                   fqdn=fqdn)
         self._rstats = defaultdict(int)
         self.sockets = [sock for sock, address, fd in
                         self.streamer.get_sockets()]

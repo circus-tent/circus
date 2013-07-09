@@ -118,6 +118,7 @@ class Arbiter(object):
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --pubsub %s' % self.pubsub_endpoint
             cmd += ' --statspoint %s' % self.stats_endpoint
+            cmd += ' --fqdn \'%s\'' % self.fqdn
             if ssh_server is not None:
                 cmd += ' --ssh %s' % ssh_server
             if debug:

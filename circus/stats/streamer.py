@@ -17,7 +17,7 @@ from circus import logger
 
 class StatsStreamer(object):
     def __init__(self, endpoint, pubsub_endoint, stats_endpoint,
-                 ssh_server=None, delay=1., loop=None):
+                 ssh_server=None, delay=1., loop=None, fqdn=None):
         self.topic = 'watcher.'
         self.delay = delay
         self.ctx = zmq.Context()
@@ -38,6 +38,7 @@ class StatsStreamer(object):
         self.stopped = False  # did the collect started yet?
         self.circus_pids = {}
         self.sockets = []
+        self.fqdn = fqdn
 
     def get_watchers(self):
         return self._pids.keys()
@@ -82,7 +83,8 @@ class StatsStreamer(object):
         else:
             raise ValueError('Unknown callback kind %r' % kind)
 
-        self._callbacks[name] = klass(self, name, self.delay, self.loop)
+        self._callbacks[name] = klass(self, name, self.delay, self.loop,
+                                      fqdn=self.fqdn)
         if start:
             self._callbacks[name].start()
 
