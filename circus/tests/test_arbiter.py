@@ -390,3 +390,8 @@ class TestArbiter(unittest.TestCase):
         with patch('circus.arbiter.sleep') as mock_sleep:
             arbiter.start_watcher(watcher)
             assert not mock_sleep.called
+
+    @patch('circus.arbiter.socket.getfqdn', lambda: 'my.fqdn')
+    def test_fqdn_prefix(self):
+        arbiter = Arbiter([], None, None, fqdn_prefix='test')
+        self.assertEqual(arbiter.fqdn, 'test@my.fqdn')

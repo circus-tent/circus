@@ -223,7 +223,6 @@ class Arbiter(object):
             if data_type == 'hey':
                 send_message(emitter_addr, nodes=self.nodes_directory,
                              data_type='hey-back')
-            print self.nodes_directory
 
     def get_socket(self, name):
         return self.sockets.get(name, None)
