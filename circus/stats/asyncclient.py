@@ -9,19 +9,18 @@ from circus.util import DEFAULT_ENDPOINT_SUB, get_connection
 
 class AsyncStatsConsumer(object):
     def __init__(self, topics, loop, callback, context=None,
-                 endpoint=DEFAULT_ENDPOINT_SUB, ssh_server=None, timeout=1.):
+                 ssh_server=None, timeout=1.):
         self.topics = topics
         self.keep_context = context is not None
         self.context = context or zmq.Context()
-        self.endpoint = endpoint
         self.pubsub_socket = self.context.socket(zmq.SUB)
-        get_connection(self.pubsub_socket, self.endpoint, ssh_server)
         for topic in self.topics:
             self.pubsub_socket.setsockopt(zmq.SUBSCRIBE, topic)
         self.stream = ZMQStream(self.pubsub_socket, loop)
         self.stream.on_recv(self.process_message)
         self.callback = callback
         self.timeout = timeout
+        self.ssh_server = ssh_server
 
         # Connection counter
         self.count = 0
@@ -32,6 +31,9 @@ class AsyncStatsConsumer(object):
     def __exit__(self, exc_type, exc_value, traceback):
         """ On context manager exit, destroy the zmq context """
         self.stop()
+
+    def connect(self, endpoint):
+        get_connection(self.pubsub_socket, endpoint, self.ssh_server)
 
     def process_message(self, msg):
         topic, stat = msg
