@@ -65,7 +65,8 @@ class Arbiter(object):
     - **debug** -- if True, adds a lot of debug info in the stdout (default:
       False)
     - **proc_name** -- the arbiter process name
-    - **fqdn** -- a unique identifier for the machine where circus runs.
+    - **fqdn_prefix** -- a prefix for the unique identifier of the circus
+                         instance on the cluster.
     """
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=.5,
                  prereload_fn=None, context=None, loop=None, statsd=False,
@@ -75,7 +76,7 @@ class Arbiter(object):
                  httpd_host='localhost', httpd_port=8080,
                  httpd_close_outputs=False, debug=False,
                  ssh_server=None, proc_name='circusd', pidfile=None,
-                 loglevel=None, logoutput=None, fqdn=None):
+                 loglevel=None, logoutput=None, fqdn_prefix=None):
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -89,8 +90,11 @@ class Arbiter(object):
         self.loglevel = loglevel
         self.logoutput = logoutput
 
-        if fqdn is None:
-            fqdn = socket.getfqdn()
+        socket_fqdn = socket.getfqdn()
+        if fqdn_prefix is None:
+            fqdn = socket_fqdn
+        else:
+            fqdn = '{}@{}'.format(fqdn_prefix, socket_fqdn)
         self.fqdn = fqdn
 
         self.ctrl = self.loop = None
@@ -201,15 +205,16 @@ class Arbiter(object):
 
         if data_type in ('hey', 'hey-back'):
             for fqdn, nodes in data.get('nodes').items():
-                # Remove the localhost node addresses and replace 0.0.0.0 by
-                # the emitter address
                 if fqdn != self.fqdn:
                     if fqdn not in self.nodes_directory:
                         self.nodes_directory[fqdn] = set()
 
                     for node in nodes:
+                        # Remove the localhost node addresses
                         if node.startswith('tcp://127.'):
                             continue
+
+                        # replace 0.0.0.0 by the emitter address
                         elif node.startswith('tcp://0.0.0.0'):
                             node = node.replace('0.0.0.0', emitter_addr[0])
 
@@ -413,7 +418,7 @@ class Arbiter(object):
                       pidfile=cfg.get('pidfile', None),
                       loglevel=cfg.get('loglevel', None),
                       logoutput=cfg.get('logoutput', None),
-                      fqdn=cfg.get('fqdn', None))
+                      fqdn_prefix=cfg.get('fqdn_prefix', None))
 
         # store the cfg which will be used, so it can be used later
         # for checking if the cfg has been changed
