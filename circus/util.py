@@ -10,6 +10,7 @@ import sys
 import shlex
 import time
 import socket
+import json
 from zmq import ssh
 from ConfigParser import (ConfigParser, MissingSectionHeaderError,
                           ParsingError, DEFAULTSECT)
@@ -703,3 +704,10 @@ def create_udp_socket(mcast_addr, mcast_port):
     # And finally bind all interfaces
     sock.bind((any_addr, mcast_port))
     return sock
+
+
+class ComplexEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        return json.JSONEncoder.default(self, obj)
