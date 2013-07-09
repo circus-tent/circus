@@ -97,10 +97,6 @@ class Controller(object):
         self.wakeup()
 
     def handle_message(self, raw_msg):
-        """Each time we receive a message on the zmq endpoint, check that the
-        command is not empty and add a job for it.
-
-        """
         cid, msg = raw_msg
         msg = msg.strip()
 
@@ -118,27 +114,12 @@ class Controller(object):
 
     def dispatch(self, job):
         cid, msg = job
-        try:
-            cmd, properties, cast = parse_message(msg)
-        except InvalidMessage as e:
-            return send_error(cid, msg, e.error, cast=cast, errno=e.errno)
 
         try:
-            cmd.execute()
-        except OSError as e:
-            return send_error(cid, msg, str(e), cast=cast, errno=OS_ERROR)
-        except:
-            exctype, value = sys.exc_info()[:2]
-            tb = traceback.format_exc()
-            reason = "command %r: %s" % (msg, value)
-            logger.debug("error: command %r: %s\n\n%s", msg, value, tb)
-            raise InvalidMessage(msg, reason, tb, cast=cast, errno=COMMAND_ERROR)
-
-            try:
-                json_msg = json.loads(msg)
-            except ValueError:
-                return self.send_error(cid, msg, "json invalid",
-                                       errno=errors.INVALID_JSON)
+            json_msg = json.loads(msg)
+        except ValueError:
+            return self.send_error(cid, msg, "json invalid",
+                                   errno=errors.INVALID_JSON)
 
         cmd_name = json_msg.get('command')
         properties = json_msg.get('properties', {})
