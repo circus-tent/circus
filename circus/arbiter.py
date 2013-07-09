@@ -310,16 +310,14 @@ class Arbiter(object):
                                self.get_plugin_config(new_cfg, n))
             old_watcher_cfg = w._cfg.copy()
             if new_watcher_cfg != old_watcher_cfg:
-                if 'numprocesses' in old_watcher_cfg:
-                    if 'numprocesses' in new_watcher_cfg:
-                        num_procs = new_watcher_cfg['numprocesses']
-                        old_watcher_cfg['numprocesses'] = num_procs
+                num_procs = new_watcher_cfg.get('numprocesses')
+                old_watcher_cfg['numprocesses'] = num_procs
 
-                        if new_watcher_cfg == old_watcher_cfg:
-                            # if nothing but the number of processes is
-                            # changed, just changes this
-                            w.set_numprocesses(int(num_procs))
-                            continue
+                if new_watcher_cfg == old_watcher_cfg:
+                    # if nothing but the number of processes is
+                    # changed, just changes this
+                    w.set_numprocesses(int(num_procs))
+                    continue
 
                 # Others things are changed. Just delete and add the watcher.
                 changed_wn.add(n)

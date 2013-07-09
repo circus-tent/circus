@@ -108,13 +108,12 @@ class FullStats(BaseObserver):
                 if isinstance(sub_info,  dict):
                     cpus.append(sub_info['cpu'])
                     mems.append(sub_info['mem'])
-                else:
-                    if sub_name == "spawn_count":
-                        # spawn_count info is in the same level as processes
-                        # dict infos, so if spawn_count is given, take it and
-                        # continue
-                        self.statsd.gauge("_stats.%s.spawn_count" % name,
-                                          sub_info)
+                elif sub_name == "spawn_count":
+                    # spawn_count info is in the same level as processes
+                    # dict infos, so if spawn_count is given, take it and
+                    # continue
+                    self.statsd.gauge("_stats.%s.spawn_count" % name,
+                                      sub_info)
 
             self.statsd.gauge("_stats.%s.watchers_num" % name, len(cpus))
 
