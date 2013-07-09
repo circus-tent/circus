@@ -13,10 +13,9 @@ class TestDiscover(unittest.TestCase):
 
         received_data = None
 
-        def cb(data):
+        def cb(data, emitter_addr, send_message):
             global received_data
             received_data = data
-            received_data = payload
             loop.stop()
 
         AutoDiscovery('udp://237.219.251.97:12027', loop, payload, cb)
