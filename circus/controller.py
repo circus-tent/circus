@@ -9,7 +9,6 @@ import zmq
 from zmq.utils.jsonapi import jsonmod as json
 from zmq.eventloop import ioloop, zmqstream
 
-from circus.discovery import AutoDiscovery
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError
@@ -19,11 +18,9 @@ from circus.sighandler import SysHandler
 
 class Controller(object):
 
-    def __init__(self, endpoint, multicast_endpoint, context, loop, arbiter,
-                 check_delay=1.0):
+    def __init__(self, endpoint, context, loop, arbiter, check_delay=1.0):
         self.arbiter = arbiter
         self.endpoint = endpoint
-        self.multicast_endpoint = multicast_endpoint
         self.context = context
         self.loop = loop
         self.check_delay = check_delay * 1000
@@ -52,12 +49,6 @@ class Controller(object):
         self.ctrl_socket.bind(self.endpoint)
         self.ctrl_socket.linger = 0
         self._init_stream()
-
-        node_data = {self.arbiter.fqdn: set([self.arbiter.endpoint])}
-        AutoDiscovery(self.multicast_endpoint, self.loop,
-                      node_data, self.arbiter.add_new_node)
-
-        # XXX handle arbiter heartbeat
 
     def start(self):
         self.initialize()

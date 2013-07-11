@@ -11,14 +11,15 @@ import socket
 import zmq
 from zmq.eventloop import ioloop
 
-from circus.controller import Controller
-from circus.exc import AlreadyExist
 from circus import logger
-from circus.watcher import Watcher
-from circus.util import debuglog, _setproctitle
 from circus.config import get_config
+from circus.controller import Controller
+from circus.discovery import AutoDiscovery
+from circus.exc import AlreadyExist
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
+from circus.util import debuglog, _setproctitle
+from circus.watcher import Watcher
 
 
 class ReloadArbiterException(Exception):
@@ -197,8 +198,13 @@ class Arbiter(object):
     def _init_context(self, context):
         self.context = context or zmq.Context.instance()
         self.loop = ioloop.IOLoop.instance()
-        self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
-                               self.context, self.loop, self, self.check_delay)
+        self.ctrl = Controller(self.endpoint, self.context, self.loop, self,
+                               self.check_delay)
+        node_data = {self.fqdn: set([self.endpoint])}
+        AutoDiscovery(self.multicast_endpoint, self.loop,
+                      node_data, self.add_new_node)
+
+        # XXX handle arbiter heartbeat
 
     def add_new_node(self, data, emitter_addr, send_message):
 
