@@ -1,6 +1,9 @@
 import unittest
 import os
 
+from mock import patch
+
+from circus import logger
 from circus.config import get_config
 from circus.watcher import Watcher
 from circus.process import Process
@@ -19,6 +22,7 @@ _CONF = {
     'env_var': os.path.join(HERE, 'env_var.ini'),
     'env_section': os.path.join(HERE, 'env_section.ini'),
     'multiple_wildcard': os.path.join(HERE, 'multiple_wildcard.ini'),
+    'empty_include': os.path.join(HERE, 'empty_include.ini'),
     'circus': os.path.join(HERE, 'circus.ini'),
     'nope': os.path.join(HERE, 'nope.ini'),
     'issue442': os.path.join(HERE, 'issue442.ini')
@@ -70,6 +74,15 @@ class TestConfig(unittest.TestCase):
         conf = get_config(_CONF['multiple_wildcard'])
         watchers = conf['watchers']
         self.assertEquals(len(watchers), 3)
+
+    @patch.object(logger, 'warn')
+    def test_empty_include(self, mock_logger_warn):
+        """https://github.com/mozilla-services/circus/pull/473"""
+        try:
+            conf = get_config(_CONF['empty_include'])
+        except:
+            self.fail('Non-existent includes should not raise')
+        self.assertTrue(mock_logger_warn.called)
 
     def test_watcher_graceful_timeout(self):
         conf = get_config(_CONF['issue210'])
