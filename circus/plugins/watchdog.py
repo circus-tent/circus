@@ -63,8 +63,6 @@ class WatchDog(CircusPlugin):
         self.period = None
         self.starting = True
 
-        logger.info("Started circus plugin: watchdog")
-
     def handle_init(self):
         """Initialization of plugin
 
@@ -93,8 +91,8 @@ class WatchDog(CircusPlugin):
         topic_parts = topic.split(".")
         logger.debug("received data from circusd: %s, %s", topic_parts, msg)
         # check if monitored watchers:
-        if topic_parts[0] == 'watcher' and \
-                self._match_watcher_name(topic_parts[1]):
+        if (topic_parts[0] == 'watcher' and
+                self._match_watcher_name(topic_parts[1])):
             try:
                 message = json.loads(msg)
             except ValueError:
@@ -184,7 +182,6 @@ class WatchDog(CircusPlugin):
         the corresponing pid.
         """
         data, _ = self.sock.recvfrom(1024)
-        #logger.debug('received data:%s', data)
         heartbeat = self._decode_received_udp_message(data)
         if "pid" in heartbeat:
             if heartbeat['pid'] in self.pid_status:

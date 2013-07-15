@@ -149,9 +149,9 @@ ResourceWatcher
 Watchdog
 ========
 
-    Plugin that bind an udp socket and wait for watchdog messages.
+    Plugin that binds an udp socket and wait for watchdog messages.
     For "watchdoged" processes, the watchdog will kill them if they
-    don't send heartbeat in a certain period of time materialized by
+    don't send a heartbeat in a certain period of time materialized by
     loop_rate * max_count. (circus will automatically restart the missing
     processes in the watcher)
 
@@ -185,9 +185,7 @@ Watchdog
         any heartbeat before restarting process (default: 3)
 
     **ip**
-
         ip the watchdog will bind on (default: 127.0.0.1)
 
     **port**
-
         port the watchdog will bind on (default: 1664)
