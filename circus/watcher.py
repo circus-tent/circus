@@ -363,6 +363,12 @@ class Watcher(object):
                     elif e.errno == errno.ECHILD:
                         # nothing to do here, we do not have any child
                         # process running
+                        # but we still need to send the "reap" signal.
+                        logger.debug('reaping already dead process %s [%s]',
+                                     pid, self.name)
+                        self.notify_event(
+                            "reap",
+                            {"process_pid": pid, "time": time.time()})
                         return
                     else:
                         raise
@@ -382,7 +388,7 @@ class Watcher(object):
         if process.status in (DEAD_OR_ZOMBIE, UNEXISTING):
             process.stop()
 
-        logger.debug('reaping process %s [%s]' % (pid, self.name))
+        logger.debug('reaping process %s [%s]', pid, self.name)
         self.notify_event("reap", {"process_pid": pid, "time": time.time()})
 
     @util.debuglog
@@ -501,7 +507,7 @@ class Watcher(object):
                 self.processes[process.pid] = process
                 logger.debug('running %s process [pid %d]', self.name,
                              process.pid)
-            except OSError, e:
+            except OSError as e:
                 logger.warning('error in %r: %s', self.name, str(e))
 
             if process is None:
