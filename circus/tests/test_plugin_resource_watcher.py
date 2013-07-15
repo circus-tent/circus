@@ -1,4 +1,3 @@
-import math
 import warnings
 from circus.tests.support import TestCircus, poll_for, Process, run_plugin
 from circus.plugins.resource_watcher import ResourceWatcher
