@@ -107,9 +107,9 @@ def read_config(config_path):
 
         paths = glob.glob(filename)
         if paths == []:
-            raise IOError('%r does not lead to any config. Make sure '
-                          'include paths are relative to the main config '
-                          'file' % filename)
+            logger.warn('%r does not lead to any config. Make sure '
+                        'include paths are relative to the main config '
+                        'file' % filename)
         includes += paths
 
     for include_file in cfg.dget('circus', 'include', '').split():
