@@ -96,5 +96,6 @@ class ResourceWatcher(BaseObserver):
                 self._count_health]) > self.max_count:
             self.statsd.increment("_resource_watcher.%s.restarting" %
                                   self.watcher)
+            # todo: restart only process instead of the whole watcher
             self.cast("restart", name=self.watcher)
             self._count_mem = self._count_health = self._count_mem = 0
