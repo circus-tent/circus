@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+from unittest2 import skipIf
 
 from circus.process import Process, RUNNING
 from circus.tests.support import TestCircus
@@ -105,6 +106,7 @@ class TestProcess(TestCircus):
         self.assertEquals(['yeah', 'macchiato'], p3.format_args())
         os.environ.pop('coffee_type')
 
+    @skipIf(not hasattr(sys.stdout, 'fileno'), 'Nose runs without -s')
     def test_streams(self):
         script_file = self.get_tmpfile(VERBOSE)
         cmd = sys.executable
