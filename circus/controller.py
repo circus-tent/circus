@@ -31,8 +31,6 @@ class Controller(object):
         self.check_delay = check_delay * 1000
         self.started = False
 
-        self.jobs = Queue()
-
         # initialize the sys handler
         self._init_syshandler()
 
@@ -65,8 +63,8 @@ class Controller(object):
 
     def start(self):
         self.initialize()
-        self.caller = ioloop.PeriodicCallback(self.wakeup, self.check_delay,
-                                              self.loop)
+        self.caller = ioloop.PeriodicCallback(self.arbiter.manage_watchers,
+                                              self.check_delay, self.loop)
         self.caller.start()
         self.started = True
 
@@ -81,21 +79,6 @@ class Controller(object):
             self.ctrl_socket.close()
         self.sys_hdl.stop()
 
-    def wakeup(self):
-        job = None
-        try:
-            job = self.jobs.get(block=False)
-        except Empty:
-            pass
-
-        if job is not None:
-            self.dispatch(job)
-        self.arbiter.manage_watchers()
-
-    def add_job(self, cid, msg):
-        self.jobs.put((cid, msg), False)
-        self.wakeup()
-
     def handle_message(self, raw_msg):
         cid, msg = raw_msg
         msg = msg.strip()
@@ -105,6 +88,9 @@ class Controller(object):
         else:
             logger.debug("got message %s", msg)
             self.add_job(cid, msg)
+
+    def add_job(self, cid, msg):
+        self.loop.add_callback(self.dispatch, (cid, msg))
 
     def handle_autodiscover_message(self, fd_no, type):
         data, address = self.udp_socket.recvfrom(1024)
