@@ -2,5 +2,3 @@ include NOTICE
 include README.rst
 include LICENSE
 include pip-requirements.txt
-recursive-include docs *.py *.rst *.png
-
