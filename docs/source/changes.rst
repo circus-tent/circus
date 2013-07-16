@@ -1,6 +1,32 @@
 History
 =======
 
+0.9 - 2013-07-16
+----------------
+
+- added [env] sections wildcards
+- added global [env] secrtion
+- fixed hidden exception when circus-web is not installed - #424
+- make sure incr/decr commands really us the nb option - #421
+- Fix watcher virtualenv site-packages not in PYTHONPATH
+- make sure we dont try to remove more processes than 0 - #429
+- updated bootstrap.py - #436
+- fixed multiplatform separator in pythonpath virtualenv watcher
+- refactored socket close function
+- Ensure env sections are applied to all watchers - #437
+- added the reloadconfig command
+- added circus.green and removed gevent from the core - #441, #452
+- silenced spurious stdout & warnings in the tests - #438
+- $(circus.env.*) can be used for all options in the config now
+- added a before_spawn hook
+- correct the path of circusd in systemd service file - #450
+- make sure we can change hooks and set streams via CLI - #455
+- improved doc
+- added a spawn_count stat in watcher
+- added min_cpu and min_mem parameters in ResourceWatcher plugin
+- added the FQDN information to the arbiter.
+
+
 0.8.1 - 2013-05-28
 ------------------
 

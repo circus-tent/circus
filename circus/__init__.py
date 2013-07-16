@@ -4,7 +4,7 @@ import os
 import warnings
 
 
-version_info = (0, 8, 1)
+version_info = (0, 9)
 __version__ = ".".join(map(str, version_info))
 
 
