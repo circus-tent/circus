@@ -146,7 +146,7 @@ class TestResourceWatcher(TestCircus):
             assert len(w) == numws - 1
 
     def test_resource_watcher_min_cpu(self):
-        config = {'loop_rate': 0.1, 'min_cpu': 90.0}
+        config = {'loop_rate': 0.1, 'min_cpu': 99.0}
 
         self.assertRaises(NotImplementedError, run_plugin,
                           ResourceWatcher, config)
