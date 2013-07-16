@@ -5,6 +5,7 @@ import signal
 import time
 import sys
 from random import randint
+import site
 
 from psutil import NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
@@ -294,11 +295,10 @@ class Watcher(object):
             self.stderr_redirector = None
 
     def _resolve_hook(self, name, callable_or_name, ignore_failure):
-        # XXX
         if 'PYTHONPATH' in self.env:
             old = list(sys.path)
             for path in self.env['PYTHONPATH'].split(os.pathsep):
-                sys.path.insert(0, path)
+                site.addsitedir(path)
 
         try:
             if callable(callable_or_name):
