@@ -39,21 +39,22 @@ def run_dummy_watchdogged(test_file):
     return 1
 
 
+fqn = 'circus.tests.test_plugin_watchdog.run_dummy_watchdogged'
+
+
 class TestPluginWatchDog(TestCircus):
     def setUp(self):
         super(TestPluginWatchDog, self).setUp()
-        dummy_process = 'circus.tests.test_plugin_watchdog.run_dummy_watchdogged'
-        self.test_file = self._run_circus(dummy_process)
+        self.test_file = self._run_circus(fqn)
 
     def test_watchdog_discovery_found(self):
         config = {'loop_rate': 0.3, 'watchers_regex': "^test.*$"}
         watchdog = run_plugin(WatchDog, config)
-        time.sleep(.3)  # ensure at leat one loop in plugin
+        time.sleep(.3)  # ensure at least one loop in plugin
         self.assertEqual(len(watchdog.pid_status), 1)
 
     def test_watchdog_discovery_not_found(self):
         config = {'loop_rate': 0.3, 'watchers_regex': "^foo.*$"}
         watchdog = run_plugin(WatchDog, config)
-        time.sleep(.3)  # ensure at leat one loop in plugin
+        time.sleep(.3)  # ensure at least one loop in plugin
         self.assertEqual(len(watchdog.pid_status), 0)
-
