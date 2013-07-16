@@ -1,4 +1,6 @@
+import os
 import warnings
+
 from circus.tests.support import TestCircus, poll_for, Process, run_plugin
 from circus.plugins.resource_watcher import ResourceWatcher
 
@@ -20,14 +22,21 @@ def run_leaky(test_file):
 
 
 class TestResourceWatcher(TestCircus):
-    def setUp(self):
-        super(TestResourceWatcher, self).setUp()
+
+    @classmethod
+    def setUpClass(cls):
         dummy_process = 'circus.tests.test_plugin_resource_watcher.run_leaky'
-        self.test_file = self._run_circus(dummy_process)
-        poll_for(self.test_file, 'START')
+        cls.file, cls.arbiter = cls._create_circus(dummy_process)
+        poll_for(cls.file, 'START')
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.arbiter.stop()
+        if os.path.exists(cls.file):
+            os.remove(cls.file)
 
     def test_resource_watcher_max_mem(self):
-        config = {'loop_rate': 0.2, 'max_mem': 0.1}
+        config = {'loop_rate': 0.1, 'max_mem': 0.05}
 
         self.assertRaises(NotImplementedError, run_plugin,
                           ResourceWatcher, config)
@@ -49,9 +58,9 @@ class TestResourceWatcher(TestCircus):
             raise AssertionError('ResourceWatcher not found')
 
         res = _statsd.increments.items()
-        self.assertEqual(len(res), 1)
-        self.assertEqual(res[0][0], '_resource_watcher.test.over_memory')
-        self.assertTrue(res[0][1] > 0)
+        self.assertTrue(len(res) > 0)
+        self.assertEqual(res[-1][0], '_resource_watcher.test.over_memory')
+        self.assertTrue(res[-1][1] > 0)
 
         # Test that watcher is ok and not deprecated
         config['watcher'] = config['service']
@@ -64,7 +73,7 @@ class TestResourceWatcher(TestCircus):
             assert len(w) == numws - 1
 
     def test_resource_watcher_min_mem(self):
-        config = {'loop_rate': 0.2, 'min_mem': 100000.1}
+        config = {'loop_rate': 0.1, 'min_mem': 100000.1}
 
         self.assertRaises(NotImplementedError, run_plugin,
                           ResourceWatcher, config)
@@ -138,7 +147,7 @@ class TestResourceWatcher(TestCircus):
             assert len(w) == numws - 1
 
     def test_resource_watcher_min_cpu(self):
-        config = {'loop_rate': 0.2, 'min_cpu': 10.0}
+        config = {'loop_rate': 0.1, 'min_cpu': 30.0}
 
         self.assertRaises(NotImplementedError, run_plugin,
                           ResourceWatcher, config)
@@ -160,9 +169,9 @@ class TestResourceWatcher(TestCircus):
             raise AssertionError('ResourceWatcher not found')
 
         res = _statsd.increments.items()
-        self.assertEqual(len(res), 1)
-        self.assertEqual(res[0][0], '_resource_watcher.test.under_cpu')
-        self.assertTrue(res[0][1] > 0)
+        self.assertTrue(len(res) > 0)
+        self.assertEqual(res[-1][0], '_resource_watcher.test.under_cpu')
+        self.assertTrue(res[-1][1] > 0)
 
         # Test that watcher is ok and not deprecated
         config['watcher'] = config['service']
