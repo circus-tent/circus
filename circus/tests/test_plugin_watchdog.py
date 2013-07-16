@@ -1,7 +1,9 @@
 import socket
 import time
 import os
-from circus.tests.support import TestCircus, Process
+import warnings
+
+from circus.tests.support import TestCircus, Process, poll_for
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 from circus.plugins.watchdog import WatchDog
 
@@ -23,18 +25,21 @@ def run_plugin(klass, config, duration=300):
 
 class DummyWatchDogged(Process):
     def run(self):
+        self._write('START')
         sock = socket.socket(socket.AF_INET,
                              socket.SOCK_DGRAM)  # UDP
         my_pid = os.getpid()
         for _ in range(5):
             message = "{pid};{time}".format(pid=my_pid, time=time.time())
-            print('sending:{0}'.format(message))
+            #print('sending:{0}'.format(message))
             sock.sendto(message, ('127.0.0.1', 1664))
             time.sleep(0.5)
 
+        self._write('STOP')
+
 
 def run_dummy_watchdogged(test_file):
-    process = DummyWatchDogged()
+    process = DummyWatchDogged(test_file)
     process.run()
     return 1
 
@@ -46,15 +51,17 @@ class TestPluginWatchDog(TestCircus):
     def setUp(self):
         super(TestPluginWatchDog, self).setUp()
         self.test_file = self._run_circus(fqn)
+        poll_for(self.test_file, 'START')
 
     def test_watchdog_discovery_found(self):
-        config = {'loop_rate': 0.3, 'watchers_regex': "^test.*$"}
-        watchdog = run_plugin(WatchDog, config)
-        time.sleep(.3)  # ensure at least one loop in plugin
-        self.assertEqual(len(watchdog.pid_status), 1)
+        config = {'loop_rate': 0.1, 'watchers_regex': "^test.*$"}
+        with warnings.catch_warnings():
+            watchdog = run_plugin(WatchDog, config)
+        time.sleep(.4)  # ensure at least one loop in plugin
+        self.assertEqual(len(watchdog.pid_status), 1, watchdog.pid_status)
 
     def test_watchdog_discovery_not_found(self):
         config = {'loop_rate': 0.3, 'watchers_regex': "^foo.*$"}
         watchdog = run_plugin(WatchDog, config)
-        time.sleep(.3)  # ensure at least one loop in plugin
+        time.sleep(.4)  # ensure at least one loop in plugin
         self.assertEqual(len(watchdog.pid_status), 0)
