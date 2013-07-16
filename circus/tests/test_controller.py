@@ -24,7 +24,7 @@ class TestController(TestCase):
                 self.called = True
                 self.loop.stop()
 
-        loop = ioloop.IOLoop.instance()
+        loop = ioloop.IOLoop()
 
         controller = MockedController('endpoint', 'multicast_endpoint',
                                       mock.sentinel.context, loop, arbiter)
