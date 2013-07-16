@@ -11,14 +11,15 @@ import socket
 import zmq
 from zmq.eventloop import ioloop
 
-from circus.controller import Controller
-from circus.exc import AlreadyExist
 from circus import logger
-from circus.watcher import Watcher
-from circus.util import debuglog, _setproctitle
 from circus.config import get_config
+from circus.controller import Controller
+from circus.discovery import AutoDiscovery
+from circus.exc import AlreadyExist
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
+from circus.util import debuglog, _setproctitle
+from circus.watcher import Watcher
 
 
 class ReloadArbiterException(Exception):
@@ -116,12 +117,17 @@ class Arbiter(object):
         self.statsd = statsd
         self.stats_endpoint = stats_endpoint
 
+        self.nodes_directory = {}
+        # We add ourselves to the nods directory
+        self.nodes_directory[self.fqdn] = set([self.endpoint])
+
         if self.statsd:
             cmd = "%s -c 'from circus import stats; stats.main()'" % \
                 sys.executable
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --pubsub %s' % self.pubsub_endpoint
             cmd += ' --statspoint %s' % self.stats_endpoint
+            cmd += ' --fqdn \'%s\'' % self.fqdn
             if ssh_server is not None:
                 cmd += ' --ssh %s' % ssh_server
             if debug:
@@ -192,8 +198,38 @@ class Arbiter(object):
     def _init_context(self, context):
         self.context = context or zmq.Context.instance()
         self.loop = ioloop.IOLoop.instance()
-        self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
-                               self.context, self.loop, self, self.check_delay)
+        self.ctrl = Controller(self.endpoint, self.context, self.loop, self,
+                               self.check_delay)
+        node_data = {self.fqdn: set([self.endpoint])}
+        AutoDiscovery(self.multicast_endpoint, self.loop,
+                      node_data, self.add_new_node)
+
+        # XXX handle arbiter heartbeat
+
+    def add_new_node(self, data, emitter_addr, send_message):
+
+        data_type = data.get('type')
+
+        if data_type in ('new-node', 'new-node-ack'):
+            for fqdn, nodes in data.get('nodes').items():
+                if fqdn != self.fqdn:
+                    if fqdn not in self.nodes_directory:
+                        self.nodes_directory[fqdn] = set()
+
+                    for node in nodes:
+                        # Remove the localhost node addresses
+                        if node.startswith('tcp://127.'):
+                            continue
+
+                        # replace 0.0.0.0 by the emitter address
+                        elif node.startswith('tcp://0.0.0.0'):
+                            node = node.replace('0.0.0.0', emitter_addr[0])
+
+                        self.nodes_directory[fqdn].add(node)
+
+            if data_type == 'new-node':
+                send_message(emitter_addr, nodes=self.nodes_directory,
+                             data_type='new-node-ack')
 
     def get_socket(self, name):
         return self.sockets.get(name, None)
@@ -246,9 +282,9 @@ class Arbiter(object):
         added_sn = new_sn - current_sn
         deleted_sn = current_sn - new_sn
         maybechanged_sn = current_sn - deleted_sn
-        changed_sn = set([])
-        wn_with_changed_socket = set([])
-        wn_with_deleted_socket = set([])
+        changed_sn = set()
+        wn_with_changed_socket = set()
+        wn_with_deleted_socket = set()
 
         # get changed sockets
         for n in maybechanged_sn:

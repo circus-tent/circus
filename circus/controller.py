@@ -5,13 +5,10 @@ try:
 except ImportError:
     from Queue import Queue, Empty  # NOQA
 
-from urlparse import urlparse
-
 import zmq
 from zmq.utils.jsonapi import jsonmod as json
 from zmq.eventloop import ioloop, zmqstream
 
-from circus.util import create_udp_socket
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError
@@ -19,13 +16,17 @@ from circus.py3compat import string_types
 from circus.sighandler import SysHandler
 
 
-class Controller(object):
+class BaseController(object):
+    """The base controller.
 
-    def __init__(self, endpoint, multicast_endpoint, context, loop, arbiter,
-                 check_delay=1.0):
-        self.arbiter = arbiter
+    Listens the zmq endpoint and knows how to decode them.  this base
+    implementation doesn't handle the command execution, one would need to
+    subclass and implement the execute_command method.
+
+    """
+
+    def __init__(self, endpoint, context, loop, check_delay=1.0):
         self.endpoint = endpoint
-        self.multicast_endpoint = multicast_endpoint
         self.context = context
         self.loop = loop
         self.check_delay = check_delay * 1000
@@ -55,14 +56,6 @@ class Controller(object):
         self.ctrl_socket.linger = 0
         self._init_stream()
 
-        # Initialize UDP Socket
-        multicast_addr, multicast_port = urlparse(self.multicast_endpoint)\
-            .netloc.split(':')
-        self.udp_socket = create_udp_socket(multicast_addr, multicast_port)
-        self.loop.add_handler(self.udp_socket.fileno(),
-                              self.handle_autodiscover_message,
-                              ioloop.IOLoop.READ)
-
     def start(self):
         self.initialize()
         self.caller = ioloop.PeriodicCallback(self.wakeup, self.check_delay,
@@ -90,7 +83,6 @@ class Controller(object):
 
         if job is not None:
             self.dispatch(job)
-        self.arbiter.manage_watchers()
 
     def add_job(self, cid, msg):
         self.jobs.put((cid, msg), False)
@@ -106,12 +98,6 @@ class Controller(object):
             logger.debug("got message %s", msg)
             self.add_job(cid, msg)
 
-    def handle_autodiscover_message(self, fd_no, type):
-        data, address = self.udp_socket.recvfrom(1024)
-        data = json.loads(data)
-        self.udp_socket.sendto(json.dumps({'endpoint': self.endpoint}),
-                               address)
-
     def dispatch(self, job):
         cid, msg = job
 
@@ -125,29 +111,7 @@ class Controller(object):
         properties = json_msg.get('properties', {})
         cast = json_msg.get('msg_type') == "cast"
 
-        try:
-            cmd = self.commands[cmd_name.lower()]
-        except KeyError:
-            error_ = "unknown command: %r" % cmd_name
-            return self.send_error(cid, msg, error_, cast=cast,
-                                   errno=errors.UNKNOWN_COMMAND)
-
-        try:
-            cmd.validate(properties)
-            resp = cmd.execute(self.arbiter, properties)
-        except MessageError as e:
-            return self.send_error(cid, msg, str(e), cast=cast,
-                                   errno=errors.MESSAGE_ERROR)
-        except OSError as e:
-            return self.send_error(cid, msg, str(e), cast=cast,
-                                   errno=errors.OS_ERROR)
-        except:
-            exctype, value = sys.exc_info()[:2]
-            tb = traceback.format_exc()
-            reason = "command %r: %s" % (msg, value)
-            logger.debug("error: command %r: %s\n\n%s", msg, value, tb)
-            return self.send_error(cid, msg, reason, tb, cast=cast,
-                                   errno=errors.COMMAND_ERROR)
+        resp = self.execute_command(cmd_name, properties, cid, msg, cast)
 
         if resp is None:
             resp = ok()
@@ -197,3 +161,44 @@ class Controller(object):
         except zmq.ZMQError as e:
             logger.debug("Received %r - Could not send back %r - %s", msg,
                          resp, str(e))
+
+    def execute_command(self, cmd_name, properties, cid, msg, cast):
+        raise NotImplementedError()
+
+
+class Controller(BaseController):
+    """A controller able to execute the commands on the given arbiter.
+    """
+
+    def __init__(self, endpoint, context, loop, arbiter, check_delay=1.0):
+        self.arbiter = arbiter
+        super(Controller, self).__init__(endpoint, context, loop, check_delay)
+
+    def wakeup(self):
+        super(Controller, self).wakeup()
+        self.arbiter.manage_watchers()
+
+    def execute_command(self, cmd_name, properties, cid, msg, cast):
+        try:
+            cmd = self.commands[cmd_name.lower()]
+        except KeyError:
+            error_ = "unknown command: %r" % cmd_name
+            return self.send_error(cid, msg, error_, cast=cast,
+                                   errno=errors.UNKNOWN_COMMAND)
+
+        try:
+            cmd.validate(properties)
+            return cmd.execute(self.arbiter, properties)
+        except MessageError as e:
+            return self.send_error(cid, msg, str(e), cast=cast,
+                                   errno=errors.MESSAGE_ERROR)
+        except OSError as e:
+            return self.send_error(cid, msg, str(e), cast=cast,
+                                   errno=errors.OS_ERROR)
+        except:
+            exctype, value = sys.exc_info()[:2]
+            tb = traceback.format_exc()
+            reason = "command %r: %s" % (msg, value)
+            logger.debug("error: command %r: %s\n\n%s", msg, value, tb)
+            return self.send_error(cid, msg, reason, tb, cast=cast,
+                                   errno=errors.COMMAND_ERROR)
