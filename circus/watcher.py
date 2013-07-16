@@ -200,8 +200,7 @@ class Watcher(object):
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
         self.ignore_hook_failure = ['before_stop', 'after_stop']
-        self.hooks = {}
-        self._resolve_hooks(hooks)
+
         self.respawn = respawn
         self.autostart = autostart
         self.close_child_stdout = close_child_stdout
@@ -251,6 +250,8 @@ class Watcher(object):
         self.send_hup = send_hup
         self.sockets = self.evpub_socket = None
         self.arbiter = None
+        self.hooks = {}
+        self._resolve_hooks(hooks)
 
     def _reload_hook(self, key, hook, ignore_error):
         hook_name = key.split('.')[-1]
@@ -293,14 +294,24 @@ class Watcher(object):
             self.stderr_redirector = None
 
     def _resolve_hook(self, name, callable_or_name, ignore_failure):
-        if callable(callable_or_name):
-            self.hooks[name] = callable_or_name
-        else:
-            # will raise ImportError on failure
-            self.hooks[name] = resolve_name(callable_or_name)
+        # XXX
+        if 'PYTHONPATH' in self.env:
+            old = list(sys.path)
+            for path in self.env['PYTHONPATH'].split(os.pathsep):
+                sys.path.insert(0, path)
 
-        if ignore_failure:
-            self.ignore_hook_failure.append(name)
+        try:
+            if callable(callable_or_name):
+                self.hooks[name] = callable_or_name
+            else:
+                # will raise ImportError on failure
+                self.hooks[name] = resolve_name(callable_or_name)
+
+            if ignore_failure:
+                self.ignore_hook_failure.append(name)
+        finally:
+            if 'PYTHONPATH' in self.env:
+                sys.path = old
 
     def _resolve_hooks(self, hooks):
         """Check the supplied hooks argument to make sure we can find
