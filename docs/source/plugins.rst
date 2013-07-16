@@ -144,3 +144,48 @@ ResourceWatcher
     	max_cpu = 70
     	min_mem = 0
     	max_mem = 20
+
+
+Watchdog
+========
+
+    Plugin that binds an udp socket and wait for watchdog messages.
+    For "watchdoged" processes, the watchdog will kill them if they
+    don't send a heartbeat in a certain period of time materialized by
+    loop_rate * max_count. (circus will automatically restart the missing
+    processes in the watcher)
+
+    Each monitored process should send udp message at least at the loop_rate.
+    The udp message format is a line of text, decoded using **msg_regex**
+    parameter.
+    The heartbeat message MUST at least contain the pid of the process sending
+    the message.
+
+    The list of monitored watchers are determined by the parameter
+    **watchers_regex** in the configuration.
+
+
+    Configuration parameters:
+
+    **loop_rate**
+        watchdog loop rate in seconds. At each loop, WatchDog
+        will looks for "dead" processes.
+
+    **watchers_regex**
+        regex for matching watcher names that should be
+        monitored by the watchdog (default: ".*" all watchers are monitored)
+
+    **msg_regex**
+        regex for decoding the received heartbeat
+        message in udp (default: "^(?P<pid>.*);(?P<timestamp>.*)$")
+        the default format is a simple text message: "pid;timestamp"
+
+    **max_count**
+        max number of passed loop without receiving
+        any heartbeat before restarting process (default: 3)
+
+    **ip**
+        ip the watchdog will bind on (default: 127.0.0.1)
+
+    **port**
+        port the watchdog will bind on (default: 1664)

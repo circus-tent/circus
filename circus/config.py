@@ -107,9 +107,9 @@ def read_config(config_path):
 
         paths = glob.glob(filename)
         if paths == []:
-            raise IOError('%r does not lead to any config. Make sure '
-                          'include paths are relative to the main config '
-                          'file' % filename)
+            logger.warn('%r does not lead to any config. Make sure '
+                        'include paths are relative to the main config '
+                        'file' % filename)
         includes += paths
 
     for include_file in cfg.dget('circus', 'include', '').split():
@@ -168,7 +168,7 @@ def get_config(config_file):
     config['pidfile'] = dget('circus', 'pidfile')
     config['loglevel'] = dget('circus', 'loglevel')
     config['logoutput'] = dget('circus', 'logoutput')
-    config['fqdn'] = dget('circus', 'fqdn', None, str)
+    config['fqdn_prefix'] = dget('circus', 'fqdn_prefix', None, str)
 
     # Initialize watchers, plugins & sockets to manage
     watchers = []
