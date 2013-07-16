@@ -35,6 +35,14 @@ class TestResourceWatcher(TestCircus):
         if os.path.exists(cls.file):
             os.remove(cls.file)
 
+    def _check_statsd(self, statsd, name):
+        res = statsd.increments.items()
+        self.assertTrue(len(res) > 0)
+        for stat, items in res:
+            if name == stat and items > 0:
+                return
+        raise AssertionError("%r stat not found" % name)
+
     def test_resource_watcher_max_mem(self):
         config = {'loop_rate': 0.1, 'max_mem': 0.05}
 
@@ -57,10 +65,7 @@ class TestResourceWatcher(TestCircus):
         if not found:
             raise AssertionError('ResourceWatcher not found')
 
-        res = _statsd.increments.items()
-        self.assertTrue(len(res) > 0)
-        self.assertEqual(res[-1][0], '_resource_watcher.test.over_memory')
-        self.assertTrue(res[-1][1] > 0)
+        self._check_statsd(_statsd, '_resource_watcher.test.over_memory')
 
         # Test that watcher is ok and not deprecated
         config['watcher'] = config['service']
@@ -94,10 +99,7 @@ class TestResourceWatcher(TestCircus):
         if not found:
             raise AssertionError('ResourceWatcher not found')
 
-        res = _statsd.increments.items()
-        self.assertEqual(len(res), 1)
-        self.assertEqual(res[0][0], '_resource_watcher.test.under_memory')
-        self.assertTrue(res[0][1] > 0)
+        self._check_statsd(_statsd, '_resource_watcher.test.under_memory')
 
         # Test that watcher is ok and not deprecated
         config['watcher'] = config['service']
@@ -131,10 +133,7 @@ class TestResourceWatcher(TestCircus):
         if not found:
             raise AssertionError('ResourceWatcher not found')
 
-        res = _statsd.increments.items()
-        self.assertEqual(len(res), 1)
-        self.assertEqual(res[0][0], '_resource_watcher.test.over_cpu')
-        self.assertTrue(res[0][1] > 0)
+        self._check_statsd(_statsd, '_resource_watcher.test.over_cpu')
 
         # Test that watcher is ok and not deprecated
         config['watcher'] = config['service']
@@ -168,10 +167,7 @@ class TestResourceWatcher(TestCircus):
         if not found:
             raise AssertionError('ResourceWatcher not found')
 
-        res = _statsd.increments.items()
-        self.assertTrue(len(res) > 0)
-        self.assertEqual(res[-1][0], '_resource_watcher.test.under_cpu')
-        self.assertTrue(res[-1][1] > 0)
+        self._check_statsd(_statsd, '_resource_watcher.test.under_cpu')
 
         # Test that watcher is ok and not deprecated
         config['watcher'] = config['service']
