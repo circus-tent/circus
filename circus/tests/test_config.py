@@ -1,6 +1,5 @@
 import unittest
 import os
-
 from mock import patch
 
 from circus import logger
@@ -25,6 +24,7 @@ _CONF = {
     'empty_include': os.path.join(HERE, 'empty_include.ini'),
     'circus': os.path.join(HERE, 'circus.ini'),
     'nope': os.path.join(HERE, 'nope.ini'),
+    'unexistant': os.path.join(HERE, 'unexistant.ini'),
     'issue442': os.path.join(HERE, 'issue442.ini')
 }
 
@@ -79,7 +79,7 @@ class TestConfig(unittest.TestCase):
     def test_empty_include(self, mock_logger_warn):
         """https://github.com/mozilla-services/circus/pull/473"""
         try:
-            conf = get_config(_CONF['empty_include'])
+            get_config(_CONF['empty_include'])
         except:
             self.fail('Non-existent includes should not raise')
         self.assertTrue(mock_logger_warn.called)
@@ -152,7 +152,7 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(conf['check'], 555)
 
     def test_config_unexistant(self):
-        self.assertRaises(IOError, get_config, _CONF['nope'])
+        self.assertRaises(IOError, get_config, _CONF['unexistant'])
 
     def test_variables_everywhere(self):
         os.environ['circus_stats_endpoint'] = 'tcp://0.0.0.0:9876'
