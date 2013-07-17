@@ -25,7 +25,7 @@ with open(changes) as f:
 
 setup(name='circus',
       version=__version__,
-      packages=find_packages(),
+      packages=find_packages(exclude=["docs"]),
       description=("Circus is a program that will let you run and watch "
                    " multiple processes and sockets."),
       long_description=README + '\n' + CHANGES,
