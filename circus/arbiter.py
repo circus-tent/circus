@@ -15,7 +15,7 @@ from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
 from circus.watcher import Watcher
-from circus.util import debuglog, _setproctitle
+from circus.util import debuglog, _setproctitle, DictDiffer
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
@@ -26,6 +26,7 @@ class ReloadArbiterException(Exception):
 
 
 class Arbiter(object):
+
     """Class used to control a list of watchers.
 
     Options:
@@ -68,6 +69,7 @@ class Arbiter(object):
     - **fqdn_prefix** -- a prefix for the unique identifier of the circus
                          instance on the cluster.
     """
+
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=.5,
                  prereload_fn=None, context=None, loop=None, statsd=False,
                  stats_endpoint=None, statsd_close_outputs=False,
@@ -313,16 +315,33 @@ class Arbiter(object):
             new_watcher_cfg = (self.get_watcher_config(new_cfg, n) or
                                self.get_plugin_config(new_cfg, n))
             old_watcher_cfg = w._cfg.copy()
-            if new_watcher_cfg != old_watcher_cfg:
-                num_procs = new_watcher_cfg.get('numprocesses')
-                old_watcher_cfg['numprocesses'] = num_procs
+            diff = DictDiffer(new_watcher_cfg, old_watcher_cfg).changed()
 
-                if new_watcher_cfg == old_watcher_cfg:
-                    # if nothing but the number of processes is
-                    # changed, just changes this
-                    w.set_numprocesses(int(num_procs))
-                    continue
+            # under Mac OS X there's a bug where __CF_USER_TEXT_ENCODING
+            # might get an extra \n on different env calls. Discarding it
+            if diff == set(['env']):
+                sdiff = DictDiffer(new_watcher_cfg['env'],
+                                   old_watcher_cfg['env'])
+                key = '__CF_USER_TEXT_ENCODING'
+                if sdiff.changed() == set([key]):
+                    new_env = new_watcher_cfg.get('env', [])
+                    old_env = old_watcher_cfg.get('env', [])
+                    if key in new_env and key in old_env:
+                        changed = (new_env[key].strip() !=
+                                   old_env[key].strip())
+                    else:
+                        changed = True
+                else:
+                    changed = len(diff) > 1
+            elif diff == set(['numprocesses']):
+                # if nothing but the number of processes is
+                # changed, just changes this
+                w.set_numprocesses(int(new_watcher_cfg['numprocesses']))
+                changed = False
+            else:
+                changed = len(diff) > 0
 
+            if changed:
                 # Others things are changed. Just delete and add the watcher.
                 changed_wn.add(n)
                 deleted_wn.add(n)

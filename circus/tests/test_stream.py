@@ -13,13 +13,15 @@ from circus.stream import FileStream
 from circus.stream import FancyStdoutStream
 
 
-def run_process(*args, **kw):
+def run_process(testfile, *args, **kw):
     try:
         # print once, then wait
         sys.stdout.write('stdout')
         sys.stdout.flush()
         sys.stderr.write('stderr')
         sys.stderr.flush()
+        with open(testfile, 'a+') as f:
+            f.write('START')
         time.sleep(1.)
     except:
         return 1
@@ -27,27 +29,33 @@ def run_process(*args, **kw):
 
 class TestWatcher(TestCircus):
 
-    def setUp(self):
-        super(TestWatcher, self).setUp()
+    @classmethod
+    def setUpClass(cls):
         dummy_process = 'circus.tests.test_stream.run_process'
-        fd, self.stdout = tempfile.mkstemp()
+        fd, cls.stdout = tempfile.mkstemp()
         os.close(fd)
-        fd, self.stderr = tempfile.mkstemp()
+        fd, cls.stderr = tempfile.mkstemp()
         os.close(fd)
-        self.test_file = self._run_circus(
-            dummy_process,
-            stdout_stream={'stream': FileStream(self.stdout)},
-            stderr_stream={'stream': FileStream(self.stderr)},
-            debug=True)
+        stdout = {'stream': FileStream(cls.stdout)}
+        stderr = {'stream': FileStream(cls.stderr)}
+        cls.file, cls.arbiter = cls._create_circus(dummy_process,
+                                                   stdout_stream=stdout,
+                                                   stderr_stream=stderr,
+                                                   debug=True)
+
+        poll_for(cls.file, 'START')
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.arbiter.stop()
+        if os.path.exists(cls.file):
+            os.remove(cls.file)
+        os.remove(cls.stdout)
+        os.remove(cls.stderr)
 
     def call(self, cmd, **props):
         msg = make_message(cmd, **props)
         return self.cli.call(msg)
-
-    def tearDown(self):
-        super(TestWatcher, self).tearDown()
-        os.remove(self.stdout)
-        os.remove(self.stderr)
 
     def test_file_stream(self):
         stream = FileStream(self.stdout, max_bytes='12', backup_count='3')

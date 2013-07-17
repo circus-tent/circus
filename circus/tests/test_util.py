@@ -107,7 +107,7 @@ class TestUtil(unittest.TestCase):
 
         self.assertEquals('thats an int 2',
                           repl('thats an int $(circus.me)',
-                          me=2))
+                               me=2))
 
         self.assertEquals('foobar', replace_gnu_args('$(circus.test)',
                           test='foobar'))
@@ -130,19 +130,19 @@ class TestUtil(unittest.TestCase):
 
         self.assertEquals('thats an int 2',
                           repl('thats an int $(s.me)', prefix='s',
-                          me=2))
+                               me=2))
 
         self.assertEquals('thats an int 2',
                           repl('thats an int ((s.me))', prefix='s',
-                          me=2))
+                               me=2))
 
         self.assertEquals('thats an int 2',
                           repl('thats an int $(me)', prefix=None,
-                          me=2))
+                               me=2))
 
         self.assertEquals('thats an int 2',
                           repl('thats an int ((me))', prefix=None,
-                          me=2))
+                               me=2))
 
     def test_get_python_version(self):
         py_version = get_python_version()
