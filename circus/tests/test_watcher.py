@@ -4,8 +4,6 @@ import os
 import threading
 import time
 from test.test_support import captured_output
-import tempfile
-import shutil
 
 from zmq.eventloop import ioloop
 from circus.tests.support import TestCircus, poll_for, truncate_file
