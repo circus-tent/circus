@@ -19,6 +19,7 @@ from circus.util import parse_env_dict, resolve_name
 
 
 class Watcher(object):
+
     """
     Class managing a list of processes for a given command.
 
@@ -162,6 +163,7 @@ class Watcher(object):
     - **close_child_stderr**: If True, closes the stderr after the fork.
       default: False.
     """
+
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None, max_retry=5,
                  gid=None, send_hup=False, env=None, stopped=True,
@@ -486,11 +488,12 @@ class Watcher(object):
                                     env=self.env)
         self._process_counter += 1
         nb_tries = 0
-        pipe_stdout = self.stdout_redirector is not None
-        pipe_stderr = self.stderr_redirector is not None
 
         while nb_tries < self.max_retry or self.max_retry == -1:
             process = None
+            pipe_stdout = self.stdout_redirector is not None
+            pipe_stderr = self.stderr_redirector is not None
+
             try:
                 process = Process(self._process_counter, cmd,
                                   args=self.args, working_dir=self.working_dir,
