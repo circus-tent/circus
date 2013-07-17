@@ -163,7 +163,7 @@ class TestWatcherInitialization(TestCircus):
     def test_hook_in_PYTHON_PATH(self):
         # we have a hook in PYTHONPATH
         tempdir = tempfile.mkdtemp()
-        
+
         with open(os.path.join(tempdir, '__init__.py'), 'w') as f:
             f.write('#')
 
@@ -391,6 +391,7 @@ def oneshot_process(test_file):
 
 
 class RespawnTest(TestCircus):
+
     def test_not_respawning(self):
         oneshot_process = 'circus.tests.test_watcher.oneshot_process'
         testfile, arbiter = self._create_circus(oneshot_process, respawn=False)
