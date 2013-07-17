@@ -25,6 +25,10 @@ class ReloadArbiterException(Exception):
     pass
 
 
+_ENV_EXCEPTIONS = ('__CF_USER_TEXT_ENCODING', 'PS1', 'COMP_WORDBREAKS',
+                   'PROMPT_COMMAND')
+
+
 class Arbiter(object):
 
     """Class used to control a list of watchers.
@@ -315,20 +319,16 @@ class Arbiter(object):
             new_watcher_cfg = (self.get_watcher_config(new_cfg, n) or
                                self.get_plugin_config(new_cfg, n))
             old_watcher_cfg = w._cfg.copy()
-            diff = DictDiffer(new_watcher_cfg, old_watcher_cfg).changed()
 
-            # under Mac OS X there's a bug where __CF_USER_TEXT_ENCODING
-            # might get an extra \n on different env calls. Discarding it
-            if 'env' in diff:
-                sdiff = DictDiffer(new_watcher_cfg['env'],
-                                   old_watcher_cfg['env'])
-                key = '__CF_USER_TEXT_ENCODING'
-                if sdiff.changed() == set([key]):
-                    new_env = new_watcher_cfg.get('env', [])
-                    old_env = old_watcher_cfg.get('env', [])
-                    if key in new_env and key in old_env:
-                        if new_env[key].strip() == old_env[key].strip():
-                            diff.discard('env')
+            # discarding env exceptions
+            for key in _ENV_EXCEPTIONS:
+                if 'env' in new_watcher_cfg and key in new_watcher_cfg['env']:
+                    del new_watcher_cfg['env'][key]
+
+                if 'env' in new_watcher_cfg and key in old_watcher_cfg['env']:
+                    del old_watcher_cfg['env'][key]
+
+            diff = DictDiffer(new_watcher_cfg, old_watcher_cfg).changed()
 
             if diff == set(['numprocesses']):
                 # if nothing but the number of processes is
