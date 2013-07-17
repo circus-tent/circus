@@ -1,5 +1,6 @@
 import sys
 import traceback
+import functools
 try:
     from queue import Queue, Empty  # NOQA
 except ImportError:
@@ -90,7 +91,8 @@ class Controller(object):
             self.add_job(cid, msg)
 
     def add_job(self, cid, msg):
-        self.loop.add_callback(self.dispatch, (cid, msg))
+        # using a single argument to stay compatible w/ pyzmq <= 13.0.0
+        self.loop.add_callback(functools.partial(self.dispatch, (cid, msg)))
 
     def handle_autodiscover_message(self, fd_no, type):
         data, address = self.udp_socket.recvfrom(1024)
