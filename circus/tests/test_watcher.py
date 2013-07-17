@@ -162,10 +162,7 @@ class TestWatcherInitialization(TestCircus):
 
     def test_hook_in_PYTHON_PATH(self):
         # we have a hook in PYTHONPATH
-        tempdir = tempfile.mkdtemp()
-
-        with open(os.path.join(tempdir, '__init__.py'), 'w') as f:
-            f.write('#')
+        tempdir = self.get_tmpdir()
 
         hook = 'def hook(*args, **kw):\n    return True\n'
         with open(os.path.join(tempdir, 'plugins.py'), 'w') as f:
@@ -181,7 +178,6 @@ class TestWatcherInitialization(TestCircus):
             self.assertEquals(watcher.env, os.environ)
         finally:
             os.environ = old_environ
-            shutil.rmtree(tempdir)
 
     def test_copy_path(self):
         watcher = SomeWatcher()

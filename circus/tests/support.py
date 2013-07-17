@@ -1,4 +1,4 @@
-from tempfile import mkstemp
+from tempfile import mkstemp, mkdtemp
 import os
 import signal
 import sys
@@ -6,6 +6,7 @@ from time import time, sleep
 from collections import defaultdict
 import cProfile
 import pstats
+import shutil
 
 import unittest2 as unittest
 
@@ -57,6 +58,7 @@ class TestCircus(unittest.TestCase):
     def setUp(self):
         self.arbiters = []
         self.files = []
+        self.dirs = []
         self.tmpfiles = []
         self.cli = CircusClient()
 
@@ -65,7 +67,16 @@ class TestCircus(unittest.TestCase):
         for file in self.files + self.tmpfiles:
             if os.path.exists(file):
                 os.remove(file)
+
+        for dir in self.dirs:
+            shutil.rmtree(dir)
+
         self.cli.stop()
+
+    def get_tmpdir(self):
+        dir_ = mkdtemp()
+        self.dirs.append(dir_)
+        return dir_
 
     def get_tmpfile(self, content=None):
         fd, file = mkstemp()
