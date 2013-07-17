@@ -1,6 +1,15 @@
 History
 =======
 
+0.9.1 - 2013-07-17
+------------------
+
+- When a PYTHONPATH is defined in a config file, it's loaded
+  in sys.path so hooks can be located there - #477, #481
+- Use a single argument for add_callback so it works with
+  PyZMQ < 13.1.x - see #478
+
+
 0.9 - 2013-07-16
 ----------------
 
