@@ -247,6 +247,14 @@ class Watcher(object):
         if self.virtualenv:
             util.load_virtualenv(self)
 
+        # load directories in PYTHONPATH if provided
+        # so if a hook is there, it can be loaded
+        if self.env is not None and 'PYTHONPATH' in self.env:
+            for path in self.env['PYTHONPATH'].split(os.pathsep): 
+                if path in sys.path:
+                    continue
+                site.addsitedir(path)
+
         self.rlimits = rlimits
         self.send_hup = send_hup
         self.sockets = self.evpub_socket = None
@@ -295,23 +303,14 @@ class Watcher(object):
             self.stderr_redirector = None
 
     def _resolve_hook(self, name, callable_or_name, ignore_failure):
-        if 'PYTHONPATH' in self.env:
-            old = list(sys.path)
-            for path in self.env['PYTHONPATH'].split(os.pathsep):
-                site.addsitedir(path)
+        if callable(callable_or_name):
+            self.hooks[name] = callable_or_name
+        else:
+            # will raise ImportError on failure
+            self.hooks[name] = resolve_name(callable_or_name)
 
-        try:
-            if callable(callable_or_name):
-                self.hooks[name] = callable_or_name
-            else:
-                # will raise ImportError on failure
-                self.hooks[name] = resolve_name(callable_or_name)
-
-            if ignore_failure:
-                self.ignore_hook_failure.append(name)
-        finally:
-            if 'PYTHONPATH' in self.env:
-                sys.path = old
+        if ignore_failure:
+            self.ignore_hook_failure.append(name)
 
     def _resolve_hooks(self, hooks):
         """Check the supplied hooks argument to make sure we can find
