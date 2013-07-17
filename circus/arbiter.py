@@ -319,7 +319,7 @@ class Arbiter(object):
 
             # under Mac OS X there's a bug where __CF_USER_TEXT_ENCODING
             # might get an extra \n on different env calls. Discarding it
-            if diff == set(['env']):
+            if 'env' in diff:
                 sdiff = DictDiffer(new_watcher_cfg['env'],
                                    old_watcher_cfg['env'])
                 key = '__CF_USER_TEXT_ENCODING'
@@ -327,13 +327,10 @@ class Arbiter(object):
                     new_env = new_watcher_cfg.get('env', [])
                     old_env = old_watcher_cfg.get('env', [])
                     if key in new_env and key in old_env:
-                        changed = (new_env[key].strip() !=
-                                   old_env[key].strip())
-                    else:
-                        changed = True
-                else:
-                    changed = len(diff) > 1
-            elif diff == set(['numprocesses']):
+                        if new_env[key].strip() == old_env[key].strip():
+                            diff.discard('env')
+
+            if diff == set(['numprocesses']):
                 # if nothing but the number of processes is
                 # changed, just changes this
                 w.set_numprocesses(int(new_watcher_cfg['numprocesses']))
