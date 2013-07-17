@@ -59,7 +59,6 @@ class TestConfig(unittest.TestCase):
 
     def test_reload_addwatchers(self):
         self.assertEqual(len(self.a.watchers), 3)
-
         self.a.reload_from_config(_CONF['reload_addwatchers'])
         self.assertEqual(len(self.a.watchers), 4)
 

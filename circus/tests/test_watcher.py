@@ -158,6 +158,25 @@ class TestWatcherInitialization(TestCircus):
         finally:
             os.environ = old_environ
 
+    def test_hook_in_PYTHON_PATH(self):
+        # we have a hook in PYTHONPATH
+        tempdir = self.get_tmpdir()
+
+        hook = 'def hook(*args, **kw):\n    return True\n'
+        with open(os.path.join(tempdir, 'plugins.py'), 'w') as f:
+            f.write(hook)
+
+        old_environ = os.environ
+        try:
+            os.environ = {'PYTHONPATH': tempdir}
+            hooks = {'before_start': ('plugins.hook', False)}
+
+            watcher = Watcher("foo", "foobar", copy_env=True, hooks=hooks)
+
+            self.assertEquals(watcher.env, os.environ)
+        finally:
+            os.environ = old_environ
+
     def test_copy_path(self):
         watcher = SomeWatcher()
         watcher.start()
@@ -366,6 +385,7 @@ def oneshot_process(test_file):
 
 
 class RespawnTest(TestCircus):
+
     def test_not_respawning(self):
         oneshot_process = 'circus.tests.test_watcher.oneshot_process'
         testfile, arbiter = self._create_circus(oneshot_process, respawn=False)
