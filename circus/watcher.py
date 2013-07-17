@@ -5,6 +5,7 @@ import signal
 import time
 import sys
 from random import randint
+import site
 
 from psutil import NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
@@ -202,8 +203,7 @@ class Watcher(object):
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
         self.ignore_hook_failure = ['before_stop', 'after_stop']
-        self.hooks = {}
-        self._resolve_hooks(hooks)
+
         self.respawn = respawn
         self.autostart = autostart
         self.close_child_stdout = close_child_stdout
@@ -249,10 +249,20 @@ class Watcher(object):
         if self.virtualenv:
             util.load_virtualenv(self)
 
+        # load directories in PYTHONPATH if provided
+        # so if a hook is there, it can be loaded
+        if self.env is not None and 'PYTHONPATH' in self.env:
+            for path in self.env['PYTHONPATH'].split(os.pathsep):
+                if path in sys.path:
+                    continue
+                site.addsitedir(path)
+
         self.rlimits = rlimits
         self.send_hup = send_hup
         self.sockets = self.evpub_socket = None
         self.arbiter = None
+        self.hooks = {}
+        self._resolve_hooks(hooks)
 
     def _reload_hook(self, key, hook, ignore_error):
         hook_name = key.split('.')[-1]
