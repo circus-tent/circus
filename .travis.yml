@@ -6,7 +6,7 @@ install:
     - pip install -r test-requirements.txt --use-mirrors
     - pip install --use-mirrors unittest2
     - python setup.py develop
-script: unit2 discover -v && flake8 circus
+script: flake8 circus && unit2 discover -v 
 notifications:
     email: tarek@mozilla.com
     irc: "irc.freenode.org#mozilla-circus"
