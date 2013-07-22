@@ -1,10 +1,9 @@
 description "circusd"
 
-start on (net-device-up
-          and local-filesystems
-          and runlevel [2345])
-stop on runlevel [!2345]
+start on filesystem and net-device-up IFACE=lo
+stop on shutdown
 
 respawn
-
-exec /usr/bin/circusd /etc/circus/circusd.ini
+exec /usr/bin/circusd --log-output /var/log/circus.log \
+                      --pidfile /var/run/circusd.pid \
+                      /etc/circus/circusd.ini
