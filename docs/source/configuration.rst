@@ -108,7 +108,7 @@ watcher:NAME - as many sections as you want
         format syntax here to build the parameters. Environment variables are
         available, as well as the worker id and the environment variables that
         you passed, if any, with the "env" parameter. See
-        :ref:`formating_cmd` for more information on this.
+        :ref:`formatting_cmd` for more information on this.
     **shell**
         If True, the processes are run in the shell (default: False)
     **working_dir**
@@ -396,10 +396,10 @@ a variable defined in *env*, which will override a variable
 defined in *os.environ*.
 
 
-.. _formating_cmd:
+.. _formatting_cmd:
 
-Formating the commands and arguments with dynamic variables
-===========================================================
+Formatting the commands and arguments with dynamic variables
+============================================================
 
 As you may have seen, it is possible to pass some information that are computed
 dynamically when running the processes. Among other things, you can get the
