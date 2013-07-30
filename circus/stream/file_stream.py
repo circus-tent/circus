@@ -1,11 +1,15 @@
 import os
 import tempfile
-
+from datetime import datetime
 from circus import logger
 
 
 class FileStream(object):
-    def __init__(self, filename=None, max_bytes=0, backup_count=0, **kwargs):
+    # You may want to use another now method (not naive or a mock).
+    now = datetime.now
+
+    def __init__(self, filename=None, max_bytes=0, backup_count=0,
+                 time_format=None, **kwargs):
         '''
         File writer handler which writes output to a file, allowing rotation
         behaviour based on Python's ``logging.handlers.RotatingFileHandler``.
@@ -26,6 +30,17 @@ class FileStream(object):
         respectively.
 
         If max_bytes is zero, rollover never occurs.
+
+        You may also configure the timestamp format as defined by
+        datetime.strftime.
+
+        Here is an example: ::
+
+          [watcher:foo]
+          cmd = python -m myapp.server
+          stdout_stream.class = FileStream
+          stdout_stream.filename = /var/log/circus/out.log
+          stdout_stream.time_format = %Y-%m-%d %H:%M:%S
         '''
         super(FileStream, self).__init__()
         if filename is None:
@@ -36,6 +51,7 @@ class FileStream(object):
         self._backup_count = int(backup_count)
         self._file = self._open()
         self._buffer = []
+        self.time_format = time_format
 
     def _open(self):
         return open(self._filename, 'a+')
@@ -43,7 +59,17 @@ class FileStream(object):
     def __call__(self, data):
         if self._should_rollover(data['data']):
             self._do_rollover()
-        self._file.write(data['data'])
+
+        # If we want to prefix the stream with the current datetime
+        for line in data['data'].split('\n'):
+            if not line:
+                continue
+            if self.time_format is not None:
+                self._file.write('{time} [{pid}] | '.format(
+                    time=self.now().strftime(self.time_format),
+                    pid=data['pid']))
+            self._file.write(line)
+            self._file.write('\n')
         self._file.flush()
 
     def close(self):
