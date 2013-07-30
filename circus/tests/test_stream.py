@@ -157,3 +157,60 @@ class TestFancyStdoutStream(unittest.TestCase):
         for i, color in enumerate(FancyStdoutStream.colors):
             stream = self.get_stream(color)
             self.assertEquals(i + 1, stream.color_code)
+
+
+class TestFileStream(unittest.TestCase):
+
+    def get_stream(self, *args, **kw):
+        # need a constant timestamp
+        now = datetime.now()
+        stream = FileStream(*args, **kw)
+
+        # patch some details that will be used
+        stream._file = StringIO()
+        stream._open = lambda: stream._file
+        stream.now = lambda: now
+
+        return stream
+
+    def get_output(self, stream):
+        # stub data
+        data = {'data': 'hello world',
+                'pid': 333}
+
+        # get the output
+        stream(data)
+        output = stream._file.getvalue()
+
+        expected = stream.now().strftime(stream.time_format) + " "
+        expected += "[333] | " + data['data'] + '\n'
+        return output, expected
+
+    def test_time_formatting(self):
+        stream = self.get_stream(time_format='%Y/%m/%d %H.%M.%S')
+        output, expected = self.get_output(stream)
+        self.assertEquals(output, expected)
+
+    def test_data_split_into_lines(self):
+        stream = self.get_stream(time_format='%Y/%m/%d %H.%M.%S')
+        data = {'data': '\n'.join(['foo', 'bar', 'baz']),
+                'pid': 333}
+
+        stream(data)
+        output = stream._file.getvalue()
+
+        # NOTE: We expect 4 b/c the last line needs to add a newline
+        #       in order to prepare for the next chunk
+        self.assertEquals(len(output.split('\n')), 4)
+
+    def test_data_with_extra_lines(self):
+        stream = self.get_stream(time_format='%Y/%m/%d %H.%M.%S')
+
+        # There is an extra newline
+        data = {'data': '\n'.join(['foo', 'bar', 'baz', '']),
+                'pid': 333}
+
+        stream(data)
+        output = stream._file.getvalue()
+
+        self.assertEquals(len(output.split('\n')), 4)

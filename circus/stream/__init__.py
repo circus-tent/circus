@@ -52,7 +52,7 @@ class FancyStdoutStream(StdoutStream):
     You may also configure the timestamp format as defined by
     datetime.strftime. The default is: ::
 
-      %Y-%M-%d %H:%M:%S
+      %Y-%m-%d %H:%M:%S
 
     Here is an example: ::
 
@@ -60,7 +60,7 @@ class FancyStdoutStream(StdoutStream):
       cmd = python -m myapp.server
       stdout_stream.class = FancyStdoutStream
       stdout_stream.color = green
-      stdout_stream.time_format = '%Y/%M/%d | %H:%M:%S'
+      stdout_stream.time_format = '%Y/%m/%d | %H:%M:%S'
     """
 
     # colors in order according to the ascii escape sequences
@@ -74,7 +74,7 @@ class FancyStdoutStream(StdoutStream):
     now = datetime.now
 
     def __init__(self, color=None, time_format=None, *args, **kwargs):
-        self.time_format = time_format or '%Y-%M-%d %H:%M:%S'
+        self.time_format = time_format or '%Y-%m-%d %H:%M:%S'
 
         # If no color is provided we pick one at random
         if color not in self.colors:
