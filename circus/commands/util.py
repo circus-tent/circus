@@ -1,6 +1,7 @@
 from circus.exc import ArgumentError, MessageError
 from circus.py3compat import string_types
 from circus import util
+import warnings
 
 
 def convert_option(key, val):
@@ -47,8 +48,6 @@ def convert_option(key, val):
             return val
         elif subkey in ('max_bytes', 'backup_count'):
             return int(val)
-        elif subkey == 'refresh_time':
-            return float(val)
     elif key.startswith('hooks.'):
         subkey = key.split('.', 1)[-1]
 
@@ -104,6 +103,8 @@ def validate_option(key, val):
 
     if key in ('stderr_stream', 'stdout_stream'):
         for k, v in val.items():
-            if not k in ('class', 'filename', 'refresh_time', 'max_bytes',
+            if k in ('refresh_time',):
+                warnings.warn("%r is deprecated and not useful anymore for %r" % (k, key))
+            if not k in ('class', 'filename', 'max_bytes',
                          'backup_count'):
                 raise MessageError("%r is an invalid option for %r" % (k, key))

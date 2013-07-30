@@ -39,7 +39,7 @@ class FileStream(object):
           cmd = python -m myapp.server
           stdout_stream.class = FileStream
           stdout_stream.filename = /var/log/circus/out.log
-          stdout_stream.time_format = '%Y-%m-%d %H:%M:%S'
+          stdout_stream.time_format = %Y-%m-%d %H:%M:%S
         '''
         super(FileStream, self).__init__()
         if filename is None:

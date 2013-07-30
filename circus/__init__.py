@@ -57,8 +57,6 @@ class ArbiterHandler(object):
 
                 - **class**: the fully qualified name of the class to use for
                              streaming. Defaults to circus.stream.FileStream
-                - **refresh_time**: the delay between two stream checks.
-                                    Defaults to 0.3 seconds.
                 - any other key will be passed the class constructor.
             - **stderr_stream**: a mapping containing the options for
               configuring the stderr stream. Default to None. When provided,
@@ -66,8 +64,6 @@ class ArbiterHandler(object):
 
                 - **class**: the fully qualified name of the class to use for
                   streaming. Defaults to circus.stream.FileStream
-                - **refresh_time**: the delay between two stream checks.
-                                    Defaults to 0.3 seconds.
                 - any other key will be passed the class constructor.
             - **max_retry**: the number of times we attempt to start a process,
               before we abandon and stop the whole watcher. (default: 5)

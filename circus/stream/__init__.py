@@ -127,10 +127,7 @@ def get_stream(conf):
     else:
         raise ValueError("stream configuration invalid")
 
-    # default refresh_time
-    refresh_time = float(conf.get('refresh_time', 0.3))
-
-    return {'stream': inst, 'refresh_time': refresh_time}
+    return {'stream': inst}
 
 
 def get_pipe_redirector(redirect, extra_info=None, buffer=1024, loop=None):
@@ -154,7 +151,6 @@ def get_pipe_redirector(redirect, extra_info=None, buffer=1024, loop=None):
         return
 
     stream = redirect.get('stream')
-    refresh_time = redirect.get('refresh_time', 0.3)
 
     # finally setup the redirection
-    return Redirector(stream, refresh_time, extra_info, buffer, loop=loop)
+    return Redirector(stream, extra_info, buffer, loop=loop)

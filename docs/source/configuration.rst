@@ -23,7 +23,6 @@ Example::
     # will push in test.log the stream every 300 ms
     stdout_stream.class = FileStream
     stdout_stream.filename = test.log
-    stdout_stream.refresh_time = 0.3
 
     # optionally rotate the log file when it reaches 1 gb
     # and save 5 copied of rotated files
@@ -424,3 +423,78 @@ This works with both `cmd` and `args`.
 - All variables are prefixed with `circus.`
 - The replacement is case insensitive.
 
+Stream configuration
+====================
+
+Simple stream class as `QueueStream` and `StdoutStream` doesn't have
+specific attributes but some other stream class may have some:
+
+
+FileStream
+::::::::::
+
+    **filename**
+        The file path where log will be written.
+
+    **time_format**
+        The strftime format that each line will be prefixed with.
+
+        i.e: %Y-%m-%d %H:%M:%S
+
+    **max_bytes**
+        The max size of the log file. Then the rollover applies.
+
+    **backup_count**
+        The number of log files that will be kept
+
+
+.. note::    
+
+    Rollover occurs whenever the current log file is nearly max_bytes in
+    length. If backup_count is >= 1, the system will successively create
+    new files with the same pathname as the base file, but with extensions
+    ".1", ".2" etc. appended to it. For example, with a backup_count of 5
+    and a base file name of "app.log", you would get "app.log",
+    "app.log.1", "app.log.2", ... through to "app.log.5". The file being
+    written to is always "app.log" - when it gets filled up, it is closed
+    and renamed to "app.log.1", and if files "app.log.1", "app.log.2" etc.
+    exist, then they are renamed to "app.log.2", "app.log.3" etc.
+    respectively.
+
+Example::
+
+    [watcher:myprogram]
+    cmd = python -m myapp.server
+
+    stdout_stream.class = FileStream
+    stdout_stream.filename = test.log
+    stdout_stream.time_format = %Y-%m-%d %H:%M:%S
+    stdout_stream.max_bytes = 1073741824
+    stdout_stream.backup_count = 5
+
+
+FancyStdoutStram
+::::::::::::::::
+
+    **color**
+        The name of an ascii color:
+            - red
+            - green
+            - yellow
+            - blue
+            - magenta
+            - cyan
+            - white
+
+    **time_format**
+        The strftime format that each line will be prefixed with.
+
+        Default to: %Y-%m-%d %H:%M:%S
+
+Example::
+
+    [watcher:myprogram]
+    cmd = python -m myapp.server
+    stdout_stream.class = FancyStdoutStream
+    stdout_stream.color = green
+    stdout_stream.time_format = '%Y/%m/%d | %H:%M:%S'

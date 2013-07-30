@@ -67,8 +67,6 @@ class Watcher(object):
       - **class**: the stream class. Defaults to
         `circus.stream.FileStream`
       - **filename**: the filename, if using a FileStream
-      - **refresh_time**: the delay between two stream checks. Defaults
-        to 0.3 seconds.
       - **max_bytes**: maximum file size, after which a new output file is
         opened. defaults to 0 which means no maximum size.
       - **backup_count**: how many backups to retain when rotating files
@@ -90,8 +88,6 @@ class Watcher(object):
       three keys:
       - **class**: the stream class. Defaults to `circus.stream.FileStream`
       - **filename**: the filename, if using a FileStream
-      - **refresh_time**: the delay between two stream checks. Defaults
-        to 0.3 seconds.
       - **max_bytes**: maximum file size, after which a new output file is
         opened. defaults to 0 which means no maximum size.
       - **backup_count**: how many backups to retain when rotating files
