@@ -426,7 +426,7 @@ This works with both `cmd` and `args`.
 Stream configuration
 ====================
 
-Simple stream class as `QueueStream` and `StdoutStream` doesn't have
+Simple stream class like `QueueStream` and `StdoutStream` don't have
 specific attributes but some other stream class may have some:
 
 
@@ -437,15 +437,18 @@ FileStream
         The file path where log will be written.
 
     **time_format**
-        The strftime format that each line will be prefixed with.
+        The strftime format that will be used to prefix each time with a timestamp.
+        By default they will be not prefixed.
 
         i.e: %Y-%m-%d %H:%M:%S
 
     **max_bytes**
-        The max size of the log file. Then the rollover applies.
+        The max size of the log file before a new file is started.
+        If not provided, the file is not rolled over.
 
     **backup_count**
         The number of log files that will be kept
+        By default backup_count is null.
 
 
 .. note::    
@@ -497,4 +500,4 @@ Example::
     cmd = python -m myapp.server
     stdout_stream.class = FancyStdoutStream
     stdout_stream.color = green
-    stdout_stream.time_format = '%Y/%m/%d | %H:%M:%S'
+    stdout_stream.time_format = %Y/%m/%d | %H:%M:%S

@@ -5,6 +5,7 @@ from circus import logger
 
 
 class FileStream(object):
+    # You may want to use another now method (not naive or a mock).
     now = datetime.now
 
     def __init__(self, filename=None, max_bytes=0, backup_count=0,
@@ -61,14 +62,15 @@ class FileStream(object):
 
         # If we want to prefix the stream with the current datetime
         for line in data['data'].split('\n'):
-            if line:
-                if self.time_format is not None:
-                    self._file.write('{time} [{pid}] | '.format(
-                        time=self.now().strftime(self.time_format),
-                        pid=data['pid']))
-                self._file.write(line)
-                self._file.write('\n')
-                self._file.flush()
+            if not line:
+                continue
+            if self.time_format is not None:
+                self._file.write('{time} [{pid}] | '.format(
+                    time=self.now().strftime(self.time_format),
+                    pid=data['pid']))
+            self._file.write(line)
+            self._file.write('\n')
+        self._file.flush()
 
     def close(self):
         self._file.close()

@@ -104,7 +104,8 @@ def validate_option(key, val):
     if key in ('stderr_stream', 'stdout_stream'):
         for k, v in val.items():
             if k in ('refresh_time',):
-                warnings.warn("%r is deprecated and not useful anymore for %r" % (k, key))
+                warnings.warn(u"%r is deprecated and not useful "
+                              u"anymore for %r" % (k, key))
             if not k in ('class', 'filename', 'max_bytes',
                          'backup_count'):
                 raise MessageError("%r is an invalid option for %r" % (k, key))
