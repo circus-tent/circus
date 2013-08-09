@@ -30,7 +30,7 @@ def addrinfo(host, port):
 class CircusSocket(socket.socket):
     """Inherits from socket, to add a few extra options.
     """
-    def __init__(self, name='', host='localhost', port=8080,
+    def __init__(self, name='', host='localhost', port=8080, interface=None,
                  family=socket.AF_INET, type=socket.SOCK_STREAM,
                  proto=0, backlog=2048, path=None, umask=None):
         if path is not None:
@@ -50,6 +50,7 @@ class CircusSocket(socket.socket):
             self.host, self.port = addrinfo(host, port)
             self.is_unix = False
 
+        self.interface = interface
         self.backlog = backlog
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
@@ -69,6 +70,12 @@ class CircusSocket(socket.socket):
 
     def bind_and_listen(self):
         try:
+            if self.interface is not None:
+                # Bind to device if given, e.g. to limit which device to bind
+                # when binding on IN_ADDR_ANY or IN_ADDR_BROADCAST.
+                import IN
+                self.setsockopt(socket.SOL_SOCKET, IN.SO_BINDTODEVICE, self.interface +'\0')
+                logger.debug('Binding to device: %s' % self.interface)
             if self.is_unix:
                 if os.path.exists(self.path):
                     raise OSError("%r already exists. You might want to "
@@ -102,6 +109,7 @@ class CircusSocket(socket.socket):
                   'host': config.get('host', 'localhost'),
                   'port': int(config.get('port', '8080')),
                   'path': config.get('path'),
+                  'interface': config.get('interface', None),
                   'family': _FAMILY[config.get('family', 'AF_INET').upper()],
                   'type': _TYPE[config.get('type', 'SOCK_STREAM').upper()],
                   'backlog': int(config.get('backlog', 2048)),

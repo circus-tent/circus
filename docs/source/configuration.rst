@@ -265,6 +265,14 @@ socket:NAME - as many sections as you want
     **type**
         The socket type. Can be 'SOCK_STREAM', 'SOCK_DGRAM', 'SOCK_RAW',
         'SOCK_RDM' or 'SOCK_SEQPACKET'. Defaults to 'SOCK_STREAM'.
+    **interface**
+        When provided a network interface name like 'eth0', binds the socket
+        to that particular device so that only packets received from that
+        particular interface are processed by the socket.
+        This can be used for example to limit which device to bind when
+        binding on IN_ADDR_ANY (0.0.0.0) or IN_ADDR_BROADCAST
+        (255.255.255.255). Note that this only works for some socket types,
+        particularly AF_INET sockets.
     **path**
         When provided a path to a file that will be used as a unix socket
         file. If a path is provided, **family** is forced to AF_UNIX and
