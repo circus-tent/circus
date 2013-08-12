@@ -147,8 +147,9 @@ class CircusSockets(dict):
         if sock is not None:
             raise ValueError('A socket already exists %s' % sock)
 
-        sock = CircusSocket(name, host, port, family, type, proto, backlog,
-                            path)
+        sock = CircusSocket(name=name, host=host, port=port, family=family,
+            type=type, proto=proto, backlog=backlog, path=path,
+            interface=interface)
         self[name] = sock
         return sock
 
