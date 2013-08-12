@@ -74,7 +74,8 @@ class CircusSocket(socket.socket):
                 # Bind to device if given, e.g. to limit which device to bind
                 # when binding on IN_ADDR_ANY or IN_ADDR_BROADCAST.
                 import IN
-                self.setsockopt(socket.SOL_SOCKET, IN.SO_BINDTODEVICE, self.interface +'\0')
+                self.setsockopt(socket.SOL_SOCKET, IN.SO_BINDTODEVICE,
+                    self.interface + '\0')
                 logger.debug('Binding to device: %s' % self.interface)
             if self.is_unix:
                 if os.path.exists(self.path):
