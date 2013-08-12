@@ -43,12 +43,8 @@ def convert_option(key, val):
         return util.to_bool(val)
     elif key.startswith('stderr_stream.') or key.startswith('stdout_stream.'):
         subkey = key.split('.', 1)[-1]
-
-        if subkey in ('max_bytes', 'backup_count'):
+        if hasattr(val, 'isdigit') and val.isdigit():
             return int(val)
-        elif subkey == 'refresh_time':
-            # Deprecated but warning below
-            return
         return val
     elif key.startswith('hooks.'):
         subkey = key.split('.', 1)[-1]

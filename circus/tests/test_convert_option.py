@@ -14,15 +14,17 @@ class TestConvertOption(unittest.TestCase):
             ('stdout_stream.class', 'class', 'class'),
             ('stdout_stream.filename', 'file', 'file'),
             ('stdout_stream.other_option', 'other', 'other'),
-            ('stdout_stream.refresh_time', '10', None),
+            ('stdout_stream.refresh_time', '10', 10),
             ('stdout_stream.max_bytes', '10', 10),
             ('stdout_stream.backup_count', '20', 20),
             ('stderr_stream.class', 'class', 'class'),
             ('stderr_stream.filename', 'file', 'file'),
             ('stderr_stream.other_option', 'other', 'other'),
-            ('stderr_stream.refresh_time', '10', None),
+            ('stderr_stream.refresh_time', '10', 10),
             ('stderr_stream.max_bytes', '10', 10),
             ('stderr_stream.backup_count', '20', 20),
+            ('stderr_stream.some_number', '99', 99),
+            ('stderr_stream.some_number_2', 99, 99),
         )
 
         for option, value, expected in expected_convertions:
