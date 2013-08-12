@@ -43,7 +43,7 @@ def convert_option(key, val):
         return util.to_bool(val)
     elif key.startswith('stderr_stream.') or key.startswith('stdout_stream.'):
         subkey = key.split('.', 1)[-1]
-        if hasattr(val, 'isdigit') and val.isdigit():
+        if subkey in ('max_bytes', 'backup_count'):
             return int(val)
         return val
     elif key.startswith('hooks.'):
