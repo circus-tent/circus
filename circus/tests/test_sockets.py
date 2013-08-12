@@ -1,6 +1,9 @@
 import os
 import socket
 import tempfile
+import IN
+
+import mock
 
 from circus.tests.support import unittest
 from circus.sockets import CircusSocket, CircusSockets
@@ -87,3 +90,18 @@ class TestSockets(unittest.TestCase):
         finally:
             sockets.close_all()
             self.assertTrue(not os.path.exists(sockfile))
+
+    @unittest.skipIf(TRAVIS, "Running in Travis")
+    def test_bind_to_interface(self):
+        config = {'name': '', 'host': 'localhost', 'port': 0,
+                  'interface': 'lo'}
+
+        sock = CircusSocket.load_from_config(config)
+        self.assertEqual(sock.interface, config['interface'])
+        sock.setsockopt = mock.Mock()
+        try:
+            sock.bind_and_listen()
+            sock.setsockopt.assert_any_call(socket.SOL_SOCKET, 
+                IN.SO_BINDTODEVICE, config['interface'] + '\0')
+        finally:
+            sock.close()

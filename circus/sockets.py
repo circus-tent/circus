@@ -32,7 +32,8 @@ class CircusSocket(socket.socket):
     """
     def __init__(self, name='', host='localhost', port=8080,
                  family=socket.AF_INET, type=socket.SOCK_STREAM,
-                 proto=0, backlog=2048, path=None, umask=None):
+                 proto=0, backlog=2048, path=None, umask=None,
+                 interface=None):
         if path is not None:
             family = socket.AF_UNIX
 
@@ -50,6 +51,7 @@ class CircusSocket(socket.socket):
             self.host, self.port = addrinfo(host, port)
             self.is_unix = False
 
+        self.interface = interface
         self.backlog = backlog
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
@@ -81,6 +83,13 @@ class CircusSocket(socket.socket):
                     self.bind(self.path)
                     os.umask(old_mask)
             else:
+                if self.interface is not None:
+                    # Bind to device if given, e.g. to limit which device to bind
+                    # when binding on IN_ADDR_ANY or IN_ADDR_BROADCAST.
+                    import IN
+                    self.setsockopt(socket.SOL_SOCKET, IN.SO_BINDTODEVICE,
+                        self.interface + '\0')
+                    logger.debug('Binding to device: %s' % self.interface)
                 self.bind((self.host, self.port))
         except socket.error:
             logger.error('Could not bind %s' % self.location)
@@ -102,6 +111,7 @@ class CircusSocket(socket.socket):
                   'host': config.get('host', 'localhost'),
                   'port': int(config.get('port', '8080')),
                   'path': config.get('path'),
+                  'interface': config.get('interface', None),
                   'family': _FAMILY[config.get('family', 'AF_INET').upper()],
                   'type': _TYPE[config.get('type', 'SOCK_STREAM').upper()],
                   'backlog': int(config.get('backlog', 2048)),
@@ -127,7 +137,8 @@ class CircusSockets(dict):
                 self[sock.name] = sock
 
     def add(self, name, host='localhost', port=8080, family=socket.AF_INET,
-            type=socket.SOCK_STREAM, proto=0, backlog=None, path=None):
+            type=socket.SOCK_STREAM, proto=0, backlog=None, path=None,
+            umask=None, interface=None):
 
         if backlog is None:
             backlog = self.backlog
@@ -136,8 +147,9 @@ class CircusSockets(dict):
         if sock is not None:
             raise ValueError('A socket already exists %s' % sock)
 
-        sock = CircusSocket(name, host, port, family, type, proto, backlog,
-                            path)
+        sock = CircusSocket(name=name, host=host, port=port, family=family,
+            type=type, proto=proto, backlog=backlog, path=path, umask=umask,
+            interface=interface)
         self[name] = sock
         return sock
 
