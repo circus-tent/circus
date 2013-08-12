@@ -43,14 +43,9 @@ def convert_option(key, val):
         return util.to_bool(val)
     elif key.startswith('stderr_stream.') or key.startswith('stdout_stream.'):
         subkey = key.split('.', 1)[-1]
-
-        if subkey in ('class', 'filename'):
-            return val
-        elif subkey in ('max_bytes', 'backup_count'):
+        if subkey in ('max_bytes', 'backup_count'):
             return int(val)
-        elif subkey == 'refresh_time':
-            # Deprecated but warning below
-            return
+        return val
     elif key.startswith('hooks.'):
         subkey = key.split('.', 1)[-1]
 
@@ -105,10 +100,10 @@ def validate_option(key, val):
                 raise MessageError("%r isn't a string" % k)
 
     if key in ('stderr_stream', 'stdout_stream'):
-        for k, v in val.items():
-            if k in ('refresh_time',):
-                warnings.warn(u"%r is deprecated and not useful "
-                              u"anymore for %r" % (k, key))
-            if not k in ('class', 'filename', 'max_bytes',
-                         'backup_count'):
-                raise MessageError("%r is an invalid option for %r" % (k, key))
+        if not isinstance(val, dict):
+            raise MessageError("%r isn't a valid object" % key)
+        if not 'class' in val:
+            raise MessageError("%r must have a 'class' key" % key)
+        if 'refresh_time' in val:
+            warnings.warn(u"'refresh_time' is deprecated and not useful "
+                          u"anymore for %r" % key)
