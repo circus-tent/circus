@@ -30,9 +30,10 @@ def addrinfo(host, port):
 class CircusSocket(socket.socket):
     """Inherits from socket, to add a few extra options.
     """
-    def __init__(self, name='', host='localhost', port=8080, interface=None,
+    def __init__(self, name='', host='localhost', port=8080,
                  family=socket.AF_INET, type=socket.SOCK_STREAM,
-                 proto=0, backlog=2048, path=None, umask=None):
+                 proto=0, backlog=2048, path=None, umask=None,
+                 interface=None):
         if path is not None:
             family = socket.AF_UNIX
 
@@ -136,7 +137,8 @@ class CircusSockets(dict):
                 self[sock.name] = sock
 
     def add(self, name, host='localhost', port=8080, family=socket.AF_INET,
-            type=socket.SOCK_STREAM, proto=0, backlog=None, path=None):
+            type=socket.SOCK_STREAM, proto=0, backlog=None, path=None,
+            interface=None):
 
         if backlog is None:
             backlog = self.backlog
