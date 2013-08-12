@@ -138,7 +138,7 @@ class CircusSockets(dict):
 
     def add(self, name, host='localhost', port=8080, family=socket.AF_INET,
             type=socket.SOCK_STREAM, proto=0, backlog=None, path=None,
-            interface=None):
+            umask=None, interface=None):
 
         if backlog is None:
             backlog = self.backlog
@@ -148,7 +148,7 @@ class CircusSockets(dict):
             raise ValueError('A socket already exists %s' % sock)
 
         sock = CircusSocket(name=name, host=host, port=port, family=family,
-            type=type, proto=proto, backlog=backlog, path=path,
+            type=type, proto=proto, backlog=backlog, path=path, umask=umask,
             interface=interface)
         self[name] = sock
         return sock
