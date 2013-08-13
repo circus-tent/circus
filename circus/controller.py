@@ -55,12 +55,13 @@ class Controller(object):
         self._init_stream()
 
         # Initialize UDP Socket
-        multicast_addr, multicast_port = urlparse(self.multicast_endpoint)\
-            .netloc.split(':')
-        self.udp_socket = create_udp_socket(multicast_addr, multicast_port)
-        self.loop.add_handler(self.udp_socket.fileno(),
-                              self.handle_autodiscover_message,
-                              ioloop.IOLoop.READ)
+        if self.multicast_endpoint:
+            multicast_addr, multicast_port = urlparse(self.multicast_endpoint)\
+                .netloc.split(':')
+            self.udp_socket = create_udp_socket(multicast_addr, multicast_port)
+            self.loop.add_handler(self.udp_socket.fileno(),
+                                  self.handle_autodiscover_message,
+                                  ioloop.IOLoop.READ)
 
     def start(self):
         self.initialize()
