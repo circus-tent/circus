@@ -46,13 +46,6 @@ def convert_option(key, val):
         if subkey in ('max_bytes', 'backup_count'):
             return int(val)
         return val
-    elif key.startswith('hooks.'):
-        subkey = key.split('.', 1)[-1]
-
-        if subkey in ('before_start', 'after_start', 'before_stop',
-                      'after_stop', 'before_spawn'):
-            return val
-
     raise ArgumentError("unknown key %r" % key)
 
 
@@ -61,7 +54,8 @@ def validate_option(key, val):
                   'gid', 'send_hup', 'shell', 'env', 'cmd', 'copy_env',
                   'flapping_attempts', 'flapping_window', 'retry_in',
                   'max_retry', 'graceful_timeout', 'stdout_stream',
-                  'stderr_stream', 'max_age', 'max_age_variance', 'respawn')
+                  'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
+                  'hooks')
     valid_prefixes = ('stdout_stream', 'stderr_stream', 'hooks')
 
     def _valid_prefix():
