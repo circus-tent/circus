@@ -106,6 +106,8 @@ class Arbiter(object):
         self.ctrl = self.loop = None
         self.socket_event = False
 
+        self.started = False
+
         # initialize zmq context
         self._init_context(context)
         self.pid = os.getpid()
@@ -463,6 +465,8 @@ class Arbiter(object):
             for watcher in self.iter_watchers():
                 self.start_watcher(watcher)
 
+            self.started = True
+
             logger.info('Arbiter now waiting for commands')
 
             while True:
@@ -486,6 +490,7 @@ class Arbiter(object):
         # this will stop the loop and the closing
         # will finish in .start()
         self.loop.stop()
+        self.started = False
 
     def reap_processes(self):
         # map watcher to pids
@@ -592,9 +597,12 @@ class Arbiter(object):
             return ValueError("command name shouldn't be empty")
 
         watcher = Watcher(name, cmd, **kw)
-        watcher.initialize(self.evpub_socket, self.sockets, self)
         self.watchers.append(watcher)
-        self._watchers_names[watcher.name.lower()] = watcher
+
+        if self.started:
+            watcher.initialize(self.evpub_socket, self.sockets, self)
+            self._watchers_names[watcher.name.lower()] = watcher
+
         return watcher
 
     def rm_watcher(self, name):
