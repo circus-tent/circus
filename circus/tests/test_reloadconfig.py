@@ -33,18 +33,23 @@ class FakeSocket(object):
 class TestConfig(unittest.TestCase):
 
     def setUp(self):
-        conf = _CONF['reload_base']
-        self.a = Arbiter.load_from_config(conf)
-        self.a.evpub_socket = FakeSocket()
-
-        # initialize watchers
-        for watcher in self.a.iter_watchers():
-            self.a._watchers_names[watcher.name.lower()] = watcher
+        self.a = self._load_base_arbiter()
 
     def tearDown(self):
-        for watcher in self.a.iter_watchers():
+        self._tear_down_arbiter(self.a)
+
+    def _tear_down_arbiter(self, a):
+        for watcher in a.iter_watchers():
             watcher.stop()
-        self.a.sockets.close_all()
+        a.sockets.close_all()
+
+    def _load_base_arbiter(self):
+        a = Arbiter.load_from_config(_CONF['reload_base'])
+        a.evpub_socket = FakeSocket()
+        # initialize watchers
+        for watcher in a.iter_watchers():
+            a._watchers_names[watcher.name.lower()] = watcher
+        return a
 
     def test_watcher_names(self):
         watcher_names = [i.name for i in self.a.watchers]
@@ -122,3 +127,15 @@ class TestConfig(unittest.TestCase):
         self.assertRaises(ReloadArbiterException,
                           self.a.reload_from_config,
                           _CONF['reload_changearbiter'])
+
+    def test_reload_envdictparsed(self):
+        # environ var that needs a `circus.util.parse_env_dict` treatment
+        os.environ['SHRUBBERY'] = ' NI '
+        try:
+            a = self._load_base_arbiter()
+            w = a.get_watcher('test1')
+            a.reload_from_config(_CONF['reload_base'])
+            self.assertEqual(a.get_watcher('test1'), w)
+        finally:
+            del os.environ['SHRUBBERY']
+            self._tear_down_arbiter(a)
