@@ -101,7 +101,8 @@ class TestSockets(unittest.TestCase):
         sock.setsockopt = mock.Mock()
         try:
             sock.bind_and_listen()
-            sock.setsockopt.assert_any_call(socket.SOL_SOCKET, 
-                IN.SO_BINDTODEVICE, config['interface'] + '\0')
+            sock.setsockopt.assert_any_call(socket.SOL_SOCKET,
+                                            IN.SO_BINDTODEVICE,
+                                            config['interface'] + '\0')
         finally:
             sock.close()

@@ -84,11 +84,11 @@ class CircusSocket(socket.socket):
                     os.umask(old_mask)
             else:
                 if self.interface is not None:
-                    # Bind to device if given, e.g. to limit which device to bind
-                    # when binding on IN_ADDR_ANY or IN_ADDR_BROADCAST.
+                    # Bind to device if given, e.g. to limit which device to
+                    # bind when binding on IN_ADDR_ANY or IN_ADDR_BROADCAST.
                     import IN
                     self.setsockopt(socket.SOL_SOCKET, IN.SO_BINDTODEVICE,
-                        self.interface + '\0')
+                                    self.interface + '\0')
                     logger.debug('Binding to device: %s' % self.interface)
                 self.bind((self.host, self.port))
         except socket.error:
@@ -148,8 +148,8 @@ class CircusSockets(dict):
             raise ValueError('A socket already exists %s' % sock)
 
         sock = CircusSocket(name=name, host=host, port=port, family=family,
-            type=type, proto=proto, backlog=backlog, path=path, umask=umask,
-            interface=interface)
+                            type=type, proto=proto, backlog=backlog, path=path,
+                            umask=umask, interface=interface)
         self[name] = sock
         return sock
 
