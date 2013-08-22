@@ -15,7 +15,7 @@ from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
 from circus.watcher import Watcher
-from circus.util import debuglog, _setproctitle, DictDiffer
+from circus.util import debuglog, _setproctitle, parse_env_dict, DictDiffer
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
@@ -319,6 +319,9 @@ class Arbiter(object):
             new_watcher_cfg = (self.get_watcher_config(new_cfg, n) or
                                self.get_plugin_config(new_cfg, n))
             old_watcher_cfg = w._cfg.copy()
+
+            if 'env' in new_watcher_cfg:
+                new_watcher_cfg['env'] = parse_env_dict(new_watcher_cfg['env'])
 
             # discarding env exceptions
             for key in _ENV_EXCEPTIONS:
