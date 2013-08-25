@@ -92,6 +92,8 @@ class TestSockets(unittest.TestCase):
             self.assertTrue(not os.path.exists(sockfile))
 
     @unittest.skipIf(TRAVIS, "Running in Travis")
+    @unittest.skipIf(not hasattr(IN, 'SO_BINDTODEVICE'),
+                     'SO_BINDTODEVICE unsupported')
     def test_bind_to_interface(self):
         config = {'name': '', 'host': 'localhost', 'port': 0,
                   'interface': 'lo'}

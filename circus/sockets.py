@@ -19,12 +19,12 @@ _TYPE = {
 }
 
 
-def addrinfo(host, port):
+def addrinfo(host, port, family):
     for _addrinfo in socket.getaddrinfo(host, port):
         if len(_addrinfo[-1]) == 2:
             return _addrinfo[-1][-2], _addrinfo[-1][-1]
 
-        if len(_addrinfo[-1]) == 4:
+        if family == socket.AF_INET6 and len(_addrinfo[-1]) == 4:
             return _addrinfo[-1][-4], _addrinfo[-1][-3]
 
     raise ValueError((host, port))
@@ -51,7 +51,7 @@ class CircusSocket(socket.socket):
             self.host = self.port = None
             self.is_unix = True
         else:
-            self.host, self.port = addrinfo(host, port)
+            self.host, self.port = addrinfo(host, port, family)
             self.is_unix = False
 
         self.interface = interface
@@ -90,9 +90,11 @@ class CircusSocket(socket.socket):
                     # Bind to device if given, e.g. to limit which device to
                     # bind when binding on IN_ADDR_ANY or IN_ADDR_BROADCAST.
                     import IN
-                    self.setsockopt(socket.SOL_SOCKET, IN.SO_BINDTODEVICE,
-                                    self.interface + '\0')
-                    logger.debug('Binding to device: %s' % self.interface)
+                    if hasattr(IN, 'SO_BINDTODEVICE'):
+                        self.setsockopt(socket.SOL_SOCKET, IN.SO_BINDTODEVICE,
+                                        self.interface + '\0')
+                        logger.debug('Binding to device: %s' % self.interface)
+
                 self.bind((self.host, self.port))
         except socket.error:
             logger.error('Could not bind %s' % self.location)
@@ -103,7 +105,7 @@ class CircusSocket(socket.socket):
             self.listen(self.backlog)
 
         if not self.is_unix:
-            if self.family = socket.AF_INET6:
+            if self.family == socket.AF_INET6:
                 self.host, self.prot, _flowinfo, _scopeid = self.getsockname()
             else:
                 self.host, self.port = self.getsockname()
