@@ -14,7 +14,6 @@ TRAVIS = os.getenv('TRAVIS', False)
 
 class TestSockets(unittest.TestCase):
 
-    @unittest.skipIf(TRAVIS, "Running in Travis")
     def test_socket(self):
         sock = CircusSocket('somename', 'localhost', 0)
         try:
@@ -22,7 +21,6 @@ class TestSockets(unittest.TestCase):
         finally:
             sock.close()
 
-    @unittest.skipIf(TRAVIS, "Running in Travis")
     def test_manager(self):
         mgr = CircusSockets()
 
@@ -48,7 +46,6 @@ class TestSockets(unittest.TestCase):
         config = {'name': '', 'proto': 'foo'}
         self.assertRaises(socket.error, CircusSocket.load_from_config, config)
 
-    @unittest.skipIf(TRAVIS, "Running in Travis")
     def test_load_from_config_umask(self):
         fd, sockfile = tempfile.mkstemp()
         os.close(fd)
@@ -61,7 +58,6 @@ class TestSockets(unittest.TestCase):
         finally:
             sock.close()
 
-    @unittest.skipIf(TRAVIS, "Running in Travis")
     def test_unix_socket(self):
         fd, sockfile = tempfile.mkstemp()
         os.close(fd)
@@ -76,7 +72,6 @@ class TestSockets(unittest.TestCase):
         finally:
             sock.close()
 
-    @unittest.skipIf(TRAVIS, "Running in Travis")
     def test_unix_cleanup(self):
         sockets = CircusSockets()
         fd, sockfile = tempfile.mkstemp()
@@ -91,7 +86,6 @@ class TestSockets(unittest.TestCase):
             sockets.close_all()
             self.assertTrue(not os.path.exists(sockfile))
 
-    @unittest.skipIf(TRAVIS, "Running in Travis")
     @unittest.skipIf(not hasattr(IN, 'SO_BINDTODEVICE'),
                      'SO_BINDTODEVICE unsupported')
     def test_bind_to_interface(self):
