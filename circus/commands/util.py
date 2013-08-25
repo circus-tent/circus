@@ -4,6 +4,10 @@ from circus import util
 import warnings
 
 
+_HOOKS = ('before_start', 'after_start', 'before_stop', 'after_stop',
+          'before_spawn')
+
+
 def convert_option(key, val):
     if key == "numprocesses":
         return int(val)
@@ -46,12 +50,22 @@ def convert_option(key, val):
         if subkey in ('max_bytes', 'backup_count'):
             return int(val)
         return val
-    elif key.startswith('hooks.'):
-        subkey = key.split('.', 1)[-1]
+    elif key == 'hooks':
+        res = {}
+        for hook in val.split(','):
+            if hook == '':
+                continue
+            hook = hook.split(':')
+            if len(hook) != 2:
+                raise ArgumentError(hook)
 
-        if subkey in ('before_start', 'after_start', 'before_stop',
-                      'after_stop', 'before_spawn'):
-            return val
+            name, value = hook
+            if name not in _HOOKS:
+                raise ArgumentError(name)
+
+            res[name] = value
+
+        return res
 
     raise ArgumentError("unknown key %r" % key)
 
@@ -61,8 +75,10 @@ def validate_option(key, val):
                   'gid', 'send_hup', 'shell', 'env', 'cmd', 'copy_env',
                   'flapping_attempts', 'flapping_window', 'retry_in',
                   'max_retry', 'graceful_timeout', 'stdout_stream',
-                  'stderr_stream', 'max_age', 'max_age_variance', 'respawn')
-    valid_prefixes = ('stdout_stream', 'stderr_stream', 'hooks')
+                  'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
+                  'hooks')
+
+    valid_prefixes = ('stdout_stream', 'stderr_stream')
 
     def _valid_prefix():
         for prefix in valid_prefixes:
@@ -98,6 +114,14 @@ def validate_option(key, val):
         for k, v in val.items():
             if not isinstance(v, string_types):
                 raise MessageError("%r isn't a string" % k)
+
+    if key == 'hooks':
+        if not isinstance(val, dict):
+            raise MessageError("%r isn't a valid hook dict" % val)
+
+        for key in val:
+            if key not in _HOOKS:
+                raise MessageError("Unknown hook %r" % val)
 
     if key in ('stderr_stream', 'stdout_stream'):
         if not isinstance(val, dict):

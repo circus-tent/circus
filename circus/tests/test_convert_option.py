@@ -1,6 +1,6 @@
 from circus.tests.support import unittest
 
-from circus.commands.util import convert_option
+from circus.commands.util import convert_option, ArgumentError
 
 
 class TestConvertOption(unittest.TestCase):
@@ -30,3 +30,18 @@ class TestConvertOption(unittest.TestCase):
         for option, value, expected in expected_convertions:
             ret = convert_option(option, value)
             self.assertEqual(ret, expected)
+
+    def test_hooks(self):
+        ret = convert_option('hooks', 'before_start:one')
+        self.assertEqual(ret, {'before_start': 'one'})
+
+        ret = convert_option('hooks', 'before_start:one,after_start:two')
+
+        self.assertEqual(ret['before_start'], 'one')
+        self.assertEqual(ret['after_start'], 'two')
+
+        self.assertRaises(ArgumentError, convert_option, 'hooks',
+                          'before_start:one,DONTEXIST:two')
+
+        self.assertRaises(ArgumentError, convert_option, 'hooks',
+                          'before_start:one:two')
