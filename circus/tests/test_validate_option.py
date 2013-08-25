@@ -39,3 +39,6 @@ class TestValidateOption(unittest.TestCase):
         validate_option(
             'stderr_stream', {'class': 'MyClass', 'refresh_time': 1})
         self.assertEqual(warn.call_count, 1)
+
+    def test_hooks(self):
+        validate_option('hooks', {'before_start': ['all', False]})
