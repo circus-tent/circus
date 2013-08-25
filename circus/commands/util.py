@@ -66,6 +66,12 @@ def convert_option(key, val):
             res[name] = value
 
         return res
+    elif key.startswith('hooks.'):
+        # we can also set a single hook
+        name = key.split('.', 1)[-1]
+        if name not in _HOOKS:
+            raise ArgumentError(name)
+        return val
 
     raise ArgumentError("unknown key %r" % key)
 

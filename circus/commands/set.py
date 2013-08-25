@@ -62,7 +62,15 @@ class Set(Command):
         watcher = self._get_watcher(arbiter, props.pop('name'))
         action = 0
         for key, val in props.get('options', {}).items():
-            new_action = watcher.set_opt(key, val)
+            if key == 'hooks':
+                new_action = 0
+                for name, _val in val.items():
+                    action = watcher.set_opt('hooks.%s' % name, _val)
+                    if action == 1:
+                        new_action = 1
+            else:
+                new_action = watcher.set_opt(key, val)
+
             if new_action == 1:
                 action = 1
 
