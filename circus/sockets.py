@@ -106,7 +106,7 @@ class CircusSocket(socket.socket):
 
         if not self.is_unix:
             if self.family == socket.AF_INET6:
-                self.host, self.prot, _flowinfo, _scopeid = self.getsockname()
+                self.host, self.port, _flowinfo, _scopeid = self.getsockname()
             else:
                 self.host, self.port = self.getsockname()
 
