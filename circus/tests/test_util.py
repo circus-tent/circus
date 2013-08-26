@@ -1,18 +1,29 @@
 from __future__ import unicode_literals
-
+import tempfile
 import grp
 import pwd
+import shutil
+import os
+import sys
+
 from psutil import Popen
 from mock import Mock, patch
-
 
 from circus.tests.support import unittest
 from circus.util import (get_info, bytes2human, to_bool, parse_env_str,
                          env_to_str, to_uid, to_gid, replace_gnu_args,
-                         get_python_version)
+                         get_python_version, load_virtualenv)
 
 
 class TestUtil(unittest.TestCase):
+
+    def setUp(self):
+        self.dirs = []
+
+    def tearDown(self):
+        for dir in self.dirs:
+            if os.path.exists(dir):
+                shutil.rmtree(dir)
 
     def test_get_info(self):
 
@@ -154,3 +165,35 @@ class TestUtil(unittest.TestCase):
         self.assertGreaterEqual(py_version[0], 2)
         self.assertGreaterEqual(py_version[1], 0)
         self.assertGreaterEqual(py_version[2], 0)
+
+    def _create_dir(self):
+        dir = tempfile.mkdtemp()
+        self.dirs.append(dir)
+        return dir
+
+    def test_load_virtualenv(self):
+
+        watcher = Mock()
+        watcher.copy_env = False
+
+        # we need the copy_env flag
+        self.assertRaises(ValueError, load_virtualenv, watcher)
+
+        watcher.copy_env = True
+        watcher.virtualenv = 'XXX'
+
+        # we want virtualenv to be a directory
+        self.assertRaises(ValueError, load_virtualenv, watcher)
+
+        watcher.virtualenv = self._create_dir()
+
+        # we want virtualenv directory to contain a site-packages
+        self.assertRaises(ValueError, load_virtualenv, watcher)
+
+        minor = sys.version_info[1]
+        site_pkg = os.path.join(watcher.virtualenv, 'lib',
+                                'python2.%s' % minor, 'site-packages')
+        os.makedirs(site_pkg)
+        watcher.env = {}
+        load_virtualenv(watcher)
+        self.assertEqual(site_pkg, watcher.env['PYTHONPATH'])
