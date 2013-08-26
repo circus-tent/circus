@@ -38,6 +38,12 @@ class TestWatcher(TestCircus):
     def tearDownClass(cls):
         cls.arbiter.stop()
 
+    def tearDown(self):
+        super(TestCircus, self).tearDown()
+        current = self.numprocesses('numprocesses')
+        if current > 1:
+            self.numprocesses('decr', name='test', nb=current-1)
+
     def status(self, cmd, **props):
         resp = self.call(cmd, **props)
         return resp.get('status')
@@ -69,11 +75,15 @@ class TestWatcher(TestCircus):
         self.assertEquals(self.status('signal', name='test', pid=to_kill,
                                       signum=signal.SIGKILL), 'ok')
 
-        # make sure process is restarted
+        # make sure the process is restarted
         self.assertTrue(poll_for(self.test_file, 'START'))
 
         # we still should have two processes, but not the same pids for them
         pids = self.pids()
+        count = 0
+        while len(pids) < 2 and count < 10:
+            pids = self.pids()
+            time.sleep(.1)
         self.assertEquals(len(pids), 2)
         self.assertTrue(to_kill not in pids)
 
@@ -121,17 +131,26 @@ class TestWatcher(TestCircus):
                          sys.executable.split(os.sep)[-1])
 
     def test_max_age(self):
+        # let's run 15 processes
+        self.numprocesses('incr', name='test', nb=14)
+        initial_pids = self.pids()
+
+        # we want a max age of 2 sec.
         result = self.call('set', name='test',
                            options={'max_age': 1, 'max_age_variance': 0})
+
         self.assertEquals(result.get('status'), 'ok')
-        initial_pids = self.pids()
+
+        # let's wait 1.2 sec.
+        time.sleep(1.2)
 
         truncate_file(self.test_file)  # make sure we have a clean slate
         # expect at least one restart (max_age and restart), in less than 5s
         self.assertTrue(poll_for(self.test_file,
                                  ('QUITSTOPSTART', 'QUITSTART')))
         current_pids = self.pids()
-        self.assertEqual(len(current_pids), 1)
+
+        self.assertEqual(len(current_pids), 15)
         self.assertNotEqual(initial_pids, current_pids)
 
     def test_arbiter_reference(self):

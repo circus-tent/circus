@@ -417,21 +417,29 @@ class Watcher(object):
         if self.stopped:
             return
 
+        # removing old processes
         if self.max_age:
-            for process in self.processes.itervalues():
-                max_age = self.max_age + randint(0, self.max_age_variance)
-                if process.age() > max_age:
-                    logger.debug('%s: expired, respawning', self.name)
-                    self.notify_event("expired",
-                                      {"process_pid": process.pid,
-                                       "time": time.time()})
+            max_age = self.max_age + randint(0, self.max_age_variance)
+
+            for process in list(self.processes.itervalues()):
+                if process.age() <= max_age:
+                    continue
+
+                logger.debug('%s: expired, respawning', self.name)
+                self.notify_event("expired", {"process_pid": process.pid,
+                                              "time": time.time()})
+                self.processes.pop(process.pid)
+                if process.status != DEAD_OR_ZOMBIE:
                     self.kill_process(process)
 
+        # adding fresh processes
         if self.respawn and len(self.processes) < self.numprocesses:
             self.spawn_processes()
 
+        # removing extra processes
         processes = self.processes.values()
         processes.sort()
+
         while len(processes) > self.numprocesses:
             process = processes.pop(0)
             if process.status == DEAD_OR_ZOMBIE:
