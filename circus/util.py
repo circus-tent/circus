@@ -654,6 +654,7 @@ def load_virtualenv(watcher):
                 continue
 
     py_path = watcher.env.get('PYTHONPATH')
+    path = None
 
     if venv_pkgs:
         venv_path = os.pathsep.join(venv_pkgs)
