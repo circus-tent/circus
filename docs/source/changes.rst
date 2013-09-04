@@ -1,7 +1,26 @@
 History
 =======
 
-0.9.1 - 2013-07-17
+0.9.3 - 2013-09-04
+------------------
+
+- Make sure we can add watchers even if the arbiter is not started
+- Make sure we pop expired process
+- Make sure the set command can set one or several hooks
+- Correctly support ipv6 sockets and improvments of CircusSockets
+- Give path default value to prevent UnboundLocalError
+- Added a test for multicast_endpoint existence in Controller initialization
+- Not converting every string of digits to ints anymore
+- Add tests
+- No need for special cases when converting stdout_stream options
+- also accept umask as an argument for consistency
+- Allow custom options for stdout_stream and stderr_stream.
+- Add new socket config option to bind to a specific interface by name
+- Add time_format for FileStream + tests
+- Update circus.upstart
+
+
+0.9.2 - 2013-07-17
 ------------------
 
 - When a PYTHONPATH is defined in a config file, it's loaded
