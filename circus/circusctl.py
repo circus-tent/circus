@@ -3,6 +3,7 @@ import argparse
 import cmd
 import getopt
 import json
+import logging
 import os
 import sys
 import textwrap
@@ -366,6 +367,7 @@ def parse_arguments(args, commands):
 
 
 def main():
+    logging.basicConfig()
     # TODO, we should ask the server for its command list
     commands = get_commands()
 

@@ -6,6 +6,7 @@ from collections import defaultdict
 import errno
 import threading
 import time
+import logging
 
 import zmq
 
@@ -198,6 +199,7 @@ class Painter(threading.Thread):
 
 
 def main():
+    logging.basicConfig()
     desc = 'Runs Circus Top'
     parser = argparse.ArgumentParser(description=desc)
 
