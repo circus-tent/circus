@@ -1,5 +1,6 @@
 import sys
 import argparse
+import logging
 import os
 import resource
 
@@ -103,6 +104,7 @@ def main():
             sys.exit(1)
 
     # configure the logger
+    logging.basicConfig()
     loglevel = args.loglevel or arbiter.loglevel or 'info'
     logoutput = args.logoutput or arbiter.logoutput or '-'
     configure_logger(logger, loglevel, logoutput)
