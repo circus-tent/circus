@@ -91,7 +91,7 @@ class Arbiter(object):
         self.multicast_endpoint = multicast_endpoint
         self.proc_name = proc_name
         self.ssh_server = ssh_server
-
+        self.evpub_socket = None
         self.pidfile = pidfile
         self.loglevel = loglevel
         self.logoutput = logoutput
@@ -595,7 +595,8 @@ class Arbiter(object):
             return ValueError("command name shouldn't be empty")
 
         watcher = Watcher(name, cmd, **kw)
-        watcher.initialize(self.evpub_socket, self.sockets, self)
+        if self.evpub_socket is not None:
+            watcher.initialize(self.evpub_socket, self.sockets, self)
         self.watchers.append(watcher)
         self._watchers_names[watcher.name.lower()] = watcher
         return watcher
