@@ -622,7 +622,7 @@ class Arbiter(object):
             watcher.start()
             sleep(self.warmup_delay)
 
-    def stop_watchers(self, stop_alive=False):
+    def stop_watchers(self, stop_alive=False, async=True):
         if not self.alive:
             return
 
@@ -631,7 +631,7 @@ class Arbiter(object):
             self.alive = False
 
         for watcher in self.iter_watchers(reverse=False):
-            watcher.stop()
+            watcher.stop(async)
 
     def restart(self):
         self.stop_watchers()

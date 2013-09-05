@@ -631,7 +631,7 @@ class Watcher(object):
                      for proc in self.processes.values()])
 
     @util.debuglog
-    def stop(self):
+    def stop(self, async=True):
         """Stop.
         """
         logger.debug('stopping the %s watcher' % self.name)
@@ -645,14 +645,17 @@ class Watcher(object):
         for process in self.get_active_processes():
             self.send_signal(process.pid, signal.SIGTERM)
 
-        # delayed SIGKILL
-        limit = time.time() + self.graceful_timeout
-        self.loop.add_callback(functools.partial(self._final_stop, limit))
+        # delayed SIGKILL if async is True
+        if async:
+            limit = time.time() + self.graceful_timeout
+            self.loop.add_callback(functools.partial(self._final_stop, limit))
+        else:
+            self._final_stop()
 
-    def _final_stop(self, limit):
+    def _final_stop(self, limit=None):
         # if we still got some active ones lets wait
         actives = self.get_active_processes()
-        if actives and time.time() < limit:
+        if actives and time.time() < limit and limit is not None:
             self.loop.add_callback(functools.partial(self._final_stop, limit))
             return
 

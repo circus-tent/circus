@@ -15,8 +15,9 @@ class Stop(Command):
 
             {
                 "command": "stop",
-                "propeties": {
-                    "name": '<name>",
+                "propreties": {
+                    "name": "<name>",
+                    "async": True
                 }
             }
 
@@ -24,6 +25,13 @@ class Stop(Command):
 
         If the property name is present, then the stop will be applied
         to the watcher.
+
+        If async is False the graceful period will be blocking the
+        call and the circusd daemon. (defaults: True).
+
+        Otherwise the call will return immediatly after
+        calling SIGTERM on each process and call asynchronously
+        SIGKILL after the delay of some processes are still up.
 
 
         Command line
@@ -37,19 +45,21 @@ class Stop(Command):
         +++++++
 
         - <name>: name of the watcher
-
+        - <async>: asynchronous stop
     """
 
     name = "stop"
 
     def message(self, *args, **opts):
         if len(args) >= 1:
-            return self.make_message(name=args[0])
+            async = len(args) > 2 and args[1] or True
+            return self.make_message(name=args[0], async=async)
         return self.make_message()
 
     def execute(self, arbiter, props):
+        async = props.get('async', True)
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            watcher.stop()
+            watcher.stop(async=async)
         else:
-            arbiter.stop_watchers()
+            arbiter.stop_watchers(async=async)
