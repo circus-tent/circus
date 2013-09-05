@@ -180,7 +180,6 @@ class Watcher(object):
         self.cmd = cmd
         self.args = args
         self._process_counter = 0
-        self._slots = range(1, self.numprocesses + 1)
         self.stopped = stopped
         self.graceful_timeout = float(graceful_timeout)
         self.prereload_fn = prereload_fn
@@ -378,11 +377,10 @@ class Watcher(object):
                         self.notify_event(
                             "reap",
                             {"process_pid": pid, "time": time.time()})
-                        self._slots.append(process.wid)
                         return
                     else:
                         raise
-        self._slots.append(process.wid)
+
         # get return code
         if os.WIFSIGNALED(status):
             os.WTERMSIG(status)
@@ -501,7 +499,7 @@ class Watcher(object):
             pipe_stderr = self.stderr_redirector is not None
 
             try:
-                process = Process(self.free_wid_slot, cmd,
+                process = Process(self._process_counter, cmd,
                                   args=self.args, working_dir=self.working_dir,
                                   shell=self.shell, uid=self.uid, gid=self.gid,
                                   env=self.env, rlimits=self.rlimits,
@@ -672,13 +670,6 @@ class Watcher(object):
         """return a list of pids of active processes (not already stopped)"""
         return [p for p in self.processes.values()
                 if p.status not in (DEAD_OR_ZOMBIE, UNEXISTING)]
-
-    @property
-    def free_wid_slot(self):
-        """Return smallest slot number based on numprocesses"""
-        self._slots.sort()
-        self._slots.reverse()
-        return self._slots.pop()
 
     @property
     def pids(self):
