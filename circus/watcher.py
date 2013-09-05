@@ -658,8 +658,9 @@ class Watcher(object):
         actives = self.get_active_processes()
         if actives and time.time() < limit and limit is not None:
             if async:
-                self.loop.add_callback(functools.partial(self._final_stop,
-                                                         limit))
+                # we're back in .2 seconds
+                callmeback = functools.partial(self._final_stop, limit)
+                self.loop.add_timeout(time.time() + .2, callmeback)
                 return
             else:
                 while time.time() < limit:
