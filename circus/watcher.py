@@ -6,6 +6,7 @@ import time
 import sys
 from random import randint
 import site
+import functools
 
 from psutil import NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
@@ -634,6 +635,31 @@ class Watcher(object):
         """Stop.
         """
         logger.debug('stopping the %s watcher' % self.name)
+        logger.debug('gracefully stopping processes [%s] for %ss' % (
+                     self.name, self.graceful_timeout))
+
+        # We ignore the hook result
+        self.call_hook('before_stop')
+
+        # sending a SIGTERM to all processes
+        for process in self.get_active_processes():
+            self.send_signal(process.pid, signal.SIGTERM)
+
+        # delayed SIGKILL
+        limit = time.time() + self.graceful_timeout
+        self.loop.add_callback(functools.partial(self._final_stop, limit))
+
+    def _final_stop(self, limit):
+        # if we still got some active ones lets wait
+        actives = self.get_active_processes()
+        if actives and time.time() < limit:
+            self.loop.add_callback(functools.partial(self._final_stop, limit))
+            return
+
+        # kill the remaining with SIGKILL
+        for process in actives:
+            self.kill_processes(signal.SIGTERM)
+
         # stop redirectors
         if self.stdout_redirector is not None:
             self.stdout_redirector.stop()
@@ -643,20 +669,7 @@ class Watcher(object):
             self.stderr_redirector.stop()
             self.stderr_redirector = None
 
-        limit = time.time() + self.graceful_timeout
-
-        logger.debug('gracefully stopping processes [%s] for %ss' % (
-                     self.name, self.graceful_timeout))
-
-        # We ignore the hook result
-        self.call_hook('before_stop')
-
-        while self.get_active_processes() and time.time() < limit:
-            self.kill_processes(signal.SIGTERM)
-            self.reap_processes()
-
-        self.kill_processes(signal.SIGKILL)
-
+        # notify about the stop
         if self.evpub_socket is not None:
             self.notify_event("stop", {"time": time.time()})
 
