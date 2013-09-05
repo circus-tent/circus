@@ -46,7 +46,7 @@ class TestConfig(unittest.TestCase):
         watcher = Watcher.load_from_config(conf['watchers'][0])
         socket = CircusSocket.load_from_config(conf['sockets'][0])
         watcher.initialize(None, {'web': socket}, None)
-        process = Process(watcher._process_counter, watcher.cmd,
+        process = Process(watcher.nextwid, watcher.cmd,
                           args=watcher.args, working_dir=watcher.working_dir,
                           shell=watcher.shell, uid=watcher.uid,
                           gid=watcher.gid, env=watcher.env,
