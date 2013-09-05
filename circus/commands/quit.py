@@ -34,4 +34,4 @@ class Quit(Command):
         return self.make_message()
 
     def execute(self, arbiter, opts):
-        arbiter.stop_watchers(stop_alive=True)
+        arbiter.stop_watchers(stop_alive=True, async=False)
