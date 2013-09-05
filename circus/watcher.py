@@ -646,19 +646,27 @@ class Watcher(object):
             self.send_signal(process.pid, signal.SIGTERM)
 
         # delayed SIGKILL if async is True
+        limit = time.time() + self.graceful_timeout
         if async:
-            limit = time.time() + self.graceful_timeout
             self.loop.add_callback(functools.partial(self._final_stop, limit,
-                                                     restarting))
+                                                     restarting, async))
         else:
-            self._final_stop()
+            self._final_stop(limit=limit, restarting=restarting, async=async)
 
-    def _final_stop(self, limit=None, restarting=False):
+    def _final_stop(self, limit=None, restarting=False, async=True):
         # if we still got some active ones lets wait
         actives = self.get_active_processes()
         if actives and time.time() < limit and limit is not None:
-            self.loop.add_callback(functools.partial(self._final_stop, limit))
-            return
+            if async:
+                self.loop.add_callback(functools.partial(self._final_stop,
+                                                         limit))
+                return
+            else:
+                while time.time() < limit:
+                    actives = self.get_active_processes()
+                    if not actives:
+                        break
+                    time.sleep(.1)
 
         # kill the remaining with SIGKILL
         for process in actives:
