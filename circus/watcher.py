@@ -500,7 +500,7 @@ class Watcher(object):
             pipe_stderr = self.stderr_redirector is not None
 
             try:
-                process = Process(self.nextwid, cmd,
+                process = Process(self._nextwid, cmd,
                                   args=self.args, working_dir=self.working_dir,
                                   shell=self.shell, uid=self.uid, gid=self.gid,
                                   env=self.env, rlimits=self.rlimits,
@@ -678,7 +678,7 @@ class Watcher(object):
         return [process.pid for process in self.processes]
 
     @property
-    def nextwid(self):
+    def _nextwid(self):
         used_wids = sorted([p.wid for p in self.processes.values()])
         all_wids = xrange(1, self.numprocesses + 1)
         for slot, wid in izip_longest(all_wids, used_wids, fillvalue=None):
