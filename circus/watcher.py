@@ -631,7 +631,7 @@ class Watcher(object):
                      for proc in self.processes.values()])
 
     @util.debuglog
-    def stop(self, async=True):
+    def stop(self, async=True, restarting=False):
         """Stop.
         """
         logger.debug('stopping the %s watcher' % self.name)
@@ -648,11 +648,12 @@ class Watcher(object):
         # delayed SIGKILL if async is True
         if async:
             limit = time.time() + self.graceful_timeout
-            self.loop.add_callback(functools.partial(self._final_stop, limit))
+            self.loop.add_callback(functools.partial(self._final_stop, limit,
+                                                     restarting))
         else:
             self._final_stop()
 
-    def _final_stop(self, limit=None):
+    def _final_stop(self, limit=None, restarting=False):
         # if we still got some active ones lets wait
         actives = self.get_active_processes()
         if actives and time.time() < limit and limit is not None:
@@ -681,6 +682,9 @@ class Watcher(object):
         # We ignore the hook result
         self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
+
+        if restarting:
+            self.loop.add_callback(self.start)
 
     def get_active_processes(self):
         """return a list of pids of active processes (not already stopped)"""
@@ -751,15 +755,18 @@ class Watcher(object):
         return True
 
     @util.debuglog
-    def restart(self):
+    def restart(self, async=True):
         """Restart.
         """
         self.notify_event("restart", {"time": time.time()})
-        self.stop()
-        if self.start():
-            logger.info('%s restarted', self.name)
+        if not async:
+            self.stop(async=False)
+            if self.start():
+                logger.info('%s restarted', self.name)
+            else:
+                logger.info('Failed to restart %s', self.name)
         else:
-            logger.info('Failed to restart %s', self.name)
+            self.stop(async=async, restarting=True)
 
     @util.debuglog
     def reload(self, graceful=True):

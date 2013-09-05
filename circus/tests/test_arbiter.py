@@ -243,14 +243,14 @@ class TestTrainer(TestCircus):
     def test_stop_watchers1(self):
         if 'TRAVIS' in os.environ:
             return
-        self.cli.call(make_message("stop"))
+        self.cli.call(make_message("stop", async=False))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get("status"), "stopped")
 
     def test_stop_watchers2(self):
         if 'TRAVIS' in os.environ:
             return
-        self.cli.call(make_message("stop", name="test"))
+        self.cli.call(make_message("stop", name="test", async=False))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get('status'), "stopped")
 

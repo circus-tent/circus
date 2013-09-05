@@ -634,7 +634,7 @@ class Arbiter(object):
             watcher.stop(async)
 
     def restart(self):
-        self.stop_watchers()
+        self.stop_watchers(async=False)
         self.start_watchers()
 
 
