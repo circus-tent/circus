@@ -1,8 +1,8 @@
-from circus.commands.base import Command
+from circus.commands.base import AsyncCommand
 from circus.exc import ArgumentError
 
 
-class Restart(Command):
+class Restart(AsyncCommand):
     """\
         Restart the arbiter or a watcher
         ================================
@@ -48,25 +48,27 @@ class Restart(Command):
         +++++++
 
         - <name>: name of the watcher
-        - <async>: asynchronous process
+        - --async: asynchronous process
         - --terminate; quit the node immediately
     """
     name = "restart"
 
     def message(self, *args, **opts):
-        if len(args) > 2:
+        if len(args) > 1:
             raise ArgumentError("Invalid number of arguments")
 
-        if len(args) >= 1:
-            async = len(args) > 1 and args[1] or True
-            return self.make_message(name=args[0], async=async)
-        else:
-            return self.make_message()
+        if len(args) == 1:
+            return self.make_message(name=args[0], **opts)
+
+        return self.make_message(**opts)
 
     def execute(self, arbiter, props):
-        async = props.get('async', True)
+        async = props.get('async')
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
             watcher.restart(async=async)
         else:
-            arbiter.restart()
+            if async:
+                arbiter.loop.add_callback(arbiter.restart)
+            else:
+                arbiter.restart()

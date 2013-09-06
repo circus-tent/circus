@@ -647,9 +647,12 @@ class Watcher(object):
 
         # delayed SIGKILL if async is True
         limit = time.time() + self.graceful_timeout
+
         if async:
-            self.loop.add_callback(functools.partial(self._final_stop, limit,
-                                                     restarting, async))
+            self.loop.add_callback(functools.partial(self._final_stop,
+                                                     limit=limit,
+                                                     restarting=restarting,
+                                                     async=async))
         else:
             self._final_stop(limit=limit, restarting=restarting, async=async)
 
@@ -659,7 +662,8 @@ class Watcher(object):
         if actives and time.time() < limit and limit is not None:
             if async:
                 # we're back in .2 seconds
-                callmeback = functools.partial(self._final_stop, limit)
+                callmeback = functools.partial(self._final_stop, limit,
+                                               restarting, async)
                 self.loop.add_timeout(time.time() + .2, callmeback)
                 return
             else:
@@ -692,7 +696,9 @@ class Watcher(object):
         self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
 
+
         if restarting:
+            logger.info('restarting %s', self.name)
             self.loop.add_callback(self.start)
 
     def get_active_processes(self):
