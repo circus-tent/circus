@@ -119,6 +119,12 @@ class ControllerApp(object):
     def dispatch(self, args):
         opts = {}
         cmd = self.commands[args.command]
+
+        for option in cmd.options:
+            name = option[1]
+            if name in args:
+                opts[name] = getattr(args, name)
+
         if args.help:
             print textwrap.dedent(cmd.__doc__)
             return 0
