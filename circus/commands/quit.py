@@ -1,3 +1,5 @@
+import functools
+
 from circus.commands.base import Command
 
 
@@ -30,15 +32,22 @@ class Quit(Command):
 
         ::
 
-            $ circusctl quit
+            $ circusctl quit --async
 
     """
     name = "quit"
+    options = [('async', 'async', False, "Run asynchronously")]
 
     def message(self, *args, **opts):
-        async = len(args) > 0 and args[0] or False
-        return self.make_message(async=async)
+        return self.make_message(async=opts.get('async', False))
 
     def execute(self, arbiter, opts):
         async = opts.get('async', False)
-        arbiter.stop_watchers(stop_alive=True, async=async)
+        if async:
+            callback = functools.partial(arbiter.stop_watchers,
+                                         stop_alive=True,
+                                         async=False)
+
+            arbiter.loop.add_callback(callback)
+        else:
+            arbiter.stop_watchers(stop_alive=True, async=False)
