@@ -2,6 +2,7 @@ import signal
 import copy
 import textwrap
 import time
+import functools
 
 from circus.exc import MessageError, ArgumentError
 from circus.commands import errors
@@ -105,4 +106,18 @@ class Command(object):
             if propname not in props:
                 raise MessageError("message invalid %r is missing" % propname)
 
+
+class AsyncCommand(Command):
+    options = [('async', 'async', False, "Run asynchronously")]
+
+    def async_execute(self, arbiter, opts):
+        async = opts.get('async', False)
+        if async:
+            callback = functools.partial(self.execute, arbiter, opts)
+            arbiter.loop.add_callback(callback)
+        else:
+            self.execute(arbiter, opts)
+
+
 Command = CommandMeta('Command', (Command,), {})
+AsyncCommand = CommandMeta('AsyncCommand', (AsyncCommand,), {})

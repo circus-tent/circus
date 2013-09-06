@@ -1,9 +1,9 @@
 import functools
 
-from circus.commands.base import Command
+from circus.commands.base import AsyncCommand
 
 
-class Quit(Command):
+class Quit(AsyncCommand):
     """\
         Quit the arbiter immediately
         ============================
@@ -36,18 +36,9 @@ class Quit(Command):
 
     """
     name = "quit"
-    options = [('async', 'async', False, "Run asynchronously")]
 
     def message(self, *args, **opts):
-        return self.make_message(async=opts.get('async', False))
+        return self.make_message(**opts)
 
     def execute(self, arbiter, opts):
-        async = opts.get('async', False)
-        if async:
-            callback = functools.partial(arbiter.stop_watchers,
-                                         stop_alive=True,
-                                         async=False)
-
-            arbiter.loop.add_callback(callback)
-        else:
-            arbiter.stop_watchers(stop_alive=True, async=False)
+        arbiter.stop_watchers(stop_alive=True, async=False)
