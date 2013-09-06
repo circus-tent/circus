@@ -1,4 +1,3 @@
-import functools
 from circus.commands.base import Command
 
 
