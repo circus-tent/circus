@@ -696,7 +696,6 @@ class Watcher(object):
         self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
 
-
         if restarting:
             logger.info('restarting %s', self.name)
             self.loop.add_callback(self.start)
