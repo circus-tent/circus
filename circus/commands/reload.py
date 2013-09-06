@@ -1,8 +1,8 @@
-from circus.commands.base import AsyncCommand
+from circus.commands.base import Command
 from circus.exc import ArgumentError
 
 
-class Reload(AsyncCommand):
+class Reload(Command):
     """\
         Reload the arbiter or a watcher
         ===============================
@@ -53,8 +53,9 @@ class Reload(AsyncCommand):
 
     """
     name = "reload"
-    options = (AsyncCommand.options +
+    options = (Command.options +
                [('', 'terminate', False, "stop immediately")])
+    async = True
 
     def message(self, *args, **opts):
         if len(args) > 1:

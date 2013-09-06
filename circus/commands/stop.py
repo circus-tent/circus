@@ -1,7 +1,7 @@
-from circus.commands.base import AsyncCommand
+from circus.commands.base import Command
 
 
-class Stop(AsyncCommand):
+class Stop(Command):
     """\
         Stop the arbiter or a watcher
         =============================
@@ -49,15 +49,16 @@ class Stop(AsyncCommand):
     """
 
     name = "stop"
+    async = False
 
     def message(self, *args, **opts):
         if len(args) >= 1:
-            return self.make_message(name=args[0])
-        return self.make_message()
+            return self.make_message(name=args[0], **opts)
+        return self.make_message(**opts)
 
     def execute(self, arbiter, props):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            watcher.stop()
+            watcher.stop(async=props.get('async', False))
         else:
-            arbiter.stop_watchers()
+            arbiter.stop_watchers(async=props.get('async', False))

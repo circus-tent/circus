@@ -1,8 +1,8 @@
-from circus.commands.base import AsyncCommand
+from circus.commands.base import Command
 from circus.exc import ArgumentError
 
 
-class Restart(AsyncCommand):
+class Restart(Command):
     """\
         Restart the arbiter or a watcher
         ================================
@@ -52,6 +52,7 @@ class Restart(AsyncCommand):
         - --terminate; quit the node immediately
     """
     name = "restart"
+    async = True
 
     def message(self, *args, **opts):
         if len(args) > 1:

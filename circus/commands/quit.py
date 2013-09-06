@@ -1,9 +1,8 @@
 import functools
+from circus.commands.base import Command
 
-from circus.commands.base import AsyncCommand
 
-
-class Quit(AsyncCommand):
+class Quit(Command):
     """\
         Quit the arbiter immediately
         ============================
@@ -36,6 +35,7 @@ class Quit(AsyncCommand):
 
     """
     name = "quit"
+    async = False
 
     def message(self, *args, **opts):
         return self.make_message(**opts)

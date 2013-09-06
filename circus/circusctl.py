@@ -359,7 +359,6 @@ def parse_arguments(args, commands):
                                    help=argparse.SUPPRESS)
             for option in klass.options:
                 __, name, default, desc = option
-
                 if isinstance(default, bool):
                     action = 'store_true'
                 else:
