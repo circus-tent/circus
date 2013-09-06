@@ -14,10 +14,15 @@ class Quit(Command):
         ::
 
             {
-                "command": "quit"
+                "command": "quit",
+                "async": False
             }
 
         The response return the status "ok".
+
+        If async is True, the graceful period for process termination
+        will be done in the background, and a response will be returned
+        immediatly. (defaults: False).
 
 
         Command line
@@ -31,7 +36,9 @@ class Quit(Command):
     name = "quit"
 
     def message(self, *args, **opts):
-        return self.make_message()
+        async = len(args) > 0 and args[0] or False
+        return self.make_message(async=async)
 
     def execute(self, arbiter, opts):
-        arbiter.stop_watchers(stop_alive=True, async=False)
+        async = opts.get('async', False)
+        arbiter.stop_watchers(stop_alive=True, async=async)
