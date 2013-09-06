@@ -190,6 +190,16 @@ watcher:NAME - as many sections as you want
         we abandon and stop the whole watcher. Defaults to 5.
         Set to -1 to disable max_retry and retry indefinitely.
 
+    **graceful_timeout**
+        The number of seconds to wait for a process to terminate gracefully
+        before killing it.
+
+        When stopping a process, we first send it a SIGTERM signal. A worker
+        may catch this signal to perform clean up operations before exiting.
+        If the worker is still active after graceful_timeout seconds, we send
+        it a SIGKILL signal.  It is not possible to catch SIGKILL signals so
+        the worker will stop.
+
     **priority**
         Integer that defines a priority for the watcher. When the
         Arbiter do some operations on all watchers, it will sort them
