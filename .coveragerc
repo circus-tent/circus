@@ -1,3 +1,8 @@
 [run]
-omit = *_patch*
+omit = *_patch*,circus/tests/*
 source = circus
+include = circus/*
+
+[html]
+directory = html
+

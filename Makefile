@@ -17,7 +17,11 @@ docs:
 	SPHINXBUILD=../bin/sphinx-build $(MAKE) -C docs html $^ 
 
 coverage: bin/coverage
-	COVERAGE_PROCESS_START=1 bin/nosetests -s --cover-erase --with-coverage --cover-html --cover-html-dir=html --cover-package=circus circus/tests
+	rm -f `pwd`/.coverage
+	rm -rf `pwd`/html
+	- COVERAGE_PROCESS_START=`pwd`/.coveragerc COVERAGE_FILE=`pwd`/.coverage PYTHONPATH=`pwd` bin/nosetests -s circus/tests
+	bin/coverage combine
+	bin/coverage html
 
 bin/coverage: bin/python
 	bin/pip install -r test-requirements.txt --use-mirrors
