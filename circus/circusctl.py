@@ -174,7 +174,11 @@ class ControllerApp(object):
             else:
                 print(self._console(client, cmd, opts, msg))
         except CallError as e:
-            sys.stderr.write(str(e) + " Try to raise the --timeout value\n")
+            advices = (" Try to raise the --timeout value.\n"
+                       "Some operations may take a long time, "
+                       "you can also try to use --async when the command "
+                       "supports it.\n")
+            sys.stderr.write(str(e) + advices)
             return 1
         finally:
             if endpoint is not None:
