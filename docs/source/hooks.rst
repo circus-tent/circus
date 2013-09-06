@@ -68,9 +68,9 @@ Available hooks are:
   returns **False** the watcher is immediatly stopped and the startup
   is aborted.
 
-- **before_spawn**: called before the watcher spawns a new process.
-  is stopped. If the hook returns **False** the watcher is
-  immediatly stopped and the startup is aborted.
+- **before_spawn**: called before the watcher spawns a new process.  If the
+  hook returns **False** the watcher is immediatly stopped and the startup is
+  aborted.
 
 - **before_stop**: called before the watcher is stopped. The hook result
   is ignored.
