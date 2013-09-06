@@ -15,7 +15,7 @@ class Stop(Command):
 
             {
                 "command": "stop",
-                "propreties": {
+                "properties": {
                     "name": "<name>",
                     "async": True
                 }
@@ -26,8 +26,8 @@ class Stop(Command):
         If the property name is present, then the stop will be applied
         to the watcher.
 
-        If async is False the graceful period will be blocking the
-        call and the circusd daemon. (defaults: True).
+        If async is True, processes will be killed in the background
+        (defaults: False).
 
         Otherwise the call will return immediatly after
         calling SIGTERM on each process and call asynchronously
@@ -39,13 +39,12 @@ class Stop(Command):
 
         ::
 
-            $ circusctl stop [<name>]
+            $ circusctl stop [<name>] [--async]
 
         Options
         +++++++
 
         - <name>: name of the watcher
-        - <async>: asynchronous stop
     """
 
     name = "stop"

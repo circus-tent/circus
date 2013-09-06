@@ -153,6 +153,7 @@ More documentation
    hooks
    cli
    commands
+   adding_new_commands
    circushttpd
    sockets
    library
@@ -166,7 +167,6 @@ More documentation
    troubleshooting
    glossary
    contributing
-   adding_new_commands
    changes
    copyright
 

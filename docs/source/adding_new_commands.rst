@@ -20,13 +20,22 @@ allow you to follow more easily)::
         circus, so don't be affraid of being exhaustive, that's what it is made
         for.
         """
-        # all the commands need to inherit from `circus.commands.base.Command` 
+        # all the commands need to inherit from `circus.commands.base.Command`
 
-        name = "numwatchers"
         # you need to specify a name so we find back the command somehow
+        name = "numwatchers"
 
+        # set async to True or False to define your default behavior
+        # - an async command is run asynchronously on the server and the client
+        #   gets back an 'ok' response
+        # - a sync command is run synchronously, and the client may get
+        #   back results.
+        #
+        #   By default, commands are set to async=False
+        async = True
+
+        # options
         options = [('', 'optname', default_value, 'description')]
-        # XXX describe options
 
         properties = ['foo', 'bar']
         # properties list the command argments that are mendatory. If they are
