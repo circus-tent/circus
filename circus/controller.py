@@ -123,11 +123,7 @@ class Controller(object):
 
         try:
             cmd.validate(properties)
-            if hasattr(cmd, 'async_execute'):
-                execute = cmd.async_execute
-            else:
-                execute = cmd.execute
-            resp = execute(self.arbiter, properties)
+            resp = cmd.async_execute(self.arbiter, properties)
         except MessageError as e:
             return self.send_error(cid, msg, str(e), cast=cast,
                                    errno=errors.MESSAGE_ERROR)
