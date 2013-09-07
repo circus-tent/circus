@@ -13,7 +13,7 @@ from circus.util import MAXFD, REDIRECT_TO, configure_logger, LOG_LEVELS
 
 def get_maxfd():
     maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
-    if (maxfd == resource.RLIM_INFINITY):
+    if maxfd == resource.RLIM_INFINITY:
         maxfd = MAXFD
     return maxfd
 
@@ -31,7 +31,7 @@ except ImportError:
 
 
 # http://www.svbug.com/documentation/comp.unix.programmer-FAQ/faq_2.html#SEC16
-def daemonize():
+def daemonize(parent_exit=True):
     """Standard daemonization of a process.
     """
     # guard to prevent daemonization with gevent loaded
@@ -39,9 +39,15 @@ def daemonize():
         if module.startswith('gevent'):
             raise ValueError('Cannot daemonize if gevent is loaded')
 
-    #if not 'CIRCUS_PID' in os.environ:
-    if os.fork():
-        os._exit(0)
+    child_pid = os.fork()
+
+    if child_pid != 0:
+        # we're in the parent
+        if parent_exit:
+            os._exit(0)
+        return child_pid
+
+    # child process
     os.setsid()
 
     if os.fork():
@@ -54,6 +60,7 @@ def daemonize():
     os.open(REDIRECT_TO, os.O_RDWR)
     os.dup2(0, 1)
     os.dup2(0, 2)
+    return 0
 
 
 def main():
