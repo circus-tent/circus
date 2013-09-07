@@ -3,7 +3,7 @@ import sys
 import os
 import tempfile
 
-from circus.circusd import daemonize, get_maxfd, daemonize, main
+from circus.circusd import get_maxfd, daemonize, main
 from circus.arbiter import Arbiter
 
 
