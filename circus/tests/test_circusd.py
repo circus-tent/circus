@@ -2,9 +2,15 @@ import unittest
 import sys
 import os
 import tempfile
+from copy import copy
 
 from circus.circusd import get_maxfd, daemonize, main
+from circus import circusd
 from circus.arbiter import Arbiter
+from circus.util import REDIRECT_TO
+from circus import util
+
+import psutil
 
 
 CIRCUS_INI = os.path.join(os.path.dirname(__file__), 'circus.ini')
@@ -14,19 +20,53 @@ class TestCircusd(unittest.TestCase):
 
     def setUp(self):
         self.saved = dict(sys.modules)
+        self.argv = copy(sys.argv)
         self.starter = Arbiter.start
         Arbiter.start = lambda x: None
         self.exit = sys.exit
         sys.exit = lambda x: None
         self._files = []
+        self.fork = os.fork
+        os.fork = self._forking
+        self.setsid = os.setsid
+        os.setsid = lambda : None
+        self.forked = 0
+        self.closerange = circusd.closerange
+        circusd.closerange = lambda x, y : None
+        self.open = os.open
+        os.open = self._open
+        self.dup2 = os.dup2
+        os.dup2 = lambda x, y : None
+        self.stop = Arbiter.stop
+        Arbiter.stop = lambda x: None
+        self.config = util.configure_logger
+        util.configure_logger = lambda x: None
+
+    def _open(self, path, *args, **kw):
+        if path == REDIRECT_TO:
+            return
+        return self.open(path, *args, **kw)
 
     def tearDown(self):
+        util.configure_logger = self.config
+        Arbiter.stop = self.stop
+        sys.argv = self.argv
+        os.dup2 = self.dup2
+        os.open = self.open
+        circusd.closerange = self.closerange
+        os.setsid = self.setsid
         sys.modules = self.saved
         Arbiter.start = self.starter
         sys.exit = self.exit
+        os.fork = self.fork
         for file in self._files:
             if os.path.exists(file):
                 os.remove(file)
+        self.forked = 0
+
+    def _forking(self):
+        self.forked += 1
+        return 0
 
     def test_daemon(self):
         # if gevent is loaded, we want to prevent
@@ -58,9 +98,8 @@ class TestCircusd(unittest.TestCase):
             else:
                 return True
 
-        child_pid = daemonize(parent_exit=False)
-        self.assertTrue(check_pid(child_pid))
-        os.kill(child_pid, 9)
+        daemonize()
+        self.assertEqual(self.forked, 2)
 
     def _get_file(self):
         fd, path = tempfile.mkstemp()
@@ -79,9 +118,5 @@ class TestCircusd(unittest.TestCase):
         pid_file = self._get_file()
 
         sys.argv = ['circusd', CIRCUS_INI, '--pidfile', pid_file]
-        try:
-            main()
-        finally:
-            sys.argv[:] = saved
-
+        main()
         self.assertFalse(os.path.exists(pid_file))

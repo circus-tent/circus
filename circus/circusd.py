@@ -31,7 +31,7 @@ except ImportError:
 
 
 # http://www.svbug.com/documentation/comp.unix.programmer-FAQ/faq_2.html#SEC16
-def daemonize(parent_exit=True):
+def daemonize():
     """Standard daemonization of a process.
     """
     # guard to prevent daemonization with gevent loaded
@@ -43,16 +43,16 @@ def daemonize(parent_exit=True):
 
     if child_pid != 0:
         # we're in the parent
-        if parent_exit:
-            os._exit(0)
-        return child_pid
+        os._exit(0)
 
     # child process
     os.setsid()
 
-    if os.fork():
+    subchild = os.fork()
+    if subchild:
         os._exit(0)
 
+    # subchild
     os.umask(0)
     maxfd = get_maxfd()
     closerange(0, maxfd)
@@ -60,7 +60,6 @@ def daemonize(parent_exit=True):
     os.open(REDIRECT_TO, os.O_RDWR)
     os.dup2(0, 1)
     os.dup2(0, 2)
-    return 0
 
 
 def main():
