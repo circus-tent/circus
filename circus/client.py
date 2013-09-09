@@ -52,7 +52,6 @@ class CircusClient(object):
 
     def call(self, cmd):
         call_id = uuid.uuid4().hex
-
         if not isinstance(cmd, string_types):
             cmd['id'] = call_id
             try:
