@@ -13,7 +13,7 @@ from circus.util import MAXFD, REDIRECT_TO, configure_logger, LOG_LEVELS
 
 def get_maxfd():
     maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
-    if (maxfd == resource.RLIM_INFINITY):
+    if maxfd == resource.RLIM_INFINITY:
         maxfd = MAXFD
     return maxfd
 
@@ -39,14 +39,20 @@ def daemonize():
         if module.startswith('gevent'):
             raise ValueError('Cannot daemonize if gevent is loaded')
 
-    #if not 'CIRCUS_PID' in os.environ:
-    if os.fork():
+    child_pid = os.fork()
+
+    if child_pid != 0:
+        # we're in the parent
         os._exit(0)
+
+    # child process
     os.setsid()
 
-    if os.fork():
+    subchild = os.fork()
+    if subchild:
         os._exit(0)
 
+    # subchild
     os.umask(0)
     maxfd = get_maxfd()
     closerange(0, maxfd)

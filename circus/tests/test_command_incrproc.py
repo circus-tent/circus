@@ -21,15 +21,24 @@ class FakeWatcher(object):
         self.nb -= nb
 
 
+class FakeLoop(object):
+    def add_callback(self, function):
+        function()
+
+
 class FakeArbiter(object):
 
     watcher_class = FakeWatcher
 
     def __init__(self):
         self.watchers = [self.watcher_class()]
+        self.loop = FakeLoop()
 
     def get_watcher(self, name):
         return self.watchers[0]
+
+    def stop_watchers(self, **options):
+        self.watchers[:] = []
 
 
 class IncrProcTest(TestCircus):

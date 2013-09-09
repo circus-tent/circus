@@ -28,6 +28,20 @@ from circus.util import DEFAULT_ENDPOINT_SUB, DEFAULT_ENDPOINT_DEALER
 
 USAGE = 'circusctl [options] command [args]'
 VERSION = 'circusctl ' + __version__
+TIMEOUT_MSG = """\
+
+A time out usually happens in one of those cases:
+
+#1 The Circus daemon could not be reached.
+#2 The Circus daemon took too long to perform the operation
+
+For #1, make sure you are hitting the right place
+by checking your --endpoint option.
+
+For #2, if you are not expecting a result to
+come back, like for any restart, incr, decr
+etc. operations, use the --async option
+"""
 
 
 def prettify(jsonobj, prettify=True):
@@ -119,6 +133,12 @@ class ControllerApp(object):
     def dispatch(self, args):
         opts = {}
         cmd = self.commands[args.command]
+
+        for option in cmd.options:
+            name = option[1]
+            if name in args:
+                opts[name] = getattr(args, name)
+
         if args.help:
             print textwrap.dedent(cmd.__doc__)
             return 0
@@ -168,7 +188,10 @@ class ControllerApp(object):
             else:
                 print(self._console(client, cmd, opts, msg))
         except CallError as e:
-            sys.stderr.write(str(e) + " Try to raise the --timeout value\n")
+            msg = str(e)
+            if 'timed out' in str(e).lower():
+                msg += TIMEOUT_MSG
+            sys.stderr.write(msg)
             return 1
         finally:
             if endpoint is not None:
@@ -349,7 +372,6 @@ def parse_arguments(args, commands):
                                    help=argparse.SUPPRESS)
             for option in klass.options:
                 __, name, default, desc = option
-
                 if isinstance(default, bool):
                     action = 'store_true'
                 else:

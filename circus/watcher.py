@@ -6,6 +6,7 @@ import time
 import sys
 from random import randint
 import site
+import functools
 
 from psutil import NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
@@ -630,10 +631,52 @@ class Watcher(object):
                      for proc in self.processes.values()])
 
     @util.debuglog
-    def stop(self):
+    def stop(self, async=True, restarting=False):
         """Stop.
         """
         logger.debug('stopping the %s watcher' % self.name)
+        logger.debug('gracefully stopping processes [%s] for %ss' % (
+                     self.name, self.graceful_timeout))
+
+        # We ignore the hook result
+        self.call_hook('before_stop')
+
+        # sending a SIGTERM to all processes
+        for process in self.get_active_processes():
+            self.send_signal(process.pid, signal.SIGTERM)
+
+        # delayed SIGKILL if async is True
+        limit = time.time() + self.graceful_timeout
+
+        if async:
+            self.loop.add_callback(functools.partial(self._final_stop,
+                                                     limit=limit,
+                                                     restarting=restarting,
+                                                     async=async))
+        else:
+            self._final_stop(limit=limit, restarting=restarting, async=async)
+
+    def _final_stop(self, limit=None, restarting=False, async=True):
+        # if we still got some active ones lets wait
+        actives = self.get_active_processes()
+        if actives and time.time() < limit and limit is not None:
+            if async:
+                # we're back in .2 seconds
+                callmeback = functools.partial(self._final_stop, limit,
+                                               restarting, async)
+                self.loop.add_timeout(time.time() + .2, callmeback)
+                return
+            else:
+                while time.time() < limit:
+                    actives = self.get_active_processes()
+                    if not actives:
+                        break
+                    time.sleep(.1)
+
+        # kill the remaining with SIGKILL
+        for process in actives:
+            self.kill_processes(signal.SIGTERM)
+
         # stop redirectors
         if self.stdout_redirector is not None:
             self.stdout_redirector.stop()
@@ -643,20 +686,7 @@ class Watcher(object):
             self.stderr_redirector.stop()
             self.stderr_redirector = None
 
-        limit = time.time() + self.graceful_timeout
-
-        logger.debug('gracefully stopping processes [%s] for %ss' % (
-                     self.name, self.graceful_timeout))
-
-        # We ignore the hook result
-        self.call_hook('before_stop')
-
-        while self.get_active_processes() and time.time() < limit:
-            self.kill_processes(signal.SIGTERM)
-            self.reap_processes()
-
-        self.kill_processes(signal.SIGKILL)
-
+        # notify about the stop
         if self.evpub_socket is not None:
             self.notify_event("stop", {"time": time.time()})
 
@@ -665,6 +695,10 @@ class Watcher(object):
         # We ignore the hook result
         self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
+
+        if restarting:
+            logger.info('restarting %s', self.name)
+            self.loop.add_callback(self.start)
 
     def get_active_processes(self):
         """return a list of pids of active processes (not already stopped)"""
@@ -735,15 +769,18 @@ class Watcher(object):
         return True
 
     @util.debuglog
-    def restart(self):
+    def restart(self, async=True):
         """Restart.
         """
         self.notify_event("restart", {"time": time.time()})
-        self.stop()
-        if self.start():
-            logger.info('%s restarted', self.name)
+        if not async:
+            self.stop(async=False)
+            if self.start():
+                logger.info('%s restarted', self.name)
+            else:
+                logger.info('Failed to restart %s', self.name)
         else:
-            logger.info('Failed to restart %s', self.name)
+            self.stop(async=async, restarting=True)
 
     @util.debuglog
     def reload(self, graceful=True):
