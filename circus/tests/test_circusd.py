@@ -38,7 +38,10 @@ class TestCircusd(unittest.TestCase):
         self.stop = Arbiter.stop
         Arbiter.stop = lambda x: None
         self.config = util.configure_logger
-        util.configure_logger = lambda x: None
+        circusd.configure_logger = util.configure_logger = self._logger
+
+    def _logger(self, *args, **kw):
+        pass
 
     def _open(self, path, *args, **kw):
         if path == REDIRECT_TO:
@@ -46,7 +49,7 @@ class TestCircusd(unittest.TestCase):
         return self.open(path, *args, **kw)
 
     def tearDown(self):
-        util.configure_logger = self.config
+        circusd.configure_logger = util.configure_logger = self.config
         Arbiter.stop = self.stop
         sys.argv = self.argv
         os.dup2 = self.dup2
