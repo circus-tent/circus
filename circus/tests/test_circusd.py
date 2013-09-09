@@ -10,8 +10,6 @@ from circus.arbiter import Arbiter
 from circus.util import REDIRECT_TO
 from circus import util
 
-import psutil
-
 
 CIRCUS_INI = os.path.join(os.path.dirname(__file__), 'circus.ini')
 
@@ -29,14 +27,14 @@ class TestCircusd(unittest.TestCase):
         self.fork = os.fork
         os.fork = self._forking
         self.setsid = os.setsid
-        os.setsid = lambda : None
+        os.setsid = lambda: None
         self.forked = 0
         self.closerange = circusd.closerange
-        circusd.closerange = lambda x, y : None
+        circusd.closerange = lambda x, y: None
         self.open = os.open
         os.open = self._open
         self.dup2 = os.dup2
-        os.dup2 = lambda x, y : None
+        os.dup2 = lambda x, y: None
         self.stop = Arbiter.stop
         Arbiter.stop = lambda x: None
         self.config = util.configure_logger
@@ -113,10 +111,7 @@ class TestCircusd(unittest.TestCase):
             self.assertTrue(os.path.exists(pid_file))
 
         Arbiter.start = _check_pid
-
-        saved = list(sys.argv)
         pid_file = self._get_file()
-
         sys.argv = ['circusd', CIRCUS_INI, '--pidfile', pid_file]
         main()
         self.assertFalse(os.path.exists(pid_file))
