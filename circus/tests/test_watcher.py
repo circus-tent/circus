@@ -135,21 +135,34 @@ class TestWatcher(TestCircus):
         self.numprocesses('incr', name='test', nb=14)
         initial_pids = self.pids()
 
-        # we want a max age of 2 sec.
+        # we want to make sure the watcher is really up and running 14
+        # processes, and stable
+        poll_for(self.test_file, 'START' * 15)
+        truncate_file(self.test_file)  # make sure we have a clean slate
+
+        # we want a max age of 1 sec.
         result = self.call('set', name='test',
                            options={'max_age': 1, 'max_age_variance': 0})
 
         self.assertEquals(result.get('status'), 'ok')
 
-        # let's wait 1.2 sec.
-        time.sleep(1.2)
+        # we want to wait for all 15 processes to restart
+        ready = False
 
-        truncate_file(self.test_file)  # make sure we have a clean slate
-        # expect at least one restart (max_age and restart), in less than 5s
-        self.assertTrue(poll_for(self.test_file,
-                                 ('QUITSTOPSTART', 'QUITSTART')))
+        def _ready(olds, news):
+            for pid in olds:
+                if pid in news:
+                    return False
+            return True
+
+        started = time.time()
+        while not ready:
+            if time.time() - started > 10.:
+                break
+            time.sleep(.1)
+            ready = _ready(initial_pids, self.pids())
+
         current_pids = self.pids()
-
         self.assertEqual(len(current_pids), 15)
         self.assertNotEqual(initial_pids, current_pids)
 

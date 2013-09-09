@@ -190,7 +190,7 @@ def poll_for(filename, needles, timeout=5):
         needles = [needles]
 
     start = time()
-    while time() - start < 5:
+    while time() - start < timeout:
         with open(filename) as f:
             content = f.read()
         for needle in needles:
@@ -198,7 +198,7 @@ def poll_for(filename, needles, timeout=5):
                 return True
         # When using gevent this will make sure the redirector greenlets are
         # scheduled.
-        sleep(0)
+        sleep(0.1)
     raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
         filename, needle, content))
 
