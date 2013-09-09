@@ -51,11 +51,16 @@ class CircusClient(object):
         return self.call(make_message(command, **props))
 
     def call(self, cmd):
+        call_id = uuid.uuid4().hex
+
         if not isinstance(cmd, string_types):
+            cmd['id'] = call_id
             try:
                 cmd = json.dumps(cmd)
             except ValueError as e:
                 raise CallError(str(e))
+        else:
+            raise NotImplementedError("we want to insert the id")
 
         try:
             self.socket.send(cmd)
@@ -71,15 +76,17 @@ class CircusClient(object):
                 else:
                     print str(e)
                     raise CallError(str(e))
-            else:
-                break
 
-        if len(events) == 0:
-            raise CallError("Timed out.")
+            if len(events) == 0:
+                raise CallError("Timed out.")
 
-        for socket in events:
-            msg = socket.recv()
-            try:
-                return json.loads(msg)
-            except ValueError as e:
-                raise CallError(str(e))
+            for socket in events:
+                msg = socket.recv()
+                try:
+                    res = json.loads(msg)
+                    if res.get('id') != call_id:
+                        # we got the wrong message
+                        continue
+                    return res
+                except ValueError as e:
+                    raise CallError(str(e))
