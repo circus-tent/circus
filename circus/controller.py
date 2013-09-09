@@ -123,7 +123,7 @@ class Controller(object):
 
         try:
             cmd.validate(properties)
-            resp = cmd.execute(self.arbiter, properties)
+            resp = cmd.async_execute(self.arbiter, properties)
         except MessageError as e:
             return self.send_error(cid, msg, str(e), cast=cast,
                                    errno=errors.MESSAGE_ERROR)

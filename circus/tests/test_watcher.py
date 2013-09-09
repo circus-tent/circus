@@ -295,7 +295,7 @@ class TestWatcherHooks(TestCircus):
                                    hooks=hooks)
 
     def _stop(self):
-        self.call("stop", name="test")
+        self.call("stop", name="test", async=False)
 
     def get_status(self):
         return self.call("status", name="test")['status']

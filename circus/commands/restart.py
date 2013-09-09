@@ -17,8 +17,9 @@ class Restart(Command):
 
             {
                 "command": "restart",
-                "propeties": {
-                    "name": '<name>"
+                "properties": {
+                    "name": "<name>",
+                    "async": True
                 }
             }
 
@@ -27,35 +28,48 @@ class Restart(Command):
         If the property name is present, then the reload will be applied
         to the watcher.
 
+        If the async flag is set to False, everything will be done
+        synchronously in circusd and it will be blocked while doing it.
+
+        If set to True (the default), the process killing will be done
+        asynchronously and the command will return before it's over.
+
+        Notice that async is only applied when you restart a specific
+        watcher, not the whole arbiter - in that case the call is blocking.
 
         Command line
         ------------
 
         ::
 
-            $ circusctl restart [<name>] [--terminate]
+            $ circusctl restart [<name>] [async] [--terminate]
 
         Options
         +++++++
 
         - <name>: name of the watcher
+        - --async: asynchronous process
         - --terminate; quit the node immediately
-
     """
     name = "restart"
+    async = True
 
     def message(self, *args, **opts):
         if len(args) > 1:
             raise ArgumentError("Invalid number of arguments")
 
         if len(args) == 1:
-            return self.make_message(name=args[0])
-        else:
-            return self.make_message()
+            return self.make_message(name=args[0], **opts)
+
+        return self.make_message(**opts)
 
     def execute(self, arbiter, props):
+        async = props.get('async')
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            watcher.restart()
+            watcher.restart(async=async)
         else:
-            arbiter.restart()
+            if async:
+                arbiter.loop.add_callback(arbiter.restart)
+            else:
+                arbiter.restart()

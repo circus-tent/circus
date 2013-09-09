@@ -72,4 +72,5 @@ class SysHandler(object):
         pass
 
     def handle_hup(self):
-        self.controller.add_job(None, make_json("reload", graceful=True))
+        self.controller.add_job(None, make_json("reload", graceful=True,
+                                                async=True))
