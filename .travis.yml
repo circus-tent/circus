@@ -6,7 +6,7 @@ install:
     - pip install -r test-requirements.txt --use-mirrors
     - pip install --use-mirrors unittest2
     - python setup.py develop
-script: flake8 loads && nosetests -sv --with-coverage --cover-package=circus circus/tests
+script: flake8 circus && nosetests -sv --with-coverage --cover-package=circus circus/tests
 notifications:
     email: tarek@mozilla.com
     irc: "irc.freenode.org#mozilla-circus"
