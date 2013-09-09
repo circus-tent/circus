@@ -1,5 +1,8 @@
+import time
+
 from circus.tests.support import TestCircus, poll_for
-from circus.client import make_message
+from circus.client import make_message, CallError
+from circus.stream import QueueStream
 
 
 class TestClient(TestCircus):
@@ -58,3 +61,49 @@ class TestClient(TestCircus):
         resp = self.call('globaloptions', name='test')
         self.assertEqual(resp['options']['pubsub_endpoint'],
                          'tcp://127.0.0.1:5556')
+
+
+def long_hook(*args, **kw):
+    time.sleep(5)
+
+
+class TestWithHook(TestCircus):
+
+    def setUp(self):
+        super(TestWithHook, self).setUp()
+        self.old = self.cli.timeout
+
+    def tearDown(self):
+        super(TestWithHook, self).tearDown()
+        self.cli.timeout = self.old
+
+    def run_with_hooks(self, hooks):
+        self.stream = QueueStream()
+        self.errstream = QueueStream()
+        dummy_process = 'circus.tests.support.run_process'
+        return self._create_circus(dummy_process,
+                                   stdout_stream={'stream': self.stream},
+                                   stderr_stream={'stream': self.errstream},
+                                   hooks=hooks)
+
+    def test_message_id(self):
+        hooks = {'before_stop': ('circus.tests.test_client.long_hook', False)}
+        try:
+            testfile, arbiter = self.run_with_hooks(hooks)
+            msg = make_message("numwatchers")
+            resp = self.cli.call(msg)
+            self.assertEqual(resp.get("numwatchers"), 1)
+
+            # this should timeout
+            self.assertRaises(CallError, self.cli.call, make_message("stop"))
+
+            # and we should get back on our feet
+            del arbiter.watchers[0].hooks['before_stop']
+
+            while arbiter.watchers[0].status() != 'stopped':
+                time.sleep(.1)
+
+            resp = self.cli.call(make_message("numwatchers"))
+            self.assertEqual(resp.get("numwatchers"), 1)
+        finally:
+            arbiter.stop()

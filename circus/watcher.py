@@ -512,12 +512,12 @@ class Watcher(object):
                                   close_child_stderr=self.close_child_stderr)
 
                 # stream stderr/stdout if configured
-                if pipe_stdout:
+                if pipe_stdout and self.stdout_redirector is not None:
                     self.stdout_redirector.add_redirection('stdout',
                                                            process,
                                                            process.stdout)
 
-                if pipe_stderr:
+                if pipe_stderr and self.stderr_redirector is not None:
                     self.stderr_redirector.add_redirection('stderr',
                                                            process,
                                                            process.stderr)
@@ -714,7 +714,6 @@ class Watcher(object):
         """Call a hook function"""
         kwargs = {'watcher': self, 'arbiter': self.arbiter,
                   'hook_name': hook_name}
-
         if hook_name in self.hooks:
             try:
                 result = self.hooks[hook_name](**kwargs)

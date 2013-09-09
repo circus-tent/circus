@@ -133,7 +133,6 @@ class ControllerApp(object):
     def dispatch(self, args):
         opts = {}
         cmd = self.commands[args.command]
-
         for option in cmd.options:
             name = option[1]
             if name in args:
