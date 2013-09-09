@@ -121,10 +121,16 @@ exclude_patterns = []
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-sys.path.append(os.path.abspath('_themes'))
-html_theme_path = ['_themes']
+
 html_short_title = "Circus"
-html_theme = 'mozilla'
+
+THEMES = os.path.abspath('_themes')
+sys.path.append(THEMES)
+html_theme_path = ['_themes']
+
+MOZ = os.path.join(THEMES, 'mozilla')
+if os.path.exists(MOZ) and len(os.listdir(MOZ)) > 0:
+    html_theme = 'mozilla'
 
 #html_logo = "images/circus32.png"
 
