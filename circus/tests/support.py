@@ -95,7 +95,7 @@ class TestCircus(unittest.TestCase):
         wdir = os.path.dirname(__file__)
         args = ['generic.py', callable, testfile]
         worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
-                  'name': 'test', 'graceful_timeout': 4}
+                  'name': 'test', 'graceful_timeout': 2}
         worker.update(kw)
         debug = kw.get('debug', False)
 

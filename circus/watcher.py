@@ -894,12 +894,11 @@ class Watcher(object):
     def do_action(self, num):
         # trigger needed action
         self.stopped = False
-        if num == 1:
-            for i in range(self.numprocesses):
-                self.spawn_process()
+        if num == 0:
             self.manage_processes()
         else:
-            self.reap_and_manage_processes()
+            # graceful restart
+            self.stop(async=False, restarting=True)
 
     @util.debuglog
     def options(self, *args):

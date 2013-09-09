@@ -103,7 +103,6 @@ class Controller(object):
 
     def dispatch(self, job):
         cid, msg = job
-
         try:
             json_msg = json.loads(msg)
         except ValueError:
