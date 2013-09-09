@@ -51,15 +51,15 @@ class CircusClient(object):
         return self.call(make_message(command, **props))
 
     def call(self, cmd):
+        if isinstance(cmd, string_types):
+            raise DeprecationWarning('call() takes a mapping')
+
         call_id = uuid.uuid4().hex
-        if not isinstance(cmd, string_types):
-            cmd['id'] = call_id
-            try:
-                cmd = json.dumps(cmd)
-            except ValueError as e:
-                raise CallError(str(e))
-        else:
-            raise NotImplementedError("we want to insert the id")
+        cmd['id'] = call_id
+        try:
+            cmd = json.dumps(cmd)
+        except ValueError as e:
+            raise CallError(str(e))
 
         try:
             self.socket.send(cmd)

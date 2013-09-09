@@ -174,11 +174,11 @@ class Controller(object):
         if cid is None:
             return
 
-        if not isinstance(resp, string_types):
-            resp['id'] = mid
-            resp = json.dumps(resp)
-        else:
-            raise NotImplementedError("we want to insert the id")
+        if isinstance(resp, string_types):
+            raise DeprecationWarning('Takes only a mapping')
+
+        resp['id'] = mid
+        resp = json.dumps(resp)
 
         if isinstance(resp, unicode):
             resp = resp.encode('utf8')
