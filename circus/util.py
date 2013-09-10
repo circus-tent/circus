@@ -1,18 +1,21 @@
-import logging
-from datetime import timedelta
+import fcntl
 import grp
+import logging
 import os
 import pwd
-import fcntl
-from functools import wraps
 import re
-import sys
 import shlex
-import time
 import socket
+import sys
+import time
+from ConfigParser import (
+    ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
+)
+from datetime import timedelta
+from functools import wraps
+
 from zmq import ssh
-from ConfigParser import (ConfigParser, MissingSectionHeaderError,
-                          ParsingError, DEFAULTSECT)
+
 
 from psutil import AccessDenied, NoSuchProcess, Process
 
