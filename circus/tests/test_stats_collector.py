@@ -8,14 +8,10 @@ from circus.tests.support import unittest
 from zmq.eventloop import ioloop
 
 
-TRAVIS = os.getenv('TRAVIS', False)
-
-
 class TestSocketCollector(unittest.TestCase):
 
+    @unittest.skipIf('TRAVIS' in os.environ, 'Travis')
     def test_socketstats(self):
-        if TRAVIS:
-            return
 
         # let's create 10 sockets and their clients
         socks = []
