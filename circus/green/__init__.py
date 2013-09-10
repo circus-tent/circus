@@ -7,10 +7,11 @@ class ArbiterHandler(_ArbiterHandler):
 
     def _get_arbiter_klass(self, background):
         if background:
-            raise NotImplementedError
+            from circus.green.arbiter import ThreadedArbiter
+            return ThreadedArbiter
         else:
             from circus.green.arbiter import Arbiter   # NOQA
-        return Arbiter
+            return Arbiter
 
 
 get_arbiter = ArbiterHandler()

@@ -53,9 +53,30 @@ def resolve_name(name):
 _CMD = sys.executable
 
 
-class TestCircus(unittest.TestCase):
+def create_circus(callable, plugins=None, stats=False, factory=get_arbiter,
+                  **kw):
+    resolve_name(callable)   # used to check the callable
+    fd, testfile = mkstemp()
+    os.close(fd)
+    wdir = os.path.dirname(__file__)
+    args = ['generic.py', callable, testfile]
+    worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
+              'name': 'test', 'graceful_timeout': 2}
+    worker.update(kw)
+    debug = kw.get('debug', False)
+    if stats:
+        arbiter = factory([worker], background=True, plugins=plugins,
+                          stats_endpoint=DEFAULT_ENDPOINT_STATS,
+                          statsd=True,
+                          debug=debug, statsd_close_outputs=not debug)
+    else:
+        arbiter = factory([worker], background=True, plugins=plugins,
+                          debug=debug)
+    arbiter.start()
+    return testfile, arbiter
 
-    arbiter_factory = get_arbiter
+
+class TestCircus(unittest.TestCase):
 
     def setUp(self):
         self.arbiters = []
@@ -91,32 +112,13 @@ class TestCircus(unittest.TestCase):
 
     @classmethod
     def _create_circus(cls, callable, plugins=None, stats=False, **kw):
-        resolve_name(callable)   # used to check the callable
-        fd, testfile = mkstemp()
-        os.close(fd)
-        wdir = os.path.dirname(__file__)
-        args = ['generic.py', callable, testfile]
-        worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
-                  'name': 'test', 'graceful_timeout': 2}
-        worker.update(kw)
-        debug = kw.get('debug', False)
-
-        fact = cls.arbiter_factory
-        if stats:
-            arbiter = fact([worker], background=True, plugins=plugins,
-                           stats_endpoint=DEFAULT_ENDPOINT_STATS,
-                           statsd=True,
-                           debug=debug, statsd_close_outputs=not debug)
-        else:
-            arbiter = fact([worker], background=True, plugins=plugins,
-                           debug=debug)
-        arbiter.start()
+        testfile, arbiter = create_circus(callable, plugins, stats, **kw)
         return testfile, arbiter
 
     def _run_circus(self, callable, plugins=None, stats=False, **kw):
-
-        testfile, arbiter = TestCircus._create_circus(callable, plugins, stats,
-                                                      **kw)
+        klass = self.__class__
+        testfile, arbiter = klass._create_circus(callable, plugins, stats,
+                                                 **kw)
         self.arbiters.append(arbiter)
         self.files.append(testfile)
         return testfile
