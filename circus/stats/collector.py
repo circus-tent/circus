@@ -109,8 +109,7 @@ class SocketStatsCollector(BaseStatsCollector):
         super(SocketStatsCollector, self).__init__(streamer, name,
                                                    callback_time, io_loop)
         self._rstats = defaultdict(int)
-        self.sockets = [sock for sock, address, fd in
-                        self.streamer.get_sockets()]
+        self.sockets = [sock for sock, address, fd in self.streamer.sockets]
         self._p = ioloop.PeriodicCallback(self._select, _LOOP_RES,
                                           io_loop=io_loop)
 
@@ -148,7 +147,7 @@ class SocketStatsCollector(BaseStatsCollector):
 
     def collect_stats(self):
         # sending hits by sockets
-        sockets = self.streamer.get_sockets()
+        sockets = self.streamer.sockets
 
         if len(sockets) == 0:
             yield None

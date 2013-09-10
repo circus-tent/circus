@@ -34,6 +34,9 @@ class TestCollector(unittest.TestCase):
         class FakeStreamer(object):
             stats = []
 
+            def __init__(this):
+                this.sockets = self.socks
+
             @property
             def circus_pids(this):
                 return self.circus_pids
@@ -44,9 +47,6 @@ class TestCollector(unittest.TestCase):
             @property
             def publisher(this):
                 return this
-
-            def get_sockets(this):
-                return self.socks
 
             def publish(this, name, stat):
                 this.stats.append(stat)
