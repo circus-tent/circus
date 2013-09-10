@@ -675,7 +675,7 @@ class Watcher(object):
 
         # kill the remaining with SIGKILL
         for process in actives:
-            self.kill_processes(signal.SIGTERM)
+            self.kill_processes(signal.SIGKILL)
 
         # stop redirectors
         if self.stdout_redirector is not None:
