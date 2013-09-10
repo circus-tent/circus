@@ -189,3 +189,32 @@ Watchdog
 
     **port**
         port the watchdog will bind on (default: 1664)
+
+
+Flapping
+========
+
+    When a worker restarts too often, we say that it is *flapping*.  This
+    plugin keeps track of worker restarts and stops the corresponding watcher
+    in case it is flapping. This plugin may be used to automatically stop
+    workers that get constantly restarted because they're not working
+    properly.
+
+    **use**
+      set to 'circus.plugins.flapping.Flapping'
+    **attempts**
+      the number of times a process can restart, within **window** seconds,
+      before we consider it flapping (default: 2)
+    **window**
+      the time window in seconds to test for flapping.  If the process
+      restarts more than **attempts** times within this time window, we
+      consider it a flapping process.  (default: 1)
+    **retry_in**
+      time in seconds to wait until we try to start again a process that has
+      been flapping. (default: 7)
+    **max_retry**
+      the number of times we attempt to start a process that has been
+      flapping, before we abandon and stop the whole watcher. (default: 5)
+    **active**
+      define if the plugin is active or not (default: True).  If the global
+      flag is set to False, the plugin is not started.
