@@ -1,4 +1,4 @@
-import unittest
+from unittest2 import TestCase, skipIf
 import sys
 import os
 import tempfile
@@ -14,7 +14,15 @@ from circus import util
 CIRCUS_INI = os.path.join(os.path.dirname(__file__), 'circus.ini')
 
 
-class TestCircusd(unittest.TestCase):
+def has_gevent():
+    try:
+        import gevent       # NOQA
+        return True
+    except ImportError:
+        return False
+
+
+class TestCircusd(TestCase):
 
     def setUp(self):
         self.saved = dict(sys.modules)
@@ -69,14 +77,10 @@ class TestCircusd(unittest.TestCase):
         self.forked += 1
         return 0
 
+    @skipIf(not has_gevent(), "Only when Gevent is loaded")
     def test_daemon(self):
         # if gevent is loaded, we want to prevent
         # daemonize() to work
-        try:
-            import gevent       # NOQA
-        except ImportError:
-            return
-
         self.assertRaises(ValueError, daemonize)
 
         for module in sys.modules.keys():
@@ -90,6 +94,7 @@ class TestCircusd(unittest.TestCase):
         max = get_maxfd()
         self.assertTrue(isinstance(max, int))
 
+    @skipIf(has_gevent(), "Gevent is loaded")
     def test_daemonize(self):
         def check_pid(pid):
             try:
