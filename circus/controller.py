@@ -86,7 +86,7 @@ class Controller(object):
         msg = msg.strip()
 
         if not msg:
-            self.send_response(cid, msg, "error: empty command")
+            self.send_response(None, cid, msg, "error: empty command")
         else:
             logger.debug("got message %s", msg)
             self.add_job(cid, msg)
@@ -106,9 +106,10 @@ class Controller(object):
         try:
             json_msg = json.loads(msg)
         except ValueError:
-            return self.send_error(cid, msg, "json invalid",
+            return self.send_error(None, cid, msg, "json invalid",
                                    errno=errors.INVALID_JSON)
 
+        mid = json_msg.get('id')
         cmd_name = json_msg.get('command')
         properties = json_msg.get('properties', {})
         cast = json_msg.get('msg_type') == "cast"
@@ -117,24 +118,24 @@ class Controller(object):
             cmd = self.commands[cmd_name.lower()]
         except KeyError:
             error_ = "unknown command: %r" % cmd_name
-            return self.send_error(cid, msg, error_, cast=cast,
+            return self.send_error(mid, cid, msg, error_, cast=cast,
                                    errno=errors.UNKNOWN_COMMAND)
 
         try:
             cmd.validate(properties)
             resp = cmd.async_execute(self.arbiter, properties)
         except MessageError as e:
-            return self.send_error(cid, msg, str(e), cast=cast,
+            return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.MESSAGE_ERROR)
         except OSError as e:
-            return self.send_error(cid, msg, str(e), cast=cast,
+            return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.OS_ERROR)
         except:
             exctype, value = sys.exc_info()[:2]
             tb = traceback.format_exc()
             reason = "command %r: %s" % (msg, value)
             logger.debug("error: command %r: %s\n\n%s", msg, value, tb)
-            return self.send_error(cid, msg, reason, tb, cast=cast,
+            return self.send_error(mid, cid, msg, reason, tb, cast=cast,
                                    errno=errors.COMMAND_ERROR)
 
         if resp is None:
@@ -143,13 +144,13 @@ class Controller(object):
         if not isinstance(resp, (dict, list,)):
             msg = "msg %r tried to send a non-dict: %s" % (msg, str(resp))
             logger.error("msg %r tried to send a non-dict: %s", msg, str(resp))
-            return self.send_error(cid, msg, "server error", cast=cast,
+            return self.send_error(mid, cid, msg, "server error", cast=cast,
                                    errno=errors.BAD_MSG_DATA_ERROR)
 
         if isinstance(resp, list):
             resp = {"results": resp}
 
-        self.send_ok(cid, msg, resp, cast=cast)
+        self.send_ok(mid, cid, msg, resp, cast=cast)
 
         if cmd_name.lower() == "quit":
             if cid is not None:
@@ -157,24 +158,27 @@ class Controller(object):
 
             self.arbiter.stop()
 
-    def send_error(self, cid, msg, reason="unknown", tb=None, cast=False,
+    def send_error(self, mid, cid, msg, reason="unknown", tb=None, cast=False,
                    errno=errors.NOT_SPECIFIED):
         resp = error(reason=reason, tb=tb, errno=errno)
-        self.send_response(cid, msg, resp, cast=cast)
+        self.send_response(mid, cid, msg, resp, cast=cast)
 
-    def send_ok(self, cid, msg, props=None, cast=False):
+    def send_ok(self, mid, cid, msg, props=None, cast=False):
         resp = ok(props)
-        self.send_response(cid, msg, resp, cast=cast)
+        self.send_response(mid, cid, msg, resp, cast=cast)
 
-    def send_response(self, cid, msg, resp, cast=False):
+    def send_response(self, mid, cid, msg, resp, cast=False):
         if cast:
             return
 
         if cid is None:
             return
 
-        if not isinstance(resp, string_types):
-            resp = json.dumps(resp)
+        if isinstance(resp, string_types):
+            raise DeprecationWarning('Takes only a mapping')
+
+        resp['id'] = mid
+        resp = json.dumps(resp)
 
         if isinstance(resp, unicode):
             resp = resp.encode('utf8')
