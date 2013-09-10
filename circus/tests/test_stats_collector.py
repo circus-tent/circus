@@ -1,85 +1,190 @@
-from threading import Thread
-import time
-import socket
 import os
+import socket
+import time
+from collections import defaultdict
+from threading import Thread
 
-from circus.stats.collector import SocketStatsCollector
-from circus.tests.support import unittest
 from zmq.eventloop import ioloop
 
+from circus.stats import collector as collector_module
+from circus.stats.collector import SocketStatsCollector, WatcherStatsCollector
+from circus.tests.support import unittest
 
-class TestSocketCollector(unittest.TestCase):
 
-    @unittest.skipIf('TRAVIS' in os.environ, 'Travis')
-    def test_socketstats(self):
+class TestCollector(unittest.TestCase):
 
+    def setUp(self):
         # let's create 10 sockets and their clients
-        socks = []
-        clients = []
-        fds = []
+        self.socks = []
+        self.clients = []
+        self.fds = []
+        self.pids = {}
 
+    def _get_streamer(self):
         for i in range(10):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.bind(('localhost', 0))
             sock.listen(1)
-            socks.append((sock, 'localhost:0', sock.fileno()))
-            fds.append(sock.fileno())
+            self.socks.append((sock, 'localhost:0', sock.fileno()))
+            self.fds.append(sock.fileno())
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client.connect(sock.getsockname())
-            clients.append(client)
+            self.clients.append(client)
 
         class FakeStreamer(object):
             stats = []
 
             @property
-            def publisher(self):
-                return self
+            def circus_pids(this):
+                return self.circus_pids
 
-            def get_sockets(self):
-                return socks
+            def get_pids(this, name):
+                return self.pids[name]
 
-            def publish(self, name, stat):
-                self.stats.append(stat)
+            @property
+            def publisher(this):
+                return this
 
-        streamer = FakeStreamer()
+            def get_sockets(this):
+                return self.socks
 
-        # now the stats collector
+            def publish(this, name, stat):
+                this.stats.append(stat)
+
+        self.streamer = FakeStreamer()
+        return self.streamer
+
+    def _get_collector(self, collector_class):
+        self._get_streamer()
+
         class Collector(Thread):
 
-            def __init__(self, streamer):
-                Thread.__init__(self)
-                self.streamer = streamer
-                self.loop = ioloop.IOLoop()
-                self.daemon = True
+            def __init__(this, streamer):
+                Thread.__init__(this)
+                this.streamer = self.streamer
+                this.loop = ioloop.IOLoop()
+                this.daemon = True
 
-            def run(self):
-                collector = SocketStatsCollector(streamer, 'sockets',
-                                                 callback_time=0.1,
-                                                 io_loop=self.loop)
+            def run(this):
+                collector = collector_class(
+                    self.streamer, 'sockets', callback_time=0.1,
+                    io_loop=this.loop)
                 collector.start()
-                self.loop.start()
+                this.loop.start()
 
             def stop(self):
                 self.loop.stop()
 
-        collector = Collector(streamer)
+        return Collector(self.streamer)
+
+    def test_watcherstats(self):
+        calls = defaultdict(int)
+        info = []
+        for i in range(2):
+            info.append({
+                'age': 154058.91111397743 + i,
+                'children': [],
+                'cmdline': 'python',
+                'cpu': 0.0 + i/10.,
+                'create_time': 1378663281.96,
+                'ctime': '0:00.0',
+                'mem': 0.0,
+                'mem_info1': '52K',
+                'mem_info2': '39M',
+                'nice': 0,
+                'pid': None,
+                'username': 'alexis'})
+
+        def _get_info(pid):
+            try:
+                data = info[calls[pid]].copy()
+            except IndexError:
+                raise collector_module.util.NoSuchProcess(pid)
+            data['pid'] = pid
+            calls[pid] += 1
+            return data
+
+        try:
+            old_info = collector_module.util.get_info
+            collector_module.util.get_info = _get_info
+
+            self.pids['firefox'] = [2353, 2354]
+            collector = WatcherStatsCollector(self._get_streamer(), 'firefox')
+
+            stats = list(collector.collect_stats())
+            self.assertEquals(len(stats), 3)
+
+            stats = list(collector.collect_stats())
+            self.assertEquals(len(stats), 3)
+
+            stats = list(collector.collect_stats())
+            self.assertEquals(len(stats), 1)
+
+            self.circus_pids = {1234: 'ohyeah'}
+            self.pids['circus'] = [1234]
+            collector = WatcherStatsCollector(self._get_streamer(), 'circus')
+            stats = list(collector.collect_stats())
+            self.assertEquals(stats[0]['name'], 'ohyeah')
+
+        finally:
+            collector_module.util.get_info = old_info
+
+    def test_collector_aggregation(self):
+        collector = WatcherStatsCollector(self._get_streamer(), 'firefox')
+        aggregate = {}
+        for i in range(0, 10):
+            pid = 1000 + i
+            aggregate[pid] = {
+                'age': 154058.91111397743, 'children': [],
+                'cmdline': 'python', 'cpu': 0.0 + i / 10.,
+                'create_time': 1378663281.96,
+                'ctime': '0:00.0', 'mem': 0.0 + i / 10,
+                'mem_info1': '52K', 'mem_info2': '39M',
+                'username': 'alexis', 'subtopic': pid, 'name': 'firefox'}
+
+        res = collector._aggregate(aggregate)
+        self.assertEquals(res['mem'], 0)
+        self.assertEquals(len(res['pid']), 10)
+        self.assertEquals(res['cpu'], 0.45)
+
+    def test_collector_aggregation_when_unknown_values(self):
+        collector = WatcherStatsCollector(self._get_streamer(), 'firefox')
+        aggregate = {}
+        for i in range(0, 10):
+            pid = 1000 + i
+            aggregate[pid] = {
+                'age': 'N/A', 'children': [], 'cmdline': 'python',
+                'cpu': 'N/A', 'create_time': 1378663281.96,
+                'ctime': '0:00.0', 'mem': 'N/A', 'mem_info1': '52K',
+                'mem_info2': '39M', 'nice': 0, 'pid': pid,
+                'username': 'alexis', 'subtopic': pid, 'name': 'firefox'}
+
+        res = collector._aggregate(aggregate)
+        res = collector._aggregate(aggregate)
+        self.assertEquals(res['mem'], 'N/A')
+        self.assertEquals(len(res['pid']), 10)
+        self.assertEquals(res['cpu'], 'N/A')
+
+    @unittest.skipIf('TRAVIS' in os.environ, 'Travis')
+    def test_socketstats(self):
+        collector = self._get_collector(SocketStatsCollector)
         collector.start()
         time.sleep(1.)
 
         # doing some socket things as a client
         for i in range(10):
-            for client in clients:
+            for client in self.clients:
                 client.send('ok')
                 #client.recv(2)
 
         # stopping
         collector.stop()
-        for s, _, _ in socks:
+        for s, _, _ in self.socks:
             s.close()
 
         # let's see what we got
-        self.assertTrue(len(streamer.stats) > 2)
+        self.assertTrue(len(self.streamer.stats) > 2)
 
-        stat = streamer.stats[0]
-        self.assertTrue(stat['fd'] in fds)
+        stat = self.streamer.stats[0]
+        self.assertTrue(stat['fd'] in self.fds)
         self.assertTrue(stat['reads'] > 1)

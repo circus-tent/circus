@@ -25,7 +25,7 @@ class BaseStatsCollector(ioloop.PeriodicCallback):
 
     def collect_stats(self):
         # should be implemented in subclasses
-        raise NotImplementedError()
+        raise NotImplementedError()  # PRAGMA: NOCOVER
 
 
 class WatcherStatsCollector(BaseStatsCollector):
