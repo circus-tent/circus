@@ -9,17 +9,10 @@ from circus import circusd
 from circus.arbiter import Arbiter
 from circus.util import REDIRECT_TO
 from circus import util
+from circus.tests.support import has_gevent
 
 
 CIRCUS_INI = os.path.join(os.path.dirname(__file__), 'circus.ini')
-
-
-def has_gevent():
-    try:
-        import gevent       # NOQA
-        return True
-    except ImportError:
-        return False
 
 
 class TestCircusd(TestCase):

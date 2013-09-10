@@ -55,6 +55,8 @@ _CMD = sys.executable
 
 class TestCircus(unittest.TestCase):
 
+    arbiter_factory = get_arbiter
+
     def setUp(self):
         self.arbiters = []
         self.files = []
@@ -99,14 +101,15 @@ class TestCircus(unittest.TestCase):
         worker.update(kw)
         debug = kw.get('debug', False)
 
+        fact = cls.arbiter_factory
         if stats:
-            arbiter = get_arbiter([worker], background=True, plugins=plugins,
-                                  stats_endpoint=DEFAULT_ENDPOINT_STATS,
-                                  statsd=True,
-                                  debug=debug, statsd_close_outputs=not debug)
+            arbiter = fact([worker], background=True, plugins=plugins,
+                           stats_endpoint=DEFAULT_ENDPOINT_STATS,
+                           statsd=True,
+                           debug=debug, statsd_close_outputs=not debug)
         else:
-            arbiter = get_arbiter([worker], background=True, plugins=plugins,
-                                  debug=debug)
+            arbiter = fact([worker], background=True, plugins=plugins,
+                           debug=debug)
         arbiter.start()
         return testfile, arbiter
 
@@ -173,6 +176,14 @@ def run_process(test_file):
     process = Process(test_file)
     process.run()
     return 1
+
+
+def has_gevent():
+    try:
+        import gevent       # NOQA
+        return True
+    except ImportError:
+        return False
 
 
 class TimeoutException(Exception):
