@@ -26,7 +26,6 @@ class TestUtil(unittest.TestCase):
                 shutil.rmtree(dir)
 
     def test_get_info(self):
-
         worker = Popen(["python -c 'import time;time.sleep(5)'"], shell=True)
         try:
             info = get_info(worker)
