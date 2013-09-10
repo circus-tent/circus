@@ -190,6 +190,8 @@ watcher:NAME - as many sections as you want
         we abandon and stop the whole watcher. Defaults to 5.
         Set to -1 to disable max_retry and retry indefinitely.
 
+.. _graceful_timeout:
+
     **graceful_timeout**
         The number of seconds to wait for a process to terminate gracefully
         before killing it.
