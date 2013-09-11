@@ -38,6 +38,12 @@ class TestWatcher(TestCircus):
     def tearDownClass(cls):
         cls.arbiter.stop()
 
+    def tearDown(self):
+        super(TestCircus, self).tearDown()
+        current = self.numprocesses('numprocesses')
+        if current > 1:
+            self.numprocesses('decr', name='test', nb=current-1)
+
     def status(self, cmd, **props):
         resp = self.call(cmd, **props)
         return resp.get('status')
@@ -69,11 +75,15 @@ class TestWatcher(TestCircus):
         self.assertEquals(self.status('signal', name='test', pid=to_kill,
                                       signum=signal.SIGKILL), 'ok')
 
-        # make sure process is restarted
+        # make sure the process is restarted
         self.assertTrue(poll_for(self.test_file, 'START'))
 
         # we still should have two processes, but not the same pids for them
         pids = self.pids()
+        count = 0
+        while len(pids) < 2 and count < 10:
+            pids = self.pids()
+            time.sleep(.1)
         self.assertEquals(len(pids), 2)
         self.assertTrue(to_kill not in pids)
 
@@ -121,17 +131,39 @@ class TestWatcher(TestCircus):
                          sys.executable.split(os.sep)[-1])
 
     def test_max_age(self):
-        result = self.call('set', name='test',
-                           options={'max_age': 1, 'max_age_variance': 0})
-        self.assertEquals(result.get('status'), 'ok')
+        # let's run 15 processes
+        self.numprocesses('incr', name='test', nb=14)
         initial_pids = self.pids()
 
+        # we want to make sure the watcher is really up and running 14
+        # processes, and stable
+        poll_for(self.test_file, 'START' * 15)
         truncate_file(self.test_file)  # make sure we have a clean slate
-        # expect at least one restart (max_age and restart), in less than 5s
-        self.assertTrue(poll_for(self.test_file,
-                                 ('QUITSTOPSTART', 'QUITSTART')))
+
+        # we want a max age of 1 sec.
+        result = self.call('set', name='test',
+                           options={'max_age': 1, 'max_age_variance': 0})
+
+        self.assertEquals(result.get('status'), 'ok')
+
+        # we want to wait for all 15 processes to restart
+        ready = False
+
+        def _ready(olds, news):
+            for pid in olds:
+                if pid in news:
+                    return False
+            return True
+
+        started = time.time()
+        while not ready:
+            if time.time() - started > 10.:
+                break
+            time.sleep(.1)
+            ready = _ready(initial_pids, self.pids())
+
         current_pids = self.pids()
-        self.assertEqual(len(current_pids), 1)
+        self.assertEqual(len(current_pids), 15)
         self.assertNotEqual(initial_pids, current_pids)
 
     def test_arbiter_reference(self):
@@ -155,6 +187,25 @@ class TestWatcherInitialization(TestCircus):
                               env={"AWESOMENESS": "YES"})
             self.assertEquals(watcher.env,
                               {'COCONUTS': 'MIGRATE', 'AWESOMENESS': 'YES'})
+        finally:
+            os.environ = old_environ
+
+    def test_hook_in_PYTHON_PATH(self):
+        # we have a hook in PYTHONPATH
+        tempdir = self.get_tmpdir()
+
+        hook = 'def hook(*args, **kw):\n    return True\n'
+        with open(os.path.join(tempdir, 'plugins.py'), 'w') as f:
+            f.write(hook)
+
+        old_environ = os.environ
+        try:
+            os.environ = {'PYTHONPATH': tempdir}
+            hooks = {'before_start': ('plugins.hook', False)}
+
+            watcher = Watcher("foo", "foobar", copy_env=True, hooks=hooks)
+
+            self.assertEquals(watcher.env, os.environ)
         finally:
             os.environ = old_environ
 
@@ -257,7 +308,7 @@ class TestWatcherHooks(TestCircus):
                                    hooks=hooks)
 
     def _stop(self):
-        self.call("stop", name="test")
+        self.call("stop", name="test", async=False)
 
     def get_status(self):
         return self.call("status", name="test")['status']
@@ -366,6 +417,7 @@ def oneshot_process(test_file):
 
 
 class RespawnTest(TestCircus):
+
     def test_not_respawning(self):
         oneshot_process = 'circus.tests.test_watcher.oneshot_process'
         testfile, arbiter = self._create_circus(oneshot_process, respawn=False)

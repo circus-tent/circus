@@ -350,6 +350,7 @@ def convert_opt(key, val):
 
 # taken from werkzeug
 class ImportStringError(ImportError):
+
     """Provides information about a failed :func:`import_string` attempt."""
 
     #: String in dotted notation that failed to be imported.
@@ -485,6 +486,7 @@ def replace_gnu_args(data, prefix='circus', **options):
 
 
 class ObjectDict(dict):
+
     def __getattr__(self, item):
         return self[item]
 
@@ -499,7 +501,7 @@ def configure_logger(logger, level='INFO', output="-"):
         close_on_exec(h.stream.fileno())
     fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
     h.setFormatter(fmt)
-    logger.addHandler(h)
+    logger.handlers = [h]
 
 
 class StrictConfigParser(ConfigParser):
@@ -653,6 +655,7 @@ def load_virtualenv(watcher):
                 continue
 
     py_path = watcher.env.get('PYTHONPATH')
+    path = None
 
     if venv_pkgs:
         venv_path = os.pathsep.join(venv_pkgs)
@@ -711,3 +714,39 @@ class SetEncoder(json.JSONEncoder):
         if isinstance(obj, set):
             return list(obj)
         return json.JSONEncoder.default(self, obj)
+# taken from http://stackoverflow.com/questions/1165352
+
+
+class DictDiffer(object):
+
+    """
+    Calculate the difference between two dictionaries as:
+    (1) items added
+    (2) items removed
+    (3) keys same in both but changed values
+    (4) keys same in both and unchanged values
+    """
+
+    def __init__(self, current_dict, past_dict):
+        self.current_dict, self.past_dict = current_dict, past_dict
+        self.set_current, self.set_past = (set(current_dict.keys()),
+                                           set(past_dict.keys()))
+        self.intersect = self.set_current.intersection(self.set_past)
+
+    def added(self):
+        return self.set_current - self.intersect
+
+    def removed(self):
+        return self.set_past - self.intersect
+
+    def changed(self):
+        return set(o for o in self.intersect
+                   if self.past_dict[o] != self.current_dict[o])
+
+    def unchanged(self):
+        return set(o for o in self.intersect
+                   if self.past_dict[o] == self.current_dict[o])
+
+
+def dict_differ(dict1, dict2):
+    return len(DictDiffer(dict1, dict2).changed()) > 0

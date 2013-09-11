@@ -23,7 +23,6 @@ Example::
     # will push in test.log the stream every 300 ms
     stdout_stream.class = FileStream
     stdout_stream.filename = test.log
-    stdout_stream.refresh_time = 0.3
 
     # optionally rotate the log file when it reaches 1 gb
     # and save 5 copied of rotated files
@@ -108,7 +107,7 @@ watcher:NAME - as many sections as you want
         format syntax here to build the parameters. Environment variables are
         available, as well as the worker id and the environment variables that
         you passed, if any, with the "env" parameter. See
-        :ref:`formating_cmd` for more information on this.
+        :ref:`formatting_cmd` for more information on this.
     **shell**
         If True, the processes are run in the shell (default: False)
     **working_dir**
@@ -129,7 +128,7 @@ watcher:NAME - as many sections as you want
     **warmup_delay**
         The delay (in seconds) between running processes.
     **autostart**
-        If set to true, the watcher will not be started automatically
+        If set to false, the watcher will not be started automatically
         when the arbiter starts. The watcher can be started explicitly
         (example: `circusctrl start myprogram`). (Default: True)
     **numprocesses**
@@ -190,6 +189,18 @@ watcher:NAME - as many sections as you want
         The number of times we attempt to start a process, before
         we abandon and stop the whole watcher. Defaults to 5.
         Set to -1 to disable max_retry and retry indefinitely.
+
+.. _graceful_timeout:
+
+    **graceful_timeout**
+        The number of seconds to wait for a process to terminate gracefully
+        before killing it.
+
+        When stopping a process, we first send it a SIGTERM signal. A worker
+        may catch this signal to perform clean up operations before exiting.
+        If the worker is still active after graceful_timeout seconds, we send
+        it a SIGKILL signal.  It is not possible to catch SIGKILL signals so
+        the worker will stop.
 
     **priority**
         Integer that defines a priority for the watcher. When the
@@ -266,6 +277,14 @@ socket:NAME - as many sections as you want
     **type**
         The socket type. Can be 'SOCK_STREAM', 'SOCK_DGRAM', 'SOCK_RAW',
         'SOCK_RDM' or 'SOCK_SEQPACKET'. Defaults to 'SOCK_STREAM'.
+    **interface**
+        When provided a network interface name like 'eth0', binds the socket
+        to that particular device so that only packets received from that
+        particular interface are processed by the socket.
+        This can be used for example to limit which device to bind when
+        binding on IN_ADDR_ANY (0.0.0.0) or IN_ADDR_BROADCAST
+        (255.255.255.255). Note that this only works for some socket types,
+        particularly AF_INET sockets.
     **path**
         When provided a path to a file that will be used as a unix socket
         file. If a path is provided, **family** is forced to AF_UNIX and
@@ -396,10 +415,10 @@ a variable defined in *env*, which will override a variable
 defined in *os.environ*.
 
 
-.. _formating_cmd:
+.. _formatting_cmd:
 
-Formating the commands and arguments with dynamic variables
-===========================================================
+Formatting the commands and arguments with dynamic variables
+============================================================
 
 As you may have seen, it is possible to pass some information that are computed
 dynamically when running the processes. Among other things, you can get the
@@ -424,3 +443,81 @@ This works with both `cmd` and `args`.
 - All variables are prefixed with `circus.`
 - The replacement is case insensitive.
 
+Stream configuration
+====================
+
+Simple stream class like `QueueStream` and `StdoutStream` don't have
+specific attributes but some other stream class may have some:
+
+
+FileStream
+::::::::::
+
+    **filename**
+        The file path where log will be written.
+
+    **time_format**
+        The strftime format that will be used to prefix each time with a timestamp.
+        By default they will be not prefixed.
+
+        i.e: %Y-%m-%d %H:%M:%S
+
+    **max_bytes**
+        The max size of the log file before a new file is started.
+        If not provided, the file is not rolled over.
+
+    **backup_count**
+        The number of log files that will be kept
+        By default backup_count is null.
+
+
+.. note::    
+
+    Rollover occurs whenever the current log file is nearly max_bytes in
+    length. If backup_count is >= 1, the system will successively create
+    new files with the same pathname as the base file, but with extensions
+    ".1", ".2" etc. appended to it. For example, with a backup_count of 5
+    and a base file name of "app.log", you would get "app.log",
+    "app.log.1", "app.log.2", ... through to "app.log.5". The file being
+    written to is always "app.log" - when it gets filled up, it is closed
+    and renamed to "app.log.1", and if files "app.log.1", "app.log.2" etc.
+    exist, then they are renamed to "app.log.2", "app.log.3" etc.
+    respectively.
+
+Example::
+
+    [watcher:myprogram]
+    cmd = python -m myapp.server
+
+    stdout_stream.class = FileStream
+    stdout_stream.filename = test.log
+    stdout_stream.time_format = %Y-%m-%d %H:%M:%S
+    stdout_stream.max_bytes = 1073741824
+    stdout_stream.backup_count = 5
+
+
+FancyStdoutStram
+::::::::::::::::
+
+    **color**
+        The name of an ascii color:
+            - red
+            - green
+            - yellow
+            - blue
+            - magenta
+            - cyan
+            - white
+
+    **time_format**
+        The strftime format that each line will be prefixed with.
+
+        Default to: %Y-%m-%d %H:%M:%S
+
+Example::
+
+    [watcher:myprogram]
+    cmd = python -m myapp.server
+    stdout_stream.class = FancyStdoutStream
+    stdout_stream.color = green
+    stdout_stream.time_format = %Y/%m/%d | %H:%M:%S

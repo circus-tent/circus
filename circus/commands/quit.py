@@ -14,10 +14,15 @@ class Quit(Command):
         ::
 
             {
-                "command": "quit"
+                "command": "quit",
+                "async": False
             }
 
         The response return the status "ok".
+
+        If async is True, the graceful period for process termination
+        will be done in the background, and a response will be returned
+        immediatly. (defaults: False).
 
 
         Command line
@@ -25,13 +30,14 @@ class Quit(Command):
 
         ::
 
-            $ circusctl quit
+            $ circusctl quit --async
 
     """
     name = "quit"
+    async = False
 
     def message(self, *args, **opts):
-        return self.make_message()
+        return self.make_message(**opts)
 
     def execute(self, arbiter, opts):
-        arbiter.stop_watchers(stop_alive=True)
+        arbiter.stop_watchers(stop_alive=True, async=False)

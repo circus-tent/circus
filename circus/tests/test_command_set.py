@@ -41,3 +41,14 @@ class SetTest(TestCircus):
         self.assertEqual(watcher.options['hooks.before_start'],
                          'some.hook')
         self.assertEqual(watcher.actions, [0, 0])
+
+        # we can also set several hooks at once
+        props = cmd.message('dummy', 'hooks',
+                            'before_start:some,after_start:hook')
+        props = props['properties']
+        cmd.execute(arbiter, props)
+        watcher = arbiter.watchers[0]
+        self.assertEqual(watcher.options['hooks.before_start'],
+                         'some')
+        self.assertEqual(watcher.options['hooks.after_start'],
+                         'hook')

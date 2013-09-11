@@ -110,8 +110,16 @@ ResourceWatcher
     **max_cpu**
         The maximum cpu one process is allowed to consume (in %). Default: 90
 
+    **min_cpu**
+	   The minimum cpu one process should consume (in %). Default: None (no minimum)
+	   You can set the min_cpu to 0 (zero), in this case if one process consume exactly 0% cpu, it will trigger an exceeded limit.
+
     **max_mem**
         The amount of memory one process of this watcher is allowed to consume (in %). Default: 90
+
+    **min_mem**
+	   The minimum memory one process should consume (in %). Default: None (no minimum)
+	   You can set the min_mem to 0 (zero), in this case if one process consume exactly 0% memory, it will trigger an exceeded limit.
 
     **health_threshold**
         The health is the average of cpu and memory (in %) the watchers processes are allowed to consume (in %). Default: 75
@@ -127,5 +135,86 @@ ResourceWatcher
         ...
 
         [watcher:program]
-        c
+        cmd = sleep 120
 
+    	[plugin:myplugin]
+    	use = circus.plugins.resource_watcher.ResourceWatcher
+    	watcher = program
+    	min_cpu = 10
+    	max_cpu = 70
+    	min_mem = 0
+    	max_mem = 20
+
+
+Watchdog
+========
+
+    Plugin that binds an udp socket and wait for watchdog messages.
+    For "watchdoged" processes, the watchdog will kill them if they
+    don't send a heartbeat in a certain period of time materialized by
+    loop_rate * max_count. (circus will automatically restart the missing
+    processes in the watcher)
+
+    Each monitored process should send udp message at least at the loop_rate.
+    The udp message format is a line of text, decoded using **msg_regex**
+    parameter.
+    The heartbeat message MUST at least contain the pid of the process sending
+    the message.
+
+    The list of monitored watchers are determined by the parameter
+    **watchers_regex** in the configuration.
+
+
+    Configuration parameters:
+
+    **loop_rate**
+        watchdog loop rate in seconds. At each loop, WatchDog
+        will looks for "dead" processes.
+
+    **watchers_regex**
+        regex for matching watcher names that should be
+        monitored by the watchdog (default: ".*" all watchers are monitored)
+
+    **msg_regex**
+        regex for decoding the received heartbeat
+        message in udp (default: "^(?P<pid>.*);(?P<timestamp>.*)$")
+        the default format is a simple text message: "pid;timestamp"
+
+    **max_count**
+        max number of passed loop without receiving
+        any heartbeat before restarting process (default: 3)
+
+    **ip**
+        ip the watchdog will bind on (default: 127.0.0.1)
+
+    **port**
+        port the watchdog will bind on (default: 1664)
+
+
+Flapping
+========
+
+    When a worker restarts too often, we say that it is *flapping*.  This
+    plugin keeps track of worker restarts and stops the corresponding watcher
+    in case it is flapping. This plugin may be used to automatically stop
+    workers that get constantly restarted because they're not working
+    properly.
+
+    **use**
+      set to 'circus.plugins.flapping.Flapping'
+    **attempts**
+      the number of times a process can restart, within **window** seconds,
+      before we consider it flapping (default: 2)
+    **window**
+      the time window in seconds to test for flapping.  If the process
+      restarts more than **attempts** times within this time window, we
+      consider it a flapping process.  (default: 1)
+    **retry_in**
+      time in seconds to wait until we try to start again a process that has
+      been flapping. (default: 7)
+    **max_retry**
+      the number of times we attempt to start a process that has been
+      flapping, before we abandon and stop the whole watcher. (default: 5)
+    **active**
+      define if the plugin is active or not (default: True).  If the global
+      flag is set to False, the plugin is not started.

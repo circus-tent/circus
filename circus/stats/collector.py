@@ -28,7 +28,7 @@ class BaseStatsCollector(ioloop.PeriodicCallback):
 
     def collect_stats(self):
         # should be implemented in subclasses
-        raise NotImplementedError()
+        raise NotImplementedError()  # PRAGMA: NOCOVER
 
 
 class WatcherStatsCollector(BaseStatsCollector):
@@ -114,8 +114,7 @@ class SocketStatsCollector(BaseStatsCollector):
                                                    callback_time, io_loop,
                                                    fqdn=fqdn)
         self._rstats = defaultdict(int)
-        self.sockets = [sock for sock, address, fd in
-                        self.streamer.get_sockets()]
+        self.sockets = [sock for sock, address, fd in self.streamer.sockets]
         self._p = ioloop.PeriodicCallback(self._select, _LOOP_RES,
                                           io_loop=io_loop)
 
@@ -153,7 +152,7 @@ class SocketStatsCollector(BaseStatsCollector):
 
     def collect_stats(self):
         # sending hits by sockets
-        sockets = self.streamer.get_sockets()
+        sockets = self.streamer.sockets
 
         if len(sockets) == 0:
             yield None

@@ -33,7 +33,7 @@ class RedirectorHandler(object):
 
 
 class Redirector(object):
-    def __init__(self, redirect, refresh_time=1.0, extra_info=None,
+    def __init__(self, redirect, extra_info=None,
                  buffer=4096, loop=None):
         self.running = False
         self.pipes = {}

@@ -28,7 +28,7 @@ if PY3:
 
     MAXSIZE = sys.maxsize       # NOQA
 else:
-    string_types = basestring,
+    string_types = basestring
     integer_types = (int, long)
     text_type = unicode
 

@@ -1,4 +1,4 @@
-from tempfile import mkstemp
+from tempfile import mkstemp, mkdtemp
 import os
 import signal
 import sys
@@ -6,6 +6,7 @@ from time import time, sleep
 from collections import defaultdict
 import cProfile
 import pstats
+import shutil
 
 import unittest2 as unittest
 
@@ -26,7 +27,7 @@ def resolve_name(name):
         try:
             ret = __import__('.'.join(module_name))
             break
-        except ImportError, exc:
+        except ImportError as exc:
             last_exc = exc
             if cursor == 0:
                 raise
@@ -54,9 +55,12 @@ _CMD = sys.executable
 
 class TestCircus(unittest.TestCase):
 
+    arbiter_factory = get_arbiter
+
     def setUp(self):
         self.arbiters = []
         self.files = []
+        self.dirs = []
         self.tmpfiles = []
         self.cli = CircusClient()
 
@@ -65,7 +69,16 @@ class TestCircus(unittest.TestCase):
         for file in self.files + self.tmpfiles:
             if os.path.exists(file):
                 os.remove(file)
+
+        for dir in self.dirs:
+            shutil.rmtree(dir)
+
         self.cli.stop()
+
+    def get_tmpdir(self):
+        dir_ = mkdtemp()
+        self.dirs.append(dir_)
+        return dir_
 
     def get_tmpfile(self, content=None):
         fd, file = mkstemp()
@@ -84,18 +97,19 @@ class TestCircus(unittest.TestCase):
         wdir = os.path.dirname(__file__)
         args = ['generic.py', callable, testfile]
         worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
-                  'name': 'test', 'graceful_timeout': 4}
+                  'name': 'test', 'graceful_timeout': 2}
         worker.update(kw)
         debug = kw.get('debug', False)
 
+        fact = cls.arbiter_factory
         if stats:
-            arbiter = get_arbiter([worker], background=True, plugins=plugins,
-                                  stats_endpoint=DEFAULT_ENDPOINT_STATS,
-                                  statsd=True,
-                                  debug=debug, statsd_close_outputs=not debug)
+            arbiter = fact([worker], background=True, plugins=plugins,
+                           stats_endpoint=DEFAULT_ENDPOINT_STATS,
+                           statsd=True,
+                           debug=debug, statsd_close_outputs=not debug)
         else:
-            arbiter = get_arbiter([worker], background=True, plugins=plugins,
-                                  debug=debug)
+            arbiter = fact([worker], background=True, plugins=plugins,
+                           debug=debug)
         arbiter.start()
         return testfile, arbiter
 
@@ -164,6 +178,14 @@ def run_process(test_file):
     return 1
 
 
+def has_gevent():
+    try:
+        import gevent       # NOQA
+        return True
+    except ImportError:
+        return False
+
+
 class TimeoutException(Exception):
     pass
 
@@ -179,7 +201,7 @@ def poll_for(filename, needles, timeout=5):
         needles = [needles]
 
     start = time()
-    while time() - start < 5:
+    while time() - start < timeout:
         with open(filename) as f:
             content = f.read()
         for needle in needles:
@@ -187,7 +209,7 @@ def poll_for(filename, needles, timeout=5):
                 return True
         # When using gevent this will make sure the redirector greenlets are
         # scheduled.
-        sleep(0)
+        sleep(0.1)
     raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
         filename, needle, content))
 

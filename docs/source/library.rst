@@ -17,7 +17,7 @@ The get_arbiter function
 
 :func:`get_arbiter` is just a convenience on top of the various
 circus classes. It creates a :term:`arbiter` (class :class:`Arbiter`) instance
-with the provided options, which in turn runs a single :class:`Watcher` with a 
+with the provided options, which in turn runs a single :class:`Watcher` with a
 single :class:`Process`.
 
 
@@ -29,7 +29,7 @@ Example:
 
    from circus import get_arbiter
 
-   arbiter = get_arbiter({"cmd": "myprogram", "numprocesses": 3})
+   arbiter = get_arbiter([{"cmd": "myprogram", "numprocesses": 3}])
    try:
        arbiter.start()
    finally:

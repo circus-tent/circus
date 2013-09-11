@@ -17,18 +17,13 @@ except ImportError:
 with open("README.rst") as f:
     README = f.read()
 
-changes = os.path.join('docs', 'source', 'changes.rst')
-
-with open(changes) as f:
-    CHANGES = f.read()
-
 
 setup(name='circus',
       version=__version__,
-      packages=find_packages(),
+      packages=find_packages(exclude=["docs"]),
       description=("Circus is a program that will let you run and watch "
                    " multiple processes and sockets."),
-      long_description=README + '\n' + CHANGES,
+      long_description=README,
       author="Mozilla Foundation & contributors",
       author_email="services-dev@lists.mozila.org",
       include_package_data=True,

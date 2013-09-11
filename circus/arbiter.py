@@ -18,7 +18,7 @@ from circus.discovery import AutoDiscovery
 from circus.exc import AlreadyExist
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
-from circus.util import debuglog, _setproctitle
+from circus.util import debuglog, _setproctitle, parse_env_dict, DictDiffer
 from circus.watcher import Watcher
 
 
@@ -26,7 +26,12 @@ class ReloadArbiterException(Exception):
     pass
 
 
+_ENV_EXCEPTIONS = ('__CF_USER_TEXT_ENCODING', 'PS1', 'COMP_WORDBREAKS',
+                   'PROMPT_COMMAND')
+
+
 class Arbiter(object):
+
     """Class used to control a list of watchers.
 
     Options:
@@ -69,6 +74,7 @@ class Arbiter(object):
     - **fqdn_prefix** -- a prefix for the unique identifier of the circus
                          instance on the cluster.
     """
+
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=.5,
                  prereload_fn=None, context=None, loop=None, statsd=False,
                  stats_endpoint=None, statsd_close_outputs=False,
@@ -86,7 +92,7 @@ class Arbiter(object):
         self.multicast_endpoint = multicast_endpoint
         self.proc_name = proc_name
         self.ssh_server = ssh_server
-
+        self.evpub_socket = None
         self.pidfile = pidfile
         self.loglevel = loglevel
         self.logoutput = logoutput
@@ -118,7 +124,7 @@ class Arbiter(object):
         self.stats_endpoint = stats_endpoint
 
         self.nodes_directory = {}
-        # We add ourselves to the nods directory
+        # We add ourselves to the nodes directory
         self.nodes_directory[self.fqdn] = set([self.endpoint])
 
         if self.statsd:
@@ -201,8 +207,9 @@ class Arbiter(object):
         self.ctrl = Controller(self.endpoint, self.context, self.loop, self,
                                self.check_delay)
         node_data = {self.fqdn: set([self.endpoint])}
-        AutoDiscovery(self.multicast_endpoint, self.loop,
-                      node_data, self.add_new_node)
+        if self.multicast_endpoint:
+            AutoDiscovery(self.multicast_endpoint, self.loop,
+                          node_data, self.add_new_node)
 
         # XXX handle arbiter heartbeat
 
@@ -272,7 +279,6 @@ class Arbiter(object):
 
     def reload_from_config(self, config_file=None):
         new_cfg = get_config(config_file if config_file else self.config_file)
-
         # if arbiter is changed, reload everything
         if self.get_arbiter_config(new_cfg) != self._cfg:
             raise ReloadArbiterException
@@ -350,16 +356,29 @@ class Arbiter(object):
             new_watcher_cfg = (self.get_watcher_config(new_cfg, n) or
                                self.get_plugin_config(new_cfg, n))
             old_watcher_cfg = w._cfg.copy()
-            if new_watcher_cfg != old_watcher_cfg:
-                if not w.name.startswith('plugin:'):
-                    num_procs = new_watcher_cfg['numprocesses']
-                    old_watcher_cfg['numprocesses'] = num_procs
-                    if new_watcher_cfg == old_watcher_cfg:
-                        # if nothing but the number of processes is
-                        # changed, just changes this
-                        w.set_numprocesses(int(num_procs))
-                        continue
 
+            if 'env' in new_watcher_cfg:
+                new_watcher_cfg['env'] = parse_env_dict(new_watcher_cfg['env'])
+
+            # discarding env exceptions
+            for key in _ENV_EXCEPTIONS:
+                if 'env' in new_watcher_cfg and key in new_watcher_cfg['env']:
+                    del new_watcher_cfg['env'][key]
+
+                if 'env' in new_watcher_cfg and key in old_watcher_cfg['env']:
+                    del old_watcher_cfg['env'][key]
+
+            diff = DictDiffer(new_watcher_cfg, old_watcher_cfg).changed()
+
+            if diff == set(['numprocesses']):
+                # if nothing but the number of processes is
+                # changed, just changes this
+                w.set_numprocesses(int(new_watcher_cfg['numprocesses']))
+                changed = False
+            else:
+                changed = len(diff) > 0
+
+            if changed:
                 # Others things are changed. Just delete and add the watcher.
                 changed_wn.add(n)
                 deleted_wn.add(n)
@@ -388,7 +407,6 @@ class Arbiter(object):
     @classmethod
     def load_from_config(cls, config_file):
         cfg = get_config(config_file)
-
         watchers = []
         for watcher in cfg.get('watchers', []):
             watchers.append(Watcher.load_from_config(watcher))
@@ -504,7 +522,7 @@ class Arbiter(object):
                 self.sockets.close_all()
 
     def stop(self):
-        self.stop_watchers(stop_alive=True)
+        self.stop_watchers(stop_alive=True, async=False)
         # this will stop the loop and the closing
         # will finish in .start()
         self.loop.stop()
@@ -614,7 +632,8 @@ class Arbiter(object):
             return ValueError("command name shouldn't be empty")
 
         watcher = Watcher(name, cmd, **kw)
-        watcher.initialize(self.evpub_socket, self.sockets, self)
+        if self.evpub_socket is not None:
+            watcher.initialize(self.evpub_socket, self.sockets, self)
         self.watchers.append(watcher)
         self._watchers_names[watcher.name.lower()] = watcher
         return watcher
@@ -640,7 +659,7 @@ class Arbiter(object):
             watcher.start()
             sleep(self.warmup_delay)
 
-    def stop_watchers(self, stop_alive=False):
+    def stop_watchers(self, stop_alive=False, async=True):
         if not self.alive:
             return
 
@@ -649,10 +668,10 @@ class Arbiter(object):
             self.alive = False
 
         for watcher in self.iter_watchers(reverse=False):
-            watcher.stop()
+            watcher.stop(async=async)
 
     def restart(self):
-        self.stop_watchers()
+        self.stop_watchers(async=False)
         self.start_watchers()
 
 

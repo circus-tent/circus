@@ -67,6 +67,7 @@ def main():
         sys.exit(0)
 
     # configure the logger
+    logging.basicConfig()
     loglevel = LOG_LEVELS.get(args.loglevel.lower(), logging.INFO)
     logger.setLevel(loglevel)
     if args.logoutput == "-":

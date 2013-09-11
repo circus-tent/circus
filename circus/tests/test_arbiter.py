@@ -6,14 +6,15 @@ import unittest
 
 from mock import patch
 from tempfile import mkstemp
-from time import time
+from time import time, sleep
 from urlparse import urlparse
 
-from circus.arbiter import Arbiter
+from circus.arbiter import Arbiter, ThreadedArbiter
 from circus.client import CallError, CircusClient, make_message
 from circus.plugins import CircusPlugin
 from circus.tests.support import TestCircus, poll_for, truncate_file
-from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST
+from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
+                         DEFAULT_ENDPOINT_SUB)
 from circus.watcher import Watcher
 
 
@@ -97,6 +98,16 @@ class TestTrainer(TestCircus):
         return kwargs
 
     def test_add_watcher(self):
+        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+                           options=self._get_options())
+        resp = self.cli.call(msg)
+        self.assertEqual(resp.get("status"), "ok")
+
+    def test_add_watcher_arbiter_stopped(self):
+        # stop the arbiter
+        resp = self.cli.call(make_message("stop"))
+        self.assertEqual(resp.get("status"), "ok")
+
         msg = make_message("add", name="test1", cmd=self._get_cmd(),
                            options=self._get_options())
         resp = self.cli.call(msg)
@@ -232,14 +243,14 @@ class TestTrainer(TestCircus):
     def test_stop_watchers1(self):
         if 'TRAVIS' in os.environ:
             return
-        self.cli.call(make_message("stop"))
+        self.cli.call(make_message("stop", async=False))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get("status"), "stopped")
 
     def test_stop_watchers2(self):
         if 'TRAVIS' in os.environ:
             return
-        self.cli.call(make_message("stop", name="test"))
+        self.cli.call(make_message("stop", name="test", async=False))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get('status'), "stopped")
 
@@ -395,3 +406,14 @@ class TestArbiter(unittest.TestCase):
     def test_fqdn_prefix(self):
         arbiter = Arbiter([], None, None, fqdn_prefix='test')
         self.assertEqual(arbiter.fqdn, 'test@my.fqdn')
+
+    def test_add_watcher(self):
+        arbiter = ThreadedArbiter([], DEFAULT_ENDPOINT_DEALER,
+                                  DEFAULT_ENDPOINT_SUB)
+        arbiter.add_watcher('foo', 'sleep 5')
+        try:
+            arbiter.start()
+            sleep(.1)
+            self.assertEqual(arbiter.watchers[0].status(), 'active')
+        finally:
+            arbiter.stop()

@@ -68,9 +68,9 @@ Available hooks are:
   returns **False** the watcher is immediatly stopped and the startup
   is aborted.
 
-- **before_spawn**: called before the watcher spawns a new process.
-  is stopped. If the hook returns **False** the watcher is
-  immediatly stopped and the startup is aborted.
+- **before_spawn**: called before the watcher spawns a new process.  If the
+  hook returns **False** the watcher is immediatly stopped and the startup is
+  aborted.
 
 - **before_stop**: called before the watcher is stopped. The hook result
   is ignored.
@@ -101,9 +101,9 @@ Everytime a hook is run, its result is notified as an event in Circus.
 
 There are two events related to hooks:
 
-- **hook_success**:: a hook was successfully called. The event keys are
+- **hook_success**: a hook was successfully called. The event keys are
   **name** the name if the event, and **time**: the date of the events.
 
-- **hook_failure**:: a hook has failed. The event keys are **name** the
+- **hook_failure**: a hook has failed. The event keys are **name** the
   name if the event, **time**: the date of the events and
   **error**: the exception that occurred in the event, if any.

@@ -1,6 +1,11 @@
 from circus.exc import ArgumentError, MessageError
 from circus.py3compat import string_types
 from circus import util
+import warnings
+
+
+_HOOKS = ('before_start', 'after_start', 'before_stop', 'after_stop',
+          'before_spawn')
 
 
 def convert_option(key, val):
@@ -42,19 +47,31 @@ def convert_option(key, val):
         return util.to_bool(val)
     elif key.startswith('stderr_stream.') or key.startswith('stdout_stream.'):
         subkey = key.split('.', 1)[-1]
-
-        if subkey in ('class', 'filename'):
-            return val
-        elif subkey in ('max_bytes', 'backup_count'):
+        if subkey in ('max_bytes', 'backup_count'):
             return int(val)
-        elif subkey == 'refresh_time':
-            return float(val)
-    elif key.startswith('hooks.'):
-        subkey = key.split('.', 1)[-1]
+        return val
+    elif key == 'hooks':
+        res = {}
+        for hook in val.split(','):
+            if hook == '':
+                continue
+            hook = hook.split(':')
+            if len(hook) != 2:
+                raise ArgumentError(hook)
 
-        if subkey in ('before_start', 'after_start', 'before_stop',
-                      'after_stop', 'before_spawn'):
-            return val
+            name, value = hook
+            if name not in _HOOKS:
+                raise ArgumentError(name)
+
+            res[name] = value
+
+        return res
+    elif key.startswith('hooks.'):
+        # we can also set a single hook
+        name = key.split('.', 1)[-1]
+        if name not in _HOOKS:
+            raise ArgumentError(name)
+        return val
 
     raise ArgumentError("unknown key %r" % key)
 
@@ -64,8 +81,10 @@ def validate_option(key, val):
                   'gid', 'send_hup', 'shell', 'env', 'cmd', 'copy_env',
                   'flapping_attempts', 'flapping_window', 'retry_in',
                   'max_retry', 'graceful_timeout', 'stdout_stream',
-                  'stderr_stream', 'max_age', 'max_age_variance', 'respawn')
-    valid_prefixes = ('stdout_stream', 'stderr_stream', 'hooks')
+                  'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
+                  'hooks')
+
+    valid_prefixes = ('stdout_stream', 'stderr_stream')
 
     def _valid_prefix():
         for prefix in valid_prefixes:
@@ -102,8 +121,19 @@ def validate_option(key, val):
             if not isinstance(v, string_types):
                 raise MessageError("%r isn't a string" % k)
 
+    if key == 'hooks':
+        if not isinstance(val, dict):
+            raise MessageError("%r isn't a valid hook dict" % val)
+
+        for key in val:
+            if key not in _HOOKS:
+                raise MessageError("Unknown hook %r" % val)
+
     if key in ('stderr_stream', 'stdout_stream'):
-        for k, v in val.items():
-            if not k in ('class', 'filename', 'refresh_time', 'max_bytes',
-                         'backup_count'):
-                raise MessageError("%r is an invalid option for %r" % (k, key))
+        if not isinstance(val, dict):
+            raise MessageError("%r isn't a valid object" % key)
+        if not 'class' in val:
+            raise MessageError("%r must have a 'class' key" % key)
+        if 'refresh_time' in val:
+            warnings.warn(u"'refresh_time' is deprecated and not useful "
+                          u"anymore for %r" % key)

@@ -31,27 +31,25 @@ class StatsStreamer(object):
         self.client = CircusClient(context=self.ctx, endpoint=endpoint,
                                    ssh_server=ssh_server)
         self.cmds = get_commands()
+        self.publisher = StatsPublisher(stats_endpoint, self.ctx)
+        self.fqdn = fqdn
+        self._initialize()
+
+    def _initialize(self):
         self._pids = defaultdict(list)
         self._callbacks = dict()
-        self.publisher = StatsPublisher(stats_endpoint, self.ctx)
         self.running = False  # should the streamer be running?
         self.stopped = False  # did the collect started yet?
         self.circus_pids = {}
         self.sockets = []
-        self.fqdn = fqdn
-
-    def get_watchers(self):
-        return self._pids.keys()
-
-    def get_sockets(self):
-        return self.sockets
+        self.get_watchers = self._pids.keys
 
     def get_pids(self, watcher=None):
         if watcher is not None:
             if watcher == 'circus':
                 return self.circus_pids.keys()
             return self._pids[watcher]
-        return chain(self._pids.values())
+        return chain(*self._pids.values())
 
     def get_circus_pids(self):
         watchers = self.client.send_message('list').get('watchers', [])
