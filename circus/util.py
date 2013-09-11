@@ -1,18 +1,21 @@
-import logging
-from datetime import timedelta
+import fcntl
 import grp
+import logging
 import os
 import pwd
-import fcntl
-from functools import wraps
 import re
-import sys
 import shlex
-import time
 import socket
+import sys
+import time
+from ConfigParser import (
+    ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
+)
+from datetime import timedelta
+from functools import wraps
+
 from zmq import ssh
-from ConfigParser import (ConfigParser, MissingSectionHeaderError,
-                          ParsingError, DEFAULTSECT)
+
 
 from psutil import AccessDenied, NoSuchProcess, Process
 
@@ -23,40 +26,6 @@ DEFAULT_ENDPOINT_SUB = "tcp://127.0.0.1:5556"
 DEFAULT_ENDPOINT_STATS = "tcp://127.0.0.1:5557"
 DEFAULT_ENDPOINT_MULTICAST = "udp://237.219.251.97:12027"
 
-
-try:
-    from importlib import import_module         # NOQA
-except ImportError:
-    def _resolve_name(name, package, level):
-        """Returns the absolute name of the module to be imported. """
-        if not hasattr(package, 'rindex'):
-            raise ValueError("'package' not set to a string")
-        dot = len(package)
-        for x in xrange(level, 1, -1):
-            try:
-                dot = package.rindex('.', 0, dot)
-            except ValueError:
-                raise ValueError("attempted relative import beyond top-level "
-                                 "package")
-        return "%s.%s" % (package[:dot], name)
-
-    def import_module(name, package=None):      # NOQA
-        """Import a module.
-        The 'package' argument is required when performing a relative import.
-        It specifies the package to use as the anchor point from which to
-        resolve the relative import to an absolute import."""
-        if name.startswith('.'):
-            if not package:
-                raise TypeError("relative imports require the 'package' "
-                                "argument")
-            level = 0
-            for character in name:
-                if character != '.':
-                    break
-                level += 1
-            name = _resolve_name(name[level:], package, level)
-        __import__(name)
-        return sys.modules[name]
 
 try:
     from setproctitle import setproctitle
@@ -70,9 +39,9 @@ except ImportError:
 
 MAXFD = 1024
 if hasattr(os, "devnull"):
-    REDIRECT_TO = os.devnull
+    REDIRECT_TO = os.devnull  # PRAGMA: NOCOVER
 else:
-    REDIRECT_TO = "/dev/null"
+    REDIRECT_TO = "/dev/null"  # PRAGMA: NOCOVER
 
 LOG_LEVELS = {
     "critical": logging.CRITICAL,
