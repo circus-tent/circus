@@ -39,9 +39,9 @@ except ImportError:
 
 MAXFD = 1024
 if hasattr(os, "devnull"):
-    REDIRECT_TO = os.devnull
+    REDIRECT_TO = os.devnull  # PRAGMA: NOCOVER
 else:
-    REDIRECT_TO = "/dev/null"
+    REDIRECT_TO = "/dev/null"  # PRAGMA: NOCOVER
 
 LOG_LEVELS = {
     "critical": logging.CRITICAL,

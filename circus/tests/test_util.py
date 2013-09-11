@@ -7,12 +7,16 @@ import os
 import sys
 
 from psutil import Popen
-from mock import Mock, patch
+import mock
 
 from circus.tests.support import unittest
-from circus.util import (get_info, bytes2human, to_bool, parse_env_str,
-                         env_to_str, to_uid, to_gid, replace_gnu_args,
-                         get_python_version, load_virtualenv)
+
+from circus import util
+from circus.util import (
+    get_info, bytes2human, to_bool, parse_env_str, env_to_str,
+    to_uid, to_gid, replace_gnu_args, get_python_version, load_virtualenv,
+    get_working_dir
+)
 
 
 class TestUtil(unittest.TestCase):
@@ -34,6 +38,42 @@ class TestUtil(unittest.TestCase):
 
         self.assertTrue(isinstance(info['pid'], int))
         self.assertEqual(info['nice'], 0)
+
+    def test_get_info_still_works_when_denied_access(self):
+        def access_denied():
+            return mock.MagicMock(side_effect=util.AccessDenied)
+
+        class WorkerMock(mock.MagicMock):
+            def __getattr__(self, attr):
+                raise util.AccessDenied()
+
+        worker = WorkerMock()
+        worker.get_memory_info = access_denied()
+        worker.get_cpu_percent = access_denied()
+        worker.get_cpu_times = access_denied()
+        worker.get_nice = access_denied()
+        worker.get_memory_percent = access_denied()
+        worker.cmdline = []
+
+        info = get_info(worker)
+
+        self.assertEquals(info['mem'], 'N/A')
+        self.assertEquals(info['cpu'], 'N/A')
+        self.assertEquals(info['ctime'], 'N/A')
+        self.assertEquals(info['pid'], 'N/A')
+        self.assertEquals(info['username'], 'N/A')
+        self.assertEquals(info['nice'], 'N/A')
+        self.assertEquals(info['create_time'], 'N/A')
+        self.assertEquals(info['age'], 'N/A')
+
+        worker.get_nice = mock.MagicMock(side_effect=util.NoSuchProcess(1234))
+        self.assertEquals(get_info(worker)['nice'], 'Zombie')
+
+    def test_convert_opt(self):
+        self.assertEquals(util.convert_opt('env', {'key': 'value'}),
+                          'key=value')
+        self.assertEquals(util.convert_opt('test', None), '')
+        self.assertEquals(util.convert_opt('test', 1), '1')
 
     def test_bytes2human(self):
         self.assertEqual(bytes2human(10000), '9K')
@@ -57,8 +97,8 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(env_to_str(parsed), env)
 
     def test_to_uid(self):
-        with patch('pwd.getpwnam') as getpw:
-            m = Mock()
+        with mock.patch('pwd.getpwnam') as getpw:
+            m = mock.Mock()
             m.pw_uid = '1000'
             getpw.return_value = m
             uid = to_uid(u'user')
@@ -171,8 +211,7 @@ class TestUtil(unittest.TestCase):
         return dir
 
     def test_load_virtualenv(self):
-
-        watcher = Mock()
+        watcher = mock.Mock()
         watcher.copy_env = False
 
         # we need the copy_env flag
@@ -196,3 +235,19 @@ class TestUtil(unittest.TestCase):
         watcher.env = {}
         load_virtualenv(watcher)
         self.assertEqual(site_pkg, watcher.env['PYTHONPATH'])
+
+    @mock.patch('circus.util.os.environ', {'PWD': '/path/to/pwd'})
+    @mock.patch('circus.util.os.getcwd', lambda: '/path/to/cwd')
+    def test_working_dir_return_pwd_when_paths_are_equals(self):
+        def _stat(path):
+            stat = mock.MagicMock()
+            stat.ino = 'path'
+            stat.dev = 'dev'
+            return stat
+        try:
+            _old_os_stat = util.os.stat
+            util.os.stat = _stat
+
+            self.assertEquals(get_working_dir(), '/path/to/pwd')
+        finally:
+            util.os.stat = _old_os_stat
