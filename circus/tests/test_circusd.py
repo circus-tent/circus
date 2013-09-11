@@ -12,7 +12,7 @@ from circus import util
 from circus.tests.support import has_gevent
 
 
-CIRCUS_INI = os.path.join(os.path.dirname(__file__), 'circus.ini')
+CIRCUS_INI = os.path.join(os.path.dirname(__file__), 'config', 'circus.ini')
 
 
 class TestCircusd(TestCase):

@@ -10,22 +10,23 @@ from circus.sockets import CircusSocket
 
 
 HERE = os.path.join(os.path.dirname(__file__))
+CONFIG_DIR = os.path.join(HERE, 'config')
 
 _CONF = {
-    'issue137': os.path.join(HERE, 'issue137.ini'),
-    'include': os.path.join(HERE, 'include.ini'),
-    'issue210': os.path.join(HERE, 'issue210.ini'),
-    'issue310': os.path.join(HERE, 'issue310.ini'),
-    'issue395': os.path.join(HERE, 'issue395.ini'),
-    'hooks': os.path.join(HERE, 'hooks.ini'),
-    'env_var': os.path.join(HERE, 'env_var.ini'),
-    'env_section': os.path.join(HERE, 'env_section.ini'),
-    'multiple_wildcard': os.path.join(HERE, 'multiple_wildcard.ini'),
-    'empty_include': os.path.join(HERE, 'empty_include.ini'),
-    'circus': os.path.join(HERE, 'circus.ini'),
-    'nope': os.path.join(HERE, 'nope.ini'),
-    'unexistant': os.path.join(HERE, 'unexistant.ini'),
-    'issue442': os.path.join(HERE, 'issue442.ini')
+    'issue137': os.path.join(CONFIG_DIR, 'issue137.ini'),
+    'include': os.path.join(CONFIG_DIR, 'include.ini'),
+    'issue210': os.path.join(CONFIG_DIR, 'issue210.ini'),
+    'issue310': os.path.join(CONFIG_DIR, 'issue310.ini'),
+    'issue395': os.path.join(CONFIG_DIR, 'issue395.ini'),
+    'hooks': os.path.join(CONFIG_DIR, 'hooks.ini'),
+    'env_var': os.path.join(CONFIG_DIR, 'env_var.ini'),
+    'env_section': os.path.join(CONFIG_DIR, 'env_section.ini'),
+    'multiple_wildcard': os.path.join(CONFIG_DIR, 'multiple_wildcard.ini'),
+    'empty_include': os.path.join(CONFIG_DIR, 'empty_include.ini'),
+    'circus': os.path.join(CONFIG_DIR, 'circus.ini'),
+    'nope': os.path.join(CONFIG_DIR, 'nope.ini'),
+    'unexistant': os.path.join(CONFIG_DIR, 'unexistant.ini'),
+    'issue442': os.path.join(CONFIG_DIR, 'issue442.ini')
 }
 
 
