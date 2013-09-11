@@ -3,7 +3,7 @@ from unittest2 import skipIf, TestCase
 from gevent import monkey
 
 from circus.green import get_arbiter
-from circus.tests.test_arbiter import _TestTrainer
+from circus.tests.test_arbiter import _TestTrainer, _setUpClass, _tearDownClass
 from circus.green.client import CircusClient
 from circus.tests.support import has_gevent
 
@@ -12,11 +12,13 @@ from circus.tests.support import has_gevent
 class TestGreen(TestCase, _TestTrainer):
     @classmethod
     def setUpClass(cls):
-        _TestTrainer.setUpClass()
+        _setUpClass(cls, factory=cls._get_arbiter_factory(),
+                    client_factory=cls._get_client_factory())
+
 
     @classmethod
     def tearDownClass(cls):
-        _TestTrainer.tearDownClass()
+        _tearDownClass(cls)
 
     @classmethod
     def _get_arbiter_factory(cls):
