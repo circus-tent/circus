@@ -5,20 +5,21 @@ from circus.arbiter import Arbiter, ReloadArbiterException
 
 
 HERE = os.path.join(os.path.dirname(__file__))
+CONFIG_DIR = os.path.join(HERE, 'config')
 
 _CONF = {
-    'reload_base': os.path.join(HERE, 'reload_base.ini'),
-    'reload_numprocesses': os.path.join(HERE, 'reload_numprocesses.ini'),
-    'reload_addwatchers': os.path.join(HERE, 'reload_addwatchers.ini'),
-    'reload_delwatchers': os.path.join(HERE, 'reload_delwatchers.ini'),
-    'reload_changewatchers': os.path.join(HERE, 'reload_changewatchers.ini'),
-    'reload_addplugins': os.path.join(HERE, 'reload_addplugins.ini'),
-    'reload_delplugins': os.path.join(HERE, 'reload_delplugins.ini'),
-    'reload_changeplugins': os.path.join(HERE, 'reload_changeplugins.ini'),
-    'reload_addsockets': os.path.join(HERE, 'reload_addsockets.ini'),
-    'reload_delsockets': os.path.join(HERE, 'reload_delsockets.ini'),
-    'reload_changesockets': os.path.join(HERE, 'reload_changesockets.ini'),
-    'reload_changearbiter': os.path.join(HERE, 'reload_changearbiter.ini'),
+    'reload_base': os.path.join(CONFIG_DIR, 'reload_base.ini'),
+    'reload_numprocesses': os.path.join(CONFIG_DIR, 'reload_numprocesses.ini'),
+    'reload_addwatchers': os.path.join(CONFIG_DIR, 'reload_addwatchers.ini'),
+    'reload_delwatchers': os.path.join(CONFIG_DIR, 'reload_delwatchers.ini'),
+    'reload_changewatchers': os.path.join(CONFIG_DIR, 'reload_changewatchers.ini'),
+    'reload_addplugins': os.path.join(CONFIG_DIR, 'reload_addplugins.ini'),
+    'reload_delplugins': os.path.join(CONFIG_DIR, 'reload_delplugins.ini'),
+    'reload_changeplugins': os.path.join(CONFIG_DIR, 'reload_changeplugins.ini'),
+    'reload_addsockets': os.path.join(CONFIG_DIR, 'reload_addsockets.ini'),
+    'reload_delsockets': os.path.join(CONFIG_DIR, 'reload_delsockets.ini'),
+    'reload_changesockets': os.path.join(CONFIG_DIR, 'reload_changesockets.ini'),
+    'reload_changearbiter': os.path.join(CONFIG_DIR, 'reload_changearbiter.ini'),
 }
 
 
