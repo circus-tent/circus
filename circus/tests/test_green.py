@@ -1,7 +1,5 @@
 from unittest2 import skipIf, TestCase
 
-from gevent import monkey
-
 from circus.green import get_arbiter
 from circus.tests.test_arbiter import _TestTrainer, _setUpClass, _tearDownClass
 from circus.green.client import CircusClient
@@ -22,6 +20,7 @@ class TestGreen(TestCase, _TestTrainer):
 
     @classmethod
     def _get_arbiter_factory(cls):
+        from gevent import monkey
         monkey.patch_all()
         return get_arbiter
 
