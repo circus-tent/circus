@@ -5,6 +5,7 @@ import signal
 import time
 import sys
 from random import randint
+from itertools import izip_longest
 import site
 import functools
 
@@ -180,7 +181,6 @@ class Watcher(object):
         self.warmup_delay = warmup_delay
         self.cmd = cmd
         self.args = args
-        self._process_counter = 0
         self.stopped = stopped
         self.graceful_timeout = float(graceful_timeout)
         self.prereload_fn = prereload_fn
@@ -491,7 +491,6 @@ class Watcher(object):
 
         cmd = util.replace_gnu_args(self.cmd, sockets=self._get_sockets_fds(),
                                     env=self.env)
-        self._process_counter += 1
         nb_tries = 0
 
         while nb_tries < self.max_retry or self.max_retry == -1:
@@ -500,7 +499,7 @@ class Watcher(object):
             pipe_stderr = self.stderr_redirector is not None
 
             try:
-                process = Process(self._process_counter, cmd,
+                process = Process(self._nextwid, cmd,
                                   args=self.args, working_dir=self.working_dir,
                                   shell=self.shell, uid=self.uid, gid=self.gid,
                                   env=self.env, rlimits=self.rlimits,
@@ -709,6 +708,17 @@ class Watcher(object):
     def pids(self):
         """Returns a list of PIDs"""
         return [process.pid for process in self.processes]
+
+    @property
+    def _nextwid(self):
+        used_wids = sorted([p.wid for p in self.processes.values()])
+        all_wids = xrange(1, self.numprocesses + 1)
+        for slot, wid in izip_longest(all_wids, used_wids, fillvalue=None):
+            if slot is None:
+                # should never happen
+                raise RuntimeError("Process count > numproceses")
+            elif wid is None:
+                return slot
 
     def call_hook(self, hook_name):
         """Call a hook function"""
