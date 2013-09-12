@@ -96,12 +96,12 @@ class CircusPlugin(object):
         self.running = False
 
     def call(self, command, **props):
-        """Sends to **circusd** the command.
+        """Sends the command to **circusd**
 
         Options:
 
         - **command** -- the command to call
-        - **props** -- keywords argument to add to the call
+        - **props** -- keyword arguments to add to the call
 
         Returns the JSON mapping sent back by **circusd**
         """
@@ -116,7 +116,7 @@ class CircusPlugin(object):
         Options:
 
         - **command** -- the command to call
-        - **props** -- keywords argument to add to the call
+        - **props** -- keyword arguments to add to the call
         """
         msg = cast_message(command, **props)
         self.client.send(json.dumps(msg))
@@ -139,7 +139,7 @@ class CircusPlugin(object):
         pass
 
     def handle_init(self):
-        """Called right befor a plugin is started - in the thread context.
+        """Called right before a plugin is started - in the thread context.
         """
         pass
 
