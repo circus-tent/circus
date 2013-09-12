@@ -55,9 +55,13 @@ class TestFlapping(TestCircus):
 
     def test_beyond_window_resets_tries(self):
         plugin = self.make_plugin(max_retry=-1)
+        plugin.tries['test'] = 1
         timestamp_beyond_window = plugin.window + plugin.check_delay + 1
         plugin.timelines['test'] = [0, timestamp_beyond_window]
+
         plugin.check('test')
+
+        self.assertEqual(plugin.tries['test'], 0)
 
     @patch.object(Flapping, 'cast')
     @patch('circus.plugins.flapping.Timer')
