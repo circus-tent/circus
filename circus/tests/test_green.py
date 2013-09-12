@@ -12,7 +12,6 @@ class TestGreen(TestCase, _TestTrainer):
         _setUpClass(cls, factory=cls._get_arbiter_factory(),
                     client_factory=cls._get_client_factory())
 
-
     @classmethod
     def tearDownClass(cls):
         _tearDownClass(cls)
