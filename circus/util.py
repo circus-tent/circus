@@ -369,9 +369,6 @@ def resolve_name(import_name, silent=False):
 
     If `silent` is True the return value will be `None` if the import fails.
 
-    For better debugging we recommend the new :func:`import_module`
-    function to be used instead.
-
     :param import_name: the dotted name for the object to import.
     :param silent: if set to `True` import errors are ignored and
                    `None` is returned instead.
