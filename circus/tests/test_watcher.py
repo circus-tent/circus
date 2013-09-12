@@ -3,20 +3,32 @@ import sys
 import os
 import threading
 import time
-from test.test_support import captured_output
-
-from zmq.eventloop import ioloop
-from circus.tests.support import TestCircus, poll_for, truncate_file
-from circus.stream import QueueStream
-from circus.watcher import Watcher
-from circus.process import UNEXISTING
-from circus import logger
-from circus.util import get_python_version
-
 import warnings
+
+import mock
+from zmq.eventloop import ioloop
+
+from circus import logger
+from circus.process import RUNNING
+
+from circus.stream import QueueStream
+from circus.tests.support import TestCircus, poll_for, truncate_file
+from circus.util import get_python_version
+from circus.watcher import Watcher
+
+from test.test_support import captured_output
 
 warnings.filterwarnings('ignore',
                         module='threading', message='sys.exc_clear')
+
+
+class FakeProcess(object):
+
+    def __init__(self, pid, status, started=1, age=1):
+        self.status = status
+        self.pid = pid
+        self.started = started
+        self.age = age
 
 
 class TestWatcher(TestCircus):
@@ -440,3 +452,30 @@ class RespawnTest(TestCircus):
             self.assertEquals(len(watcher.processes), 1)
         finally:
             arbiter.stop()
+
+    def test_stopping_a_watcher_doesnt_spawn(self):
+        watcher = Watcher("foo", "foobar", respawn=True, numprocesses=3)
+        watcher.stopped = False
+
+        watcher.spawn_processes = mock.MagicMock()
+        watcher.loop = mock.MagicMock()
+        watcher.send_signal = mock.MagicMock()
+
+        # We have one running process and a dead one.
+        watcher.processes = {1234: FakeProcess(1234, status=RUNNING),
+                             1235: FakeProcess(1235, status=RUNNING)}
+
+        # When we call manage_process(), the watcher should try to spawn a new
+        # process since we aim to have 3 of them.
+        watcher.manage_processes()
+        self.assertTrue(watcher.spawn_processes.called)
+
+        # Now, we want to stop everything.
+        watcher.processes = {1234: FakeProcess(1234, status=RUNNING),
+                             1235: FakeProcess(1235, status=RUNNING)}
+        watcher.spawn_processes.reset_mock()
+        watcher.stop()
+        watcher.manage_processes()
+
+        # And be sure we don't spawn new processes in the meantime.
+        self.assertFalse(watcher.spawn_processes.called)
