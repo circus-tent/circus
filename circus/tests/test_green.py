@@ -2,7 +2,6 @@ from unittest2 import skipIf, TestCase
 
 from circus.green import get_arbiter
 from circus.tests.test_arbiter import _TestTrainer, _setUpClass, _tearDownClass
-from circus.green.client import CircusClient
 from circus.tests.support import has_gevent
 
 
@@ -26,4 +25,5 @@ class TestGreen(TestCase, _TestTrainer):
 
     @classmethod
     def _get_client_factory(cls):
+        from circus.green.client import CircusClient
         return CircusClient
