@@ -2,20 +2,20 @@ import json
 import os
 import socket
 import sys
-import unittest
+import unittest2 as unittest
 
 from mock import patch
 from tempfile import mkstemp
-from time import time, sleep
+from time import time
 from urlparse import urlparse
 
-from circus.arbiter import Arbiter, ThreadedArbiter
 from circus.client import CallError, CircusClient, make_message
 from circus.plugins import CircusPlugin
-from circus.tests.support import TestCircus, poll_for, truncate_file
-from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
-                         DEFAULT_ENDPOINT_SUB)
+from circus.tests.support import (poll_for, truncate_file,
+                                  create_circus)
+from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST
 from circus.watcher import Watcher
+from circus import get_arbiter
 
 
 _GENERIC = os.path.join(os.path.dirname(__file__), 'generic.py')
@@ -38,44 +38,67 @@ class Plugin(CircusPlugin):
             f.write('%s:%s' % (watcher, action))
 
 
-class TestTrainer(TestCircus):
+def _setUpClass(cls, fqn='circus.tests.support.run_process',
+                client_factory=CircusClient, **kw):
+    cls.test_file, cls.arb = create_circus(fqn, **kw)
+    cls.cli = client_factory()
+    poll_for(cls.test_file, 'START')
 
-    def setUp(self):
-        super(TestTrainer, self).setUp()
-        dummy_process = 'circus.tests.support.run_process'
-        self.test_file = self._run_circus(dummy_process)
-        poll_for(self.test_file, 'START')
+
+def _tearDownClass(cls):
+    cls.cli.stop()
+    cls.arb.stop()
+
+
+class _TestTrainer(object):
+
+    @classmethod
+    def setUpClass(cls):
+        _setUpClass(cls, factory=cls._get_arbiter_factory(),
+                    client_factory=cls._get_client_factory())
+
+    @classmethod
+    def tearDownClass(cls):
+        _tearDownClass(cls)
+
+    @classmethod
+    def _get_arbiter_factory(cls):
+        return get_arbiter
+
+    @classmethod
+    def _get_client_factory(cls):
+        return CircusClient
 
     def test_numwatchers(self):
         msg = make_message("numwatchers")
         resp = self.cli.call(msg)
-        self.assertEqual(resp.get("numwatchers"), 1)
+        self.assertTrue(resp.get("numwatchers") >= 1)
 
     def test_numprocesses(self):
         msg = make_message("numprocesses")
         resp = self.cli.call(msg)
-        self.assertEqual(resp.get("numprocesses"), 1)
+        self.assertTrue(resp.get("numprocesses") >= 1)
 
     def test_processes(self):
         msg1 = make_message("list", name="test")
         resp = self.cli.call(msg1)
-        self.assertEqual(len(resp.get('pids')), 1)
+        before = len(resp.get('pids'))
 
         msg2 = make_message("incr", name="test")
         self.cli.call(msg2)
 
         resp = self.cli.call(msg1)
-        self.assertEqual(len(resp.get('pids')), 2)
+        self.assertEqual(len(resp.get('pids')), before + 1)
 
         self.cli.send_message("incr", name="test", nb=2)
         resp = self.cli.call(msg1)
-        self.assertEqual(len(resp.get('pids')), 4)
+        self.assertEqual(len(resp.get('pids')), before + 3)
 
     def test_watchers(self):
         if 'TRAVIS' in os.environ:
             return
         resp = self.cli.call(make_message("list"))
-        self.assertEqual(resp.get('watchers'), ["test"])
+        self.assertTrue(len(resp.get('watchers')) > 0)
 
     def _get_cmd(self):
         fd, testfile = mkstemp()
@@ -98,7 +121,8 @@ class TestTrainer(TestCircus):
         return kwargs
 
     def test_add_watcher(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+        msg = make_message("add", name="test_add_watcher",
+                           cmd=self._get_cmd(),
                            options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
@@ -108,27 +132,43 @@ class TestTrainer(TestCircus):
         resp = self.cli.call(make_message("stop"))
         self.assertEqual(resp.get("status"), "ok")
 
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+        msg = make_message("add", name="add_watcher_arbiter_stopped",
+                           cmd=self._get_cmd(),
                            options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
+        # start it back
+        resp = self.cli.call(make_message("start"))
+        self.assertEqual(resp.get("status"), "ok")
+
     def test_add_watcher1(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+        resp = self.cli.call(make_message("list"))
+        before = resp.get('watchers')
+        before.sort()
+
+        msg = make_message("add", name="add_watcher1",
+                           cmd=self._get_cmd(),
                            options=self._get_options())
         self.cli.call(msg)
         resp = self.cli.call(make_message("list"))
-        self.assertEqual(resp.get('watchers'), ["test", "test1"])
+        after = resp.get('watchers')
+        self.assertEqual(len(before) + 1, len(after))
+        self.assertTrue("add_watcher1" in after)
+        self.assertFalse("add_watcher1" in before)
 
     def test_add_watcher2(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+        resp = self.cli.call(make_message("numwatchers"))
+        before = resp.get("numwatchers")
+
+        msg = make_message("add", name="add_watcher2", cmd=self._get_cmd(),
                            options=self._get_options())
         self.cli.call(msg)
         resp = self.cli.call(make_message("numwatchers"))
-        self.assertEqual(resp.get("numwatchers"), 2)
+        self.assertEqual(resp.get("numwatchers"), before + 1)
 
     def test_add_watcher3(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+        msg = make_message("add", name="add_watcher3", cmd=self._get_cmd(),
                            options=self._get_options())
         self.cli.call(msg)
         resp = self.cli.call(msg)
@@ -136,54 +176,63 @@ class TestTrainer(TestCircus):
 
     def test_add_watcher4(self):
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args,
+        msg = make_message("add", name="add_watcher4", cmd=cmd, args=args,
                            options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
     def test_add_watcher5(self):
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args,
+        name = "add_watcher5"
+        msg = make_message("add", name=name, cmd=cmd, args=args,
                            options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
-        resp = self.cli.call(make_message("start", name="test1"))
+        resp = self.cli.call(make_message("start", name=name))
         self.assertEqual(resp.get("status"), "ok")
-        resp = self.cli.call(make_message("status", name="test1"))
+        resp = self.cli.call(make_message("status", name=name))
         self.assertEqual(resp.get("status"), "active")
 
     def test_add_watcher6(self):
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args,
+        name = "add_watcher6"
+        msg = make_message("add", name=name, cmd=cmd, args=args,
                            start=True, options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
-        resp = self.cli.call(make_message("status", name="test1"))
+        resp = self.cli.call(make_message("status", name=name))
         self.assertEqual(resp.get("status"), "active")
 
     def test_add_watcher7(self):
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args, start=True,
+        name = "add_watcher7"
+        msg = make_message("add", name=name, cmd=cmd, args=args, start=True,
                            options=self._get_options(flapping_window=100))
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
 
-        resp = self.cli.call(make_message("status", name="test1"))
+        resp = self.cli.call(make_message("status", name=name))
         self.assertEqual(resp.get("status"), "active")
 
-        resp = self.cli.call(make_message("options", name="test1"))
+        resp = self.cli.call(make_message("options", name=name))
         options = resp.get('options', {})
         self.assertEqual(options.get("flapping_window"), 100)
 
     def test_rm_watcher(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
+        resp = self.cli.call(make_message("numwatchers"))
+        before = resp.get("numwatchers")
+        name = "rm_watcher"
+        msg = make_message("add", name=name, cmd=self._get_cmd(),
                            options=self._get_options())
         self.cli.call(msg)
-        msg = make_message("rm", name="test1")
+        resp = self.cli.call(make_message("numwatchers"))
+        self.assertEqual(resp.get("numwatchers"), before + 1)
+
+        msg = make_message("rm", name=name)
         self.cli.call(msg)
         resp = self.cli.call(make_message("numwatchers"))
-        self.assertEqual(resp.get("numwatchers"), 1)
+        self.assertEqual(resp.get("numwatchers"), before)
 
     def _test_stop(self):
         resp = self.cli.call(make_message("quit"))
@@ -221,7 +270,7 @@ class TestTrainer(TestCircus):
         msg1 = make_message("list", name="test")
         resp = self.cli.call(msg1)
         processes1 = resp.get('pids')
-        self.assertEqual(len(processes1), 1)
+        before = len(processes1)
 
         truncate_file(self.test_file)  # clean slate
         self.cli.call(make_message("reload"))
@@ -231,7 +280,7 @@ class TestTrainer(TestCircus):
         resp = self.cli.call(msg1)
 
         processes2 = resp.get('pids')
-        self.assertEqual(len(processes2), 1)
+        self.assertEqual(len(processes2), before)
         self.assertNotEqual(processes1[0], processes2[0])
 
     def test_stop_watchers(self):
@@ -257,78 +306,53 @@ class TestTrainer(TestCircus):
     def test_stop_watchers3(self):
         if 'TRAVIS' in os.environ:
             return
+
+        name = "stop_watchers3"
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args,
+        msg = make_message("add", name=name,
+                           cmd=cmd, args=args,
                            options=self._get_options())
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("status"), "ok")
-        resp = self.cli.call(make_message("start", name="test1"))
+        self.cli.call(make_message("start", name=name))
+
+        def _status():
+            resp = self.cli.call(make_message("status", name=name))
+            return resp.get('status')
+
+        self.assertEqual(_status(), "active")
+
+        resp = self.cli.call(make_message("start", name=name))
         self.assertEqual(resp.get("status"), "ok")
 
-        self.cli.call(make_message("stop", name="test1"))
-        resp = self.cli.call(make_message("status", name="test1"))
+        self.cli.call(make_message("stop", name=name))
+        resp = self.cli.call(make_message("status", name=name))
         self.assertEqual(resp.get('status'), "stopped")
+        self.assertEqual(_status(), "stopped")
 
-        resp = self.cli.call(make_message("status", name="test"))
-        self.assertEqual(resp.get('status'), "active")
 
-    def test_plugins(self):
-        # killing the setUp runner
-        self._stop_runners()
-        self.cli.stop()
+class TestTrainer(unittest.TestCase, _TestTrainer):
+    @classmethod
+    def setUpClass(cls):
+        _TestTrainer.setUpClass()
 
-        fd, datafile = mkstemp()
-        os.close(fd)
+    @classmethod
+    def tearDownClass(cls):
+        _TestTrainer.tearDownClass()
 
-        # setting up a circusd with a plugin
-        dummy_process = 'circus.tests.support.run_process'
-        plugin = 'circus.tests.test_arbiter.Plugin'
-        plugins = [{'use': plugin, 'file': datafile}]
-        self._run_circus(dummy_process, plugins=plugins)
 
-        # doing a few operations
-        def nb_processes():
-            return len(cli.send_message('list', name='test').get('pids'))
+class TestUDP(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        _setUpClass(cls)
 
-        def incr_processes():
-            return cli.send_message('incr', name='test')
-
-        # wait for the plugin to be started
-        self.assertTrue(poll_for(datafile, 'PLUGIN STARTED'))
-
-        cli = CircusClient()
-        self.assertEqual(nb_processes(), 1)
-        incr_processes()
-        self.assertEqual(nb_processes(), 2)
-        # wait for the plugin to receive the signal
-        self.assertTrue(poll_for(datafile, 'test:spawn'))
-        truncate_file(datafile)
-        incr_processes()
-        self.assertEqual(nb_processes(), 3)
-        # wait for the plugin to receive the signal
-        self.assertTrue(poll_for(datafile, 'test:spawn'))
-
-    def test_singleton(self):
-        self._stop_runners()
-
-        dummy_process = 'circus.tests.support.run_process'
-        self._run_circus(dummy_process, singleton=True)
-        cli = CircusClient()
-
-        # adding more than one process should fail
-        res = cli.send_message('incr', name='test')
-        self.assertEqual(res['numprocesses'], 1)
+    @classmethod
+    def tearDownClass(cls):
+        _tearDownClass(cls)
 
     def test_udp_discovery(self):
-        """test_udp_discovery: Test that when the circusd answer UDP call.
-
-        """
         if 'TRAVIS' in os.environ:
             return
-        self._stop_runners()
-
-        dummy_process = 'circus.tests.support.run_process'
-        self._run_circus(dummy_process)
 
         ANY = '0.0.0.0'
 
@@ -364,6 +388,60 @@ class TestTrainer(TestCircus):
         self.assertTrue(resp)
 
 
+class TestSingleton(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        _setUpClass(cls, singleton=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        _tearDownClass(cls)
+
+    def test_singleton(self):
+        # adding more than one process should fail
+        res = self.cli.send_message('incr', name='test')
+        self.assertEqual(res['numprocesses'], 1)
+
+
+class TestPlugin(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        fd, cls.datafile = mkstemp()
+        os.close(fd)
+        plugin = 'circus.tests.test_arbiter.Plugin'
+        plugins = [{'use': plugin, 'file': cls.datafile}]
+        _setUpClass(cls, plugins=plugins)
+
+    @classmethod
+    def tearDownClass(cls):
+        _tearDownClass(cls)
+
+    def test_plugins(self):
+        # doing a few operations
+        def nb_processes():
+            return len(self.cli.send_message('list', name='test').get('pids'))
+
+        def incr_processes():
+            return self.cli.send_message('incr', name='test')
+
+        # wait for the plugin to be started
+        self.assertTrue(poll_for(self.datafile, 'PLUGIN STARTED'))
+
+        self.assertEqual(nb_processes(), 1)
+        incr_processes()
+        self.assertEqual(nb_processes(), 2)
+
+        # wait for the plugin to receive the signal
+        self.assertTrue(poll_for(self.datafile, 'test:spawn'))
+        truncate_file(self.datafile)
+        incr_processes()
+        self.assertEqual(nb_processes(), 3)
+        # wait for the plugin to receive the signal
+        self.assertTrue(poll_for(self.datafile, 'test:spawn'))
+
+
 class MockWatcher(Watcher):
 
     def start(self):
@@ -375,25 +453,32 @@ class TestArbiter(unittest.TestCase):
     Unit tests for the arbiter class to codify requirements within
     behavior.
     """
+    @classmethod
+    def setUpClass(cls):
+        _setUpClass(cls, singleton=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        _tearDownClass(cls)
+
     def test_start_watcher(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1)
-        arbiter = Arbiter([], None, None)
-        arbiter.start_watcher(watcher)
+        self.arb.start_watcher(watcher)
         self.assertTrue(watcher.started)
 
     def test_start_watchers_with_autostart(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1,
                               autostart=False)
-        arbiter = Arbiter([], None, None)
-        arbiter.start_watcher(watcher)
+        self.arb.start_watcher(watcher)
         self.assertFalse(getattr(watcher, 'started', False))
 
     def test_start_watchers_warmup_delay(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1)
-        arbiter = Arbiter([], None, None, warmup_delay=10)
+        arbiter = self.arb
+
         with patch('circus.arbiter.sleep') as mock_sleep:
             arbiter.start_watcher(watcher)
-            mock_sleep.assert_called_with(10)
+            mock_sleep.assert_called_with(0)
 
         # now make sure we don't sleep when there is a autostart
         watcher = MockWatcher(name='foo', cmd='serve', priority=1,
@@ -403,12 +488,6 @@ class TestArbiter(unittest.TestCase):
             assert not mock_sleep.called
 
     def test_add_watcher(self):
-        arbiter = ThreadedArbiter([], DEFAULT_ENDPOINT_DEALER,
-                                  DEFAULT_ENDPOINT_SUB)
-        arbiter.add_watcher('foo', 'sleep 5')
-        try:
-            arbiter.start()
-            sleep(.1)
-            self.assertEqual(arbiter.watchers[0].status(), 'active')
-        finally:
-            arbiter.stop()
+        watcher = self.arb.add_watcher('foo', 'sleep 5')
+        self.arb.start_watcher(watcher)
+        self.assertEqual(watcher.status(), 'active')
