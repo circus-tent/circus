@@ -3,11 +3,11 @@
 The Plugin System
 #################
 
-Circus comes with a plugin system which let you interact with **circusd**.
+Circus comes with a plugin system which lets you interact with **circusd**.
 
 .. note::
 
-   We might add circusd-stats support to plugins later on
+   We might add circusd-stats support to plugins later on.
 
 
 A Plugin is composed of two parts:
@@ -21,14 +21,14 @@ A few examples of some plugins you could create with this system:
 
 - a notification system that sends e-mail alerts when a watcher is flapping
 - a logger
-- a tool that add or remove processes depending on the load
+- a tool that adds or removes processes depending on the load
 - etc.
 
 Circus itself provides a few plugins:
 
-- a statsd plugin, that sends to statsd all events emited by circusd
-- the flapping feature which avoid to re-launch processes infinitely when they
-  die too quickly.
+- a statsd plugin, that sends to statsd all events emitted by circusd
+- the flapping feature which avoids re-launching processes infinitely when
+  they die too quickly.
 - many more to come !
 
 
@@ -64,7 +64,7 @@ Writing a plugin
 Let's write a plugin that logs in a file every event happening in
 **circusd**. It takes one argument which is the filename.
 
-The plugin could look like this::
+The plugin may look like this::
 
     from circus.plugins import CircusPlugin
 
@@ -92,7 +92,7 @@ The plugin could look like this::
 That's it ! This class can be saved in any package/module, as long as it can be seen
 by Python.
 
-For example, :class:`Logger` could be found in a *plugins* module in a
+For example, :class:`Logger` may be found in a *plugins* module within a
 *myproject* package.
 
 Async requests
