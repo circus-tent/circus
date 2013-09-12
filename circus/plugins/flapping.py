@@ -6,6 +6,9 @@ from circus.plugins import CircusPlugin
 from circus.util import to_bool
 
 
+INFINITE_RETRY = -1
+
+
 class Flapping(CircusPlugin):
     """ Plugin that controls the flapping and stops the watcher in case
         it happens too often.
@@ -21,7 +24,8 @@ class Flapping(CircusPlugin):
     - **retry_in**: time in seconds to wait until we try to start a process
       that has been flapping. (default: 7)
     - **max_retry**: the number of times we attempt to start a process, before
-      we abandon and stop the whole watcher. (default: 5)
+      we abandon and stop the whole watcher. (default: 5) Set to -1 to
+      disable max_retry and retry indefinitely.
     - **active** -- define if the plugin is active or not (default: True).
       If the global flag is set to False, the plugin is not started.
 
@@ -106,7 +110,8 @@ class Flapping(CircusPlugin):
             duration = timeline[-1] - timeline[0] - self.check_delay
 
             if duration <= self._get_conf(conf, 'window'):
-                if tries < self._get_conf(conf, 'max_retry'):
+                max_retry = self._get_conf(conf, 'max_retry')
+                if tries < max_retry or max_retry == INFINITE_RETRY:
                     logger.info("%s: flapping detected: retry in %2ds",
                                 watcher_name, self._get_conf(conf, 'retry_in'))
 
