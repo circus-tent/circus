@@ -244,3 +244,12 @@ def run_plugin(klass, config, duration=300):
     plugin.loop.add_timeout(deadline, plugin.loop.stop)
     plugin.start()
     return _statsd
+
+
+class FakeProcess(object):
+
+    def __init__(self, pid, status, started=1, age=1):
+        self.status = status
+        self.pid = pid
+        self.started = started
+        self.age = age
