@@ -113,6 +113,11 @@ class TestWatcher(TestCircus):
         # this should clean up and create a new process
         watcher.reap_and_manage_processes()
 
+        # watcher ids should have been reused
+        wids = [p.wid for p in watcher.processes.values()]
+        self.assertEqual(max(wids), watcher.numprocesses)
+        self.assertEqual(sum(wids), sum(xrange(1, watcher.numprocesses + 1)))
+
         # we should have a new process here now
         self.assertEquals(len(watcher.processes), nb_proc)
         for p in watcher.processes.values():
