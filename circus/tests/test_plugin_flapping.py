@@ -58,3 +58,15 @@ class TestFlapping(TestCircus):
         timestamp_beyond_window = plugin.window + plugin.check_delay + 1
         plugin.timelines['test'] = [0, timestamp_beyond_window]
         plugin.check('test')
+
+    @patch.object(Flapping, 'cast')
+    @patch('circus.plugins.flapping.Timer')
+    def test_minus_one_max_retry_triggers_restart(self, timer_mock, cast_mock):
+        plugin = self.make_plugin(max_retry=-1)
+        plugin.timelines['test'] = [1, 2]
+        plugin.tries['test'] = 5
+
+        plugin.check('test')
+
+        cast_mock.assert_called_with("stop", name="test")
+        self.assertTrue(timer_mock.called)
