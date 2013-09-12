@@ -9,7 +9,7 @@ import mock
 from zmq.eventloop import ioloop
 
 from circus import logger
-from circus.process import RUNNING
+from circus.process import RUNNING, UNEXISTING
 
 from circus.stream import QueueStream
 from circus.tests.support import TestCircus, poll_for, truncate_file
