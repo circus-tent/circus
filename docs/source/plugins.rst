@@ -214,7 +214,8 @@ Flapping
       been flapping. (default: 7)
     **max_retry**
       the number of times we attempt to start a process that has been
-      flapping, before we abandon and stop the whole watcher. (default: 5)
+      flapping, before we abandon and stop the whole watcher. (default: 5) Set
+      to -1 to disable max_retry and retry indefinitely.
     **active**
       define if the plugin is active or not (default: True).  If the global
       flag is set to False, the plugin is not started.
