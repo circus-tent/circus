@@ -142,7 +142,7 @@ class Watcher(object):
       or the callabled itself and a boolean flag indicating if an
       exception occuring in the hook should not be ignored.
       Possible values for the hook name: *before_start*, *after_start*,
-      *befor_spawn*, *before_stop*, *after_stop*.
+      *before_spawn*, *before_stop*, *after_stop*.
 
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
