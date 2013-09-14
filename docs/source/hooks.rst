@@ -78,6 +78,11 @@ Available hooks are:
 - **after_stop**: called after the watcher is stopped. The hook result
   is ignored.
 
+- **before_signal**: called before a signal is sent to a watcher's process. If
+  the hook returns **False** the signal is not sent (except SIGKILL which is
+  always sent)
+
+- **after_signal**: called after a signal is sent to a watcher's process. 
 
 Hook signature
 ==============
@@ -91,6 +96,15 @@ A hook must follow this signature::
 Where **watcher** is the **Watcher** class instance, **arbiter** the
 **Arbiter** one, and **hook_name** the hook name.
 
+Special case for **before_signal** and **after_signal** hooks which must follow
+this signature::
+
+    def hook(watcher, arbiter, hook_name, pid, signum):
+        ...
+
+Where **pid** is the PID of the corresponding process and **signum** the 
+corresponding signal.
+        
 You can ignore those but being able to use the watcher and/or arbiter
 data and methods can be useful in some hooks.
 

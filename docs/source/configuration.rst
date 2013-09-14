@@ -235,13 +235,17 @@ watcher:NAME - as many sections as you want
 
     **hooks.***
         Available hooks: **before_start**, **before_spawn**, **after_start**,
-        **before_stop**, **after_stop**
+        **before_stop**, **after_stop**, **before_signal**, **after_signal**
 
         Define callback functions that hook into the watcher startup/shutdown process.
 
         If the hook returns **False** and if the hook is one of
         **before_start**, **before_spawn** or  **after_start**, the startup
         will be aborted.
+
+        If the hook is **before_signal** and returns **False**, then the
+        corresponding signal will not be sent (except SIGKILL which is always
+        sent)
 
         Notice that a hook that fails during the stopping process will not
         abort it.
