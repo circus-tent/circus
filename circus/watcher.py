@@ -202,7 +202,7 @@ class Watcher(object):
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
         self.ignore_hook_failure = ['before_stop', 'after_stop',
-                                    'before_kill', 'after_kill']
+                                    'before_signal', 'after_signal']
 
         self.respawn = respawn
         self.autostart = autostart
@@ -586,7 +586,11 @@ class Watcher(object):
     def send_signal(self, pid, signum):
         if pid in self.processes:
             process = self.processes[pid]
-            process.send_signal(signum)
+            if not(self.call_hook("before_signal", pid=pid, signum=signum)):
+                logger.debug("before_signal hook didn't return True "
+                             "=> signal %i is not sent to %i" % (signum, pid))
+                process.send_signal(signum)
+            self.call_hook("after_signal", pid=pid, signum=signum)
         else:
             logger.debug('process %s does not exist' % pid)
 

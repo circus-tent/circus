@@ -72,7 +72,7 @@ class ArbiterHandler(object):
               callable or the callabled itself and a boolean flag indicating if
               an exception occuring in the hook should not be ignored.
               Possible values for the hook name: *before_start*, *after_start*,
-              *before_stop*, *after_stop*, *before_kill*, *after_kill*
+              *before_stop*, *after_stop*, *before_signal*, *after_signal*
 
         - **controller** -- the zmq entry point
           (default: 'tcp://127.0.0.1:5555')
