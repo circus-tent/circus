@@ -142,7 +142,8 @@ class Watcher(object):
       or the callabled itself and a boolean flag indicating if an
       exception occuring in the hook should not be ignored.
       Possible values for the hook name: *before_start*, *after_start*,
-      *before_spawn*, *before_stop*, *after_stop*.
+      *before_spawn*, *before_stop*, *after_stop*., *before_kill*,
+      *after_kill*, *before_signal* or *after_signal*.
 
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
@@ -200,7 +201,8 @@ class Watcher(object):
         self.virtualenv = virtualenv
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
-        self.ignore_hook_failure = ['before_stop', 'after_stop']
+        self.ignore_hook_failure = ['before_stop', 'after_stop',
+                                    'before_kill', 'after_kill']
 
         self.respawn = respawn
         self.autostart = autostart
@@ -658,6 +660,7 @@ class Watcher(object):
         else:
             self._final_stop(limit=limit, restarting=restarting, async=async)
 
+
     def _final_stop(self, limit=None, restarting=False, async=True):
         # if we still got some active ones lets wait
         actives = self.get_active_processes()
@@ -724,13 +727,14 @@ class Watcher(object):
             elif wid is None:
                 return slot
 
-    def call_hook(self, hook_name):
+    def call_hook(self, hook_name, **kwargs):
         """Call a hook function"""
-        kwargs = {'watcher': self, 'arbiter': self.arbiter,
-                  'hook_name': hook_name}
+        hook_kwargs = {'watcher': self, 'arbiter': self.arbiter,
+                       'hook_name': hook_name}
+        hook_kwargs.update(kwargs)
         if hook_name in self.hooks:
             try:
-                result = self.hooks[hook_name](**kwargs)
+                result = self.hooks[hook_name](**hook_kwargs)
                 error = None
                 self.notify_event("hook_success",
                                   {"name": hook_name, "time": time.time()})
