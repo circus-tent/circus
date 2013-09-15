@@ -667,7 +667,6 @@ class Watcher(object):
         else:
             self._final_stop(limit=limit, restarting=restarting, async=async)
 
-
     def _final_stop(self, limit=None, restarting=False, async=True):
         # if we still got some active ones lets wait
         actives = self.get_active_processes()
