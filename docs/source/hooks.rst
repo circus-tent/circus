@@ -89,24 +89,45 @@ Hook signature
 
 A hook must follow this signature::
 
-    def hook(watcher, arbiter, hook_name):
+    def hook(watcher, arbiter, hook_name, **kwargs):
         ...
+        # If you don't return True, the hook can change
+        # the behavior of circus (depending on the hook)
+        return True
 
 
 Where **watcher** is the **Watcher** class instance, **arbiter** the
-**Arbiter** one, and **hook_name** the hook name.
+**Arbiter** one, **hook_name** the hook name and **kwargs** some additional
+optional parameters (depending on the hook type).
 
-Special case for **before_signal** and **after_signal** hooks which must follow
-this signature::
+For the moment, only **before_signal** and **after_signal** hooks offer some
+additional parameters in **kwargs**::
 
-    def hook(watcher, arbiter, hook_name, pid, signum):
+    def before_signal_hook(watcher, arbiter, hook_name, pid, signum, **kwargs):
         ...
+        # If you don't return True, circus won't send the signum signal
+        # (SIGKILL is always sent)
+        return True
 
 Where **pid** is the PID of the corresponding process and **signum** the 
 corresponding signal.
         
 You can ignore those but being able to use the watcher and/or arbiter
 data and methods can be useful in some hooks.
+
+Note that hooks are called with named arguments. So use the hook signature without
+changing argument names.
+
+As a last example, here is a super hook which can deal with all kind of signals::
+
+    def super_hook(watcher, arbiter, hook_name, **kwargs):
+        pid = None
+        signum = None
+        if hook_name in ('before_signal', 'after_signal'):
+            pid = kwargs['pid']
+            signum = kwargs['signum']
+        ...
+        return True
 
 Hook events
 ===========
