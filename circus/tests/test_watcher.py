@@ -335,12 +335,16 @@ class TestWatcherHooks(TestCircus):
         self.assertRaises(ImportError, self.run_with_hooks, hooks)
 
     def _test_hooks(self, hook_name='before_start', status='active',
-                    behavior=SUCCESS, call=None):
+                    behavior=SUCCESS, call=None,
+                    hook_kwargs_test_function=None):
         events = {'before_start_called': False}
 
-        def hook(watcher, arbiter, hook_name):
+        def hook(watcher, arbiter, hook_name, **kwargs):
             events['before_start_called'] = True
             events['arbiter_in_hook'] = arbiter
+
+            if hook_kwargs_test_function is not None:
+                hook_kwargs_test_function(kwargs)
 
             if behavior == SUCCESS:
                 return True
@@ -390,6 +394,24 @@ class TestWatcherHooks(TestCircus):
     def test_before_stop(self):
         self._test_hooks(hook_name='before_stop', status='stopped',
                          call=self._stop)
+
+    def _hook_signal_kwargs_test_function(self, kwargs):
+        self.assertTrue("pid" not in kwargs)
+        self.assertTrue("signum" not in kwargs)
+        self.assertTrue(kwargs["pid"] in (signal.SIGTERM, signal.SIGKILL))
+        self.assertTrue(int(kwargs["signum"]) > 1)
+
+    def test_before_signal(self):
+        func = self._hook_signal_kwargs_test_function
+        self._test_hooks(hook_name='before_signal', status='stopped',
+                         call=self._stop,
+                         hook_kwargs_test_function=func)
+
+    def test_after_signal(self):
+        func = self._hook_signal_kwargs_test_function
+        self._test_hooks(hook_name='after_signal', status='stopped',
+                         call=self._stop,
+                         hook_kwargs_test_function=func)
 
     def test_before_stop_fails(self):
         with captured_output('stdout'):
