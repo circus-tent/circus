@@ -11,14 +11,14 @@ Differences overview
 --------------------
 
 Supervisor & Circus have the same goals - they both manage processes and
-provide a command-line script — respectively **supervisord** and **circusd**—
+provide a command-line script — respectively **supervisord** and **circusd** —
 that reads a configuration file, forks new processes and maintain them alive.
 
 Circus has an extra feature: the ability to bind sockets and
 let the processes it manages use them. This "pre-fork" model is used
-by many web servers out there, like `Apache <https://httpd.apache.org/>`_ or 
-`Unicorn <http://unicorn.bogomips.org/>`_. Having this option in Circus 
-can simplify a web app stack: all processes and sockets are managed by 
+by many web servers out there, like `Apache <https://httpd.apache.org/>`_ or
+`Unicorn <http://unicorn.bogomips.org/>`_. Having this option in Circus
+can simplify a web app stack: all processes and sockets are managed by
 a single tool.
 
 Both projects provide a way to control a running daemon via another script.
@@ -33,7 +33,7 @@ what's going on and interact with the daemon. It uses web sockets and
 is developed in a separate project (`circus-web <https://github.com/mozilla-services/circus-web>`_.)
 
 There are many other subtle differences in the core design, we
-might list here one day… In the meantime, you can learn more about circus 
+might list here one day… In the meantime, you can learn more about circus
 internals in :ref:`design`.
 
 
@@ -49,14 +49,28 @@ Here's a small example of running an application with Supervisor. In this
 case, the application will be started and restarted in case it crashes ::
 
     [program:example]
-    command=/usr/local/bin/uwsgi --ini /etc/uwsgi.ini
-
+    command=npm start
+    directory=/home/www/my-server/
+    user=www-data
+    autostart=true
+    autorestart=true
+    redirect_stderr=True
 
 In Circus, the same configuration is done by::
 
     [watcher:example]
-    cmd=/usr/local/bin/uwsgi --ini /etc/uwsgi.ini
+    cmd=npm start
+    working_dir=/home/www/my-server/
+    user=www-data
+    stderr_stream.class=StdoutStream
 
+Notice that the stderr redirection is slightly different in Circus. The
+tool does not have a **tail** feature like in Supervisor, but will let
+you hook any piece of code to deal with the incoming stream. You
+can create your own stream hook (as a Class) and do whatever you want with
+the incoming stream. Circus provides some built-in stream classes
+like **StdoutStream** or **FileStream**.
 
 XXX add more complex examples
+
 
