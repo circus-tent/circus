@@ -7,7 +7,7 @@ import mock
 from zmq.eventloop import ioloop
 
 from circus.stats.collector import SocketStatsCollector
-from circus.tests.support import TestCircus, unittest
+from circus.tests.support import TestCircus
 from circus.stats.streamer import StatsStreamer
 from circus import util
 from circus import client
@@ -58,7 +58,6 @@ class TestStatsStreamer(TestCircus):
 
         raise NotImplementedError(cmd)
 
-    @unittest.skipIf('TRAVIS' in os.environ, 'Travis')
     def test_socketstats(self):
 
         endpoint = util.DEFAULT_ENDPOINT_DEALER
