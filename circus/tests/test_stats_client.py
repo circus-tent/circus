@@ -42,9 +42,6 @@ class TestStatsClient(TestCircus):
                 os.remove(file)
 
     def test_handler(self):
-        if os.getenv('TRAVIS', False):
-            return
-
         log = self._get_file()
         stream = {'stream': FileStream(log)}
         self._run_circus('circus.tests.test_stats_client.run_process',
