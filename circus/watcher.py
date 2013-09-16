@@ -588,7 +588,7 @@ class Watcher(object):
             process = self.processes[pid]
             hook_result = self.call_hook("before_signal",
                                          pid=pid, signum=signum)
-            if (signum != signal.SIGKILL) and not(hook_result):
+            if signum != signal.SIGKILL and not hook_result:
                 logger.debug("before_signal hook didn't return True "
                              "=> signal %i is not sent to %i" % (signum, pid))
             else:
