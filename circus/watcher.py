@@ -639,9 +639,20 @@ class Watcher(object):
         return dict([(proc.pid, proc.info())
                      for proc in self.processes.values()])
 
+    def block_until_stop_is_over(self):
+        """Block until the stop is over without blocking the event loop
+        """
+        if self.stopped:
+            logger.debug("stop is over for the %s watcher" % self.name)
+            return
+        logger.debug("still waiting for the %s watcher to stop" % self.name)
+        # we're back in .2 seconds
+        callmeback = self.block_until_stop_is_over
+        self.loop.add_timeout(time.time() + .2, callmeback)
+
     @util.debuglog
-    def stop(self, async=True, restarting=False):
-        """Stop.
+    def begin_stop(self):
+        """Begin the stop process
         """
         logger.debug('stopping the %s watcher' % self.name)
         logger.debug('gracefully stopping processes [%s] for %ss' % (
@@ -656,33 +667,28 @@ class Watcher(object):
 
         self._stopping = True
 
-        # delayed SIGKILL if async is True
+        # delayed SIGKILL
         limit = time.time() + self.graceful_timeout
 
-        if async:
-            self.loop.add_callback(functools.partial(self._final_stop,
-                                                     limit=limit,
-                                                     restarting=restarting,
-                                                     async=async))
-        else:
-            self._final_stop(limit=limit, restarting=restarting, async=async)
+        self.loop.add_callback(functools.partial(self._final_stop,
+                                                 limit=limit))
 
-    def _final_stop(self, limit=None, restarting=False, async=True):
+    @util.debuglog
+    def stop(self):
+        """Stop the watcher (blocking command without blocking the event loop)
+        """
+        import pdb ; pdb.set_trace()
+        self.begin_stop()
+        self.block_until_stop_is_over()
+
+    def _final_stop(self, limit=None):
         # if we still got some active ones lets wait
         actives = self.get_active_processes()
         if actives and time.time() < limit and limit is not None:
-            if async:
-                # we're back in .2 seconds
-                callmeback = functools.partial(self._final_stop, limit,
-                                               restarting, async)
-                self.loop.add_timeout(time.time() + .2, callmeback)
-                return
-            else:
-                while time.time() < limit:
-                    actives = self.get_active_processes()
-                    if not actives:
-                        break
-                    time.sleep(.1)
+            # we're back in .2 seconds
+            callmeback = functools.partial(self._final_stop, limit)
+            self.loop.add_timeout(time.time() + .2, callmeback)
+            return
 
         # kill the remaining with SIGKILL
         for process in actives:
@@ -707,10 +713,6 @@ class Watcher(object):
         # We ignore the hook result
         self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
-
-        if restarting:
-            logger.info('restarting %s', self.name)
-            self.loop.add_callback(self.start)
 
     def get_active_processes(self):
         """return a list of pids of active processes (not already stopped)"""
@@ -792,18 +794,13 @@ class Watcher(object):
         return True
 
     @util.debuglog
-    def restart(self, async=True):
-        """Restart.
+    def restart(self):
+        """Restart the watcher
+        (blocking command without blocking the event loop)
         """
         self.notify_event("restart", {"time": time.time()})
-        if not async:
-            self.stop(async=False)
-            if self.start():
-                logger.info('%s restarted', self.name)
-            else:
-                logger.info('Failed to restart %s', self.name)
-        else:
-            self.stop(async=async, restarting=True)
+        self.stop()
+        self.start()
 
     @util.debuglog
     def reload(self, graceful=True):
@@ -921,7 +918,7 @@ class Watcher(object):
             self.manage_processes()
         else:
             # graceful restart
-            self.stop(async=False, restarting=True)
+            self.restart()
 
     @util.debuglog
     def options(self, *args):

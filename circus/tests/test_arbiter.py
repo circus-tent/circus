@@ -233,12 +233,12 @@ class TestTrainer(TestCircus):
         self.assertNotEqual(processes1[0], processes2[0])
 
     def test_stop_watchers(self):
-        self.cli.call(make_message("stop", async=False))
+        self.cli.call(make_message("stop"))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get("status"), "stopped")
 
     def test_stop_watchers2(self):
-        self.cli.call(make_message("stop", name="test", async=False))
+        self.cli.call(make_message("stop", name="test"))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get('status'), "stopped")
 

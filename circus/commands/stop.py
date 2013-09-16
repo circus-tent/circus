@@ -16,8 +16,7 @@ class Stop(Command):
             {
                 "command": "stop",
                 "properties": {
-                    "name": "<name>",
-                    "async": True
+                    "name": "<name>"
                 }
             }
 
@@ -27,10 +26,9 @@ class Stop(Command):
         to the watcher corresponding to that name. Otherwise, all watchers
         will get stopped.
 
-        If ``async`` is True, processes will be killed in the background
-        (defaults: False).  Otherwise the call will return immediatly after
+        The call will return after
         calling SIGTERM on each process and then, after a delay,
-        asynchronously call SIGKILL on processes that are still up. The delay
+        call SIGKILL on processes that are still up. The delay
         before SIGKILL can be configured using the
         :ref:`graceful_timeout option <graceful_timeout>`.
 
@@ -40,7 +38,7 @@ class Stop(Command):
 
         ::
 
-            $ circusctl stop [<name>] [--async]
+            $ circusctl stop [<name>]
 
         Options
         +++++++
@@ -49,7 +47,6 @@ class Stop(Command):
     """
 
     name = "stop"
-    async = False
 
     def message(self, *args, **opts):
         if len(args) >= 1:
@@ -59,6 +56,13 @@ class Stop(Command):
     def execute(self, arbiter, props):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            watcher.stop(async=props.get('async', False))
+            return {"stop": watcher.stop()}
         else:
-            arbiter.stop_watchers(async=props.get('async', False))
+            arbiter.stop_watchers()
+            return {"stop": "plop"}
+
+    def console_msg(self, msg):
+        if "stop" in msg:
+            return "yop"
+        else:
+            return "foo"

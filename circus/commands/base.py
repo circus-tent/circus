@@ -2,7 +2,6 @@ import signal
 import copy
 import textwrap
 import time
-import functools
 
 from circus.exc import MessageError, ArgumentError
 from circus.commands import errors
@@ -41,14 +40,6 @@ class CommandMeta(type):
     def __new__(cls, name, bases, attrs):
         super_new = type.__new__
         parents = [b for b in bases if isinstance(b, CommandMeta)]
-        options = attrs.get('options', [])
-        async = attrs.get('async', False)
-
-        for index, option in enumerate(options):
-            if option[1] == 'async':
-                option = list(option)
-                options[index] = option[:2] + [async] + option[3:]
-                break
 
         if not parents:
             return super_new(cls, name, bases, attrs)
@@ -71,16 +62,9 @@ class Command(object):
     msg_type = "dealer"
     options = []
     properties = []
-    options = [('async', 'async', False, "Run asynchronously")]
-    async = False
 
     def async_execute(self, arbiter, opts):
-        async = opts.get('async', self.async)
-        if async:
-            callback = functools.partial(self.execute, arbiter, opts)
-            arbiter.loop.add_callback(callback)
-        else:
-            return self.execute(arbiter, opts)
+        return self.execute(arbiter, opts)
 
     def make_message(self, **props):
         name = props.pop("command", self.name)

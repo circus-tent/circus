@@ -18,8 +18,7 @@ class Restart(Command):
             {
                 "command": "restart",
                 "properties": {
-                    "name": "<name>",
-                    "async": True
+                    "name": "<name>"
                 }
             }
 
@@ -28,31 +27,20 @@ class Restart(Command):
         If the property name is present, then the reload will be applied
         to the watcher.
 
-        If the async flag is set to False, everything will be done
-        synchronously in circusd and it will be blocked while doing it.
-
-        If set to True (the default), the process killing will be done
-        asynchronously and the command will return before it's over.
-
-        Notice that async is only applied when you restart a specific
-        watcher, not the whole arbiter - in that case the call is blocking.
-
         Command line
         ------------
 
         ::
 
-            $ circusctl restart [<name>] [async] [--terminate]
+            $ circusctl restart [<name>] [--terminate]
 
         Options
         +++++++
 
         - <name>: name of the watcher
-        - --async: asynchronous process
         - --terminate; quit the node immediately
     """
     name = "restart"
-    async = True
 
     def message(self, *args, **opts):
         if len(args) > 1:
@@ -64,12 +52,9 @@ class Restart(Command):
         return self.make_message(**opts)
 
     def execute(self, arbiter, props):
-        async = props.get('async')
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            watcher.restart(async=async)
+            watcher.restart()
         else:
-            if async:
-                arbiter.loop.add_callback(arbiter.restart)
-            else:
-                arbiter.restart()
+            #arbiter.loop.add_callback(arbiter.restart)
+            arbiter.restart()

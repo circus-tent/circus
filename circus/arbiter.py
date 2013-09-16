@@ -485,7 +485,7 @@ class Arbiter(object):
                 self.sockets.close_all()
 
     def stop(self):
-        self.stop_watchers(stop_alive=True, async=False)
+        self.stop_watchers(stop_alive=True)
         # this will stop the loop and the closing
         # will finish in .start()
         self.loop.stop()
@@ -622,7 +622,7 @@ class Arbiter(object):
             watcher.start()
             sleep(self.warmup_delay)
 
-    def stop_watchers(self, stop_alive=False, async=True):
+    def stop_watchers(self, stop_alive=False):
         if not self.alive:
             return
 
@@ -631,10 +631,10 @@ class Arbiter(object):
             self.alive = False
 
         for watcher in self.iter_watchers(reverse=False):
-            watcher.stop(async=async)
+            watcher.stop()
 
     def restart(self):
-        self.stop_watchers(async=False)
+        self.stop_watchers()
         self.start_watchers()
 
 

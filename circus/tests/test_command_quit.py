@@ -11,13 +11,3 @@ class QuitTest(TestCircus):
         props = cmd.message('dummy')['properties']
         cmd.async_execute(arbiter, props)
         self.assertEqual(len(arbiter.watchers), 0)
-        props['async'] = True
-
-    def test_quit_async(self):
-        cmd = Quit()
-        arbiter = FakeArbiter()
-        self.assertTrue(arbiter.watchers[0].nb, 1)
-        props = cmd.message('dummy')['properties']
-        props['async'] = True
-        cmd.async_execute(arbiter, props)
-        self.assertEqual(len(arbiter.watchers), 0)
