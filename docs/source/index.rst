@@ -11,6 +11,8 @@ its python API. Circus is designed using `ZeroMQ <http://www.zeromq.org/>`_.
 See :ref:`design` for more details.
 
 If you are curious about what Circus brings compared to other projects, read :ref:`why`.
+If you're coming from Supervisor, read :ref:`supervisor`.
+
 
 .. warning::
 
@@ -163,6 +165,7 @@ More documentation
    design
    rationale
    examples
+   supervisor
    usecases
    troubleshooting
    glossary
