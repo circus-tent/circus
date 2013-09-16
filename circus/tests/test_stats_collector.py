@@ -1,4 +1,3 @@
-import os
 import socket
 import time
 from collections import defaultdict
@@ -165,7 +164,6 @@ class TestCollector(unittest.TestCase):
         self.assertEquals(len(res['pid']), 10)
         self.assertEquals(res['cpu'], 'N/A')
 
-    @unittest.skipIf('TRAVIS' in os.environ, 'Travis')
     def test_socketstats(self):
         collector = self._get_collector(SocketStatsCollector)
         collector.start()

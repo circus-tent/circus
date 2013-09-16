@@ -9,9 +9,6 @@ from circus.tests.support import unittest
 from circus.sockets import CircusSocket, CircusSockets
 
 
-TRAVIS = os.getenv('TRAVIS', False)
-
-
 class TestSockets(unittest.TestCase):
 
     def test_socket(self):

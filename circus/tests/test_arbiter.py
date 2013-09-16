@@ -72,8 +72,6 @@ class TestTrainer(TestCircus):
         self.assertEqual(len(resp.get('pids')), 4)
 
     def test_watchers(self):
-        if 'TRAVIS' in os.environ:
-            return
         resp = self.cli.call(make_message("list"))
         self.assertEqual(resp.get('watchers'), ["test"])
 
@@ -235,28 +233,16 @@ class TestTrainer(TestCircus):
         self.assertNotEqual(processes1[0], processes2[0])
 
     def test_stop_watchers(self):
-        if 'TRAVIS' in os.environ:
-            return
-        resp = self.cli.call(make_message("stop"))
-        self.assertEqual(resp.get("status"), "ok")
-
-    def test_stop_watchers1(self):
-        if 'TRAVIS' in os.environ:
-            return
         self.cli.call(make_message("stop", async=False))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get("status"), "stopped")
 
     def test_stop_watchers2(self):
-        if 'TRAVIS' in os.environ:
-            return
         self.cli.call(make_message("stop", name="test", async=False))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get('status'), "stopped")
 
     def test_stop_watchers3(self):
-        if 'TRAVIS' in os.environ:
-            return
         cmd, args = self._get_cmd_args()
         msg = make_message("add", name="test1", cmd=cmd, args=args,
                            options=self._get_options())
@@ -323,8 +309,6 @@ class TestTrainer(TestCircus):
         """test_udp_discovery: Test that when the circusd answer UDP call.
 
         """
-        if 'TRAVIS' in os.environ:
-            return
         self._stop_runners()
 
         dummy_process = 'circus.tests.support.run_process'
