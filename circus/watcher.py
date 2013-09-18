@@ -927,7 +927,7 @@ class Watcher(object):
         # trigger needed action
         self.stopped = False
         if num == 0:
-            self.manage_processes() # FIXME: must be async also
+            self.manage_processes()  # FIXME: must be async also
         else:
             # graceful restart
             self.restart(callback=callback)
