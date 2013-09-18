@@ -55,6 +55,7 @@ class Reload(Command):
     name = "reload"
     options = (Command.options +
                [('', 'terminate', False, "stop immediately")])
+    async = True
 
     def message(self, *args, **opts):
         if len(args) > 1:

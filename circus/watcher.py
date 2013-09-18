@@ -540,7 +540,7 @@ class Watcher(object):
                 time.sleep(self.warmup_delay)
                 return
 
-        self.stop()
+        self.stop_with_cb()
 
     def kill_process(self, process, sig=signal.SIGTERM):
         """Kill process.
@@ -651,7 +651,7 @@ class Watcher(object):
         self.loop.add_timeout(time.time() + .2, callmeback)
 
     @util.debuglog
-    def begin_stop(self):
+    def stop_with_cb(self, callback=None):
         """Begin the stop process
         """
         logger.debug('stopping the %s watcher' % self.name)
@@ -671,22 +671,16 @@ class Watcher(object):
         limit = time.time() + self.graceful_timeout
 
         self.loop.add_callback(functools.partial(self._final_stop,
+                                                 callback=callback,
                                                  limit=limit))
 
-    @util.debuglog
-    def stop(self):
-        """Stop the watcher (blocking command without blocking the event loop)
-        """
-        import pdb ; pdb.set_trace()
-        self.begin_stop()
-        self.block_until_stop_is_over()
-
-    def _final_stop(self, limit=None):
+    def _final_stop(self, callback, limit=None):
+        logger.debug(str(callback))
         # if we still got some active ones lets wait
         actives = self.get_active_processes()
         if actives and time.time() < limit and limit is not None:
             # we're back in .2 seconds
-            callmeback = functools.partial(self._final_stop, limit)
+            callmeback = functools.partial(self._final_stop, callback, limit)
             self.loop.add_timeout(time.time() + .2, callmeback)
             return
 
@@ -713,6 +707,8 @@ class Watcher(object):
         # We ignore the hook result
         self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
+        if callback is not None:
+            self.loop.add_callback(callback)
 
     def get_active_processes(self):
         """return a list of pids of active processes (not already stopped)"""
@@ -780,7 +776,7 @@ class Watcher(object):
 
         if not self.call_hook('after_start'):
             logger.debug('Aborting startup')
-            self.stop()
+            self.stop_with_cb()
             return False
 
         if self.stdout_redirector is not None:
@@ -793,14 +789,19 @@ class Watcher(object):
         self.notify_event("start", {"time": time.time()})
         return True
 
+    def _start_after_stop(self, callback=None):
+        self.start()
+        if callback is not None:
+            self.ioloop.add_callback(callback)
+
     @util.debuglog
-    def restart(self):
+    def restart(self, callback=None):
         """Restart the watcher
         (blocking command without blocking the event loop)
         """
         self.notify_event("restart", {"time": time.time()})
-        self.stop()
-        self.start()
+        cb = functools.partial(self._start_after_stop, callback)
+        self.stop_with_cb(callback=cb)
 
     @util.debuglog
     def reload(self, graceful=True):

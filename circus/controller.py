@@ -101,6 +101,27 @@ class Controller(object):
         self.udp_socket.sendto(json.dumps({'endpoint': self.endpoint}),
                                address)
 
+    def _dispatch_callback(self, msg, cid, mid, cast, cmd_name, resp=None):
+        if resp is None:
+            resp = ok()
+
+        if not isinstance(resp, (dict, list,)):
+            msg = "msg %r tried to send a non-dict: %s" % (msg, str(resp))
+            logger.error("msg %r tried to send a non-dict: %s", msg, str(resp))
+            return self.send_error(mid, cid, msg, "server error", cast=cast,
+                                   errno=errors.BAD_MSG_DATA_ERROR)
+
+        if isinstance(resp, list):
+            resp = {"results": resp}
+
+        self.send_ok(mid, cid, msg, resp, cast=cast)
+
+        if cmd_name.lower() == "quit":
+            if cid is not None:
+                self.stream.flush()
+
+            self.arbiter.stop()
+
     def dispatch(self, job):
         cid, msg = job
         try:
@@ -123,7 +144,16 @@ class Controller(object):
 
         try:
             cmd.validate(properties)
-            resp = cmd.async_execute(self.arbiter, properties)
+            if cmd.callback:
+                callback = functools.partial(self._dispatch_callback,
+                                             msg, cid, mid, cast, cmd_name)
+                cmd.execute_with_cb(self.arbiter, properties,
+                                    callback=callback)
+            else:
+                resp = cmd.execute(self.arbiter, properties)
+                # FIXME: split the callback in two parts, it's not clear
+                # to call manually the callback
+                self._dispatch_callback(msg, cid, cast, cmd_name, resp)
         except MessageError as e:
             return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.MESSAGE_ERROR)
@@ -137,26 +167,6 @@ class Controller(object):
             logger.debug("error: command %r: %s\n\n%s", msg, value, tb)
             return self.send_error(mid, cid, msg, reason, tb, cast=cast,
                                    errno=errors.COMMAND_ERROR)
-
-        if resp is None:
-            resp = ok()
-
-        if not isinstance(resp, (dict, list,)):
-            msg = "msg %r tried to send a non-dict: %s" % (msg, str(resp))
-            logger.error("msg %r tried to send a non-dict: %s", msg, str(resp))
-            return self.send_error(mid, cid, msg, "server error", cast=cast,
-                                   errno=errors.BAD_MSG_DATA_ERROR)
-
-        if isinstance(resp, list):
-            resp = {"results": resp}
-
-        self.send_ok(mid, cid, msg, resp, cast=cast)
-
-        if cmd_name.lower() == "quit":
-            if cid is not None:
-                self.stream.flush()
-
-            self.arbiter.stop()
 
     def send_error(self, mid, cid, msg, reason="unknown", tb=None, cast=False,
                    errno=errors.NOT_SPECIFIED):

@@ -16,7 +16,7 @@ class Stop(Command):
             {
                 "command": "stop",
                 "properties": {
-                    "name": "<name>"
+                    "name": "<name>",
                 }
             }
 
@@ -25,13 +25,6 @@ class Stop(Command):
         If the ``name`` property is present, then the stop will be applied
         to the watcher corresponding to that name. Otherwise, all watchers
         will get stopped.
-
-        The call will return after
-        calling SIGTERM on each process and then, after a delay,
-        call SIGKILL on processes that are still up. The delay
-        before SIGKILL can be configured using the
-        :ref:`graceful_timeout option <graceful_timeout>`.
-
 
         Command line
         ------------
@@ -47,22 +40,16 @@ class Stop(Command):
     """
 
     name = "stop"
+    callback = True
 
     def message(self, *args, **opts):
         if len(args) >= 1:
             return self.make_message(name=args[0], **opts)
         return self.make_message(**opts)
 
-    def execute(self, arbiter, props):
+    def execute_with_cb(self, arbiter, props, callback):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            return {"stop": watcher.stop()}
+            watcher.stop_with_cb(callback)
         else:
             arbiter.stop_watchers()
-            return {"stop": "plop"}
-
-    def console_msg(self, msg):
-        if "stop" in msg:
-            return "yop"
-        else:
-            return "foo"
