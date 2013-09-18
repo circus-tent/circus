@@ -2,7 +2,6 @@ import signal
 import copy
 import textwrap
 import time
-import functools
 
 from circus.exc import MessageError, ArgumentError
 from circus.commands import errors

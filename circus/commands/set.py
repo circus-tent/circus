@@ -19,8 +19,9 @@ class Set(Command):
                     "name": "nameofwatcher",
                     "options": {
                         "key1": "val1",
+                        ..
                     }
-                    ..
+                    "waiting": False
                 }
             }
 
@@ -33,13 +34,15 @@ class Set(Command):
 
         ::
 
-            $ circusctl set <name> <key1> <value1> <key2> <value2>
+            $ circusctl set <name> <key1> <value1> <key2> <value2> --waiting
 
 
     """
 
     name = "set"
     properties = ['name', 'options']
+    options = Command.waiting_options
+    callback = True
 
     def message(self, *args, **opts):
         if len(args) < 3:
@@ -56,9 +59,13 @@ class Set(Command):
             kvl = kv[0].lower()
             options[kvl] = convert_option(kvl, kv[1])
 
-        return self.make_message(name=watcher_name, options=options)
+        if opts.get('waiting', False):
+            return self.make_message(name=watcher_name, waiting=True,
+                                     options=options)
+        else:
+            return self.make_message(name=watcher_name, options=options)
 
-    def execute(self, arbiter, props):
+    def execute_with_cb(self, arbiter, props, callback):
         watcher = self._get_watcher(arbiter, props.pop('name'))
         action = 0
         for key, val in props.get('options', {}).items():
@@ -75,7 +82,7 @@ class Set(Command):
                 action = 1
 
         # trigger needed action
-        watcher.do_action(action)
+        watcher.do_action(action, callback=callback)
 
     def validate(self, props):
         super(Set, self).validate(props)

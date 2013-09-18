@@ -803,7 +803,7 @@ class Watcher(object):
     def _start_after_stop(self, callback=None):
         self.start()
         if callback is not None:
-            self.ioloop.add_callback(callback)
+            self.loop.add_callback(callback)
 
     @util.debuglog
     def restart(self, callback=None):
@@ -923,14 +923,14 @@ class Watcher(object):
         self.notify_event("updated", {"time": time.time()})
         return action
 
-    def do_action(self, num):
+    def do_action(self, num, callback):
         # trigger needed action
         self.stopped = False
         if num == 0:
-            self.manage_processes()
+            self.manage_processes() # FIXME: must be async also
         else:
             # graceful restart
-            self.restart()
+            self.restart(callback=callback)
 
     @util.debuglog
     def options(self, *args):

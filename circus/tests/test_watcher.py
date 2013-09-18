@@ -158,26 +158,10 @@ class TestWatcher(TestCircus):
         truncate_file(self.test_file)  # make sure we have a clean slate
 
         # we want a max age of 1 sec.
-        result = self.call('set', name='test',
+        result = self.call('set', name='test', waiting=True,
                            options={'max_age': 1, 'max_age_variance': 0})
 
         self.assertEquals(result.get('status'), 'ok')
-
-        # we want to wait for all 15 processes to restart
-        ready = False
-
-        def _ready(olds, news):
-            for pid in olds:
-                if pid in news:
-                    return False
-            return True
-
-        started = time.time()
-        while not ready:
-            if time.time() - started > 10.:
-                break
-            time.sleep(.1)
-            ready = _ready(initial_pids, self.pids())
 
         current_pids = self.pids()
         self.assertEqual(len(current_pids), 15)
@@ -322,7 +306,7 @@ class TestWatcherHooks(TestCircus):
                                    hooks=hooks)
 
     def _stop(self):
-        self.call("stop", name="test")
+        self.call("stop", name="test", waiting=True)
 
     def get_status(self):
         return self.call("status", name="test")['status']

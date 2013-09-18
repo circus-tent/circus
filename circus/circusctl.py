@@ -391,7 +391,6 @@ def main():
     logging.basicConfig()
     # TODO, we should ask the server for its command list
     commands = get_commands()
-
     globalopts = parse_arguments(sys.argv[1:], commands)
     if globalopts['endpoint'] is None:
         globalopts['endpoint'] = os.environ.get('CIRCUSCTL_ENDPOINT',
