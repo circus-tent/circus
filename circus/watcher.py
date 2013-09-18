@@ -560,7 +560,7 @@ class Watcher(object):
                 time.sleep(self.warmup_delay)
                 return
 
-        self.stop()
+        self.stop_with_cb()
 
     def kill_process(self, process, sig=signal.SIGTERM):
         """Kill process.
@@ -659,20 +659,10 @@ class Watcher(object):
         return dict([(proc.pid, proc.info())
                      for proc in self.processes.values()])
 
-    def block_until_stop_is_over(self):
-        """Block until the stop is over without blocking the event loop
-        """
-        if self.stopped:
-            logger.debug("stop is over for the %s watcher" % self.name)
-            return
-        logger.debug("still waiting for the %s watcher to stop" % self.name)
-        # we're back in .2 seconds
-        callmeback = self.block_until_stop_is_over
-        self.loop.add_timeout(time.time() + .2, callmeback)
-
     @util.debuglog
-    def begin_stop(self):
-        """Begin the stop process
+    def stop(self, callback=None):
+        """Begin the stop process and call the given callback
+        when it's over
         """
         logger.debug('stopping the %s watcher' % self.name)
         logger.debug('gracefully stopping processes [%s] for %ss' % (
@@ -691,25 +681,21 @@ class Watcher(object):
         limit = time.time() + self.graceful_timeout
 
         self.loop.add_callback(functools.partial(self._final_stop,
+                                                 callback=callback,
                                                  limit=limit))
 
-    @util.debuglog
-    def stop(self):
-        """Stop the watcher (blocking command without blocking the event loop)
-        """
-        self.begin_stop()
-        self.block_until_stop_is_over()
-
-    def _final_stop(self, limit=None):
+    def _final_stop(self, callback, limit=None):
         # if we still got some active ones lets wait
         actives = self.get_active_processes()
         if actives and time.time() < limit and limit is not None:
             # we're back in .2 seconds
-            callmeback = functools.partial(self._final_stop, limit)
+            logger.debug('waiting for the end of graceful timeout')
+            callmeback = functools.partial(self._final_stop, callback, limit)
             self.loop.add_timeout(time.time() + .2, callmeback)
             return
 
         # kill the remaining with SIGKILL
+        logger.debug("sending SIGKILL")
         for process in actives:
             self.kill_processes(signal.SIGKILL)
 
@@ -732,6 +718,8 @@ class Watcher(object):
         # We ignore the hook result
         self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
+        if callback is not None:
+            self.loop.add_callback(callback)
 
     def get_active_processes(self):
         """return a list of pids of active processes (not already stopped)"""
@@ -812,14 +800,19 @@ class Watcher(object):
         self.notify_event("start", {"time": time.time()})
         return True
 
+    def _start_after_stop(self, callback=None):
+        self.start()
+        if callback is not None:
+            self.ioloop.add_callback(callback)
+
     @util.debuglog
-    def restart(self):
-        """Restart the watcher
-        (blocking command without blocking the event loop)
+    def restart(self, callback=None):
+        """Begin the restart process of the watcher
+        and call given callback when it's over
         """
         self.notify_event("restart", {"time": time.time()})
-        self.stop()
-        self.start()
+        cb = functools.partial(self._start_after_stop, callback)
+        self.stop_with_cb(callback=cb)
 
     @util.debuglog
     def reload(self, graceful=True):

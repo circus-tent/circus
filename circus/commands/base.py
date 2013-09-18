@@ -2,6 +2,7 @@ import signal
 import copy
 import textwrap
 import time
+import functools
 
 from circus.exc import MessageError, ArgumentError
 from circus.commands import errors
@@ -62,9 +63,12 @@ class Command(object):
     msg_type = "dealer"
     options = []
     properties = []
+    callback = False  # not a good name but a temp one
+                      # to avoid to use async between
+                      # the migration
 
-    def async_execute(self, arbiter, opts):
-        return self.execute(arbiter, opts)
+    def execute_with_cb(self, arbiter, opts, callback):
+        raise NotImplementedError("execute_with_cb function not implemented")
 
     def make_message(self, **props):
         name = props.pop("command", self.name)
