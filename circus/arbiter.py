@@ -7,6 +7,7 @@ import sys
 from time import sleep
 import select
 import socket
+import functools
 
 import zmq
 from zmq.eventloop import ioloop
@@ -110,7 +111,7 @@ class Arbiter(object):
         self._init_context(context)
         self.pid = os.getpid()
         self._watchers_names = {}
-        self.alive = True
+        self._stopping = False
         self._lock = RLock()
         self.debug = debug
         if self.debug:
@@ -484,11 +485,21 @@ class Arbiter(object):
             if len(self.sockets) > 0:
                 self.sockets.close_all()
 
-    def stop(self):
-        self.stop_watchers(stop_alive=True)
+    def stop_loop(self):
         # this will stop the loop and the closing
         # will finish in .start()
         self.loop.stop()
+
+    def _stop_cb(self, main_callback):
+        if main_callback is not None:
+            self.loop.add_callback(main_callback)
+        self.loop.add_callback(self.stop_loop)
+
+    def stop(self, callback=None):
+        logger.info('Arbiter exiting')
+        self._stopping = True
+        cb = functools.partial(self._stop_cb, callback)
+        self._stop_watchers(callback=cb)
 
     def reap_processes(self):
         # map watcher to pids
@@ -520,7 +531,7 @@ class Arbiter(object):
                     raise
 
     def manage_watchers(self):
-        if not self.alive:
+        if self._stopping:
             return
 
         with self._lock:
@@ -547,6 +558,8 @@ class Arbiter(object):
         Run the :func:`prereload_fn` callable if any, then gracefuly
         reload all watchers.
         """
+        if self._stopping:
+            return
         if self.prereload_fn is not None:
             self.prereload_fn(self)
 
@@ -608,6 +621,8 @@ class Arbiter(object):
 
         - **name**: name of the watcher to delete
         """
+        if self._stopping:
+            return
         logger.debug('Deleting %r watcher', name)
 
         # remove the watcher from the list
@@ -618,24 +633,39 @@ class Arbiter(object):
         watcher.stop()
 
     def start_watchers(self):
+        if self._stopping:
+            return
         for watcher in self.iter_watchers():
             watcher.start()
             sleep(self.warmup_delay)
 
-    def stop_watchers(self, stop_alive=False):
-        if not self.alive:
-            return
-
-        if stop_alive:
-            logger.info('Arbiter exiting')
-            self.alive = False
-
+    def _stop_watchers_cb(self, main_callback):
         for watcher in self.iter_watchers(reverse=False):
-            watcher.stop()
+            if not watcher.stopped:
+                return
+        if main_callback is not None:
+            self.loop.add_callback(main_callback)
 
-    def restart(self):
-        self.stop_watchers()
+    def _stop_watchers(self, callback=None):
+        for watcher in self.iter_watchers(reverse=False):
+            cb = functools.partial(self._stop_watchers_cb, callback)
+            watcher.stop(callback=cb)
+
+    def stop_watchers(self, callback=None):
+        if self._stopping:
+            return
+        self._stop_watchers(callback)
+
+    def _restart_cb(self, main_callback):
         self.start_watchers()
+        if main_callback is not None:
+            self.loop.add_callback(main_callback)
+
+    def restart(self, callback=None):
+        if self._stopping:
+            return
+        cb = functools.partial(self._restart_cb, callback)
+        self.stop_watchers(callback=cb)
 
 
 class ThreadedArbiter(Arbiter, Thread):

@@ -144,7 +144,7 @@ class Controller(object):
 
         try:
             cmd.validate(properties)
-            if properties.get('waiting', False):
+            if properties.get('waiting', False) and cmd.callback:
                 callback = functools.partial(self._dispatch_callback,
                                              msg, cid, mid, cast, cmd_name)
                 cmd.execute_with_cb(self.arbiter, properties,

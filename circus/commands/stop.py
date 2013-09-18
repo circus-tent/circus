@@ -50,21 +50,17 @@ class Stop(Command):
     """
 
     name = "stop"
-    waiting = False
-    options = [('waiting', 'waiting', False,
-                "Waiting the real end of the process")]
+    callback = True
+    options = Command.waiting_options
 
     def message(self, *args, **opts):
         if len(args) >= 1:
             return self.make_message(name=args[0], **opts)
         return self.make_message(**opts)
 
-    def execute(self, arbiter, props):
-        return self.execute_with_cb(arbiter, props, None)
-
     def execute_with_cb(self, arbiter, props, callback):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            return watcher.stop(callback)
+            watcher.stop(callback)
         else:
-            arbiter.stop_watchers()
+            arbiter.stop_watchers(callback=callback)

@@ -560,7 +560,7 @@ class Watcher(object):
                 time.sleep(self.warmup_delay)
                 return
 
-        self.stop_with_cb()
+        self.stop()
 
     def kill_process(self, process, sig=signal.SIGTERM):
         """Kill process.
@@ -683,7 +683,6 @@ class Watcher(object):
         self.loop.add_callback(functools.partial(self._final_stop,
                                                  callback=callback,
                                                  limit=limit))
-        return {"plop": "coucou"}
 
     def _final_stop(self, callback, limit=None):
         # if we still got some active ones lets wait
@@ -813,7 +812,7 @@ class Watcher(object):
         """
         self.notify_event("restart", {"time": time.time()})
         cb = functools.partial(self._start_after_stop, callback)
-        self.stop_with_cb(callback=cb)
+        self.stop(callback=cb)
 
     @util.debuglog
     def reload(self, graceful=True):
