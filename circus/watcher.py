@@ -421,20 +421,8 @@ class Watcher(object):
         if self.stopped:
             return
 
-        # removing old processes
         if self.max_age:
-            max_age = self.max_age + randint(0, self.max_age_variance)
-
-            for process in list(self.processes.itervalues()):
-                if process.age() <= max_age:
-                    continue
-
-                logger.debug('%s: expired, respawning', self.name)
-                self.notify_event("expired", {"process_pid": process.pid,
-                                              "time": time.time()})
-                self.processes.pop(process.pid)
-                if process.status != DEAD_OR_ZOMBIE:
-                    self.kill_process(process)
+            self.remove_expired_processes()
 
         # adding fresh processes
         if (self.respawn and len(self.processes) < self.numprocesses
@@ -452,6 +440,38 @@ class Watcher(object):
             else:
                 self.processes.pop(process.pid)
                 self.kill_process(process)
+
+    @util.debuglog
+    def remove_expired_processes(self):
+        max_age = self.max_age + randint(0, self.max_age_variance)
+
+        for process in list(self.processes.itervalues()):
+            if process.age() > max_age:
+                self.kill_process_gracefully(process)
+
+    @util.debuglog
+    def kill_process_gracefully(self, process):
+        if not process._stopping and process.status != DEAD_OR_ZOMBIE:
+            logger.debug('%s: expired, respawning', self.name)
+            self.notify_event("expired", {"process_pid": process.pid,
+                                          "time": time.time()})
+            process._stopping = True
+            self.kill_process(process, signal.SIGTERM)
+            limit = time.time() + self.graceful_timeout
+            self.wait_gracefully(process, limit)
+
+    @util.debuglog
+    def wait_gracefully(self, process, limit):
+        actives = self.get_active_processes()
+        if process in actives and time.time() < limit and limit is not None:
+            # we're back in .2 seconds
+            callmeback = functools.partial(self.wait_gracefully,
+                                           process, limit)
+            self.loop.add_timeout(time.time() + .2, callmeback)
+            return
+        if process in actives:
+            self.kill_process(process, signal.SIGKILL)
+            self.processes.pop(process.pid)
 
     @util.debuglog
     def reap_and_manage_processes(self):
@@ -677,7 +697,6 @@ class Watcher(object):
     def stop(self):
         """Stop the watcher (blocking command without blocking the event loop)
         """
-        import pdb ; pdb.set_trace()
         self.begin_stop()
         self.block_until_stop_is_over()
 

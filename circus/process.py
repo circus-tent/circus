@@ -111,6 +111,7 @@ class Process(object):
         self.pipe_stderr = pipe_stderr
         self.close_child_stdout = close_child_stdout
         self.close_child_stderr = close_child_stderr
+        self._stopping = False
 
         if spawn:
             self.spawn()
