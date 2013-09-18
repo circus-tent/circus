@@ -37,6 +37,10 @@ A time out usually happens in one of those cases:
 
 For #1, make sure you are hitting the right place
 by checking your --endpoint option.
+
+For #2, if you are not expecting a result to
+come back, increase your timeout option value
+(particularly with waiting switches)
 """
 
 
