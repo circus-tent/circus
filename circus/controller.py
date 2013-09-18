@@ -144,7 +144,7 @@ class Controller(object):
 
         try:
             cmd.validate(properties)
-            if cmd.callback:
+            if properties.get('waiting', False):
                 callback = functools.partial(self._dispatch_callback,
                                              msg, cid, mid, cast, cmd_name)
                 cmd.execute_with_cb(self.arbiter, properties,
@@ -153,7 +153,7 @@ class Controller(object):
                 resp = cmd.execute(self.arbiter, properties)
                 # FIXME: split the callback in two parts, it's not clear
                 # to call manually the callback
-                self._dispatch_callback(msg, cid, cast, cmd_name, resp)
+                self._dispatch_callback(msg, cid, mid, cast, cmd_name, resp)
         except MessageError as e:
             return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.MESSAGE_ERROR)

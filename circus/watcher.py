@@ -683,6 +683,7 @@ class Watcher(object):
         self.loop.add_callback(functools.partial(self._final_stop,
                                                  callback=callback,
                                                  limit=limit))
+        return {"plop": "coucou"}
 
     def _final_stop(self, callback, limit=None):
         # if we still got some active ones lets wait

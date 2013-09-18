@@ -63,9 +63,7 @@ class Command(object):
     msg_type = "dealer"
     options = []
     properties = []
-    callback = False  # not a good name but a temp one
-                      # to avoid to use async between
-                      # the migration
+    waiting = False
 
     def execute_with_cb(self, arbiter, opts, callback):
         raise NotImplementedError("execute_with_cb function not implemented")

@@ -17,6 +17,7 @@ class Stop(Command):
                 "command": "stop",
                 "properties": {
                     "name": "<name>",
+                    "waiting": False
                 }
             }
 
@@ -26,12 +27,21 @@ class Stop(Command):
         to the watcher corresponding to that name. Otherwise, all watchers
         will get stopped.
 
+        If ``waiting`` is False (default), the call will return immediatly
+        after calling SIGTERM on each process.
+
+        If ``waiting`` is True, the call will return only when the stop process
+        is completly ended. Because of the
+        :ref:`graceful_timeout option <graceful_timeout>`, it can take some
+        time.
+
+
         Command line
         ------------
 
         ::
 
-            $ circusctl stop [<name>]
+            $ circusctl stop [<name>] [--waiting]
 
         Options
         +++++++
@@ -40,16 +50,21 @@ class Stop(Command):
     """
 
     name = "stop"
-    callback = True
+    waiting = False
+    options = [('waiting', 'waiting', False,
+                "Waiting the real end of the process")]
 
     def message(self, *args, **opts):
         if len(args) >= 1:
             return self.make_message(name=args[0], **opts)
         return self.make_message(**opts)
 
+    def execute(self, arbiter, props):
+        return self.execute_with_cb(arbiter, props, None)
+
     def execute_with_cb(self, arbiter, props, callback):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            watcher.stop_with_cb(callback)
+            return watcher.stop(callback)
         else:
             arbiter.stop_watchers()
