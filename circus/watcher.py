@@ -447,31 +447,7 @@ class Watcher(object):
 
         for process in list(self.processes.itervalues()):
             if process.age() > max_age:
-                self.kill_process_gracefully(process)
-
-    @util.debuglog
-    def kill_process_gracefully(self, process):
-        if not process._stopping and process.status != DEAD_OR_ZOMBIE:
-            logger.debug('%s: expired, respawning', self.name)
-            self.notify_event("expired", {"process_pid": process.pid,
-                                          "time": time.time()})
-            process._stopping = True
-            self.kill_process(process, signal.SIGTERM)
-            limit = time.time() + self.graceful_timeout
-            self.wait_gracefully(process, limit)
-
-    @util.debuglog
-    def wait_gracefully(self, process, limit):
-        actives = self.get_active_processes()
-        if process in actives and time.time() < limit and limit is not None:
-            # we're back in .2 seconds
-            callmeback = functools.partial(self.wait_gracefully,
-                                           process, limit)
-            self.loop.add_timeout(time.time() + .2, callmeback)
-            return
-        if process in actives:
-            self.kill_process(process, signal.SIGKILL)
-            self.processes.pop(process.pid)
+                self.kill_process(process)
 
     @util.debuglog
     def reap_and_manage_processes(self):
@@ -562,8 +538,28 @@ class Watcher(object):
 
         self.stop()
 
-    def kill_process(self, process, sig=signal.SIGTERM):
-        """Kill process.
+    def send_signal_process(self, process, signum):
+        """Send the signum signal to the process
+
+        The signal is sent to all the children then
+        to the process itself
+        """
+        try:
+            # sending the same signal to all the children
+            for child_pid in process.children():
+                process.send_signal_child(child_pid, signum)
+                self.notify_event("kill", {"process_pid": child_pid,
+                                  "time": time.time()})
+            # now sending the signal to the process itself
+            self.send_signal(process.pid, signum)
+            self.notify_event("kill", {"process_pid": process.pid,
+                                       "time": time.time()})
+        except NoSuchProcess:
+            # already dead !
+            return
+
+    def kill_process_now(self, process):
+        """Kill process now (SIGKILL, remove redirections)
         """
         # remove redirections
         if self.stdout_redirector is not None and process.stdout is not None:
@@ -571,33 +567,55 @@ class Watcher(object):
 
         if self.stderr_redirector is not None and process.stderr is not None:
             self.stderr_redirector.remove_redirection(process.stderr)
-
-        logger.debug("%s: kill process %s", self.name, process.pid)
-        try:
-            # sending the same signal to all the children
-            for child_pid in process.children():
-                process.send_signal_child(child_pid, sig)
-                self.notify_event("kill", {"process_pid": child_pid,
-                                  "time": time.time()})
-
-            # now sending the signal to the process itself
-            self.send_signal(process.pid, sig)
-            self.notify_event("kill", {"process_pid": process.pid,
-                                       "time": time.time()})
-        except NoSuchProcess:
-            # already dead !
-            return
-
+        self.send_signal_process(process, signal.SIGKILL)
         process.stop()
 
-    @util.debuglog
-    def kill_processes(self, sig):
-        """Kill all the processes of this watcher.
+    def _kill_process_cb(self, process, limit, main_callback):
+        """Callback to wait until graceful_timeout
         """
+        if time.time() < limit and process.is_alive():
+            # we are back in 1 second
+            callmeback = functools.partial(self._kill_process_cb, process,
+                                           limit, main_callback)
+            self.loop.add_timeout(time.time() + 1, callmeback)
+            return
+        self.kill_process_now(process)
+        if main_callback is not None:
+            self.loop.add_callback(main_callback)
 
-        for process in self.get_active_processes():
+    @util.debuglog
+    def kill_process(self, process, callback=None):
+        """Kill process (SIGTERM, graceful_timeout then SIGKILL)
+        """
+        logger.debug("%s: kill process %s", self.name, process.pid)
+        self.send_signal_process(process, signal.SIGTERM)
+        now = time.time()
+        limit = now + self.graceful_timeout
+        cb = functools.partial(self._kill_process_cb, process,
+                               limit, callback)
+        self.loop.add_timeout(now + 1, cb)
+
+    def _kill_processes_cb(self, remaining_processes, process_killed,
+                           main_callback):
+        """Call the main callback if the last process is completly stopped
+
+        This callback is called after each process shutdown process
+        """
+        remaining_processes.remove(process_killed)
+        if len(remaining_processes) == 0 and main_callback is not None:
+            # Last process is killed => we can call the main callback
+            self.loop.add_callback(main_callback)
+
+    @util.debuglog
+    def kill_processes(self, callback=None):
+        """Kill all processes (SIGTERM, graceful_timeout then SIGKILL)
+        """
+        active_processes = self.get_active_processes()
+        for process in active_processes:
             try:
-                self.kill_process(process, sig)
+                cb = functools.partial(self._kill_processes_cb,
+                                       active_processes, process, callback)
+                self.kill_process(process, cb)
             except OSError as e:
                 if e.errno != errno.ESRCH:
                     raise
@@ -616,14 +634,6 @@ class Watcher(object):
             self.call_hook("after_signal", pid=pid, signum=signum)
         else:
             logger.debug('process %s does not exist' % pid)
-
-    def send_signal_processes(self, signum):
-        for pid in self.processes:
-            try:
-                self.send_signal(pid, signum)
-            except OSError as e:
-                if e.errno != errno.ESRCH:
-                    raise
 
     @util.debuglog
     def send_signal_child(self, pid, child_id, signum):
@@ -671,34 +681,11 @@ class Watcher(object):
         # We ignore the hook result
         self.call_hook('before_stop')
 
-        # sending a SIGTERM to all processes
-        for process in self.get_active_processes():
-            self.send_signal(process.pid, signal.SIGTERM)
-
         self._stopping = True
+        cb = functools.partial(self._stop_cb, callback)
+        self.kill_processes(cb)
 
-        # delayed SIGKILL
-        limit = time.time() + self.graceful_timeout
-
-        self.loop.add_callback(functools.partial(self._final_stop,
-                                                 callback=callback,
-                                                 limit=limit))
-
-    def _final_stop(self, callback, limit=None):
-        # if we still got some active ones lets wait
-        actives = self.get_active_processes()
-        if actives and time.time() < limit and limit is not None:
-            # we're back in .2 seconds
-            logger.debug('waiting for the end of graceful timeout')
-            callmeback = functools.partial(self._final_stop, callback, limit)
-            self.loop.add_timeout(time.time() + .2, callmeback)
-            return
-
-        # kill the remaining with SIGKILL
-        logger.debug("sending SIGKILL")
-        for process in actives:
-            self.kill_processes(signal.SIGKILL)
-
+    def _stop_cb(self, main_callback):
         # stop redirectors
         if self.stdout_redirector is not None:
             self.stdout_redirector.stop()
@@ -718,8 +705,8 @@ class Watcher(object):
         # We ignore the hook result
         self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
-        if callback is not None:
-            self.loop.add_callback(callback)
+        if main_callback is not None:
+            self.loop.add_callback(main_callback)
 
     def get_active_processes(self):
         """return a list of pids of active processes (not already stopped)"""

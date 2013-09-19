@@ -232,6 +232,10 @@ class Process(object):
         return self._worker.poll()
 
     @debuglog
+    def is_alive(self):
+        return self.poll() is None
+
+    @debuglog
     def send_signal(self, sig):
         """Sends a signal **sig** to the process."""
         logger.debug("sending signal %s to %s" % (sig, self.pid))
@@ -239,7 +243,17 @@ class Process(object):
 
     @debuglog
     def stop(self):
-        """Terminate the process."""
+        """Stop the process and close stdout/stderr
+
+        If the corresponding process is still here
+        (normally it's already killed by the watcher),
+        a SIGTERM is sent, then a SIGKILL after 1 second.
+
+        The shutdown process (SIGTERM then SIGKILL) is
+        normally taken by the watcher. So if the process
+        is still there here, it's a kind of bad behavior
+        because the graceful timeout won't be respected here.
+        """
         try:
             try:
                 if self._worker.poll() is None:
