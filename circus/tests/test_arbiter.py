@@ -251,7 +251,7 @@ class TestTrainer(TestCircus):
         resp = self.cli.call(make_message("start", name="test1"))
         self.assertEqual(resp.get("status"), "ok")
 
-        self.cli.call(make_message("stop", name="test1"))
+        self.cli.call(make_message("stop", name="test1", waiting=True))
         resp = self.cli.call(make_message("status", name="test1"))
         self.assertEqual(resp.get('status'), "stopped")
 

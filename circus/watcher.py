@@ -674,6 +674,11 @@ class Watcher(object):
         """Begin the stop process and call the given callback
         when it's over
         """
+        if self.stopped:
+            if callback is not None:
+                self.loop.add_callback(callback)
+            return
+
         logger.debug('stopping the %s watcher' % self.name)
         logger.debug('gracefully stopping processes [%s] for %ss' % (
                      self.name, self.graceful_timeout))

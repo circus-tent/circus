@@ -61,6 +61,6 @@ class Stop(Command):
     def execute_with_cb(self, arbiter, props, callback):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            watcher.stop(callback)
+            watcher.stop(callback=callback)
         else:
             arbiter.stop_watchers(callback=callback)
