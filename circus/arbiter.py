@@ -622,31 +622,34 @@ class Arbiter(object):
         return watcher
 
     @synchronized
-    def rm_watcher(self, name):
+    def rm_watcher(self, name, callback=None):
         """Deletes a watcher.
 
         Options:
 
         - **name**: name of the watcher to delete
         """
-        if self._stopping:
-            return
         logger.debug('Deleting %r watcher', name)
+        self._running_command = "rm_watcher"
 
         # remove the watcher from the list
         watcher = self._watchers_names.pop(name)
         del self.watchers[self.watchers.index(watcher)]
 
         # stop the watcher
-        watcher.stop()
+        cb = functools.partial(self._rm_watcher_cb, callback)
+        watcher._stop(cb)
+
+    def _rm_watcher_cb(self, main_callback):
+        self._running_command = None
+        if main_callback is not None:
+            self.loop.add_callback(main_callback)
 
     @synchronized
     def start_watchers(self):
         return self._start_watchers()
 
     def _start_watchers(self):
-        if self._stopping:
-            return
         for watcher in self.iter_watchers():
             watcher.start()
             sleep(self.warmup_delay)
