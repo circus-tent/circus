@@ -671,7 +671,7 @@ class Watcher(object):
 
     @util.synchronized
     def stop(self, callback=None):
-        self.arbiter._running_command = "stop"
+        self.set_arbiter_running_command("stop")
         return self._stop(callback=callback)
 
     @util.debuglog
@@ -715,7 +715,7 @@ class Watcher(object):
         # We ignore the hook result
         self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
-        self.arbiter._running_command = None
+        self.set_arbiter_running_command(None)
         if main_callback is not None:
             self.loop.add_callback(main_callback)
 
@@ -800,13 +800,13 @@ class Watcher(object):
 
     def _start_after_stop(self, callback=None):
         self.start()
-        self.arbiter._running_command = None
+        self.set_arbiter_running_command(None)
         if callback is not None:
             self.loop.add_callback(callback)
 
     @util.synchronized
     def restart(self, callback=None):
-        self.arbiter._running_command = "restart"
+        self.set_arbiter_running_command("restart")
         return self._restart(callback=callback)
 
     @util.debuglog
@@ -952,3 +952,7 @@ class Watcher(object):
             else:
                 options.append((name, getattr(self, name)))
         return options
+
+    def set_arbiter_running_command(self, command_name):
+        if self.arbiter is not None:
+            self.arbiter._running_command = command_name

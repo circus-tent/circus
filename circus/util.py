@@ -720,10 +720,9 @@ def synchronized(f):
             arbiter = self.arbiter
         else:
             arbiter = self
-        if arbiter._running_command is not None:
-            e = ConflictError("arbiter is already running %s command"
-                              % arbiter._running_command)
-            e.conflict_with = arbiter._running_command
-            raise e
+        if hasattr(arbiter, "_running_command"):
+            if arbiter._running_command is not None:
+                raise ConflictError("arbiter is already running %s command"
+                                    % arbiter._running_command)
         return f(self, *args, **kwargs)
     return wrapper
