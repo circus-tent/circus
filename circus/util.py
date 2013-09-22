@@ -19,6 +19,8 @@ from zmq import ssh
 
 from psutil import AccessDenied, NoSuchProcess, Process
 
+from circus.exc import ConflictError
+
 
 # default endpoints
 DEFAULT_ENDPOINT_DEALER = "tcp://127.0.0.1:5555"
@@ -709,3 +711,19 @@ class DictDiffer(object):
 
 def dict_differ(dict1, dict2):
     return len(DictDiffer(dict1, dict2).changed()) > 0
+
+
+def synchronized(f):
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        if hasattr(self, 'arbiter'):
+            arbiter = self.arbiter
+        else:
+            arbiter = self
+        if arbiter._running_command is not None:
+            e = ConflictError("arbiter is already running %s command"
+                              % arbiter._running_command)
+            e.conflict_with = arbiter._running_command
+            raise e
+        return f(self, *args, **kwargs)
+    return wrapper

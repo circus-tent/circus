@@ -16,7 +16,8 @@ from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
 from circus.watcher import Watcher
-from circus.util import debuglog, _setproctitle, parse_env_dict, DictDiffer
+from circus.util import debuglog, _setproctitle, parse_env_dict
+from circus.util import DictDiffer, synchronized
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
@@ -114,6 +115,7 @@ class Arbiter(object):
         self._stopping = False
         self._lock = RLock()
         self.debug = debug
+        self._running_command = None
         if self.debug:
             self.stdout_stream = self.stderr_stream = {'class': 'StdoutStream'}
         else:
@@ -241,6 +243,7 @@ class Arbiter(object):
 
         return cfg
 
+    @synchronized
     def reload_from_config(self, config_file=None):
         new_cfg = get_config(config_file if config_file else self.config_file)
         # if arbiter is changed, reload everything
@@ -491,12 +494,15 @@ class Arbiter(object):
         self.loop.stop()
 
     def _stop_cb(self, main_callback):
+        self._running_command = None
         if main_callback is not None:
             self.loop.add_callback(main_callback)
         self.loop.add_callback(self.stop_loop)
 
+    @synchronized
     def stop(self, callback=None):
         logger.info('Arbiter exiting')
+        self._running_command = "quit"
         self._stopping = True
         cb = functools.partial(self._stop_cb, callback)
         self._stop_watchers(callback=cb)
@@ -548,7 +554,7 @@ class Arbiter(object):
                 rlist, wlist, xlist = select.select(sockets, [], [], 0)
                 if rlist:
                     self.socket_event = True
-                    self.start_watchers()
+                    self._start_watchers()
                     self.socket_event = False
 
     @debuglog
@@ -573,7 +579,7 @@ class Arbiter(object):
 
         # gracefully reload watchers
         for watcher in self.iter_watchers():
-            watcher.reload(graceful=graceful)
+            watcher._reload(graceful=graceful)
             sleep(self.warmup_delay)
 
     def numprocesses(self):
@@ -592,6 +598,7 @@ class Arbiter(object):
         return dict([(watcher.name, watcher.status())
                      for watcher in self.watchers])
 
+    @synchronized
     def add_watcher(self, name, cmd, **kw):
         """Adds a watcher.
 
@@ -614,6 +621,7 @@ class Arbiter(object):
         self._watchers_names[watcher.name.lower()] = watcher
         return watcher
 
+    @synchronized
     def rm_watcher(self, name):
         """Deletes a watcher.
 
@@ -632,7 +640,11 @@ class Arbiter(object):
         # stop the watcher
         watcher.stop()
 
+    @synchronized
     def start_watchers(self):
+        return self._start_watchers()
+
+    def _start_watchers(self):
         if self._stopping:
             return
         for watcher in self.iter_watchers():
@@ -643,29 +655,32 @@ class Arbiter(object):
         for watcher in self.iter_watchers(reverse=False):
             if not watcher.stopped:
                 return
+        self._running_command = None
         if main_callback is not None:
             self.loop.add_callback(main_callback)
 
+    @debuglog
     def _stop_watchers(self, callback=None):
         for watcher in self.iter_watchers(reverse=False):
             cb = functools.partial(self._stop_watchers_cb, callback)
-            watcher.stop(callback=cb)
+            watcher._stop(callback=cb)
 
+    @synchronized
     def stop_watchers(self, callback=None):
-        if self._stopping:
-            return
+        self._running_command = "stop"
         self._stop_watchers(callback)
 
     def _restart_cb(self, main_callback):
-        self.start_watchers()
+        self._start_watchers()
+        self._running_command = None
         if main_callback is not None:
             self.loop.add_callback(main_callback)
 
+    @synchronized
     def restart(self, callback=None):
-        if self._stopping:
-            return
+        self._running_command = "restart"
         cb = functools.partial(self._restart_cb, callback)
-        self.stop_watchers(callback=cb)
+        self._stop_watchers(callback=cb)
 
 
 class ThreadedArbiter(Arbiter, Thread):

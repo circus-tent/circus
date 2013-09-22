@@ -669,8 +669,13 @@ class Watcher(object):
         return dict([(proc.pid, proc.info())
                      for proc in self.processes.values()])
 
-    @util.debuglog
+    @util.synchronized
     def stop(self, callback=None):
+        self.arbiter._running_command = "stop"
+        return self._stop(callback=callback)
+
+    @util.debuglog
+    def _stop(self, callback=None):
         """Begin the stop process and call the given callback
         when it's over
         """
@@ -710,6 +715,7 @@ class Watcher(object):
         # We ignore the hook result
         self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
+        self.arbiter._running_command = None
         if main_callback is not None:
             self.loop.add_callback(main_callback)
 
@@ -794,11 +800,17 @@ class Watcher(object):
 
     def _start_after_stop(self, callback=None):
         self.start()
+        self.arbiter._running_command = None
         if callback is not None:
             self.loop.add_callback(callback)
 
-    @util.debuglog
+    @util.synchronized
     def restart(self, callback=None):
+        self.arbiter._running_command = "restart"
+        return self._restart(callback=callback)
+
+    @util.debuglog
+    def _restart(self, callback=None):
         """Begin the restart process of the watcher
         and call given callback when it's over
         """
@@ -806,15 +818,19 @@ class Watcher(object):
         cb = functools.partial(self._start_after_stop, callback)
         self.stop(callback=cb)
 
-    @util.debuglog
+    @util.synchronized
     def reload(self, graceful=True):
+        return self._reload(graceful=graceful)
+
+    @util.debuglog
+    def _reload(self, graceful=True):
         """ reload
         """
         if self.prereload_fn is not None:
             self.prereload_fn(self)
 
         if not graceful:
-            return self.restart()
+            return self._restart()
 
         if self.send_hup:
             for process in self.processes.values():
@@ -838,14 +854,17 @@ class Watcher(object):
 
         return self.numprocesses
 
+    @util.synchronized
     @util.debuglog
     def incr(self, nb=1):
         return self.set_numprocesses(self.numprocesses + nb)
 
+    @util.synchronized
     @util.debuglog
     def decr(self, nb=1):
         return self.set_numprocesses(self.numprocesses - nb)
 
+    @util.synchronized
     def set_opt(self, key, val):
         """Set a watcher option.
 
@@ -922,7 +941,7 @@ class Watcher(object):
             self.manage_processes()  # FIXME: must be async also
         else:
             # graceful restart
-            self.restart(callback=callback)
+            self._restart(callback=callback)
 
     @util.debuglog
     def options(self, *args):

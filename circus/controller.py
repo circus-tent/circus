@@ -15,7 +15,7 @@ from zmq.eventloop import ioloop, zmqstream
 from circus.util import create_udp_socket
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
-from circus.exc import MessageError
+from circus.exc import MessageError, ConflictError
 from circus.py3compat import string_types
 from circus.sighandler import SysHandler
 
@@ -157,6 +157,9 @@ class Controller(object):
         except MessageError as e:
             return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.MESSAGE_ERROR)
+        except ConflictError as e:
+            return self.send_error(mid, cid, msg, str(e), cast=cast,
+                                   errno=errors.COMMAND_ERROR)
         except OSError as e:
             return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.OS_ERROR)
