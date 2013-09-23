@@ -230,6 +230,6 @@ CommandReloader
     worker processes or even for hot code upgrade in production.
 
     **use** 
-      set to 'circus.plugins.command_reloader.CommandReloader
+      set to 'circus.plugins.command_reloader.CommandReloader'
     **loop_rate**
       the frequency the plugin should check for modification in seconds. Default: 60.
