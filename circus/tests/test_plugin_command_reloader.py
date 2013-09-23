@@ -40,21 +40,26 @@ class TestCommandReloader(TestCircus):
         plugin = self.make_plugin(loop_rate='2')
         self.assertEqual(plugin.loop_rate, 2)
 
-    def test_is_modified(self):
+    def test_mtime_is_modified(self):
         plugin = self.make_plugin()
-        plugin.cmd_files = {'foo': {'filename': 'foo', 'mtime': 1}}
-        self.assertTrue(plugin.is_modified('foo', 2))
+        plugin.cmd_files = {'foo': {'path': '/bar/baz', 'mtime': 1}}
+        self.assertTrue(plugin.is_modified('foo', 2, '/bar/baz'))
+
+    def test_path_is_modified(self):
+        plugin = self.make_plugin()
+        plugin.cmd_files = {'foo': {'path': '/bar/baz', 'mtime': 1}}
+        self.assertTrue(plugin.is_modified('foo', 1, '/bar/quux'))
 
     def test_look_after_kown_watcher_triggers_restart(self):
         call_mock = self.setup_call_mock(watcher_name='foo')
         self.setup_os_mock(realpath='/bar/foo', mtime=42)
         plugin = self.make_plugin()
-        plugin.cmd_files = {'foo': {'filename': 'foo', 'mtime': 1}}
+        plugin.cmd_files = {'foo': {'path': 'foo', 'mtime': 1}}
 
         plugin.look_after()
 
         self.assertEqual(plugin.cmd_files, {
-            'foo': {'filename': '/bar/foo', 'mtime': 42}
+            'foo': {'path': '/bar/foo', 'mtime': 42}
         })
         call_mock.assert_called_with('restart', name='foo')
 
@@ -67,7 +72,7 @@ class TestCommandReloader(TestCircus):
         plugin.look_after()
 
         self.assertEqual(plugin.cmd_files, {
-            'foo': {'filename': '/bar/foo', 'mtime': 42}
+            'foo': {'path': '/bar/foo', 'mtime': 42}
         })
         # No restart, so last call should be for the 'get' command
         call_mock.assert_called_with('get', name='foo', keys=['cmd'])
@@ -76,7 +81,7 @@ class TestCommandReloader(TestCircus):
         self.setup_call_mock(watcher_name='bar')
         self.setup_os_mock(realpath='/bar/foo', mtime=42)
         plugin = self.make_plugin()
-        plugin.cmd_files = {'foo': {'filename': 'foo', 'mtime': 1}}
+        plugin.cmd_files = {'foo': {'path': 'foo', 'mtime': 1}}
 
         plugin.look_after()
 

@@ -15,9 +15,13 @@ class CommandReloader(CircusPlugin):
         self.loop_rate = int(self.config.get('loop_rate', 1))
         self.cmd_files = {}
 
-    def is_modified(self, watcher, cmd_mtime):
-        return (watcher in self.cmd_files
-                and cmd_mtime != self.cmd_files[watcher]['mtime'])
+    def is_modified(self, watcher, current_mtime, current_path):
+        if watcher not in self.cmd_files:
+            return False
+        if current_mtime != self.cmd_files[watcher]['mtime']:
+            return True
+        if current_path != self.cmd_files[watcher]['path']:
+            return True
 
     def look_after(self):
         list_ = self.call('list')
@@ -33,11 +37,11 @@ class CommandReloader(CircusPlugin):
             cmd = watcher_info['options']['cmd']
             cmd_path = os.path.realpath(cmd)
             cmd_mtime = os.stat(cmd_path).st_mtime
-            if self.is_modified(watcher, cmd_mtime):
+            if self.is_modified(watcher, cmd_mtime, cmd_path):
                 logger.info('%s modified. Restarting.', cmd_path)
                 self.call('restart', name=watcher)
             self.cmd_files[watcher] = {
-                'filename': cmd_path,
+                'path': cmd_path,
                 'mtime': cmd_mtime,
             }
 
