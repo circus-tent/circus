@@ -12,7 +12,7 @@ class CommandReloader(CircusPlugin):
     def __init__(self, *args, **config):
         super(CommandReloader, self).__init__(*args, **config)
         self.name = config.get('name')
-        self.loop_rate = self.config.get('loop_rate', 1) * 1000
+        self.loop_rate = int(self.config.get('loop_rate', 1))
         self.cmd_files = {}
 
     def is_modified(self, watcher, cmd_mtime):

@@ -32,9 +32,13 @@ class TestCommandReloader(TestCircus):
         ]
         return call_mock
 
-    def test_default_config(self):
+    def test_default_loop_rate(self):
         plugin = self.make_plugin()
-        self.assertEqual(plugin.loop_rate, 1000)
+        self.assertEqual(plugin.loop_rate, 1)
+
+    def test_non_default_loop_rate(self):
+        plugin = self.make_plugin(loop_rate='2')
+        self.assertEqual(plugin.loop_rate, 2)
 
     def test_is_modified(self):
         plugin = self.make_plugin()
