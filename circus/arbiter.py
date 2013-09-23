@@ -115,7 +115,7 @@ class Arbiter(object):
         self._stopping = False
         self._lock = RLock()
         self.debug = debug
-        self._running_command = None
+        self._exclusive_command = None
         if self.debug:
             self.stdout_stream = self.stderr_stream = {'class': 'StdoutStream'}
         else:
@@ -494,7 +494,7 @@ class Arbiter(object):
         self.loop.stop()
 
     def _stop_cb(self, main_callback):
-        self._running_command = None
+        self._exclusive_command = None
         if main_callback is not None:
             self.loop.add_callback(main_callback)
         self.loop.add_callback(self.stop_loop)
@@ -502,7 +502,7 @@ class Arbiter(object):
     @synchronized
     def stop(self, callback=None):
         logger.info('Arbiter exiting')
-        self._running_command = "quit"
+        self._exclusive_command = "quit"
         self._stopping = True
         cb = functools.partial(self._stop_cb, callback)
         self._stop_watchers(callback=cb)
@@ -630,7 +630,7 @@ class Arbiter(object):
         - **name**: name of the watcher to delete
         """
         logger.debug('Deleting %r watcher', name)
-        self._running_command = "rm_watcher"
+        self._exclusive_command = "rm_watcher"
 
         # remove the watcher from the list
         watcher = self._watchers_names.pop(name)
@@ -641,7 +641,7 @@ class Arbiter(object):
         watcher._stop(cb)
 
     def _rm_watcher_cb(self, main_callback):
-        self._running_command = None
+        self._exclusive_command = None
         if main_callback is not None:
             self.loop.add_callback(main_callback)
 
@@ -658,7 +658,7 @@ class Arbiter(object):
         for watcher in self.iter_watchers(reverse=False):
             if not watcher.stopped:
                 return
-        self._running_command = None
+        self._exclusive_command = None
         if main_callback is not None:
             self.loop.add_callback(main_callback)
 
@@ -670,18 +670,18 @@ class Arbiter(object):
 
     @synchronized
     def stop_watchers(self, callback=None):
-        self._running_command = "stop"
+        self._exclusive_command = "stop"
         self._stop_watchers(callback)
 
     def _restart_cb(self, main_callback):
         self._start_watchers()
-        self._running_command = None
+        self._exclusive_command = None
         if main_callback is not None:
             self.loop.add_callback(main_callback)
 
     @synchronized
     def restart(self, callback=None):
-        self._running_command = "restart"
+        self._exclusive_command = "restart"
         cb = functools.partial(self._restart_cb, callback)
         self._stop_watchers(callback=cb)
 
