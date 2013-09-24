@@ -110,7 +110,7 @@ Trying a plugin
 You can run a plugin through the command line with the **circus-plugin** command,
 by specifying the plugin fully qualified name::
 
-    $ circus-plugin --endpoint tcp://127.0.0.1:5555 --pubsub tcp://127.0.0.1:5556 myproject.plugins.Logger
+    $ circus-plugin --endpoint tcp://127.0.0.1:5555 --pubsub tcp://127.0.0.1:5556 --config filename:circus-events.log myproject.plugins.Logger
     [INFO] Loading the plugin...
     [INFO] Endpoint: 'tcp://127.0.0.1:5555'
     [INFO] Pub/sub: 'tcp://127.0.0.1:5556'
