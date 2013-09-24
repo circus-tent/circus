@@ -50,6 +50,11 @@ class TestCommandReloader(TestCircus):
         plugin.cmd_files = {'foo': {'path': '/bar/baz', 'mtime': 1}}
         self.assertTrue(plugin.is_modified('foo', 1, '/bar/quux'))
 
+    def test_not_modified(self):
+        plugin = self.make_plugin()
+        plugin.cmd_files = {'foo': {'path': '/bar/quux', 'mtime': 1}}
+        self.assertIs(plugin.is_modified('foo', 1, '/bar/quux'), False)
+
     def test_look_after_kown_watcher_triggers_restart(self):
         call_mock = self.setup_call_mock(watcher_name='foo')
         self.setup_os_mock(realpath='/bar/foo', mtime=42)

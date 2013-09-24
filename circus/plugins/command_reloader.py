@@ -22,6 +22,7 @@ class CommandReloader(CircusPlugin):
             return True
         if current_path != self.cmd_files[watcher]['path']:
             return True
+        return False
 
     def look_after(self):
         list_ = self.call('list')
