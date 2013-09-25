@@ -8,6 +8,8 @@ import shlex
 import socket
 import sys
 import time
+from tornado.ioloop import IOLoop
+from tornado import gen
 from ConfigParser import (
     ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
 )
@@ -726,3 +728,12 @@ def synchronized(f):
                                     % arbiter._exclusive_command)
         return f(self, *args, **kwargs)
     return wrapper
+
+
+def tornado_sleep(duration):
+    """Sleep without blocking the tornado event loop
+
+    To use with a gen.coroutines decorated function
+    Thanks to http://stackoverflow.com/a/11135204/433050
+    """
+    return gen.Task(IOLoop.instance().add_timeout, time.time() + duration)
