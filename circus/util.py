@@ -10,6 +10,7 @@ import sys
 import time
 from tornado.ioloop import IOLoop
 from tornado import gen
+from tornado.concurrent import Future
 from ConfigParser import (
     ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
 )
@@ -715,19 +716,31 @@ def dict_differ(dict1, dict2):
     return len(DictDiffer(dict1, dict2).changed()) > 0
 
 
-def synchronized(f):
-    @wraps(f)
-    def wrapper(self, *args, **kwargs):
-        if hasattr(self, 'arbiter'):
-            arbiter = self.arbiter
-        else:
-            arbiter = self
-        if hasattr(arbiter, "_exclusive_command"):
-            if arbiter._exclusive_command is not None:
+_EXCLUSIVE_RUNNING_COMMAND = None
+
+
+def _synchronized_cb(name):
+    global _EXCLUSIVE_RUNNING_COMMAND
+    _EXCLUSIVE_RUNNING_COMMAND = None
+
+
+def synchronized(name):
+    def real_decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            global _EXCLUSIVE_RUNNING_COMMAND
+            if _EXCLUSIVE_RUNNING_COMMAND is not None:
                 raise ConflictError("arbiter is already running %s command"
-                                    % arbiter._exclusive_command)
-        return f(self, *args, **kwargs)
-    return wrapper
+                                    % _EXCLUSIVE_RUNNING_COMMAND)
+            _EXCLUSIVE_RUNNING_COMMAND = name
+            resp = f(*args, **kwargs)
+            if isinstance(resp, Future):
+                resp.add_done_callback(_synchronized_cb)
+            else:
+                _EXCLUSIVE_RUNNING_COMMAND = None
+            return resp
+        return wrapper
+    return real_decorator
 
 
 def tornado_sleep(duration):
