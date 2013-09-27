@@ -95,6 +95,9 @@ def main():
     if args.daemonize:
         daemonize()
 
+    # basic logging configuration
+    logging.basicConfig()
+
     # From here it can also come from the arbiter configuration
     # load the arbiter from config
     arbiter = Arbiter.load_from_config(args.config)
@@ -110,7 +113,6 @@ def main():
             sys.exit(1)
 
     # configure the logger
-    logging.basicConfig()
     loglevel = args.loglevel or arbiter.loglevel or 'info'
     logoutput = args.logoutput or arbiter.logoutput or '-'
     configure_logger(logger, loglevel, logoutput)
