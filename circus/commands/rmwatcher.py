@@ -49,7 +49,6 @@ class RmWatcher(Command):
 
     name = "rm"
     properties = ['name']
-    callback = True
     options = Command.waiting_options
 
     def message(self, *args, **opts):
@@ -58,6 +57,6 @@ class RmWatcher(Command):
 
         return self.make_message(name=args[0])
 
-    def execute_with_cb(self, arbiter, props, callback):
+    def execute(self, arbiter, props):
         self._get_watcher(arbiter, props['name'])
-        arbiter.rm_watcher(props['name'], callback=callback)
+        return arbiter.rm_watcher(props['name'])

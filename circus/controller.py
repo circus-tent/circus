@@ -11,6 +11,7 @@ from urlparse import urlparse
 import zmq
 from zmq.utils.jsonapi import jsonmod as json
 from zmq.eventloop import ioloop, zmqstream
+from tornado.concurrent import Future
 
 from circus.util import create_udp_socket
 from circus.commands import get_commands, ok, error, errors
@@ -101,6 +102,10 @@ class Controller(object):
         self.udp_socket.sendto(json.dumps({'endpoint': self.endpoint}),
                                address)
 
+    def _dispatch_callback_future(self, msg, cid, mid, cast, cmd_name, future):
+        resp = future.result()
+        self._dispatch_callback(msg, cid, mid, cast, cmd_name, resp)
+
     def _dispatch_callback(self, msg, cid, mid, cast, cmd_name, resp=None):
         if resp is None:
             resp = ok()
@@ -144,16 +149,16 @@ class Controller(object):
 
         try:
             cmd.validate(properties)
-            if properties.get('waiting', False) and cmd.callback:
-                callback = functools.partial(self._dispatch_callback,
-                                             msg, cid, mid, cast, cmd_name)
-                cmd.execute_with_cb(self.arbiter, properties,
-                                    callback=callback)
-            else:
-                resp = cmd.execute(self.arbiter, properties)
-                # FIXME: split the callback in two parts, it's not clear
-                # to call manually the callback
-                self._dispatch_callback(msg, cid, mid, cast, cmd_name, resp)
+            resp = cmd.execute(self.arbiter, properties)
+            if isinstance(resp, Future):
+                if properties.get('waiting', False):
+                    cb = functools.partial(self._dispatch_callback_future,
+                                           msg, cid, mid, cast, cmd_name)
+                    resp.add_done_callback(cb)
+                    return
+                else:
+                    resp = None
+            self._dispatch_callback(msg, cid, mid, cast, cmd_name, resp)
         except MessageError as e:
             return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.MESSAGE_ERROR)

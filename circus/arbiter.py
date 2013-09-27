@@ -8,6 +8,7 @@ from time import sleep
 import select
 import socket
 import functools
+from tornado import gen
 
 import zmq
 from zmq.eventloop import ioloop
@@ -17,7 +18,7 @@ from circus.exc import AlreadyExist
 from circus import logger
 from circus.watcher import Watcher
 from circus.util import debuglog, _setproctitle, parse_env_dict
-from circus.util import DictDiffer, synchronized
+from circus.util import DictDiffer, synchronized, tornado_sleep
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
@@ -244,7 +245,7 @@ class Arbiter(object):
 
         return cfg
 
-    @synchronized
+    #@synchronized
     def reload_from_config(self, config_file=None):
         new_cfg = get_config(config_file if config_file else self.config_file)
         # if arbiter is changed, reload everything
@@ -445,12 +446,13 @@ class Arbiter(object):
             self._watchers_names[watcher.name.lower()] = watcher
             watcher.initialize(self.evpub_socket, self.sockets, self)
 
+    @gen.coroutine
     def start_watcher(self, watcher):
         """Aska a specific watcher to start and wait for the specified
         warmup delay."""
         if watcher.autostart:
-            watcher.start()
-            sleep(self.warmup_delay)
+            yield watcher._start()
+            yield tornado_sleep(self.warmup_delay)
 
     @debuglog
     def start(self):
@@ -489,24 +491,22 @@ class Arbiter(object):
             if len(self.sockets) > 0:
                 self.sockets.close_all()
 
-    def stop_loop(self):
+    @synchronized("arbiter_stop")
+    @gen.coroutine
+    def stop(self):
+        yield self._stop()
+
+    @gen.coroutine
+    def _stop(self):
+        logger.info('Arbiter exiting')
+        self._stopping = True
+        yield self._stop_watchers()
+        self.loop.add_callback(self._stop_cb)
+
+    def _stop_cb(self):
         # this will stop the loop and the closing
         # will finish in .start()
         self.loop.stop()
-
-    def _stop_cb(self, main_callback):
-        self._exclusive_command = None
-        if main_callback is not None:
-            self.loop.add_callback(main_callback)
-        self.loop.add_callback(self.stop_loop)
-
-    @synchronized
-    def stop(self, callback=None):
-        logger.info('Arbiter exiting')
-        self._exclusive_command = "quit"
-        self._stopping = True
-        cb = functools.partial(self._stop_cb, callback)
-        self._stop_watchers(callback=cb)
 
     def reap_processes(self):
         # map watcher to pids
@@ -599,7 +599,7 @@ class Arbiter(object):
         return dict([(watcher.name, watcher.status())
                      for watcher in self.watchers])
 
-    @synchronized
+    #@synchronized
     def add_watcher(self, name, cmd, **kw):
         """Adds a watcher.
 
@@ -622,7 +622,8 @@ class Arbiter(object):
         self._watchers_names[watcher.name.lower()] = watcher
         return watcher
 
-    @synchronized
+    @synchronized("arbiter_rm_watcher")
+    @gen.coroutine
     def rm_watcher(self, name, callback=None):
         """Deletes a watcher.
 
@@ -639,21 +640,18 @@ class Arbiter(object):
 
         # stop the watcher
         cb = functools.partial(self._rm_watcher_cb, callback)
-        watcher._stop(cb)
+        yield watcher._stop(cb)
 
-    def _rm_watcher_cb(self, main_callback):
-        self._exclusive_command = None
-        if main_callback is not None:
-            self.loop.add_callback(main_callback)
-
-    @synchronized
+    @synchronized("arbiter_start_watchers")
+    @gen.coroutine
     def start_watchers(self):
-        return self._start_watchers()
+        yield self._start_watchers()
 
+    @gen.coroutine
     def _start_watchers(self):
         for watcher in self.iter_watchers():
-            watcher.start()
-            sleep(self.warmup_delay)
+            yield watcher.start()
+            yield tornado_sleep(self.warmup_delay)
 
     def _stop_watchers_cb(self, main_callback):
         for watcher in self.iter_watchers(reverse=False):
@@ -663,28 +661,25 @@ class Arbiter(object):
         if main_callback is not None:
             self.loop.add_callback(main_callback)
 
+    @gen.coroutine
     @debuglog
-    def _stop_watchers(self, callback=None):
-        for watcher in self.iter_watchers(reverse=False):
-            cb = functools.partial(self._stop_watchers_cb, callback)
-            watcher._stop(callback=cb)
+    def _stop_watchers(self):
+        yield [w._stop() for w in self.iter_watchers(reverse=False)]
 
-    @synchronized
-    def stop_watchers(self, callback=None):
-        self._exclusive_command = "stop"
-        self._stop_watchers(callback)
+    @synchronized("arbiter_stop_watchers")
+    @gen.coroutine
+    def stop_watchers(self):
+        yield self._stop_watchers()
 
-    def _restart_cb(self, main_callback):
-        self._start_watchers()
-        self._exclusive_command = None
-        if main_callback is not None:
-            self.loop.add_callback(main_callback)
+    @gen.coroutine
+    def _restart(self):
+        yield self._stop()
+        yield self._start()
 
-    @synchronized
+    @synchronized("arbiter_restart")
+    @gen.coroutine
     def restart(self, callback=None):
-        self._exclusive_command = "restart"
-        cb = functools.partial(self._restart_cb, callback)
-        self._stop_watchers(callback=cb)
+        yield self._restart()
 
 
 class ThreadedArbiter(Arbiter, Thread):

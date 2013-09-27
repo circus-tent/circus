@@ -50,7 +50,6 @@ class Stop(Command):
     """
 
     name = "stop"
-    callback = True
     options = Command.waiting_options
 
     def message(self, *args, **opts):
@@ -58,9 +57,9 @@ class Stop(Command):
             return self.make_message(name=args[0], **opts)
         return self.make_message(**opts)
 
-    def execute_with_cb(self, arbiter, props, callback):
+    def execute(self, arbiter, props):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            watcher.stop(callback=callback)
+            return watcher.stop()
         else:
-            arbiter.stop_watchers(callback=callback)
+            return arbiter.stop_watchers()

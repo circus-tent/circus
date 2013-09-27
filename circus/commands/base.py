@@ -66,9 +66,6 @@ class Command(object):
     waiting_options = [('waiting', 'waiting', False,
                         "Waiting the real end of the process")]
 
-    def execute_with_cb(self, arbiter, opts, callback):
-        raise NotImplementedError("execute_with_cb function not implemented")
-
     def make_message(self, **props):
         name = props.pop("command", self.name)
         return {"command": name, "properties": props or {}}
@@ -77,7 +74,7 @@ class Command(object):
         raise NotImplementedError("message function isn't implemented")
 
     def execute(self, arbiter, props):
-        return self.execute_with_cb(arbiter, props, None)
+        raise NotImplementedError("execute function is not implemented")
 
     def console_error(self, msg):
         return "error: %s" % msg.get("reason")

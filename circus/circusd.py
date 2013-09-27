@@ -129,7 +129,7 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
-        arbiter.stop()
+        arbiter._stop()
         if pidfile is not None:
             pidfile.unlink()
 

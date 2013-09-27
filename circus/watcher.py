@@ -7,7 +7,7 @@ import sys
 from random import randint
 from itertools import izip_longest
 import site
-import functools
+from tornado import gen
 
 from psutil import NoSuchProcess
 from zmq.utils.jsonapi import jsonmod as json
@@ -17,7 +17,7 @@ from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
-from circus.util import parse_env_dict, resolve_name
+from circus.util import parse_env_dict, resolve_name, tornado_sleep
 
 
 class Watcher(object):
@@ -165,7 +165,7 @@ class Watcher(object):
 
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None, max_retry=5,
-                 gid=None, send_hup=False, env=None, stopped=True,
+                 gid=None, send_hup=False, env=None,
                  graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, priority=0, loop=None,
@@ -182,8 +182,7 @@ class Watcher(object):
         self.warmup_delay = warmup_delay
         self.cmd = cmd
         self.args = args
-        self.stopped = stopped
-        self._stopping = False
+        self._status = "stopped"
         self.graceful_timeout = float(graceful_timeout)
         self.prereload_fn = prereload_fn
         self.executable = None
@@ -407,7 +406,7 @@ class Watcher(object):
     def reap_processes(self):
         """Reap all the processes for this watcher.
         """
-        if self.stopped:
+        if self.is_stopped():
             logger.debug('do not reap processes as the watcher is stopped')
             return
 
@@ -415,19 +414,20 @@ class Watcher(object):
         for pid in self.processes.keys():
             self.reap_process(pid)
 
+    @gen.coroutine
     @util.debuglog
     def manage_processes(self):
         """Manage processes."""
-        if self.stopped:
+        if self.is_stopped():
             return
 
         if self.max_age:
-            self.remove_expired_processes()
+            yield self.remove_expired_processes()
 
         # adding fresh processes
         if (self.respawn and len(self.processes) < self.numprocesses
-                and not self._stopping):
-            self.spawn_processes()
+                and not self.is_stopping()):
+            yield self.spawn_processes()
 
         # removing extra processes
         processes = self.processes.values()
@@ -439,24 +439,26 @@ class Watcher(object):
                 self.processes.pop(process.pid)
             else:
                 self.processes.pop(process.pid)
-                self.kill_process(process)
+                yield self.kill_process(process)
 
+    @gen.coroutine
     @util.debuglog
     def remove_expired_processes(self):
         max_age = self.max_age + randint(0, self.max_age_variance)
+        expired_processes = [p for p in self.processes.values()
+                             if p.age() > max_age]
+        yield [self.kill_process(x) for x in expired_processes]
 
-        for process in list(self.processes.itervalues()):
-            if process.age() > max_age:
-                self.kill_process(process)
-
+    @gen.coroutine
     @util.debuglog
     def reap_and_manage_processes(self):
         """Reap & manage processes."""
-        if self.stopped:
+        if self.is_stopped():
             return
         self.reap_processes()
-        self.manage_processes()
+        yield self.manage_processes()
 
+    @gen.coroutine
     @util.debuglog
     def spawn_processes(self):
         """Spawn processes.
@@ -464,11 +466,14 @@ class Watcher(object):
         # when an on_demand process dies, do not restart it until
         # the next event
         if self.on_demand and not self.arbiter.socket_event:
-            self.stopped = True
+            self._status = "stopped"
             return
         for i in range(self.numprocesses - len(self.processes)):
-            self.spawn_process()
-            time.sleep(self.warmup_delay)
+            res = self.spawn_process()
+            if res is False:
+                yield self._stop()
+                break
+            yield tornado_sleep(self.warmup_delay)
 
     def _get_sockets_fds(self):
         # XXX should be cached
@@ -481,12 +486,13 @@ class Watcher(object):
 
     def spawn_process(self):
         """Spawn process.
+
+        Return True if ok, False if the watcher must be stopped
         """
-        if self.stopped:
-            return
+        if self.is_stopped():
+            return True
 
         if not self.call_hook('before_spawn'):
-            self.stopped = True
             return False
 
         cmd = util.replace_gnu_args(self.cmd, sockets=self._get_sockets_fds(),
@@ -533,10 +539,8 @@ class Watcher(object):
             else:
                 self.notify_event("spawn", {"process_pid": process.pid,
                                             "time": time.time()})
-                time.sleep(self.warmup_delay)
-                return
-
-        self.stop()
+                return True
+        return False
 
     def send_signal_process(self, process, signum):
         """Send the signum signal to the process
@@ -558,67 +562,44 @@ class Watcher(object):
             # already dead !
             return
 
-    def kill_process_now(self, process):
-        """Kill process now (SIGKILL, remove redirections)
+    def _process_remove_redirections(self, process):
+        """Remove process redirections
         """
-        # remove redirections
         if self.stdout_redirector is not None and process.stdout is not None:
             self.stdout_redirector.remove_redirection(process.stdout)
-
         if self.stderr_redirector is not None and process.stderr is not None:
             self.stderr_redirector.remove_redirection(process.stderr)
-        self.send_signal_process(process, signal.SIGKILL)
-        process.stop()
 
-    def _kill_process_cb(self, process, limit, main_callback):
-        """Callback to wait until graceful_timeout
-        """
-        if time.time() < limit and process.is_alive():
-            # we are back in 1 second
-            callmeback = functools.partial(self._kill_process_cb, process,
-                                           limit, main_callback)
-            self.loop.add_timeout(time.time() + 1, callmeback)
-            return
-        self.kill_process_now(process)
-        if main_callback is not None:
-            self.loop.add_callback(main_callback)
-
+    @gen.coroutine
     @util.debuglog
-    def kill_process(self, process, callback=None):
+    def kill_process(self, process):
         """Kill process (SIGTERM, graceful_timeout then SIGKILL)
         """
         logger.debug("%s: kill process %s", self.name, process.pid)
         self.send_signal_process(process, signal.SIGTERM)
-        now = time.time()
-        limit = now + self.graceful_timeout
-        cb = functools.partial(self._kill_process_cb, process,
-                               limit, callback)
-        self.loop.add_timeout(now + 1, cb)
+        waited = 0
+        while waited < self.graceful_timeout:
+            yield tornado_sleep(1)
+            waited = waited + 1
+            if not process.is_alive():
+                self._process_remove_redirections(process)
+                process.stop()
+        # We are not smart anymore
+        self.send_signal_process(process, signal.SIGKILL)
+        self._process_remove_redirections(process)
+        process.stop()
 
-    def _kill_processes_cb(self, remaining_processes, process_killed,
-                           main_callback):
-        """Call the main callback if the last process is completly stopped
-
-        This callback is called after each process shutdown process
-        """
-        remaining_processes.remove(process_killed)
-        if len(remaining_processes) == 0 and main_callback is not None:
-            # Last process is killed => we can call the main callback
-            self.loop.add_callback(main_callback)
-
+    @gen.coroutine
     @util.debuglog
-    def kill_processes(self, callback=None):
+    def kill_processes(self):
         """Kill all processes (SIGTERM, graceful_timeout then SIGKILL)
         """
         active_processes = self.get_active_processes()
-        for process in active_processes:
-            try:
-                cb = functools.partial(self._kill_processes_cb,
-                                       active_processes, process, callback)
-                self.kill_process(process, cb)
-            except OSError as e:
-                if e.errno != errno.ESRCH:
-                    raise
+        try:
+            yield [self.kill_process(process) for process in active_processes]
+        except OSError as e:
+            if e.errno != errno.ESRCH:
+                raise
 
     @util.debuglog
     def send_signal(self, pid, signum):
@@ -655,9 +636,7 @@ class Watcher(object):
 
     @util.debuglog
     def status(self):
-        if self.stopped:
-            return "stopped"
-        return "active"
+        return self._status
 
     @util.debuglog
     def process_info(self, pid):
@@ -669,55 +648,37 @@ class Watcher(object):
         return dict([(proc.pid, proc.info())
                      for proc in self.processes.values()])
 
-    @util.synchronized
-    def stop(self, callback=None):
-        self.set_arbiter_exclusive_command("stop")
-        return self._stop(callback=callback)
+    @util.synchronized("watcher_stop")
+    @gen.coroutine
+    def stop(self):
+        yield self._stop()
 
     @util.debuglog
-    def _stop(self, callback=None):
-        """Begin the stop process and call the given callback
-        when it's over
-        """
-        if self.stopped:
-            if callback is not None:
-                self.loop.add_callback(callback)
+    @gen.coroutine
+    def _stop(self):
+        if self.is_stopped():
             return
-
+        self._status = "stopping"
         logger.debug('stopping the %s watcher' % self.name)
         logger.debug('gracefully stopping processes [%s] for %ss' % (
                      self.name, self.graceful_timeout))
-
         # We ignore the hook result
         self.call_hook('before_stop')
-
-        self._stopping = True
-        cb = functools.partial(self._stop_cb, callback)
-        self.kill_processes(cb)
-
-    def _stop_cb(self, main_callback):
+        yield self.kill_processes()
         # stop redirectors
         if self.stdout_redirector is not None:
             self.stdout_redirector.stop()
             self.stdout_redirector = None
-
         if self.stderr_redirector is not None:
             self.stderr_redirector.stop()
             self.stderr_redirector = None
-
         # notify about the stop
         if self.evpub_socket is not None:
             self.notify_event("stop", {"time": time.time()})
-
-        self.stopped = True
-        self._stopping = False
-
+        self._status = "stopped"
         # We ignore the hook result
         self.call_hook('after_stop')
         logger.info('%s stopped', self.name)
-        self.set_arbiter_exclusive_command(None)
-        if main_callback is not None:
-            self.loop.add_callback(main_callback)
 
     def get_active_processes(self):
         """return a list of pids of active processes (not already stopped)"""
@@ -762,31 +723,36 @@ class Watcher(object):
         else:
             return True
 
-    @util.debuglog
+    @util.synchronized("watcher_start")
+    @gen.coroutine
     def start(self):
+        yield self._start()
+
+    @gen.coroutine
+    @util.debuglog
+    def _start(self):
         """Start.
         """
-        if not self.stopped:
+        if not self.is_stopped():
             return
 
         if self.on_demand and not self.arbiter.socket_event:
             return
 
-        self.stopped = False
-
         if not self.call_hook('before_start'):
             logger.debug('Aborting startup')
-            self.stopped = True
-            return False
+            return
+
+        self._status = "starting"
 
         self._create_redirectors()
         self.reap_processes()
-        self.spawn_processes()
+        yield self.spawn_processes()
 
         if not self.call_hook('after_start'):
             logger.debug('Aborting startup')
-            self.stop()
-            return False
+            yield self.stop()
+            return
 
         if self.stdout_redirector is not None:
             self.stdout_redirector.start()
@@ -796,32 +762,24 @@ class Watcher(object):
 
         logger.info('%s started' % self.name)
         self.notify_event("start", {"time": time.time()})
-        return True
 
-    def _start_after_stop(self, callback=None):
-        self.start()
-        self.set_arbiter_exclusive_command(None)
-        if callback is not None:
-            self.loop.add_callback(callback)
+    @util.synchronized("watcher_restart")
+    @gen.coroutine
+    def restart(self):
+        yield self._restart()
 
-    @util.synchronized
-    def restart(self, callback=None):
-        self.set_arbiter_exclusive_command("restart")
-        return self._restart(callback=callback)
-
+    @gen.coroutine
     @util.debuglog
-    def _restart(self, callback=None):
-        """Begin the restart process of the watcher
-        and call given callback when it's over
-        """
-        self.notify_event("restart", {"time": time.time()})
-        cb = functools.partial(self._start_after_stop, callback)
-        self.stop(callback=cb)
+    def _restart(self):
+        yield self._stop()
+        yield self.start()
 
-    @util.synchronized
+    @util.synchronized("watcher_reload")
+    @gen.coroutine
     def reload(self, graceful=True):
-        return self._reload(graceful=graceful)
+        yield self._reload(graceful=graceful)
 
+    @gen.coroutine
     @util.debuglog
     def _reload(self, graceful=True):
         """ reload
@@ -830,7 +788,8 @@ class Watcher(object):
             self.prereload_fn(self)
 
         if not graceful:
-            return self._restart()
+            yield self._restart()
+            return
 
         if self.send_hup:
             for process in self.processes.values():
@@ -839,32 +798,35 @@ class Watcher(object):
         else:
             for i in range(self.numprocesses):
                 self.spawn_process()
-            self.manage_processes()
+            yield self.manage_processes()
         self.notify_event("reload", {"time": time.time()})
         logger.info('%s reloaded', self.name)
 
+    @gen.coroutine
     def set_numprocesses(self, np):
         if np < 0:
             np = 0
         if self.singleton and np > 1:
             raise ValueError('Singleton watcher has a single process')
-
         self.numprocesses = np
-        self.manage_processes()
+        yield self.manage_processes()
+        raise gen.Return(self.num_processes)
 
-        return self.numprocesses
-
-    @util.synchronized
+    @util.synchronized("watcher_incr")
+    @gen.coroutine
     @util.debuglog
     def incr(self, nb=1):
-        return self.set_numprocesses(self.numprocesses + nb)
+        res = yield self.set_numprocesses(self.numprocesses + nb)
+        raise gen.Return(res)
 
-    @util.synchronized
+    @util.synchronized("watcher_decr")
+    @gen.coroutine
     @util.debuglog
     def decr(self, nb=1):
-        return self.set_numprocesses(self.numprocesses - nb)
+        res = yield self.set_numprocesses(self.numprocesses - nb)
+        raise gen.Return(res)
 
-    @util.synchronized
+    @util.synchronized("watcher_set_opt")
     def set_opt(self, key, val):
         """Set a watcher option.
 
@@ -934,14 +896,15 @@ class Watcher(object):
         self.notify_event("updated", {"time": time.time()})
         return action
 
-    def do_action(self, num, callback):
+    @util.synchronized("watcher_do_action")
+    @gen.coroutine
+    def do_action(self, num):
         # trigger needed action
-        self.stopped = False
         if num == 0:
-            self.manage_processes()  # FIXME: must be async also
+            yield self.manage_processes()
         else:
             # graceful restart
-            self._restart(callback=callback)
+            yield self._restart()
 
     @util.debuglog
     def options(self, *args):
@@ -953,6 +916,13 @@ class Watcher(object):
                 options.append((name, getattr(self, name)))
         return options
 
-    def set_arbiter_exclusive_command(self, command_name):
-        if self.arbiter is not None:
-            self.arbiter._exclusive_command = command_name
+    def is_stopping(self):
+        return self._status == 'stopping'
+
+    def is_stopped(self):
+        return self._status == 'stopped'
+
+    # FIXME : supprimer
+    @property
+    def stopped(self):
+        return self.is_stopped()

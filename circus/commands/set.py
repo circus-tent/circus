@@ -42,7 +42,6 @@ class Set(Command):
     name = "set"
     properties = ['name', 'options']
     options = Command.waiting_options
-    callback = True
 
     def message(self, *args, **opts):
         if len(args) < 3:
@@ -65,7 +64,7 @@ class Set(Command):
         else:
             return self.make_message(name=watcher_name, options=options)
 
-    def execute_with_cb(self, arbiter, props, callback):
+    def execute(self, arbiter, props):
         watcher = self._get_watcher(arbiter, props.pop('name'))
         action = 0
         for key, val in props.get('options', {}).items():
@@ -80,9 +79,8 @@ class Set(Command):
 
             if new_action == 1:
                 action = 1
-
         # trigger needed action
-        watcher.do_action(action, callback=callback)
+        return watcher.do_action(action)
 
     def validate(self, props):
         super(Set, self).validate(props)

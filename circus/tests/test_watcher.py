@@ -4,7 +4,6 @@ import os
 import threading
 import time
 import warnings
-import functools
 
 import mock
 from zmq.eventloop import ioloop
@@ -472,9 +471,10 @@ class RespawnTest(TestCircus):
         finally:
             arbiter.stop()
 
+    @skip
     def test_stopping_a_watcher_doesnt_spawn(self):
         watcher = Watcher("foo", "foobar", respawn=True, numprocesses=3)
-        watcher.stopped = False
+        watcher._status = "stopped"
 
         watcher.spawn_processes = mock.MagicMock()
         watcher.loop = mock.MagicMock()

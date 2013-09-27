@@ -38,11 +38,10 @@ class Quit(Command):
 
     """
     name = "quit"
-    callback = True
     options = Command.waiting_options
 
     def message(self, *args, **opts):
         return self.make_message(**opts)
 
-    def execute_with_cb(self, arbiter, props, callback):
-        arbiter.stop(callback=callback)
+    def execute(self, arbiter, props):
+        return arbiter.stop()

@@ -51,7 +51,6 @@ class Restart(Command):
     """
 
     name = "restart"
-    callback = True
     options = Command.waiting_options
 
     def message(self, *args, **opts):
@@ -63,9 +62,9 @@ class Restart(Command):
 
         return self.make_message(**opts)
 
-    def execute_with_cb(self, arbiter, props, callback):
+    def execute(self, arbiter, props):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            watcher.restart(callback)
+            return watcher.restart()
         else:
-            arbiter.restart(callback)
+            return arbiter.restart()
