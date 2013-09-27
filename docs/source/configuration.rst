@@ -323,6 +323,9 @@ plugin:NAME - as many sections as you want
         Every other key found in the section is passed to the
         plugin constructor in the **config** mapping.
 
+        You can use all the watcher options, since a plugin is
+        started like a watcher.
+
 Circus comes with a few pre-shipped :ref:`plugins <plugins>` but you can also extend them easily by :ref:`developing your own <develop_plugins>`.
 
 
@@ -475,7 +478,7 @@ FileStream
         By default backup_count is null.
 
 
-.. note::    
+.. note::
 
     Rollover occurs whenever the current log file is nearly max_bytes in
     length. If backup_count is >= 1, the system will successively create
