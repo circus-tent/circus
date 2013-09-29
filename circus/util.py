@@ -8,9 +8,10 @@ import shlex
 import socket
 import sys
 import time
+import functools
 from tornado.ioloop import IOLoop
 from tornado import gen
-from tornado.concurrent import Future
+from tornado import concurrent
 from ConfigParser import (
     ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
 )
@@ -716,28 +717,28 @@ def dict_differ(dict1, dict2):
     return len(DictDiffer(dict1, dict2).changed()) > 0
 
 
-_EXCLUSIVE_RUNNING_COMMAND = None
-
-
-def _synchronized_cb(name):
-    global _EXCLUSIVE_RUNNING_COMMAND
-    _EXCLUSIVE_RUNNING_COMMAND = None
+def _synchronized_cb(arbiter, future):
+    arbiter._exclusive_running_command = None
 
 
 def synchronized(name):
     def real_decorator(f):
         @wraps(f)
-        def wrapper(*args, **kwargs):
-            global _EXCLUSIVE_RUNNING_COMMAND
-            if _EXCLUSIVE_RUNNING_COMMAND is not None:
-                raise ConflictError("arbiter is already running %s command"
-                                    % _EXCLUSIVE_RUNNING_COMMAND)
-            _EXCLUSIVE_RUNNING_COMMAND = name
-            resp = f(*args, **kwargs)
-            if isinstance(resp, Future):
-                resp.add_done_callback(_synchronized_cb)
+        def wrapper(self, *args, **kwargs):
+            if hasattr(self, "arbiter"):
+                arbiter = self.arbiter
             else:
-                _EXCLUSIVE_RUNNING_COMMAND = None
+                arbiter = self
+            if arbiter._exclusive_running_command is not None:
+                raise ConflictError("arbiter is already running %s command"
+                                    % arbiter._exclusive_running_command)
+            arbiter._exclusive_running_command = name
+            resp = f(self, *args, **kwargs)
+            if isinstance(resp, concurrent.Future):
+                cb = functools.partial(_synchronized_cb, arbiter)
+                resp.add_done_callback(cb)
+            else:
+                arbiter._exclusive_running_command = None
             return resp
         return wrapper
     return real_decorator
@@ -750,3 +751,41 @@ def tornado_sleep(duration):
     Thanks to http://stackoverflow.com/a/11135204/433050
     """
     return gen.Task(IOLoop.instance().add_timeout, time.time() + duration)
+
+
+class TransformableFuture(concurrent.Future):
+
+    _upstream_future = None
+    _upstream_callback = None
+    _transform_function = lambda x: x
+    _result = None
+    _exception = None
+
+    def set_transform_function(self, fn):
+        self._transform_function = fn
+
+    def set_upstream_future(self, upstream_future):
+        self._upstream_future = upstream_future
+
+    def result(self, timeout=None):
+        if self._upstream_future is None:
+            raise Exception("upstream_future is not set")
+        return self._transform_function(self._result)
+
+    def _internal_callback(self, future):
+        self._result = future.result()
+        self._exception = future.exception()
+        if self._upstream_callback is not None:
+            self._upstream_callback(self)
+
+    def add_done_callback(self, fn):
+        if self._upstream_future is None:
+            raise Exception("upstream_future is not set")
+        self._upstream_callback = fn
+        self._upstream_future.add_done_callback(self._internal_callback)
+
+    def exception(self, timeout=None):
+        if self._exception:
+            return self._exception
+        else:
+            return None
