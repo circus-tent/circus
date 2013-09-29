@@ -4,6 +4,7 @@ import os
 import threading
 import time
 import warnings
+import tornado
 
 import mock
 from zmq.eventloop import ioloop
@@ -14,7 +15,7 @@ from circus.process import RUNNING, UNEXISTING
 
 from circus.stream import QueueStream
 from circus.tests.support import TestCircus, poll_for, truncate_file
-from circus.util import get_python_version
+from circus.util import get_python_version, tornado_sleep
 from circus.watcher import Watcher
 
 from test.test_support import captured_output
@@ -39,71 +40,83 @@ class TestWatcher(TestCircus):
 
     runner = None
 
-    @classmethod
-    def setUpClass(cls):
+    @tornado.gen.coroutine
+    def _setUp(self):
+        self.stream = QueueStream()
         dummy_process = 'circus.tests.support.run_process'
-        cls.stream = QueueStream()
-        testfile, arbiter = cls._create_circus(
-            dummy_process, stdout_stream={'stream': cls.stream},
-            debug=True)
-        cls.arbiter = arbiter
-        cls.test_file = testfile
-        poll_for(testfile, 'START')
+        testfile, arbiter = self._create_circus(
+            dummy_process, stdout_stream={'stream': self.stream},
+            debug=True, async=True)
+        self.test_file = testfile
+        self.arbiter = arbiter
+        yield self.arbiter.start(start_ioloop=False)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.arbiter.stop()
-
-    def tearDown(self):
-        super(TestCircus, self).tearDown()
-        current = self.numprocesses('numprocesses')
+    @tornado.gen.coroutine
+    def _tearDown(self):
+        current = yield self.numprocesses('numprocesses')
         if current > 1:
-            self.numprocesses('decr', name='test', nb=current-1)
+            yield self.numprocesses('decr', name='test', nb=current-1)
+        yield self.arbiter.stop(stop_ioloop=False)
 
+    @tornado.gen.coroutine
     def status(self, cmd, **props):
-        resp = self.call(cmd, **props)
-        return resp.get('status')
+        resp = yield self.call(cmd, **props)
+        raise tornado.gen.Return(resp.get('status'))
 
+    @tornado.gen.coroutine
     def numprocesses(self, cmd, **props):
-        resp = self.call(cmd, **props)
-        return resp.get('numprocesses')
+        resp = yield self.call(cmd, waiting=True, **props)
+        raise tornado.gen.Return(resp.get('numprocesses'))
 
+    @tornado.gen.coroutine
     def pids(self):
-        return self.call('list', name='test').get('pids')
+        resp = yield self.call('list', name='test')
+        raise tornado.gen.Return(resp.get('pids'))
 
+    @tornado.testing.gen_test
     def test_decr_too_much(self):
-        res = self.numprocesses('decr', name='test', nb=100)
+        yield self._setUp()
+        res = yield self.numprocesses('decr', name='test', nb=100)
         self.assertEqual(res, 0)
-        res = self.numprocesses('decr', name='test', nb=100)
+        res = yield self.numprocesses('decr', name='test', nb=100)
         self.assertEqual(res, 0)
-        res = self.numprocesses('incr', name='test', nb=1)
+        res = yield self.numprocesses('incr', name='test', nb=1)
         self.assertEqual(res, 1)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_signal(self):
-        self.assertEquals(self.numprocesses('incr', name='test'), 2)
+        yield self._setUp()
+        resp = yield self.numprocesses('incr', name='test')
+        self.assertEquals(resp, 2)
         # wait for both to have started
         self.assertTrue(poll_for(self.test_file, 'STARTSTART'))
         truncate_file(self.test_file)
 
-        pids = self.pids()
+        pids = yield self.pids()
         self.assertEquals(len(pids), 2)
         to_kill = pids[0]
-        self.assertEquals(self.status('signal', name='test', pid=to_kill,
-                                      signum=signal.SIGKILL), 'ok')
+        status = yield self.status('signal', name='test', pid=to_kill,
+                                   signum=signal.SIGKILL)
+        self.assertEquals(status, 'ok')
 
         # make sure the process is restarted
+        yield tornado_sleep(2)  # FIXME: async polling
         self.assertTrue(poll_for(self.test_file, 'START'))
 
         # we still should have two processes, but not the same pids for them
-        pids = self.pids()
+        pids = yield self.pids()
         count = 0
         while len(pids) < 2 and count < 10:
-            pids = self.pids()
+            pids = yield self.pids()
             time.sleep(.1)
         self.assertEquals(len(pids), 2)
         self.assertTrue(to_kill not in pids)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_unexisting(self):
+        yield self._setUp()
         watcher = self.arbiter.get_watcher("test")
 
         to_kill = []
@@ -127,7 +140,7 @@ class TestWatcher(TestCircus):
             self.assertEquals(process.status, UNEXISTING)
 
         # this should clean up and create a new process
-        watcher.reap_and_manage_processes()
+        yield watcher.reap_and_manage_processes()
 
         # watcher ids should have been reused
         wids = [p.wid for p in watcher.processes.values()]
@@ -142,19 +155,26 @@ class TestWatcher(TestCircus):
 
             # and should not be unexisting...
             self.assertNotEqual(p.status, UNEXISTING)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_stats(self):
-        resp = self.call("stats").get('infos')
-        self.assertTrue("test" in resp)
-        watchers = resp['test']
+        yield self._setUp()
+        resp = yield self.call("stats")
+        self.assertTrue("test" in resp.get('infos'))
+        watchers = resp.get('infos')['test']
 
         self.assertEqual(watchers[watchers.keys()[0]]['cmdline'],
                          sys.executable.split(os.sep)[-1])
+        yield self._tearDown()
 
+    @skip("FIXME")
+    @tornado.testing.gen_test
     def test_max_age(self):
+        yield self._setUp()
         # let's run 15 processes
-        self.numprocesses('incr', name='test', nb=14)
-        initial_pids = self.pids()
+        yield self.numprocesses('incr', name='test', nb=14)
+        initial_pids = yield self.pids()
 
         # we want to make sure the watcher is really up and running 14
         # processes, and stable
@@ -162,18 +182,23 @@ class TestWatcher(TestCircus):
         truncate_file(self.test_file)  # make sure we have a clean slate
 
         # we want a max age of 1 sec.
-        result = self.call('set', name='test', waiting=True,
-                           options={'max_age': 1, 'max_age_variance': 0})
+        options = {'max_age': 1, 'max_age_variance': 0}
+        result = yield self.call('set', name='test', waiting=True,
+                                 options=options)
 
         self.assertEquals(result.get('status'), 'ok')
 
-        current_pids = self.pids()
+        current_pids = yield self.pids()
         self.assertEqual(len(current_pids), 15)
         self.assertNotEqual(initial_pids, current_pids)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_arbiter_reference(self):
+        yield self._setUp()
         self.assertEqual(self.arbiter.watchers[0].arbiter,
                          self.arbiter)
+        yield self._tearDown()
 
 
 class TestWatcherInitialization(TestCircus):
@@ -307,18 +332,22 @@ class TestWatcherHooks(TestCircus):
         return self._create_circus(dummy_process,
                                    stdout_stream={'stream': self.stream},
                                    stderr_stream={'stream': self.errstream},
-                                   hooks=hooks)
+                                   hooks=hooks, debug=True, async=True)
 
+    @tornado.gen.coroutine
     def _stop(self):
-        self.call("stop", name="test", waiting=True)
+        yield self.call("stop", name="test", waiting=True)
 
+    @tornado.gen.coroutine
     def get_status(self):
-        return self.call("status", name="test")['status']
+        resp = yield self.call("status", name="test")
+        raise tornado.gen.Return(resp['status'])
 
     def test_missing_hook(self):
         hooks = {'before_start': ('fake.hook.path', False)}
         self.assertRaises(ImportError, self.run_with_hooks, hooks)
 
+    @tornado.gen.coroutine
     def _test_hooks(self, hook_name='before_start', status='active',
                     behavior=SUCCESS, call=None,
                     hook_kwargs_test_function=None):
@@ -343,103 +372,117 @@ class TestWatcherHooks(TestCircus):
 
         hooks = {hook_name: (hook, False)}
         testfile, arbiter = self.run_with_hooks(hooks)
+        yield arbiter.start(start_ioloop=False)
         try:
             if call:
-                call()
-            self.assertEqual(self.get_status(), status)
+                yield call()
+            resp_status = yield self.get_status()
+            self.assertEqual(resp_status, status)
         finally:
-            arbiter.stop()
+            yield arbiter.stop(stop_ioloop=False)
             logger.exception = old
 
         self.assertTrue(events['before_start_called'])
         self.assertEqual(events['arbiter_in_hook'], arbiter)
 
+    @tornado.testing.gen_test
     def test_before_start(self):
-        self._test_hooks()
+        yield self._test_hooks()
 
-    @skip("FIXME")
+    @tornado.testing.gen_test
     def test_before_start_fails(self):
-        self._test_hooks(behavior=ERROR, status='stopped')
+        yield self._test_hooks(behavior=ERROR, status='stopped')
 
-    @skip("FIXME")
+    @tornado.testing.gen_test
     def test_before_start_false(self):
-        self._test_hooks(behavior=FAILURE, status='stopped',
-                         hook_name='after_start')
+        yield self._test_hooks(behavior=FAILURE, status='stopped',
+                               hook_name='after_start')
 
+    @tornado.testing.gen_test
     def test_after_start(self):
-        self._test_hooks(hook_name='after_start')
+        yield self._test_hooks(hook_name='after_start')
 
-    @skip("FIXME")
+    @tornado.testing.gen_test
     def test_after_start_fails(self):
         with captured_output('stderr'):
-            self._test_hooks(behavior=ERROR, status='stopped',
-                             hook_name='after_start')
+            yield self._test_hooks(behavior=ERROR, status='stopped',
+                                   hook_name='after_start')
 
-    @skip("FIXME")
+    @tornado.testing.gen_test
     def test_after_start_false(self):
-        self._test_hooks(behavior=FAILURE, status='stopped',
-                         hook_name='after_start')
+        yield self._test_hooks(behavior=FAILURE, status='stopped',
+                               hook_name='after_start')
 
+    @tornado.testing.gen_test
     def test_before_stop(self):
-        self._test_hooks(hook_name='before_stop', status='stopped',
-                         call=self._stop)
+        yield self._test_hooks(hook_name='before_stop', status='stopped',
+                               call=self._stop)
 
+    @tornado.testing.gen_test
     def _hook_signal_kwargs_test_function(self, kwargs):
         self.assertTrue("pid" not in kwargs)
         self.assertTrue("signum" not in kwargs)
         self.assertTrue(kwargs["pid"] in (signal.SIGTERM, signal.SIGKILL))
         self.assertTrue(int(kwargs["signum"]) > 1)
 
+    @tornado.testing.gen_test
     def test_before_signal(self):
         func = self._hook_signal_kwargs_test_function
-        self._test_hooks(hook_name='before_signal', status='stopped',
-                         call=self._stop,
-                         hook_kwargs_test_function=func)
+        yield self._test_hooks(hook_name='before_signal', status='stopped',
+                               call=self._stop,
+                               hook_kwargs_test_function=func)
 
+    @tornado.testing.gen_test
     def test_after_signal(self):
         func = self._hook_signal_kwargs_test_function
-        self._test_hooks(hook_name='after_signal', status='stopped',
-                         call=self._stop,
-                         hook_kwargs_test_function=func)
+        yield self._test_hooks(hook_name='after_signal', status='stopped',
+                               call=self._stop,
+                               hook_kwargs_test_function=func)
 
+    @tornado.testing.gen_test
     def test_before_stop_fails(self):
         with captured_output('stdout'):
-            self._test_hooks(behavior=ERROR, status='stopped',
-                             hook_name='before_stop',
-                             call=self._stop)
+            yield self._test_hooks(behavior=ERROR, status='stopped',
+                                   hook_name='before_stop',
+                                   call=self._stop)
 
+    @tornado.testing.gen_test
     def test_before_stop_false(self):
-        self._test_hooks(behavior=FAILURE, status='stopped',
-                         hook_name='before_stop', call=self._stop)
+        yield self._test_hooks(behavior=FAILURE, status='stopped',
+                               hook_name='before_stop', call=self._stop)
 
+    @tornado.testing.gen_test
     def test_after_stop(self):
-        self._test_hooks(hook_name='after_stop', status='stopped',
-                         call=self._stop)
+        yield self._test_hooks(hook_name='after_stop', status='stopped',
+                               call=self._stop)
 
+    @tornado.testing.gen_test
     def test_after_stop_fails(self):
         with captured_output('stdout'):
-            self._test_hooks(behavior=ERROR, status='stopped',
-                             hook_name='after_stop',
-                             call=self._stop)
+            yield self._test_hooks(behavior=ERROR, status='stopped',
+                                   hook_name='after_stop',
+                                   call=self._stop)
 
+    @tornado.testing.gen_test
     def test_after_stop_false(self):
-        self._test_hooks(behavior=FAILURE, status='stopped',
-                         hook_name='after_stop', call=self._stop)
+        yield self._test_hooks(behavior=FAILURE, status='stopped',
+                               hook_name='after_stop', call=self._stop)
 
+    @tornado.testing.gen_test
     def test_before_spawn(self):
-        self._test_hooks(hook_name='before_spawn')
+        yield self._test_hooks(hook_name='before_spawn')
 
-    @skip("FIXME")
+    @tornado.testing.gen_test
     def test_before_spawn_failure(self):
         with captured_output('stdout'):
-            self._test_hooks(behavior=ERROR, status='stopped',
-                             hook_name='before_spawn',
-                             call=self._stop)
+            yield self._test_hooks(behavior=ERROR, status='stopped',
+                                   hook_name='before_spawn',
+                                   call=self._stop)
 
-    @skip("FIXME")
+    @tornado.testing.gen_test
     def test_before_spawn_false(self):
-        self._test_hooks(behavior=FAILURE, status='stopped',
-                         hook_name='before_spawn', call=self._stop)
+        yield self._test_hooks(behavior=FAILURE, status='stopped',
+                               hook_name='before_spawn', call=self._stop)
 
 
 def oneshot_process(test_file):
@@ -448,33 +491,37 @@ def oneshot_process(test_file):
 
 class RespawnTest(TestCircus):
 
+    @tornado.testing.gen_test
     def test_not_respawning(self):
         oneshot_process = 'circus.tests.test_watcher.oneshot_process'
-        testfile, arbiter = self._create_circus(oneshot_process, respawn=False)
+        testfile, arbiter = self._create_circus(oneshot_process,
+                                                respawn=False, async=True)
+        yield arbiter.start(start_ioloop=False)
         watcher = arbiter.watchers[-1]
         try:
             # Per default, we shouldn't respawn processes,
             # so we should have one process, even if in a dead state.
-            resp = self.call("numprocesses", name="test")
+            resp = yield self.call("numprocesses", name="test")
             self.assertEquals(resp['numprocesses'], 1)
 
             # let's reap processes and explicitely ask for process management
-            watcher.reap_and_manage_processes()
+            yield watcher.reap_and_manage_processes()
 
             # we should have zero processes (the process shouldn't respawn)
             self.assertEquals(len(watcher.processes), 0)
 
             # If we explicitely ask the watcher to respawn its processes,
             # ensure it's doing so.
-            watcher.spawn_processes()
+            yield watcher.spawn_processes()
             self.assertEquals(len(watcher.processes), 1)
         finally:
-            arbiter.stop()
+            yield arbiter.stop(stop_ioloop=False)
 
-    @skip
+    @skip("FIXME : async & mock")
+    @tornado.testing.gen_test
     def test_stopping_a_watcher_doesnt_spawn(self):
         watcher = Watcher("foo", "foobar", respawn=True, numprocesses=3)
-        watcher._status = "stopped"
+        watcher._status = "started"
 
         watcher.spawn_processes = mock.MagicMock()
         watcher.loop = mock.MagicMock()
@@ -486,14 +533,14 @@ class RespawnTest(TestCircus):
 
         # When we call manage_process(), the watcher should try to spawn a new
         # process since we aim to have 3 of them.
-        watcher.manage_processes()
+        yield watcher.manage_processes()
         self.assertTrue(watcher.spawn_processes.called)
 
         # Now, we want to stop everything.
         watcher.processes = {1234: FakeProcess(1234, status=RUNNING),
                              1235: FakeProcess(1235, status=RUNNING)}
         watcher.spawn_processes.reset_mock()
-        watcher.stop()
-        watcher.manage_processes()
+        yield watcher.stop()
+        yield watcher.manage_processes()
         # And be sure we don't spawn new processes in the meantime.
         self.assertFalse(watcher.spawn_processes.called)

@@ -361,6 +361,9 @@ class Watcher(object):
     @util.debuglog
     def reap_process(self, pid, status=None):
         """ensure that the process is killed (and not a zombie)"""
+        if pid not in self.processes:
+            return
+        logger.debug( ">>>>>>>>>>>>>>>>>> pop reap %i" % pid)
         process = self.processes.pop(pid)
 
         if not status:
@@ -417,6 +420,7 @@ class Watcher(object):
     @gen.coroutine
     @util.debuglog
     def manage_processes(self):
+        logger.debug("manage processes")
         """Manage processes."""
         if self.is_stopped():
             return
@@ -433,13 +437,21 @@ class Watcher(object):
         processes = self.processes.values()
         processes.sort()
 
+        processes_to_kill = []
         while len(processes) > self.numprocesses:
             process = processes.pop(0)
             if process.status == DEAD_OR_ZOMBIE:
+                logger.debug( ">>>>>>>>>>>>>>>>> pop dead %i" % process.pid)
                 self.processes.pop(process.pid)
             else:
+                processes_to_kill.append(process)
+
+        removes = yield [self.kill_process(process)
+                         for process in processes_to_kill]
+        for i, process in enumerate(processes_to_kill):
+            if removes[i]:
+                logger.debug( ">>>>>>>>>>>>>>>>> pop kill %i" % process.pid)
                 self.processes.pop(process.pid)
-                yield self.kill_process(process)
 
     @gen.coroutine
     @util.debuglog
@@ -448,6 +460,7 @@ class Watcher(object):
         expired_processes = [p for p in self.processes.values()
                              if p.age() > max_age]
         yield [self.kill_process(x) for x in expired_processes]
+        # FIXME : self.processes ?
 
     @gen.coroutine
     @util.debuglog
@@ -541,7 +554,8 @@ class Watcher(object):
                                             "time": time.time()})
                 return True
         return False
-
+ 
+    @util.debuglog
     def send_signal_process(self, process, signum):
         """Send the signum signal to the process
 
@@ -575,19 +589,24 @@ class Watcher(object):
     def kill_process(self, process):
         """Kill process (SIGTERM, graceful_timeout then SIGKILL)
         """
+        if process.stopping:
+            raise gen.Return(False)
         logger.debug("%s: kill process %s", self.name, process.pid)
         self.send_signal_process(process, signal.SIGTERM)
+        process.stopping = True
         waited = 0
         while waited < self.graceful_timeout:
             yield tornado_sleep(1)
             waited = waited + 1
             if not process.is_alive():
-                self._process_remove_redirections(process)
-                process.stop()
-        # We are not smart anymore
-        self.send_signal_process(process, signal.SIGKILL)
+                break
+        if waited >= self.graceful_timeout:
+            # We are not smart anymore
+            self.send_signal_process(process, signal.SIGKILL)
         self._process_remove_redirections(process)
+        process.stopping = False
         process.stop()
+        raise gen.Return(True)
 
     @gen.coroutine
     @util.debuglog
@@ -760,6 +779,7 @@ class Watcher(object):
         if self.stderr_redirector is not None:
             self.stderr_redirector.start()
 
+        self._status = "active"
         logger.info('%s started' % self.name)
         self.notify_event("start", {"time": time.time()})
 
@@ -772,7 +792,7 @@ class Watcher(object):
     @util.debuglog
     def _restart(self):
         yield self._stop()
-        yield self.start()
+        yield self._start()
 
     @util.synchronized("watcher_reload")
     @gen.coroutine
@@ -810,7 +830,7 @@ class Watcher(object):
             raise ValueError('Singleton watcher has a single process')
         self.numprocesses = np
         yield self.manage_processes()
-        raise gen.Return(self.num_processes)
+        raise gen.Return(self.numprocesses)
 
     @util.synchronized("watcher_incr")
     @gen.coroutine

@@ -86,6 +86,7 @@ class Arbiter(object):
                  httpd_close_outputs=False, debug=False,
                  ssh_server=None, proc_name='circusd', pidfile=None,
                  loglevel=None, logoutput=None, fqdn_prefix=None):
+
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -116,7 +117,7 @@ class Arbiter(object):
         self._stopping = False
         self._lock = RLock()
         self.debug = debug
-        self._exclusive_command = None
+        self._exclusive_running_command = None
         if self.debug:
             self.stdout_stream = self.stderr_stream = {'class': 'StdoutStream'}
         else:
@@ -454,8 +455,9 @@ class Arbiter(object):
             yield watcher._start()
             yield tornado_sleep(self.warmup_delay)
 
+    @gen.coroutine
     @debuglog
-    def start(self):
+    def start(self, start_ioloop=True):
         """Starts all the watchers.
 
         The start command is an infinite loop that waits
@@ -470,38 +472,50 @@ class Arbiter(object):
         try:
             # initialize processes
             logger.debug('Initializing watchers')
-            for watcher in self.iter_watchers():
-                self.start_watcher(watcher)
+            if start_ioloop:
+                for watcher in self.iter_watchers():
+                    self.loop.add_future(self.start_watcher(watcher), lambda x: None)  # FIXME : enchainement ?
+            else:
+                for watcher in self.iter_watchers():
+                    yield self.start_watcher(watcher)
 
             logger.info('Arbiter now waiting for commands')
+            if start_ioloop:
 
-            while True:
-                try:
-                    self.loop.start()
-                except zmq.ZMQError as e:
-                    if e.errno == errno.EINTR:
-                        continue
+                while True:
+                    try:
+                        self.loop.start()
+                    except zmq.ZMQError as e:
+                        if e.errno == errno.EINTR:
+                            continue
+                        else:
+                            raise
                     else:
-                        raise
-                else:
-                    break
+                        break
         finally:
+            if start_ioloop:
+                self.ctrl.stop()
+                self.evpub_socket.close()
+                if len(self.sockets) > 0:
+                    self.sockets.close_all()
+
+    @synchronized("arbiter_stop")
+    @gen.coroutine
+    def stop(self, stop_ioloop=True):
+        yield self._stop(stop_ioloop=stop_ioloop)
+
+    @gen.coroutine
+    def _stop(self, stop_ioloop=True):
+        logger.info('Arbiter exiting')
+        self._stopping = True
+        yield self._stop_watchers()
+        if stop_ioloop:
+            self.loop.add_callback(self._stop_cb)
+        else:
             self.ctrl.stop()
             self.evpub_socket.close()
             if len(self.sockets) > 0:
                 self.sockets.close_all()
-
-    @synchronized("arbiter_stop")
-    @gen.coroutine
-    def stop(self):
-        yield self._stop()
-
-    @gen.coroutine
-    def _stop(self):
-        logger.info('Arbiter exiting')
-        self._stopping = True
-        yield self._stop_watchers()
-        self.loop.add_callback(self._stop_cb)
 
     def _stop_cb(self):
         # this will stop the loop and the closing
@@ -537,8 +551,11 @@ class Arbiter(object):
                 else:
                     raise
 
+    # FIXME : async + waiting for other commands
     def manage_watchers(self):
         if self._stopping:
+            return
+        if self._exclusive_running_command is not None:
             return
 
         with self._lock:
@@ -632,7 +649,6 @@ class Arbiter(object):
         - **name**: name of the watcher to delete
         """
         logger.debug('Deleting %r watcher', name)
-        self._exclusive_command = "rm_watcher"
 
         # remove the watcher from the list
         watcher = self._watchers_names.pop(name)
@@ -652,14 +668,6 @@ class Arbiter(object):
         for watcher in self.iter_watchers():
             yield watcher.start()
             yield tornado_sleep(self.warmup_delay)
-
-    def _stop_watchers_cb(self, main_callback):
-        for watcher in self.iter_watchers(reverse=False):
-            if not watcher.stopped:
-                return
-        self._exclusive_command = None
-        if main_callback is not None:
-            self.loop.add_callback(main_callback)
 
     @gen.coroutine
     @debuglog
