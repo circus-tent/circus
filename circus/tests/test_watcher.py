@@ -135,7 +135,6 @@ class TestWatcher(TestCircus):
                          sys.executable.split(os.sep)[-1])
         yield self.stop_arbiter()
 
-    @skip("FIXME")
     @tornado.testing.gen_test
     def test_max_age(self):
         yield self.start_arbiter()
