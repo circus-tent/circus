@@ -526,7 +526,7 @@ class Arbiter(object):
         # map watcher to pids
         watchers_pids = {}
         for watcher in self.iter_watchers():
-            if not watcher.stopped:
+            if not watcher.is_stopped():
                 for process in watcher.processes.values():
                     watchers_pids[process.pid] = watcher
 
@@ -563,7 +563,7 @@ class Arbiter(object):
             # manage and reap processes
             self.reap_processes()
             for watcher in self.iter_watchers():
-                if watcher.on_demand and watcher.stopped:
+                if watcher.on_demand and watcher.is_stopped():
                     need_on_demand = True
                 watcher.manage_processes()
 

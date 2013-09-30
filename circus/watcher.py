@@ -941,8 +941,3 @@ class Watcher(object):
 
     def is_stopped(self):
         return self._status == 'stopped'
-
-    # FIXME : supprimer
-    @property
-    def stopped(self):
-        return self.is_stopped()
