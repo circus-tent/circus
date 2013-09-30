@@ -26,7 +26,8 @@ _CONF = {
     'circus': os.path.join(CONFIG_DIR, 'circus.ini'),
     'nope': os.path.join(CONFIG_DIR, 'nope.ini'),
     'unexistant': os.path.join(CONFIG_DIR, 'unexistant.ini'),
-    'issue442': os.path.join(CONFIG_DIR, 'issue442.ini')
+    'issue442': os.path.join(CONFIG_DIR, 'issue442.ini'),
+    'expand_vars': os.path.join(CONFIG_DIR, 'expand_vars.ini'),
 }
 
 
@@ -169,3 +170,12 @@ class TestConfig(unittest.TestCase):
         self.assertTrue(conf['statsd'])
         self.assertEqual(conf['watchers'][0]['uid'], 'tarek')
         self.assertEqual(conf['watchers'][0]['gid'], 'root')
+
+    def test_expand_vars(self):
+        '''
+        https://github.com/mozilla-services/circus/pull/554
+        '''
+        conf = get_config(_CONF['expand_vars'])
+        watcher = conf['watchers'][0]
+        self.assertEqual(watcher['stdout_stream']['filename'], '/tmp/echo.log')
+

@@ -307,18 +307,23 @@ def get_config(config_file):
                     extra = cfg.items(section, noreplace=True)
                     environs[watcher_name].update(_upper(extra))
 
+    def _expand_vars(target, key, env):
+        if isinstance(target[key], str):
+            target[key] = replace_gnu_args(target[key], env=env)
+        elif isinstance(target[key], dict):
+            for k in target[key].keys():
+                _expand_vars(target[key], k, env)
+
     for watcher in watchers:
         if watcher['name'] in environs:
             if not 'env' in watcher:
                 watcher['env'] = dict()
             _extend(watcher['env'], environs[watcher['name']].items())
 
-        for option, value in watcher.items():
+        for option in watcher.keys():
             if option in ('name', 'env'):
                 continue
-            if not isinstance(value, str):
-                continue
-            watcher[option] = replace_gnu_args(value, env=watcher['env'])
+            _expand_vars(watcher, option, watcher['env'])
 
     config['watchers'] = watchers
     config['plugins'] = plugins
