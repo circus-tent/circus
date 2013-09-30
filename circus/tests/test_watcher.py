@@ -40,53 +40,20 @@ class TestWatcher(TestCircus):
 
     runner = None
 
-    @tornado.gen.coroutine
-    def _setUp(self):
-        self.stream = QueueStream()
-        dummy_process = 'circus.tests.support.run_process'
-        testfile, arbiter = self._create_circus(
-            dummy_process, stdout_stream={'stream': self.stream},
-            debug=True, async=True)
-        self.test_file = testfile
-        self.arbiter = arbiter
-        yield self.arbiter.start(start_ioloop=False)
-
-    @tornado.gen.coroutine
-    def _tearDown(self):
-        current = yield self.numprocesses('numprocesses')
-        if current > 1:
-            yield self.numprocesses('decr', name='test', nb=current-1)
-        yield self.arbiter.stop(stop_ioloop=False)
-
-    @tornado.gen.coroutine
-    def status(self, cmd, **props):
-        resp = yield self.call(cmd, **props)
-        raise tornado.gen.Return(resp.get('status'))
-
-    @tornado.gen.coroutine
-    def numprocesses(self, cmd, **props):
-        resp = yield self.call(cmd, waiting=True, **props)
-        raise tornado.gen.Return(resp.get('numprocesses'))
-
-    @tornado.gen.coroutine
-    def pids(self):
-        resp = yield self.call('list', name='test')
-        raise tornado.gen.Return(resp.get('pids'))
-
     @tornado.testing.gen_test
     def test_decr_too_much(self):
-        yield self._setUp()
+        yield self.start_arbiter()
         res = yield self.numprocesses('decr', name='test', nb=100)
         self.assertEqual(res, 0)
         res = yield self.numprocesses('decr', name='test', nb=100)
         self.assertEqual(res, 0)
         res = yield self.numprocesses('incr', name='test', nb=1)
         self.assertEqual(res, 1)
-        yield self._tearDown()
+        yield self.stop_arbiter()
 
     @tornado.testing.gen_test
     def test_signal(self):
-        yield self._setUp()
+        yield self.start_arbiter()
         resp = yield self.numprocesses('incr', name='test')
         self.assertEquals(resp, 2)
         # wait for both to have started
@@ -112,11 +79,11 @@ class TestWatcher(TestCircus):
             time.sleep(.1)
         self.assertEquals(len(pids), 2)
         self.assertTrue(to_kill not in pids)
-        yield self._tearDown()
+        yield self.stop_arbiter()
 
     @tornado.testing.gen_test
     def test_unexisting(self):
-        yield self._setUp()
+        yield self.start_arbiter()
         watcher = self.arbiter.get_watcher("test")
 
         to_kill = []
@@ -155,23 +122,23 @@ class TestWatcher(TestCircus):
 
             # and should not be unexisting...
             self.assertNotEqual(p.status, UNEXISTING)
-        yield self._tearDown()
+        yield self.stop_arbiter()
 
     @tornado.testing.gen_test
     def test_stats(self):
-        yield self._setUp()
+        yield self.start_arbiter()
         resp = yield self.call("stats")
         self.assertTrue("test" in resp.get('infos'))
         watchers = resp.get('infos')['test']
 
         self.assertEqual(watchers[watchers.keys()[0]]['cmdline'],
                          sys.executable.split(os.sep)[-1])
-        yield self._tearDown()
+        yield self.stop_arbiter()
 
     @skip("FIXME")
     @tornado.testing.gen_test
     def test_max_age(self):
-        yield self._setUp()
+        yield self.start_arbiter()
         # let's run 15 processes
         yield self.numprocesses('incr', name='test', nb=14)
         initial_pids = yield self.pids()
@@ -191,14 +158,14 @@ class TestWatcher(TestCircus):
         current_pids = yield self.pids()
         self.assertEqual(len(current_pids), 15)
         self.assertNotEqual(initial_pids, current_pids)
-        yield self._tearDown()
+        yield self.stop_arbiter()
 
     @tornado.testing.gen_test
     def test_arbiter_reference(self):
-        yield self._setUp()
+        yield self.start_arbiter()
         self.assertEqual(self.arbiter.watchers[0].arbiter,
                          self.arbiter)
-        yield self._tearDown()
+        yield self.stop_arbiter()
 
 
 class TestWatcherInitialization(TestCircus):

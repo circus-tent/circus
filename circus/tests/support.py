@@ -17,6 +17,7 @@ from circus import get_arbiter
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_STATS)
 from circus.client import AsyncCircusClient, make_message
+from circus.stream import QueueStream
 
 
 def resolve_name(name):
@@ -81,6 +82,38 @@ class TestCircus(AsyncTestCase):
         for dir in self.dirs:
             shutil.rmtree(dir)
         self.cli.stop()
+
+    @tornado.gen.coroutine
+    def start_arbiter(self, cmd='circus.tests.support.run_process'):
+        self.stream = QueueStream()
+        testfile, arbiter = self._create_circus(
+            cmd, stdout_stream={'stream': self.stream},
+            debug=True, async=True)
+        self.test_file = testfile
+        self.arbiter = arbiter
+        yield self.arbiter.start(start_ioloop=False)
+
+    @tornado.gen.coroutine
+    def stop_arbiter(self):
+        current = yield self.numprocesses('numprocesses')
+        if current > 1:
+            yield self.numprocesses('decr', name='test', nb=current-1)
+        yield self.arbiter.stop(stop_ioloop=False)
+
+    @tornado.gen.coroutine
+    def status(self, cmd, **props):
+        resp = yield self.call(cmd, **props)
+        raise tornado.gen.Return(resp.get('status'))
+
+    @tornado.gen.coroutine
+    def numprocesses(self, cmd, **props):
+        resp = yield self.call(cmd, waiting=True, **props)
+        raise tornado.gen.Return(resp.get('numprocesses'))
+
+    @tornado.gen.coroutine
+    def pids(self):
+        resp = yield self.call('list', name='test')
+        raise tornado.gen.Return(resp.get('pids'))
 
     def get_tmpdir(self):
         dir_ = mkdtemp()
