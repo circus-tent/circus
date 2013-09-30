@@ -1,13 +1,11 @@
 import signal
 import sys
 import os
-import threading
 import time
 import warnings
 import tornado
 
 import mock
-from zmq.eventloop import ioloop
 from unittest2 import skip
 
 from circus import logger
@@ -202,12 +200,15 @@ class TestWatcherInitialization(TestCircus):
         finally:
             os.environ = old_environ
 
+    @tornado.testing.gen_test
     def test_copy_path(self):
-        watcher = SomeWatcher()
-        watcher.start()
+        watcher = SomeWatcher(loop=tornado.ioloop.IOLoop().instance())
+        yield watcher.run()
         # wait for watcher data at most 5s
+        # FIXME : async polling
+        yield tornado_sleep(2)
         data = watcher.stream.get(timeout=5)
-        watcher.stop()
+        yield watcher.stop()
         data = [v for k, v in data.items()][1]
         data = ''.join(data)
         self.assertTrue('XYZ' in data, data)
@@ -247,14 +248,15 @@ class TestWatcherInitialization(TestCircus):
         self.assertTrue(wanted in ppath.split(os.pathsep))
 
 
-class SomeWatcher(threading.Thread):
+class SomeWatcher(object):
 
-    def __init__(self, **kw):
-        threading.Thread.__init__(self)
+    def __init__(self, loop, **kw):
         self.stream = QueueStream()
-        self.loop = self.watcher = None
+        self.watcher = None
         self.kw = kw
+        self.loop = loop
 
+    @tornado.gen.coroutine
     def run(self):
         qstream = {'stream': self.stream}
         old_environ = os.environ
@@ -266,22 +268,18 @@ class SomeWatcher(threading.Thread):
                    'sys.stdout.write(\':\'.join(sys.path)); '
                    ' sys.stdout.flush()"') % sys.executable
 
-            self.loop = ioloop.IOLoop()
             self.watcher = Watcher('xx', cmd, copy_env=True, copy_path=True,
                                    stdout_stream=qstream, loop=self.loop,
                                    **self.kw)
-            self.watcher.start()
-            self.loop.start()
+            yield self.watcher.start()
         finally:
             os.environ = old_environ
             sys.path[:] = old_paths
 
+    @tornado.gen.coroutine
     def stop(self):
-        if self.loop is not None:
-            self.loop.stop()
         if self.watcher is not None:
-            self.watcher.stop()
-        self.join()
+            yield self.watcher.stop()
 
 
 SUCCESS = 1
