@@ -718,27 +718,31 @@ def dict_differ(dict1, dict2):
 
 
 def _synchronized_cb(arbiter, future):
-    arbiter._exclusive_running_command = None
+    if arbiter is not None:
+        arbiter._exclusive_running_command = None
 
 
 def synchronized(name):
     def real_decorator(f):
         @wraps(f)
         def wrapper(self, *args, **kwargs):
+            arbiter = None
             if hasattr(self, "arbiter"):
                 arbiter = self.arbiter
-            else:
+            elif hasattr(self, "_exclusive_running_command"):
                 arbiter = self
-            if arbiter._exclusive_running_command is not None:
-                raise ConflictError("arbiter is already running %s command"
-                                    % arbiter._exclusive_running_command)
-            arbiter._exclusive_running_command = name
+            if arbiter is not None:
+                if arbiter._exclusive_running_command is not None:
+                    raise ConflictError("arbiter is already running %s command"
+                                        % arbiter._exclusive_running_command)
+                arbiter._exclusive_running_command = name
             resp = f(self, *args, **kwargs)
             if isinstance(resp, concurrent.Future):
                 cb = functools.partial(_synchronized_cb, arbiter)
                 resp.add_done_callback(cb)
             else:
-                arbiter._exclusive_running_command = None
+                if arbiter is not None:
+                    arbiter._exclusive_running_command = None
             return resp
         return wrapper
     return real_decorator
