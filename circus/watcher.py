@@ -363,7 +363,6 @@ class Watcher(object):
         """ensure that the process is killed (and not a zombie)"""
         if pid not in self.processes:
             return
-        logger.debug( ">>>>>>>>>>>>>>>>>> pop reap %i" % pid)
         process = self.processes.pop(pid)
 
         if not status:
@@ -441,7 +440,6 @@ class Watcher(object):
         while len(processes) > self.numprocesses:
             process = processes.pop(0)
             if process.status == DEAD_OR_ZOMBIE:
-                logger.debug( ">>>>>>>>>>>>>>>>> pop dead %i" % process.pid)
                 self.processes.pop(process.pid)
             else:
                 processes_to_kill.append(process)
@@ -450,7 +448,6 @@ class Watcher(object):
                          for process in processes_to_kill]
         for i, process in enumerate(processes_to_kill):
             if removes[i]:
-                logger.debug( ">>>>>>>>>>>>>>>>> pop kill %i" % process.pid)
                 self.processes.pop(process.pid)
 
     @gen.coroutine
