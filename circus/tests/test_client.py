@@ -25,7 +25,7 @@ class TestClient(TestCircus):
         return resp.get('numwatchers')
 
     def set(self, name, **opts):
-        return self.status("set", name=name, options=opts)
+        return self.status("set", name=name, waiting=True, options=opts)
 
     def test_client(self):
         # playing around with the watcher

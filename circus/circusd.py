@@ -123,15 +123,16 @@ def main():
             while True:
                 try:
                     arbiter = Arbiter.load_from_config(args.config)
-                    restart_after_stop = arbiter.start()
+                    arbiter.start()
+                    restart_after_stop = False
                 except ReloadArbiterException:
-                    pass
+                    restart_after_stop = True
                 else:
                     break
     except KeyboardInterrupt:
         pass
     finally:
-        arbiter.stop()
+        arbiter._stop()
         if pidfile is not None:
             pidfile.unlink()
 

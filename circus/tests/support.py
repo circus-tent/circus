@@ -7,13 +7,16 @@ from collections import defaultdict
 import cProfile
 import pstats
 import shutil
+from zmq.eventloop import ioloop
+from tornado.testing import AsyncTestCase
+import tornado
 
 import unittest2 as unittest
 
 from circus import get_arbiter
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_STATS)
-from circus.client import CircusClient, make_message
+from circus.client import AsyncCircusClient, make_message
 
 
 def resolve_name(name):
@@ -53,16 +56,21 @@ def resolve_name(name):
 _CMD = sys.executable
 
 
-class TestCircus(unittest.TestCase):
+class TestCircus(AsyncTestCase):
 
     arbiter_factory = get_arbiter
 
     def setUp(self):
+        ioloop.install()
+        super(TestCircus, self).setUp()
         self.arbiters = []
         self.files = []
         self.dirs = []
         self.tmpfiles = []
-        self.cli = CircusClient()
+        self.cli = AsyncCircusClient()
+
+    def get_new_ioloop(self):
+        return tornado.ioloop.IOLoop().instance()
 
     def tearDown(self):
         self._stop_runners()
@@ -72,7 +80,6 @@ class TestCircus(unittest.TestCase):
 
         for dir in self.dirs:
             shutil.rmtree(dir)
-
         self.cli.stop()
 
     def get_tmpdir(self):
@@ -90,7 +97,7 @@ class TestCircus(unittest.TestCase):
         return file
 
     @classmethod
-    def _create_circus(cls, callable, plugins=None, stats=False, **kw):
+    def _create_circus(cls, callable, plugins=None, stats=False, async=False, **kw):
         resolve_name(callable)   # used to check the callable
         fd, testfile = mkstemp()
         os.close(fd)
@@ -102,15 +109,19 @@ class TestCircus(unittest.TestCase):
         debug = kw.get('debug', False)
 
         fact = cls.arbiter_factory
-        if stats:
-            arbiter = fact([worker], background=True, plugins=plugins,
-                           stats_endpoint=DEFAULT_ENDPOINT_STATS,
-                           statsd=True,
-                           debug=debug, statsd_close_outputs=not debug)
-        else:
-            arbiter = fact([worker], background=True, plugins=plugins,
+        if async:
+            arbiter = fact([worker], background=False, plugins=plugins,
                            debug=debug)
-        arbiter.start()
+        else:
+            if stats:
+                arbiter = fact([worker], background=True, plugins=plugins,
+                               stats_endpoint=DEFAULT_ENDPOINT_STATS,
+                            statsd=True,
+                            debug=debug, statsd_close_outputs=not debug)
+            else:
+                arbiter = fact([worker], background=True, plugins=plugins,
+                            debug=debug)
+        #arbiter.start()
         return testfile, arbiter
 
     def _run_circus(self, callable, plugins=None, stats=False, **kw):
@@ -126,9 +137,11 @@ class TestCircus(unittest.TestCase):
             arbiter.stop()
         self.arbiters = []
 
+    @tornado.gen.coroutine
     def call(self, cmd, **props):
         msg = make_message(cmd, **props)
-        return self.cli.call(msg)
+        resp = yield self.cli.call(msg)
+        raise tornado.gen.Return(resp)
 
 
 def profile(func):

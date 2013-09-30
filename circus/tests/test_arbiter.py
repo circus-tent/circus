@@ -103,7 +103,7 @@ class TestTrainer(TestCircus):
 
     def test_add_watcher_arbiter_stopped(self):
         # stop the arbiter
-        resp = self.cli.call(make_message("stop"))
+        resp = self.cli.call(make_message("stop", waiting=True))
         self.assertEqual(resp.get("status"), "ok")
 
         msg = make_message("add", name="test1", cmd=self._get_cmd(),
@@ -178,7 +178,7 @@ class TestTrainer(TestCircus):
         msg = make_message("add", name="test1", cmd=self._get_cmd(),
                            options=self._get_options())
         self.cli.call(msg)
-        msg = make_message("rm", name="test1")
+        msg = make_message("rm", name="test1", waiting=True)
         self.cli.call(msg)
         resp = self.cli.call(make_message("numwatchers"))
         self.assertEqual(resp.get("numwatchers"), 1)
@@ -233,12 +233,12 @@ class TestTrainer(TestCircus):
         self.assertNotEqual(processes1[0], processes2[0])
 
     def test_stop_watchers(self):
-        self.cli.call(make_message("stop", async=False))
+        self.cli.call(make_message("stop", waiting=True))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get("status"), "stopped")
 
     def test_stop_watchers2(self):
-        self.cli.call(make_message("stop", name="test", async=False))
+        self.cli.call(make_message("stop", name="test", waiting=True))
         resp = self.cli.call(make_message("status", name="test"))
         self.assertEqual(resp.get('status'), "stopped")
 
@@ -251,7 +251,7 @@ class TestTrainer(TestCircus):
         resp = self.cli.call(make_message("start", name="test1"))
         self.assertEqual(resp.get("status"), "ok")
 
-        self.cli.call(make_message("stop", name="test1"))
+        self.cli.call(make_message("stop", name="test1", waiting=True))
         resp = self.cli.call(make_message("status", name="test1"))
         self.assertEqual(resp.get('status'), "stopped")
 

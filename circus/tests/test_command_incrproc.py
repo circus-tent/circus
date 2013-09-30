@@ -40,6 +40,9 @@ class FakeArbiter(object):
     def stop_watchers(self, **options):
         self.watchers[:] = []
 
+    def stop(self, **options):
+        self.stop_watchers(**options)
+
 
 class IncrProcTest(TestCircus):
 

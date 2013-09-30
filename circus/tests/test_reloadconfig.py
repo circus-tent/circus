@@ -45,7 +45,7 @@ class TestConfig(unittest.TestCase):
 
     def _tear_down_arbiter(self, a):
         for watcher in a.iter_watchers():
-            watcher.stop()
+            watcher._stop()
         a.sockets.close_all()
 
     def _load_base_arbiter(self):
