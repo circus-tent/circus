@@ -1,7 +1,7 @@
 import errno
 import logging
 import os
-from threading import Thread, RLock
+from threading import Thread
 from thread import get_ident
 import sys
 from time import sleep
@@ -115,7 +115,6 @@ class Arbiter(object):
         self.pid = os.getpid()
         self._watchers_names = {}
         self._stopping = False
-        self._lock = RLock()
         self.debug = debug
         self._exclusive_running_command = None
         if self.debug:
@@ -551,29 +550,28 @@ class Arbiter(object):
                 else:
                     raise
 
-    # FIXME : async + waiting for other commands
+    @gen.coroutine
     def manage_watchers(self):
         if self._stopping:
             return
         if self._exclusive_running_command is not None:
             return
 
-        with self._lock:
-            need_on_demand = False
-            # manage and reap processes
-            self.reap_processes()
-            for watcher in self.iter_watchers():
-                if watcher.on_demand and watcher.is_stopped():
-                    need_on_demand = True
-                watcher.manage_processes()
+        need_on_demand = False
+        # manage and reap processes
+        self.reap_processes()
+        for watcher in self.iter_watchers():
+            if watcher.on_demand and watcher.is_stopped():
+                need_on_demand = True
+            yield watcher.manage_processes()
 
-            if need_on_demand:
-                sockets = [x.fileno() for x in self.sockets.values()]
-                rlist, wlist, xlist = select.select(sockets, [], [], 0)
-                if rlist:
-                    self.socket_event = True
-                    self._start_watchers()
-                    self.socket_event = False
+        if need_on_demand:
+            sockets = [x.fileno() for x in self.sockets.values()]
+            rlist, wlist, xlist = select.select(sockets, [], [], 0)
+            if rlist:
+                self.socket_event = True
+                self._start_watchers()
+                self.socket_event = False
 
     @debuglog
     def reload(self, graceful=True):

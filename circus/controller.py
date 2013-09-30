@@ -12,6 +12,7 @@ import zmq
 from zmq.utils.jsonapi import jsonmod as json
 from zmq.eventloop import ioloop, zmqstream
 from tornado.concurrent import Future
+from tornado import gen
 
 from circus.util import create_udp_socket
 from circus.commands import get_commands, ok, error, errors
@@ -32,6 +33,7 @@ class Controller(object):
         self.loop = loop
         self.check_delay = check_delay * 1000
         self.started = False
+        self._managing_watchers_future = None
 
         # initialize the sys handler
         self._init_syshandler()
@@ -64,9 +66,17 @@ class Controller(object):
                                   self.handle_autodiscover_message,
                                   ioloop.IOLoop.READ)
 
+    @gen.coroutine
+    def manage_watchers(self):
+        if self._managing_watchers_future is not None:
+            return
+        self._managing_watchers_future = self.arbiter.manage_watchers()
+        yield self._managing_watchers_future
+        self._managing_watchers_future = None
+
     def start(self):
         self.initialize()
-        self.caller = ioloop.PeriodicCallback(self.arbiter.manage_watchers,
+        self.caller = ioloop.PeriodicCallback(self.manage_watchers,
                                               self.check_delay, self.loop)
         self.caller.start()
         self.started = True
@@ -127,7 +137,13 @@ class Controller(object):
 
             self.arbiter.stop()
 
-    def dispatch(self, job):
+    def dispatch(self, job, future=None):
+        if self._managing_watchers_future is not None:
+            # The arbiter is running manage_watchers()
+            # we are going to wait
+            cb = functools.partial(self.dispatch, job)
+            self.loop.add_future(self._managing_watchers_future, cb)
+            return
         cid, msg = job
         try:
             json_msg = json.loads(msg)
