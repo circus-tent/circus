@@ -82,6 +82,7 @@ class TestCircus(AsyncTestCase):
         for dir in self.dirs:
             shutil.rmtree(dir)
         self.cli.stop()
+        super(TestCircus, self).tearDown()
 
     @tornado.gen.coroutine
     def start_arbiter(self, cmd='circus.tests.support.run_process'):
@@ -95,15 +96,19 @@ class TestCircus(AsyncTestCase):
 
     @tornado.gen.coroutine
     def stop_arbiter(self):
-        current = yield self.numprocesses('numprocesses')
-        if current > 1:
-            yield self.numprocesses('decr', name='test', nb=current-1)
+        for watcher in self.arbiter.iter_watchers():
+            self.arbiter.rm_watcher(watcher)
         yield self.arbiter.stop(stop_ioloop=False)
 
     @tornado.gen.coroutine
     def status(self, cmd, **props):
         resp = yield self.call(cmd, **props)
         raise tornado.gen.Return(resp.get('status'))
+
+    @tornado.gen.coroutine
+    def numwatchers(self, cmd, **props):
+        resp = yield self.call(cmd, waiting=True, **props)
+        raise do.gen.Return(resp.get('numprocesses'))
 
     @tornado.gen.coroutine
     def numprocesses(self, cmd, **props):
@@ -171,8 +176,8 @@ class TestCircus(AsyncTestCase):
         self.arbiters = []
 
     @tornado.gen.coroutine
-    def call(self, cmd, **props):
-        msg = make_message(cmd, **props)
+    def call(self, _cmd, **props):
+        msg = make_message(_cmd, **props)
         resp = yield self.cli.call(msg)
         raise tornado.gen.Return(resp)
 

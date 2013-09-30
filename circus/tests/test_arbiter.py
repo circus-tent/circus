@@ -5,6 +5,7 @@ import sys
 import unittest
 
 from mock import patch
+import tornado
 from tempfile import mkstemp
 from time import time, sleep
 from urlparse import urlparse
@@ -42,37 +43,41 @@ class TestTrainer(TestCircus):
 
     def setUp(self):
         super(TestTrainer, self).setUp()
-        dummy_process = 'circus.tests.support.run_process'
-        self.test_file = self._run_circus(dummy_process)
-        poll_for(self.test_file, 'START')
+        self.start_arbiter()
 
+    def tearDown(self):
+        super(TestTrainer, self).tearDown()
+        self.stop_arbiter()
+
+    @tornado.gen.coroutine
+    def _call(self, _cmd, **props):
+        resp = yield self.call(_cmd, waiting=True, **props)
+        raise tornado.gen.Return(resp)
+
+    @tornado.testing.gen_test
     def test_numwatchers(self):
-        msg = make_message("numwatchers")
-        resp = self.cli.call(msg)
+        resp = yield self._call("numwatchers")
         self.assertEqual(resp.get("numwatchers"), 1)
 
+    @tornado.testing.gen_test
     def test_numprocesses(self):
-        msg = make_message("numprocesses")
-        resp = self.cli.call(msg)
+        resp = yield self._call("numprocesses")
         self.assertEqual(resp.get("numprocesses"), 1)
 
+    @tornado.testing.gen_test
     def test_processes(self):
-        msg1 = make_message("list", name="test")
-        resp = self.cli.call(msg1)
+        resp = yield self._call("list", name="test")
         self.assertEqual(len(resp.get('pids')), 1)
 
-        msg2 = make_message("incr", name="test")
-        self.cli.call(msg2)
+        resp = yield self._call("incr", name="test")
+        self.assertEqual(resp.get('numprocesses'), 2)
 
-        resp = self.cli.call(msg1)
-        self.assertEqual(len(resp.get('pids')), 2)
+        resp = yield self._call("incr", name="test", nb=2)
+        self.assertEqual(resp.get('numprocesses'), 4)
 
-        self.cli.send_message("incr", name="test", nb=2)
-        resp = self.cli.call(msg1)
-        self.assertEqual(len(resp.get('pids')), 4)
-
+    @tornado.testing.gen_test
     def test_watchers(self):
-        resp = self.cli.call(make_message("list"))
+        resp = yield self._call("list")
         self.assertEqual(resp.get('watchers'), ["test"])
 
     def _get_cmd(self):
@@ -95,173 +100,180 @@ class TestTrainer(TestCircus):
             kwargs['graceful_timeout'] = 4
         return kwargs
 
+    @tornado.testing.gen_test
     def test_add_watcher(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
-                           options=self._get_options())
-        resp = self.cli.call(msg)
+        resp = yield self._call("add", name="test_add_watcher",
+                                cmd=self._get_cmd(),
+                                options=self._get_options())
         self.assertEqual(resp.get("status"), "ok")
 
+    @tornado.testing.gen_test
     def test_add_watcher_arbiter_stopped(self):
         # stop the arbiter
-        resp = self.cli.call(make_message("stop", waiting=True))
+        resp = yield self._call("stop")
         self.assertEqual(resp.get("status"), "ok")
 
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
-                           options=self._get_options())
-        resp = self.cli.call(msg)
+        resp = yield self._call("add",
+                                name="test_add_watcher_arbiter_stopped",
+                                cmd=self._get_cmd(),
+                                options=self._get_options())
         self.assertEqual(resp.get("status"), "ok")
 
+    @tornado.testing.gen_test
     def test_add_watcher1(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
-                           options=self._get_options())
-        self.cli.call(msg)
-        resp = self.cli.call(make_message("list"))
-        self.assertEqual(resp.get('watchers'), ["test", "test1"])
+        name = "test_add_watcher1"
+        yield self._call("add", name=name, cmd=self._get_cmd(),
+                         options=self._get_options())
+        resp = yield self._call("list")
+        self.assertTrue(name in resp.get('watchers'))
 
+    @tornado.testing.gen_test
     def test_add_watcher2(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
-                           options=self._get_options())
-        self.cli.call(msg)
-        resp = self.cli.call(make_message("numwatchers"))
-        self.assertEqual(resp.get("numwatchers"), 2)
+        resp = yield self._call("numwatchers")
+        before = resp.get("numwatchers")
 
+        name = "test_add_watcher2"
+        yield self._call("add", name=name, cmd=self._get_cmd(),
+                         options=self._get_options())
+        resp = yield self._call("numwatchers")
+        self.assertEqual(resp.get("numwatchers"), before + 1)
+
+    @tornado.testing.gen_test
     def test_add_watcher3(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
-                           options=self._get_options())
-        self.cli.call(msg)
-        resp = self.cli.call(msg)
+        options = {'name': 'test1', 'cmd': self._get_cmd(),
+                   'options': self._get_options()}
+
+        yield self._call("add", **options)
+        resp = yield self._call("add", **options)
         self.assertTrue(resp.get('status'), 'error')
 
+    @tornado.testing.gen_test
     def test_add_watcher4(self):
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args,
-                           options=self._get_options())
-        resp = self.cli.call(msg)
+        resp = yield self._call("add", name="test_add_watcher4",
+                                cmd=cmd, args=args,
+                                options=self._get_options())
         self.assertEqual(resp.get("status"), "ok")
 
+    @tornado.testing.gen_test
     def test_add_watcher5(self):
+        name = "test_add_watcher5"
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args,
-                           options=self._get_options())
-        resp = self.cli.call(msg)
+        resp = yield self._call("add", name=name,
+                                cmd=cmd, args=args,
+                                options=self._get_options())
         self.assertEqual(resp.get("status"), "ok")
-        resp = self.cli.call(make_message("start", name="test1"))
+
+        resp = yield self._call("start", name=name)
         self.assertEqual(resp.get("status"), "ok")
-        resp = self.cli.call(make_message("status", name="test1"))
+
+        resp = yield self._call("status", name=name)
         self.assertEqual(resp.get("status"), "active")
 
+    @tornado.testing.gen_test
     def test_add_watcher6(self):
+        name = 'test_add_watcher6'
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args,
-                           start=True, options=self._get_options())
-        resp = self.cli.call(msg)
+        resp = yield self._call("add", name=name, cmd=cmd, args=args,
+                                start=True, options=self._get_options())
         self.assertEqual(resp.get("status"), "ok")
 
-        resp = self.cli.call(make_message("status", name="test1"))
+        resp = yield self._call("status", name=name)
         self.assertEqual(resp.get("status"), "active")
 
+    @tornado.testing.gen_test
     def test_add_watcher7(self):
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args, start=True,
-                           options=self._get_options(flapping_window=100))
-        resp = self.cli.call(msg)
+        name = 'test_add_watcher7'
+        resp = yield self._call("add", name=name, cmd=cmd, args=args,
+                                start=True,
+                                options=self._get_options(flapping_window=100))
         self.assertEqual(resp.get("status"), "ok")
 
-        resp = self.cli.call(make_message("status", name="test1"))
+        resp = yield self._call("status", name=name)
         self.assertEqual(resp.get("status"), "active")
 
-        resp = self.cli.call(make_message("options", name="test1"))
+        resp = yield self._call("options", name=name)
         options = resp.get('options', {})
         self.assertEqual(options.get("flapping_window"), 100)
 
+    @tornado.testing.gen_test
     def test_rm_watcher(self):
-        msg = make_message("add", name="test1", cmd=self._get_cmd(),
-                           options=self._get_options())
-        self.cli.call(msg)
-        msg = make_message("rm", name="test1", waiting=True)
-        self.cli.call(msg)
-        resp = self.cli.call(make_message("numwatchers"))
+        name = 'test_rm_watcher'
+        yield self._call("add", name=name, cmd=self._get_cmd(),
+                          options=self._get_options())
+        yield self._call("rm", name=name)
+        resp = yield self._call("numwatchers")
         self.assertEqual(resp.get("numwatchers"), 1)
 
+    @tornado.testing.gen_test
     def _test_stop(self):
-        resp = self.cli.call(make_message("quit"))
-        self.assertEqual(resp.get("status"), "ok")
-        self.assertRaises(CallError, self.cli.call, make_message("list"))
-
-        self._stop_runners()
-        cli = CircusClient()
-        dummy_process = 'circus.tests.support.run_process'
-        self.test_file = self._run_circus(dummy_process)
-        msg = make_message("numprocesses")
-        resp = cli.call(msg)
+        resp = yield self._call("quit")
         self.assertEqual(resp.get("status"), "ok")
 
+    @tornado.testing.gen_test
     def test_reload(self):
-        resp = self.cli.call(make_message("reload"))
+        resp = yield self._call("reload")
         self.assertEqual(resp.get("status"), "ok")
 
+    @tornado.testing.gen_test
     def test_reload1(self):
-        msg1 = make_message("list", name="test")
-        resp = self.cli.call(msg1)
+        resp = yield self._call("list", name="test")
         processes1 = resp.get('pids')
 
         truncate_file(self.test_file)  # clean slate
-        self.cli.call(make_message("reload"))
+
+        yield self._call("reload")
         self.assertTrue(poll_for(self.test_file, 'START'))  # restarted
 
-        msg2 = make_message("list", name="test")
-        resp = self.cli.call(msg2)
+        resp = yield self._call("list", name="test")
         processes2 = resp.get('pids')
 
         self.assertNotEqual(processes1, processes2)
 
+    @tornado.testing.gen_test
     def test_reload2(self):
-        msg1 = make_message("list", name="test")
-        resp = self.cli.call(msg1)
+        resp = yield self._call("list", name="test")
         processes1 = resp.get('pids')
         self.assertEqual(len(processes1), 1)
 
         truncate_file(self.test_file)  # clean slate
-        self.cli.call(make_message("reload"))
+        yield self._call("reload")
         self.assertTrue(poll_for(self.test_file, 'START'))  # restarted
 
-        make_message("list", name="test")
-        resp = self.cli.call(msg1)
-
+        resp = yield self._call("list", name="test")
         processes2 = resp.get('pids')
         self.assertEqual(len(processes2), 1)
         self.assertNotEqual(processes1[0], processes2[0])
 
+    @tornado.testing.gen_test
     def test_stop_watchers(self):
-        self.cli.call(make_message("stop", waiting=True))
-        resp = self.cli.call(make_message("status", name="test"))
+        yield self._call("stop")
+        resp = yield self._call("status", name="test")
         self.assertEqual(resp.get("status"), "stopped")
 
-    def test_stop_watchers2(self):
-        self.cli.call(make_message("stop", name="test", waiting=True))
-        resp = self.cli.call(make_message("status", name="test"))
-        self.assertEqual(resp.get('status'), "stopped")
-
+    @tornado.testing.gen_test
     def test_stop_watchers3(self):
         cmd, args = self._get_cmd_args()
-        msg = make_message("add", name="test1", cmd=cmd, args=args,
-                           options=self._get_options())
-        resp = self.cli.call(msg)
-        self.assertEqual(resp.get("status"), "ok")
-        resp = self.cli.call(make_message("start", name="test1"))
+        name = "test_stop_watchers3"
+        resp = yield self._call("add", name=name, cmd=cmd, args=args,
+                                options=self._get_options())
         self.assertEqual(resp.get("status"), "ok")
 
-        self.cli.call(make_message("stop", name="test1", waiting=True))
-        resp = self.cli.call(make_message("status", name="test1"))
+        resp = yield self._call("start", name=name)
+        self.assertEqual(resp.get("status"), "ok")
+
+        yield self._call("stop", name=name)
+        resp = yield self._call("status", name=name)
         self.assertEqual(resp.get('status'), "stopped")
 
-        resp = self.cli.call(make_message("status", name="test"))
+        yield self._call("start", name=name)
+        resp = yield self._call("status", name=name)
         self.assertEqual(resp.get('status'), "active")
 
-    def test_plugins(self):
-        # killing the setUp runner
-        self._stop_runners()
-        self.cli.stop()
+    # XXX TODO
+    @tornado.testing.gen_test
+    def _test_plugins(self):
 
         fd, datafile = mkstemp()
         os.close(fd)
@@ -294,7 +306,9 @@ class TestTrainer(TestCircus):
         # wait for the plugin to receive the signal
         self.assertTrue(poll_for(datafile, 'test:spawn'))
 
-    def test_singleton(self):
+    # XXX TODO
+    @tornado.testing.gen_test
+    def _test_singleton(self):
         self._stop_runners()
 
         dummy_process = 'circus.tests.support.run_process'
@@ -305,7 +319,9 @@ class TestTrainer(TestCircus):
         res = cli.send_message('incr', name='test')
         self.assertEqual(res['numprocesses'], 1)
 
-    def test_udp_discovery(self):
+    # TODO XXX
+    @tornado.testing.gen_test
+    def _test_udp_discovery(self):
         """test_udp_discovery: Test that when the circusd answer UDP call.
 
         """
