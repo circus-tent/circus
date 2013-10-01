@@ -167,6 +167,7 @@ class TestWatcher(TestCircus):
 
 class TestWatcherInitialization(TestCircus):
 
+    @tornado.testing.gen_test
     def test_copy_env(self):
         old_environ = os.environ
         try:
@@ -181,6 +182,7 @@ class TestWatcherInitialization(TestCircus):
         finally:
             os.environ = old_environ
 
+    @tornado.testing.gen_test
     def test_hook_in_PYTHON_PATH(self):
         # we have a hook in PYTHONPATH
         tempdir = self.get_tmpdir()
@@ -202,7 +204,7 @@ class TestWatcherInitialization(TestCircus):
 
     @tornado.testing.gen_test
     def test_copy_path(self):
-        watcher = SomeWatcher(loop=tornado.ioloop.IOLoop().instance())
+        watcher = SomeWatcher()
         yield watcher.run()
         # wait for watcher data at most 5s
         # FIXME : async polling
@@ -213,12 +215,13 @@ class TestWatcherInitialization(TestCircus):
         data = ''.join(data)
         self.assertTrue('XYZ' in data, data)
 
+    @tornado.testing.gen_test
     def test_venv(self):
         venv = os.path.join(os.path.dirname(__file__), 'venv')
         watcher = SomeWatcher(virtualenv=venv)
-        watcher.start()
+        yield watcher.run()
         try:
-            time.sleep(.1)
+            yield tornado_sleep(1)
             py_version = get_python_version()
             major = py_version[0]
             minor = py_version[1]
@@ -227,15 +230,16 @@ class TestWatcherInitialization(TestCircus):
                                   'pip-7.7-py%d.%d.egg' % (major, minor))
             ppath = watcher.watcher.env['PYTHONPATH']
         finally:
-            watcher.stop()
+            yield watcher.stop()
         self.assertTrue(wanted in ppath)
 
+    @tornado.testing.gen_test
     def test_venv_site_packages(self):
         venv = os.path.join(os.path.dirname(__file__), 'venv')
         watcher = SomeWatcher(virtualenv=venv)
-        watcher.start()
+        yield watcher.run()
         try:
-            time.sleep(.1)
+            yield tornado_sleep(1)
             py_version = get_python_version()
             major = py_version[0]
             minor = py_version[1]
@@ -243,18 +247,21 @@ class TestWatcherInitialization(TestCircus):
                                   'site-packages')
             ppath = watcher.watcher.env['PYTHONPATH']
         finally:
-            watcher.stop()
+            yield watcher.stop()
 
         self.assertTrue(wanted in ppath.split(os.pathsep))
 
 
 class SomeWatcher(object):
 
-    def __init__(self, loop, **kw):
+    def __init__(self, loop=None, **kw):
         self.stream = QueueStream()
         self.watcher = None
         self.kw = kw
-        self.loop = loop
+        if loop is None:
+            self.loop = tornado.ioloop.IOLoop().instance()
+        else:
+            self.loop = loop
 
     @tornado.gen.coroutine
     def run(self):
