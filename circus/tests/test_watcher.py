@@ -5,8 +5,8 @@ import time
 import warnings
 import tornado
 import mock
-
-from unittest2 import skip
+import Queue
+import unittest2
 
 from circus import logger
 from circus.process import RUNNING, UNEXISTING
@@ -210,15 +210,21 @@ class TestWatcherInitialization(TestCircus):
         finally:
             os.environ = old_environ
 
-    @skip("FIXME : random pass...")
+    @unittest2.skip("FIXME: random fails")
     @tornado.testing.gen_test
     def test_copy_path(self):
         watcher = SomeWatcher()
         yield watcher.run()
         # wait for watcher data at most 5s
-        # FIXME : async polling
-        yield tornado_sleep(2)
-        data = watcher.stream.get(timeout=5)
+        i = 0
+        while i < 50:
+            yield tornado_sleep(0.1)
+            try:
+                data = watcher.stream.get(block=False)
+                break
+            except Queue.Empty:
+                pass
+            i = i + 1
         yield watcher.stop()
         data = [v for k, v in data.items()][1]
         data = ''.join(data)
