@@ -18,6 +18,7 @@ from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
                          DEFAULT_ENDPOINT_SUB)
 from circus.watcher import Watcher
 from circus.stream import QueueStream
+from circus import watcher as watcher_mod
 
 
 _GENERIC = os.path.join(os.path.dirname(__file__), 'generic.py')
@@ -58,6 +59,14 @@ class TestTrainer(TestCircus):
         for watcher in cls.arbiter.iter_watchers():
             cls.arbiter.rm_watcher(watcher)
         cls.arbiter.stop(stop_ioloop=False)
+
+    def setUp(self):
+        super(TestTrainer, self).setUp()
+        self.old = watcher_mod.tornado_sleep
+
+    def tearDown(self):
+        watcher_mod.tornado_sleep = self.old
+        super(TestTrainer, self).tearDown()
 
     @tornado.gen.coroutine
     def _call(self, _cmd, **props):
@@ -392,6 +401,30 @@ class TestTrainer(TestCircus):
 
         self.assertTrue(resp)
 
+    @tornado.testing.gen_test
+    def test_start_watchers_warmup_delay(self):
+        called = []
+
+        @tornado.gen.coroutine
+        def _sleep(duration):
+            called.append(duration)
+            loop = tornado.ioloop.IOLoop().instance()
+            yield tornado.gen.Task(loop.add_timeout, time() + duration)
+
+        watcher_mod.tornado_sleep = _sleep
+
+        watcher = MockWatcher(name='foo', cmd='sleep 1', priority=1)
+        resp = yield self.arbiter.start_watcher(watcher)
+
+        self.assertTrue(called, [self.arbiter.warmup_delay])
+
+        # now make sure we don't sleep when there is a autostart
+        watcher = MockWatcher(name='foo', cmd='serve', priority=1,
+                              autostart=False)
+        yield self.arbiter.start_watcher(watcher)
+        self.assertTrue(called, [self.arbiter.warmup_delay])
+
+
 
 class MockWatcher(Watcher):
 
@@ -399,16 +432,17 @@ class MockWatcher(Watcher):
         self.started = True
 
 
-class TestArbiter(unittest.TestCase):
+class TestArbiter(TestCircus):
     """
     Unit tests for the arbiter class to codify requirements within
     behavior.
     """
+    @tornado.testing.gen_test
     def test_start_watcher(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1)
         arbiter = Arbiter([], None, None)
-        arbiter.start_watcher(watcher)
-        self.assertTrue(watcher.started)
+        yield arbiter.start_watcher(watcher)
+        self.assertTrue(watcher.is_active())
 
     def test_start_watchers_with_autostart(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1,
@@ -416,20 +450,6 @@ class TestArbiter(unittest.TestCase):
         arbiter = Arbiter([], None, None)
         arbiter.start_watcher(watcher)
         self.assertFalse(getattr(watcher, 'started', False))
-
-    def test_start_watchers_warmup_delay(self):
-        watcher = MockWatcher(name='foo', cmd='serve', priority=1)
-        arbiter = Arbiter([], None, None, warmup_delay=10)
-        with patch('circus.arbiter.sleep') as mock_sleep:
-            arbiter.start_watcher(watcher)
-            mock_sleep.assert_called_with(10)
-
-        # now make sure we don't sleep when there is a autostart
-        watcher = MockWatcher(name='foo', cmd='serve', priority=1,
-                              autostart=False)
-        with patch('circus.arbiter.sleep') as mock_sleep:
-            arbiter.start_watcher(watcher)
-            assert not mock_sleep.called
 
     def test_add_watcher(self):
         arbiter = ThreadedArbiter([], DEFAULT_ENDPOINT_DEALER,

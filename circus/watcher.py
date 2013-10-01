@@ -551,7 +551,7 @@ class Watcher(object):
                                             "time": time.time()})
                 return True
         return False
- 
+
     @util.debuglog
     def send_signal_process(self, process, signum):
         """Send the signum signal to the process
@@ -938,3 +938,6 @@ class Watcher(object):
 
     def is_stopped(self):
         return self._status == 'stopped'
+
+    def is_active(self):
+        return self._status == 'active'
