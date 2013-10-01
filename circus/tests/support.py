@@ -10,6 +10,7 @@ import shutil
 from zmq.eventloop import ioloop
 from tornado.testing import AsyncTestCase
 import tornado
+import mock
 
 import unittest2 as unittest
 
@@ -304,3 +305,40 @@ class FakeProcess(object):
         self.pid = pid
         self.started = started
         self.age = age
+        self.stopping = False
+
+    def is_alive(self):
+        return True
+
+    def stop(self):
+        pass
+
+
+class MagicMockFuture(mock.MagicMock, tornado.concurrent.Future):
+
+    def cancel(self):
+        return False
+
+    def cancelled(self):
+        return False
+
+    def running(self):
+        return False
+
+    def done(self):
+        return True
+
+    def result(self, timeout=None):
+        return None
+
+    def exception(self, timeout=None):
+        return None
+
+    def add_done_callback(self, fn):
+        fn(self)
+
+    def set_result(self, result):
+        pass
+
+    def set_exception(self, exception):
+        pass
