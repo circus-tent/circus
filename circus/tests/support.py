@@ -108,7 +108,7 @@ class TestCircus(AsyncTestCase):
     @tornado.gen.coroutine
     def numwatchers(self, cmd, **props):
         resp = yield self.call(cmd, waiting=True, **props)
-        raise do.gen.Return(resp.get('numprocesses'))
+        raise tornado.gen.Return(resp.get('numprocesses'))
 
     @tornado.gen.coroutine
     def numprocesses(self, cmd, **props):
