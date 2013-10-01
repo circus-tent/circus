@@ -17,6 +17,8 @@ from circus.tests.support import TestCircus, poll_for, truncate_file
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
                          DEFAULT_ENDPOINT_SUB)
 from circus.watcher import Watcher
+from circus.stream import QueueStream
+from circus import watcher as watcher_mod
 
 
 _GENERIC = os.path.join(os.path.dirname(__file__), 'generic.py')
@@ -41,13 +43,30 @@ class Plugin(CircusPlugin):
 
 class TestTrainer(TestCircus):
 
+    @classmethod
+    def setUpClass(cls):
+        cmd = 'circus.tests.support.run_process'
+        cls.stream = QueueStream()
+        testfile, arbiter = cls._create_circus(
+            cmd, stdout_stream={'stream': cls.stream},
+            debug=True, async=True)
+        cls.test_file = testfile
+        cls.arbiter = arbiter
+        cls.arbiter.start(start_ioloop=False)
+
+    @classmethod
+    def tearDownClass(cls):
+        for watcher in cls.arbiter.iter_watchers():
+            cls.arbiter.rm_watcher(watcher)
+        cls.arbiter.stop(stop_ioloop=False)
+
     def setUp(self):
         super(TestTrainer, self).setUp()
-        self.start_arbiter()
+        self.old = watcher_mod.tornado_sleep
 
     def tearDown(self):
+        watcher_mod.tornado_sleep = self.old
         super(TestTrainer, self).tearDown()
-        self.stop_arbiter()
 
     @tornado.gen.coroutine
     def _call(self, _cmd, **props):
@@ -57,28 +76,41 @@ class TestTrainer(TestCircus):
     @tornado.testing.gen_test
     def test_numwatchers(self):
         resp = yield self._call("numwatchers")
-        self.assertEqual(resp.get("numwatchers"), 1)
+        self.assertTrue(resp.get("numwatchers") >= 1)
 
     @tornado.testing.gen_test
     def test_numprocesses(self):
         resp = yield self._call("numprocesses")
-        self.assertEqual(resp.get("numprocesses"), 1)
+        self.assertTrue(resp.get("numprocesses") >= 1)
 
     @tornado.testing.gen_test
     def test_processes(self):
-        resp = yield self._call("list", name="test")
+        name = "test_processes"
+        resp = yield self._call("add", name=name,
+                                cmd=self._get_cmd(),
+                                start=True,
+                                options=self._get_options())
+        self.assertEqual(resp.get("status"), "ok")
+
+        resp = yield self._call("list", name=name)
         self.assertEqual(len(resp.get('pids')), 1)
 
-        resp = yield self._call("incr", name="test")
+        resp = yield self._call("incr", name=name)
         self.assertEqual(resp.get('numprocesses'), 2)
 
-        resp = yield self._call("incr", name="test", nb=2)
+        resp = yield self._call("incr", name=name, nb=2)
         self.assertEqual(resp.get('numprocesses'), 4)
 
     @tornado.testing.gen_test
     def test_watchers(self):
+        name = "test_watchers"
+        resp = yield self._call("add", name=name,
+                                cmd=self._get_cmd(),
+                                start=True,
+                                options=self._get_options())
+
         resp = yield self._call("list")
-        self.assertEqual(resp.get('watchers'), ["test"])
+        self.assertTrue(name in resp.get('watchers'))
 
     def _get_cmd(self):
         fd, testfile = mkstemp()
@@ -202,9 +234,11 @@ class TestTrainer(TestCircus):
         name = 'test_rm_watcher'
         yield self._call("add", name=name, cmd=self._get_cmd(),
                           options=self._get_options())
+        resp = yield self._call("numwatchers")
+        before = resp.get("numwatchers")
         yield self._call("rm", name=name)
         resp = yield self._call("numwatchers")
-        self.assertEqual(resp.get("numwatchers"), 1)
+        self.assertEqual(resp.get("numwatchers"), before - 1)
 
     @tornado.testing.gen_test
     def _test_stop(self):
@@ -218,7 +252,11 @@ class TestTrainer(TestCircus):
 
     @tornado.testing.gen_test
     def test_reload1(self):
-        resp = yield self._call("list", name="test")
+        name = 'test_reload1'
+        yield self._call("add", name=name, cmd=self._get_cmd(),
+                         start=True, options=self._get_options())
+
+        resp = yield self._call("list", name=name)
         processes1 = resp.get('pids')
 
         truncate_file(self.test_file)  # clean slate
@@ -226,7 +264,7 @@ class TestTrainer(TestCircus):
         yield self._call("reload")
         self.assertTrue(poll_for(self.test_file, 'START'))  # restarted
 
-        resp = yield self._call("list", name="test")
+        resp = yield self._call("list", name=name)
         processes2 = resp.get('pids')
 
         self.assertNotEqual(processes1, processes2)
@@ -363,6 +401,30 @@ class TestTrainer(TestCircus):
 
         self.assertTrue(resp)
 
+    @tornado.testing.gen_test
+    def test_start_watchers_warmup_delay(self):
+        called = []
+
+        @tornado.gen.coroutine
+        def _sleep(duration):
+            called.append(duration)
+            loop = tornado.ioloop.IOLoop().instance()
+            yield tornado.gen.Task(loop.add_timeout, time() + duration)
+
+        watcher_mod.tornado_sleep = _sleep
+
+        watcher = MockWatcher(name='foo', cmd='sleep 1', priority=1)
+        resp = yield self.arbiter.start_watcher(watcher)
+
+        self.assertTrue(called, [self.arbiter.warmup_delay])
+
+        # now make sure we don't sleep when there is a autostart
+        watcher = MockWatcher(name='foo', cmd='serve', priority=1,
+                              autostart=False)
+        yield self.arbiter.start_watcher(watcher)
+        self.assertTrue(called, [self.arbiter.warmup_delay])
+
+
 
 class MockWatcher(Watcher):
 
@@ -370,16 +432,17 @@ class MockWatcher(Watcher):
         self.started = True
 
 
-class TestArbiter(unittest.TestCase):
+class TestArbiter(TestCircus):
     """
     Unit tests for the arbiter class to codify requirements within
     behavior.
     """
+    @tornado.testing.gen_test
     def test_start_watcher(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1)
         arbiter = Arbiter([], None, None)
-        arbiter.start_watcher(watcher)
-        self.assertTrue(watcher.started)
+        yield arbiter.start_watcher(watcher)
+        self.assertTrue(watcher.is_active())
 
     def test_start_watchers_with_autostart(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1,
@@ -387,20 +450,6 @@ class TestArbiter(unittest.TestCase):
         arbiter = Arbiter([], None, None)
         arbiter.start_watcher(watcher)
         self.assertFalse(getattr(watcher, 'started', False))
-
-    def test_start_watchers_warmup_delay(self):
-        watcher = MockWatcher(name='foo', cmd='serve', priority=1)
-        arbiter = Arbiter([], None, None, warmup_delay=10)
-        with patch('circus.arbiter.sleep') as mock_sleep:
-            arbiter.start_watcher(watcher)
-            mock_sleep.assert_called_with(10)
-
-        # now make sure we don't sleep when there is a autostart
-        watcher = MockWatcher(name='foo', cmd='serve', priority=1,
-                              autostart=False)
-        with patch('circus.arbiter.sleep') as mock_sleep:
-            arbiter.start_watcher(watcher)
-            assert not mock_sleep.called
 
     def test_add_watcher(self):
         arbiter = ThreadedArbiter([], DEFAULT_ENDPOINT_DEALER,
