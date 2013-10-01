@@ -654,7 +654,11 @@ class Arbiter(object):
 
         # stop the watcher
         cb = functools.partial(self._rm_watcher_cb, callback)
-        yield watcher._stop(cb)
+        yield watcher._stop()
+
+    # XXX FIXME
+    def _rm_watcher_cb(self, callback):
+        pass
 
     @synchronized("arbiter_start_watchers")
     @gen.coroutine
