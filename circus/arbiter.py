@@ -614,7 +614,7 @@ class Arbiter(object):
         return dict([(watcher.name, watcher.status())
                      for watcher in self.watchers])
 
-    #@synchronized
+    @synchronized("arbiter_add_watcher")
     def add_watcher(self, name, cmd, **kw):
         """Adds a watcher.
 
