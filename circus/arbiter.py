@@ -7,8 +7,8 @@ import sys
 from time import sleep
 import select
 import socket
-import functools
 from tornado import gen
+import time
 
 import zmq
 from zmq.eventloop import ioloop
@@ -108,13 +108,18 @@ class Arbiter(object):
         self.fqdn = fqdn
 
         self.ctrl = self.loop = None
+        self._provided_loop = False
         self.socket_event = False
+        if loop is not None:
+            self._provided_loop = True
+            self.loop = loop
 
         # initialize zmq context
         self._init_context(context)
         self.pid = os.getpid()
         self._watchers_names = {}
         self._stopping = False
+        self._restarting = False
         self.debug = debug
         self._exclusive_running_command = None
         if self.debug:
@@ -201,8 +206,9 @@ class Arbiter(object):
 
     def _init_context(self, context):
         self.context = context or zmq.Context.instance()
-        ioloop.install()
-        self.loop = ioloop.IOLoop.instance()
+        if self.loop is None:
+            ioloop.install()
+            self.loop = ioloop.IOLoop.instance()
         self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
                                self.context, self.loop, self, self.check_delay)
 
@@ -374,7 +380,7 @@ class Arbiter(object):
         return False
 
     @classmethod
-    def load_from_config(cls, config_file):
+    def load_from_config(cls, config_file, loop=None):
         cfg = get_config(config_file)
         watchers = []
         for watcher in cfg.get('watchers', []):
@@ -404,6 +410,7 @@ class Arbiter(object):
                       plugins=cfg.get('plugins'), sockets=sockets,
                       warmup_delay=cfg.get('warmup_delay', 0),
                       httpd=httpd,
+                      loop=loop,
                       httpd_host=cfg.get('httpd_host', 'localhost'),
                       httpd_port=cfg.get('httpd_port', 8080),
                       debug=cfg.get('debug', False),
@@ -456,70 +463,90 @@ class Arbiter(object):
 
     @gen.coroutine
     @debuglog
-    def start(self, start_ioloop=True):
+    def start(self):
         """Starts all the watchers.
 
-        The start command is an infinite loop that waits
-        for any command from a client and that watches all the
-        processes and restarts them if needed.
+        If the ioloop has been provided during __init__() call,
+        starts all watchers as a standard coroutine
+
+        If the ioloop hasn't been provided during __init__() call (default),
+        starts all watchers and the eventloop (and blocks here). In this mode
+        the method MUST NOT yield anything because it's called as a standard
+        method.
         """
         logger.info("Starting master on pid %s", self.pid)
         self.initialize()
 
         # start controller
         self.ctrl.start()
+        self._restarting = False
         try:
             # initialize processes
             logger.debug('Initializing watchers')
-            if start_ioloop:
-                for watcher in self.iter_watchers():
-                    self.loop.add_future(self.start_watcher(watcher), lambda x: None)  # FIXME : enchainement ?
+            if self._provided_loop:
+                yield self.start_watchers()
             else:
-                for watcher in self.iter_watchers():
-                    yield self.start_watcher(watcher)
-
+                # start_watchers will be called just after the start_io_loop()
+                self.loop.add_future(self.start_watchers(), lambda x: None)
             logger.info('Arbiter now waiting for commands')
-            if start_ioloop:
-
-                while True:
-                    try:
-                        self.loop.start()
-                    except zmq.ZMQError as e:
-                        if e.errno == errno.EINTR:
-                            continue
-                        else:
-                            raise
-                    else:
-                        break
+            if not self._provided_loop:
+                # If an event loop is not provided, block at this line
+                self.start_io_loop()
         finally:
-            if start_ioloop:
-                self.ctrl.stop()
-                self.evpub_socket.close()
-                if len(self.sockets) > 0:
-                    self.sockets.close_all()
+            if not self._provided_loop:
+                # If an event loop is not provided, do some cleaning
+                self.stop_controller_and_close_sockets()
+        raise gen.Return(self._restarting)
+
+    def stop_controller_and_close_sockets(self):
+        self.ctrl.stop()
+        self.evpub_socket.close()
+        if len(self.sockets) > 0:
+            self.sockets.close_all()
+
+    def start_io_loop(self):
+        """Starts the ioloop and wait inside it
+        """
+        while True:
+            try:
+                self.loop.start()
+            except zmq.ZMQError as e:
+                if e.errno == errno.EINTR:
+                    continue
+                else:
+                    raise
+            else:
+                break
 
     @synchronized("arbiter_stop")
     @gen.coroutine
-    def stop(self, stop_ioloop=True):
-        yield self._stop(stop_ioloop=stop_ioloop)
+    def stop(self):
+        yield self._stop()
 
     @gen.coroutine
-    def _stop(self, stop_ioloop=True):
+    def _emergency_stop(self):
+        """Emergency and fast stop, to use only in circusd
+        """
+        for watcher in self.iter_watchers():
+            watcher.graceful_timeout = 0
+        yield self._stop_watchers()
+        self.stop_controller_and_close_sockets()
+
+    @gen.coroutine
+    def _stop(self):
         logger.info('Arbiter exiting')
         self._stopping = True
         yield self._stop_watchers()
-        if stop_ioloop:
-            self.loop.add_callback(self._stop_cb)
+        if self._provided_loop:
+            cb = self.stop_controller_and_close_sockets
+            self.loop.add_callback(cb)
         else:
-            self.ctrl.stop()
-            self.evpub_socket.close()
-            if len(self.sockets) > 0:
-                self.sockets.close_all()
+            self.loop.add_timeout(time.time() + 1, self._stop_cb)
 
     def _stop_cb(self):
-        # this will stop the loop and the closing
-        # will finish in .start()
         self.loop.stop()
+        # stop_controller_and_close_sockets will be
+        # called in the end of start() method
 
     def reap_processes(self):
         # map watcher to pids
@@ -677,14 +704,18 @@ class Arbiter(object):
         yield self._stop_watchers()
 
     @gen.coroutine
-    def _restart(self, restart_ioloop=True):
-        yield self._stop(stop_ioloop=restart_ioloop)
-        yield self._start(start_ioloop=restart_ioloop)
+    def _restart(self, inside_circusd=False):
+        if inside_circusd:
+            self._restarting = True
+            yield self._stop()
+        else:
+            yield self._stop_watchers()
+            yield self._start_watchers()
 
     @synchronized("arbiter_restart")
     @gen.coroutine
-    def restart(self, restart_ioloop=True):
-        yield self._restart(restart_ioloop=restart_ioloop)
+    def restart(self, inside_circusd=False):
+        yield self._restart(inside_circusd=inside_circusd)
 
 
 class ThreadedArbiter(Arbiter, Thread):
