@@ -738,13 +738,16 @@ def synchronized(name):
                     raise ConflictError("arbiter is already running %s command"
                                         % arbiter._exclusive_running_command)
                 arbiter._exclusive_running_command = name
-            resp = f(self, *args, **kwargs)
-            if isinstance(resp, concurrent.Future):
-                cb = functools.partial(_synchronized_cb, arbiter)
-                resp.add_done_callback(cb)
-            else:
-                if arbiter is not None:
-                    arbiter._exclusive_running_command = None
+            resp = None
+            try:
+                resp = f(self, *args, **kwargs)
+            finally:
+                if isinstance(resp, concurrent.Future):
+                    cb = functools.partial(_synchronized_cb, arbiter)
+                    resp.add_done_callback(cb)
+                else:
+                    if arbiter is not None:
+                        arbiter._exclusive_running_command = None
             return resp
         return wrapper
     return real_decorator
