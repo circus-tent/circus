@@ -639,7 +639,7 @@ class Arbiter(object):
 
     @synchronized("arbiter_rm_watcher")
     @gen.coroutine
-    def rm_watcher(self, name, callback=None):
+    def rm_watcher(self, name):
         """Deletes a watcher.
 
         Options:
@@ -677,14 +677,14 @@ class Arbiter(object):
         yield self._stop_watchers()
 
     @gen.coroutine
-    def _restart(self):
-        yield self._stop()
-        yield self._start()
+    def _restart(self, restart_ioloop=True):
+        yield self._stop(stop_ioloop=restart_ioloop)
+        yield self._start(start_ioloop=restart_ioloop)
 
     @synchronized("arbiter_restart")
     @gen.coroutine
-    def restart(self, callback=None):
-        yield self._restart()
+    def restart(self, restart_ioloop=True):
+        yield self._restart(restart_ioloop=restart_ioloop)
 
 
 class ThreadedArbiter(Arbiter, Thread):
