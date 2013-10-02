@@ -24,10 +24,6 @@ from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
 
 
-class ReloadArbiterException(Exception):
-    pass
-
-
 _ENV_EXCEPTIONS = ('__CF_USER_TEXT_ENCODING', 'PS1', 'COMP_WORDBREAKS',
                    'PROMPT_COMMAND')
 
@@ -251,12 +247,15 @@ class Arbiter(object):
 
         return cfg
 
-    #@synchronized
-    def reload_from_config(self, config_file=None):
+    @synchronized("arbiter_reload_config")
+    @gen.coroutine
+    # FIXME: fix async
+    def reload_from_config(self, config_file=None, inside_circusd=False):
         new_cfg = get_config(config_file if config_file else self.config_file)
         # if arbiter is changed, reload everything
         if self.get_arbiter_config(new_cfg) != self._cfg:
-            raise ReloadArbiterException
+            yield self._restart(inside_circusd=inside_circusd)
+            return
 
         # Gather socket names.
         current_sn = set([i.name for i in self.sockets.values()])
@@ -377,7 +376,7 @@ class Arbiter(object):
             self.watchers.append(w)
             self._watchers_names[w.name.lower()] = w
 
-        return False
+        raise gen.Return(False)
 
     @classmethod
     def load_from_config(cls, config_file, loop=None):
