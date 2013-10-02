@@ -100,11 +100,7 @@ class Controller(object):
             self.send_response(None, cid, msg, "error: empty command")
         else:
             logger.debug("got message %s", msg)
-            self.add_job(cid, msg)
-
-    def add_job(self, cid, msg):
-        # using a single argument to stay compatible w/ pyzmq <= 13.0.0
-        self.loop.add_callback(functools.partial(self.dispatch, (cid, msg)))
+            self.dispatch((cid, msg))
 
     def handle_autodiscover_message(self, fd_no, type):
         data, address = self.udp_socket.recvfrom(1024)
@@ -112,9 +108,20 @@ class Controller(object):
         self.udp_socket.sendto(json.dumps({'endpoint': self.endpoint}),
                                address)
 
-    def _dispatch_callback_future(self, msg, cid, mid, cast, cmd_name, future):
-        resp = future.result()
-        self._dispatch_callback(msg, cid, mid, cast, cmd_name, resp)
+    def _dispatch_callback_future(self, msg, cid, mid, cast, cmd_name,
+                                  send_resp, future):
+        if future.exception() is not None:
+            logger.error("exception %s caught" % future.exception())
+            if hasattr(future, "exc_info"):
+                exc_info = future.exc_info()
+                traceback.print_tb(exc_info[2])
+            if send_resp:
+                self.send_error(mid, cid, msg, "server error", cast=cast,
+                                errno=errors.BAD_MSG_DATA_ERROR)
+        else:
+            resp = future.result()
+            if send_resp:
+                self._dispatch_callback(msg, cid, mid, cast, cmd_name, resp)
 
     def _dispatch_callback(self, msg, cid, mid, cast, cmd_name, resp=None):
         if resp is None:
@@ -168,13 +175,18 @@ class Controller(object):
             resp = cmd.execute(self.arbiter, properties)
             if isinstance(resp, Future):
                 if properties.get('waiting', False):
-                    cb = functools.partial(self._dispatch_callback_future,
-                                           msg, cid, mid, cast, cmd_name)
+                    cb = functools.partial(self._dispatch_callback_future, msg,
+                                           cid, mid, cast, cmd_name, True)
                     resp.add_done_callback(cb)
-                    return
                 else:
-                    resp = None
-            self._dispatch_callback(msg, cid, mid, cast, cmd_name, resp)
+                    cb = functools.partial(self._dispatch_callback_future, msg,
+                                           cid, mid, cast, cmd_name, False)
+                    resp.add_done_callback(cb)
+                    self._dispatch_callback(msg, cid, mid, cast,
+                                            cmd_name, None)
+            else:
+                self._dispatch_callback(msg, cid, mid, cast,
+                                        cmd_name, resp)
         except MessageError as e:
             return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.MESSAGE_ERROR)
