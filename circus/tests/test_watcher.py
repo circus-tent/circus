@@ -358,14 +358,14 @@ class TestWatcherHooks(TestCircus):
 
         hooks = {hook_name: (hook, False)}
         testfile, arbiter = self.run_with_hooks(hooks)
-        yield arbiter.start(start_ioloop=False)
+        yield arbiter.start()
         try:
             if call:
                 yield call()
             resp_status = yield self.get_status()
             self.assertEqual(resp_status, status)
         finally:
-            yield arbiter.stop(stop_ioloop=False)
+            yield arbiter.stop()
             logger.exception = old
 
         self.assertTrue(events['before_start_called'])
@@ -482,7 +482,7 @@ class RespawnTest(TestCircus):
         oneshot_process = 'circus.tests.test_watcher.oneshot_process'
         testfile, arbiter = self._create_circus(oneshot_process,
                                                 respawn=False, async=True)
-        yield arbiter.start(start_ioloop=False)
+        yield arbiter.start()
         watcher = arbiter.watchers[-1]
         try:
             # Per default, we shouldn't respawn processes,
@@ -501,7 +501,7 @@ class RespawnTest(TestCircus):
             yield watcher.spawn_processes()
             self.assertEquals(len(watcher.processes), 1)
         finally:
-            yield arbiter.stop(stop_ioloop=False)
+            yield arbiter.stop()
 
     @tornado.testing.gen_test
     def test_stopping_a_watcher_doesnt_spawn(self):

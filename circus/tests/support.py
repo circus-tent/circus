@@ -94,13 +94,13 @@ class TestCircus(AsyncTestCase):
             debug=True, async=True)
         self.test_file = testfile
         self.arbiter = arbiter
-        yield self.arbiter.start(start_ioloop=False)
+        yield self.arbiter.start()
 
     @tornado.gen.coroutine
     def stop_arbiter(self):
         for watcher in self.arbiter.iter_watchers():
             self.arbiter.rm_watcher(watcher)
-        yield self.arbiter.stop(stop_ioloop=False)
+        yield self.arbiter.stop()
 
     @tornado.gen.coroutine
     def status(self, cmd, **props):
@@ -151,7 +151,7 @@ class TestCircus(AsyncTestCase):
         fact = cls.arbiter_factory
         if async:
             arbiter = fact([worker], background=False, plugins=plugins,
-                           debug=debug)
+                           debug=debug, loop=tornado.ioloop.IOLoop().instance())
         else:
             if stats:
                 arbiter = fact([worker], background=True, plugins=plugins,

@@ -52,13 +52,13 @@ class TestTrainer(TestCircus):
             debug=True, async=True)
         cls.test_file = testfile
         cls.arbiter = arbiter
-        cls.arbiter.start(start_ioloop=False)
+        cls.arbiter.start()
 
     @classmethod
     def tearDownClass(cls):
         for watcher in cls.arbiter.iter_watchers():
             cls.arbiter.rm_watcher(watcher)
-        cls.arbiter.stop(stop_ioloop=False)
+        cls.arbiter.stop()
 
     def setUp(self):
         super(TestTrainer, self).setUp()
