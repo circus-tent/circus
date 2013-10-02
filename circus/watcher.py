@@ -739,7 +739,7 @@ class Watcher(object):
         else:
             return True
 
-    @util.synchronized("watcher_start")
+    #@util.synchronized("watcher_start")
     @gen.coroutine
     def start(self):
         yield self._start()
