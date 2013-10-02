@@ -718,8 +718,6 @@ def dict_differ(dict1, dict2):
 
 
 def _synchronized_cb(arbiter, future):
-    name = arbiter._exclusive_running_command
-    print('Exiting exclusive function %s' % name)
     arbiter._exclusive_running_command = None
 
 
@@ -732,19 +730,15 @@ def synchronized(name):
             else:
                 arbiter = self
             if arbiter._exclusive_running_command is not None:
-                print ('Trying to enter exclusive mode')
-                print ('Current is %s' % arbiter._exclusive_running_command)
-
                 raise ConflictError("arbiter is already running %s command"
                                     % arbiter._exclusive_running_command)
+
             arbiter._exclusive_running_command = name
-            print ('Entering exclusive function %s' % name)
             resp = f(self, *args, **kwargs)
             if isinstance(resp, concurrent.Future):
                 cb = functools.partial(_synchronized_cb, arbiter)
                 resp.add_done_callback(cb)
             else:
-                print('Exiting exclusive function %s' % name)
                 arbiter._exclusive_running_command = None
             return resp
         return wrapper
