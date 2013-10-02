@@ -17,6 +17,7 @@ import unittest2 as unittest
 from circus import get_arbiter
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_STATS)
+from circus.util import tornado_sleep
 from circus.client import AsyncCircusClient, make_message
 from circus.stream import QueueStream
 
@@ -262,6 +263,31 @@ def poll_for(filename, needles, timeout=5):
         # When using gevent this will make sure the redirector greenlets are
         # scheduled.
         sleep(0.1)
+    raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
+        filename, needle, content))
+
+
+@tornado.gen.coroutine
+def async_poll_for(filename, needles, timeout=5):
+    """Async version of poll_for
+    """
+    if isinstance(needles, str):
+        needles = [needles]
+
+    start = time()
+    while time() - start < timeout:
+        with open(filename) as f:
+            content = f.read()
+        print content
+        print needles
+        for needle in needles:
+            if needle in content:
+                print "found"
+                raise tornado.gen.Return(True)
+        # When using gevent this will make sure the redirector greenlets are
+        # scheduled.
+        print "wait..."
+        yield tornado_sleep(0.1)
     raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
         filename, needle, content))
 
