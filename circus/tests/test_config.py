@@ -178,4 +178,3 @@ class TestConfig(unittest.TestCase):
         conf = get_config(_CONF['expand_vars'])
         watcher = conf['watchers'][0]
         self.assertEqual(watcher['stdout_stream']['filename'], '/tmp/echo.log')
-
