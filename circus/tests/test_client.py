@@ -1,66 +1,76 @@
 import time
 
-from circus.tests.support import TestCircus, poll_for
+from tornado.testing import gen_test
+from tornado.gen import coroutine, Return
+
+from circus.tests.support import TestCircus
 from circus.client import make_message, CallError
 from circus.stream import QueueStream
 
 
 class TestClient(TestCircus):
-    def setUp(self):
-        super(TestClient, self).setUp()
-        dummy_process = 'circus.tests.support.run_process'
-        self.test_file = self._run_circus(dummy_process)
-        poll_for(self.test_file, 'START')
 
+    @coroutine
     def status(self, cmd, **props):
-        resp = self.call(cmd, **props)
-        return resp.get('status')
+        resp = yield self.call(cmd, **props)
+        raise Return(resp.get('status'))
 
+    @coroutine
     def numprocesses(self, cmd, **props):
-        resp = self.call(cmd, **props)
-        return resp.get('numprocesses')
+        resp = yield self.call(cmd, waiting=True, **props)
+        raise Return(resp.get('numprocesses'))
 
+    @coroutine
     def numwatchers(self, cmd, **props):
-        resp = self.call(cmd, **props)
-        return resp.get('numwatchers')
+        resp = yield self.call(cmd, **props)
+        raise Return(resp.get('numwatchers'))
 
+    @coroutine
     def set(self, name, **opts):
-        return self.status("set", name=name, waiting=True, options=opts)
+        resp = yield self.status("set", name=name, waiting=True, options=opts)
+        raise Return(resp)
 
+    @gen_test
     def test_client(self):
         # playing around with the watcher
+        yield self.start_arbiter()
         msg = make_message("numwatchers")
-        resp = self.cli.call(msg)
+        resp = yield self.cli.call(msg)
         self.assertEqual(resp.get("numwatchers"), 1)
-        self.assertEquals(self.numprocesses("numprocesses"), 1)
+        self.assertEquals((yield self.numprocesses("numprocesses")), 1)
 
-        self.assertEquals(self.set("test", numprocesses=2), 'ok')
-        self.assertEquals(self.numprocesses("numprocesses"), 2)
+        self.assertEquals((yield self.set("test", numprocesses=2)), 'ok')
+        self.assertEquals((yield self.numprocesses("numprocesses")), 2)
 
-        self.assertEquals(self.set("test", numprocesses=1), 'ok')
-        self.assertEquals(self.numprocesses("numprocesses"), 1)
-        self.assertEquals(self.numwatchers("numwatchers"), 1)
+        self.assertEquals((yield self.set("test", numprocesses=1)), 'ok')
+        self.assertEquals((yield self.numprocesses("numprocesses")), 1)
+        self.assertEquals((yield self.numwatchers("numwatchers")), 1)
 
-        self.assertEquals(self.call("list").get('watchers'), ['test'])
-        self.assertEquals(self.numprocesses("incr", name="test"), 2)
-        self.assertEquals(self.numprocesses("numprocesses"), 2)
-        self.assertEquals(self.numprocesses("incr", name="test", nb=2), 4)
-        self.assertEquals(self.numprocesses("decr", name="test", nb=3), 1)
-        self.assertEquals(self.numprocesses("numprocesses"), 1)
-        self.assertEquals(self.set("test", env={"test": 1, "test": 2}),
+        self.assertEquals((yield self.call("list")).get('watchers'), ['test'])
+        self.assertEqual((yield self.numprocesses("incr", name="test")), 2)
+        self.assertEquals((yield self.numprocesses("numprocesses")), 2)
+        self.assertEquals((yield self.numprocesses("incr", name="test", nb=2)),
+                          4)
+        self.assertEquals((yield self.numprocesses("decr", name="test", nb=3)),
+                          1)
+        self.assertEquals((yield self.numprocesses("numprocesses")), 1)
+        self.assertEquals((yield self.set("test",
+                                          env={"test": 1, "test": 2})),
                           'error')
-        self.assertEquals(self.set("test", env={"test": '1', "test": '2'}),
+        self.assertEquals((yield self.set("test",
+                                          env={"test": '1', "test": '2'})),
                           'ok')
-        resp = self.call('get', name='test', keys=['env'])
+        resp = yield self.call('get', name='test', keys=['env'])
         options = resp.get('options', {})
         self.assertEquals(options.get('env'), {'test': '1', 'test': '2'})
 
-        resp = self.call('stats', name='test')
+        resp = yield self.call('stats', name='test')
         self.assertEqual(resp['status'], 'ok')
 
-        resp = self.call('globaloptions', name='test')
+        resp = yield self.call('globaloptions', name='test')
         self.assertEqual(resp['options']['pubsub_endpoint'],
                          'tcp://127.0.0.1:5556')
+        yield self.stop_arbiter()
 
 
 def long_hook(*args, **kw):
@@ -91,7 +101,7 @@ class TestWithHook(TestCircus):
         try:
             testfile, arbiter = self.run_with_hooks(hooks)
             msg = make_message("numwatchers")
-            resp = self.cli.call(msg)
+            resp = yield self.cli.call(msg)
             self.assertEqual(resp.get("numwatchers"), 1)
 
             # this should timeout

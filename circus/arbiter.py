@@ -614,7 +614,8 @@ class Arbiter(object):
         return dict([(watcher.name, watcher.status())
                      for watcher in self.watchers])
 
-    #@synchronized
+
+    @synchronized("arbiter_add_watcher")
     def add_watcher(self, name, cmd, **kw):
         """Adds a watcher.
 
@@ -653,12 +654,7 @@ class Arbiter(object):
         del self.watchers[self.watchers.index(watcher)]
 
         # stop the watcher
-        cb = functools.partial(self._rm_watcher_cb, callback)
         yield watcher._stop()
-
-    # XXX FIXME
-    def _rm_watcher_cb(self, callback):
-        pass
 
     @synchronized("arbiter_start_watchers")
     @gen.coroutine

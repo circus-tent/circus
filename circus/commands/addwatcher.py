@@ -68,7 +68,7 @@ class AddWatcher(Command):
         watcher = arbiter.add_watcher(props['name'], props['cmd'],
                                       args=props.get('args'), **options)
         if props.get('start', False):
-            watcher.start()
+            return watcher.start()
 
     def validate(self, props):
         super(AddWatcher, self).validate(props)

@@ -3,6 +3,7 @@ import sys
 import os
 import tempfile
 import unittest
+import tornado
 
 from datetime import datetime
 from cStringIO import StringIO
@@ -31,25 +32,31 @@ class TestWatcher(TestCircus):
 
     @classmethod
     def setUpClass(cls):
-        dummy_process = 'circus.tests.test_stream.run_process'
+        cls.dummy_process = 'circus.tests.test_stream.run_process'
         fd, cls.stdout = tempfile.mkstemp()
         os.close(fd)
         fd, cls.stderr = tempfile.mkstemp()
         os.close(fd)
+
+    @tornado.gen.coroutine
+    def start_arbiter(self):
+        cls = TestWatcher
         stdout = {'stream': FileStream(cls.stdout)}
         stderr = {'stream': FileStream(cls.stderr)}
-        cls.file, cls.arbiter = cls._create_circus(dummy_process,
-                                                   stdout_stream=stdout,
-                                                   stderr_stream=stderr,
-                                                   debug=True)
+        self.file, self.arbiter = cls._create_circus(cls.dummy_process,
+                                                     stdout_stream=stdout,
+                                                     stderr_stream=stderr,
+                                                     debug=True, async=True)
+        yield self.arbiter.start(start_ioloop=False)
 
-        poll_for(cls.file, 'START')
+    @tornado.gen.coroutine
+    def stop_arbiter(self):
+        yield self.arbiter.stop(stop_ioloop=False)
+        if os.path.exists(self.file):
+            os.remove(self.file)
 
     @classmethod
     def tearDownClass(cls):
-        cls.arbiter.stop()
-        if os.path.exists(cls.file):
-            os.remove(cls.file)
         os.remove(cls.stdout)
         os.remove(cls.stderr)
 
@@ -57,12 +64,17 @@ class TestWatcher(TestCircus):
         msg = make_message(cmd, **props)
         return self.cli.call(msg)
 
+    @tornado.testing.gen_test
     def test_file_stream(self):
+        yield self.start_arbiter()
         stream = FileStream(self.stdout, max_bytes='12', backup_count='3')
         self.assertTrue(isinstance(stream._max_bytes, int))
         self.assertTrue(isinstance(stream._backup_count, int))
+        yield self.stop_arbiter()
 
+    @tornado.testing.gen_test
     def test_stream(self):
+        yield self.start_arbiter()
         # wait for the process to be started
         self.assertTrue(poll_for(self.stdout, 'stdout'))
         self.assertTrue(poll_for(self.stderr, 'stderr'))
@@ -77,6 +89,7 @@ class TestWatcher(TestCircus):
         # wait for the process to be restarted
         self.assertTrue(poll_for(self.stdout, 'stdout'))
         self.assertTrue(poll_for(self.stderr, 'stderr'))
+        yield self.stop_arbiter()
 
 
 class TestFancyStdoutStream(unittest.TestCase):
