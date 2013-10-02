@@ -151,6 +151,9 @@ class TestTrainer(TestCircus):
                                 options=self._get_options())
         self.assertEqual(resp.get("status"), "ok")
 
+        resp = yield self._call("start")
+        self.assertEqual(resp.get("status"), "ok")
+
     @tornado.testing.gen_test
     def test_add_watcher1(self):
         name = "test_add_watcher1"
@@ -289,6 +292,11 @@ class TestTrainer(TestCircus):
         yield self._call("stop")
         resp = yield self._call("status", name="test")
         self.assertEqual(resp.get("status"), "stopped")
+
+        yield self._call("start")
+
+        resp = yield self._call("status", name="test")
+        self.assertEqual(resp.get("status"), 'active')
 
     @tornado.testing.gen_test
     def test_stop_watchers3(self):
