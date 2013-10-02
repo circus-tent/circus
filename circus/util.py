@@ -9,6 +9,7 @@ import socket
 import sys
 import time
 import functools
+import traceback
 from tornado.ioloop import IOLoop
 from tornado import gen
 from tornado import concurrent
@@ -24,6 +25,7 @@ from zmq import ssh
 from psutil import AccessDenied, NoSuchProcess, Process
 
 from circus.exc import ConflictError
+from circus import logger
 
 
 # default endpoints
@@ -793,3 +795,14 @@ class TransformableFuture(concurrent.Future):
             return self._exception
         else:
             return None
+
+
+def check_future_exception_and_log(future):
+    if isinstance(future, concurrent.Future):
+        exception = future.exception()
+        if exception is not None:
+            logger.error("exception %s caught" % exception)
+            if hasattr(future, "exc_info"):
+                exc_info = future.exc_info()
+                traceback.print_tb(exc_info[2])
+            return exception
