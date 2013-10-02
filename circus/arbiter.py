@@ -668,7 +668,7 @@ class Arbiter(object):
     @gen.coroutine
     def _start_watchers(self):
         for watcher in self.iter_watchers():
-            yield watcher.start()
+            yield watcher._start()
             yield tornado_sleep(self.warmup_delay)
 
     @gen.coroutine
