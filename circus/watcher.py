@@ -419,7 +419,6 @@ class Watcher(object):
     @gen.coroutine
     @util.debuglog
     def manage_processes(self):
-        logger.debug("manage processes")
         """Manage processes."""
         if self.is_stopped():
             return
