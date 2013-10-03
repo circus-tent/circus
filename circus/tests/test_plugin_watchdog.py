@@ -2,38 +2,27 @@ import socket
 import time
 import os
 import warnings
+from functools import partial
 import multiprocessing
 
 from tornado.gen import Return, coroutine
 from tornado.testing import gen_test
 
-from circus.tests.support import TestCircus, Process, poll_for
+from circus.tests.support import TestCircus, Process, poll_for, run_plugin
 from circus.util import tornado_sleep
-from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 from circus.plugins.watchdog import WatchDog
 
 
-def run_plugin(klass, config, queue, duration=300):
-    endpoint = DEFAULT_ENDPOINT_DEALER
-    pubsub_endpoint = DEFAULT_ENDPOINT_SUB
-    check_delay = 1
-    ssh_server = None
-
-    plugin = klass(endpoint, pubsub_endpoint, check_delay, ssh_server,
-                   **config)
-
-    deadline = time.time() + (duration / 1000.)
-    plugin.loop.add_timeout(deadline, plugin.stop)
-    plugin.start()
+def get_pid_status(queue, plugin):
     queue.put(plugin.pid_status)
-    return plugin
 
 
 @coroutine
 def async_run_plugin(klass, config):
     queue = multiprocessing.Queue()
-    circusctl_process = multiprocessing.Process(target=run_plugin,
-                                                args=(klass, config, queue))
+    circusctl_process = multiprocessing.Process(
+        target=run_plugin,
+        args=(klass, config, partial(get_pid_status, queue)))
     circusctl_process.start()
     while queue.empty():
         yield tornado_sleep(.1)

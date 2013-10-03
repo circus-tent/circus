@@ -293,7 +293,7 @@ def truncate_file(filename):
     open(filename, 'w').close()  # opening as 'w' overwrites the file
 
 
-def run_plugin(klass, config, duration=300):
+def run_plugin(klass, config, plugin_info_callback=None, duration=300):
     endpoint = DEFAULT_ENDPOINT_DEALER
     pubsub_endpoint = DEFAULT_ENDPOINT_SUB
     check_delay = 1
@@ -317,6 +317,8 @@ def run_plugin(klass, config, duration=300):
     deadline = time() + (duration / 1000.)
     plugin.loop.add_timeout(deadline, plugin.loop.stop)
     plugin.start()
+    if plugin_info_callback:
+        plugin_info_callback(plugin)
     return _statsd
 
 
