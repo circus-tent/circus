@@ -2,32 +2,12 @@ import socket
 import time
 import os
 import warnings
-from functools import partial
-import multiprocessing
 
-from tornado.gen import Return, coroutine
 from tornado.testing import gen_test
 
-from circus.tests.support import TestCircus, Process, poll_for, run_plugin
-from circus.util import tornado_sleep
+from circus.tests.support import TestCircus, Process, poll_for
+from circus.tests.support import async_run_plugin
 from circus.plugins.watchdog import WatchDog
-
-
-def get_pid_status(queue, plugin):
-    queue.put(plugin.pid_status)
-
-
-@coroutine
-def async_run_plugin(klass, config):
-    queue = multiprocessing.Queue()
-    circusctl_process = multiprocessing.Process(
-        target=run_plugin,
-        args=(klass, config, partial(get_pid_status, queue)))
-    circusctl_process.start()
-    while queue.empty():
-        yield tornado_sleep(.1)
-    pid_status = queue.get()
-    raise Return(pid_status)
 
 
 class DummyWatchDogged(Process):
@@ -51,6 +31,10 @@ def run_dummy_watchdogged(test_file):
     return 1
 
 
+def get_pid_status(queue, plugin):
+    queue.put(plugin.pid_status)
+
+
 fqn = 'circus.tests.test_plugin_watchdog.run_dummy_watchdogged'
 
 
@@ -63,7 +47,8 @@ class TestPluginWatchDog(TestCircus):
 
         config = {'loop_rate': 0.1, 'watchers_regex': "^test.*$"}
         with warnings.catch_warnings():
-            pid_status = yield async_run_plugin(WatchDog, config)
+            pid_status = yield async_run_plugin(WatchDog, config,
+                                                get_pid_status)
         self.assertEqual(len(pid_status), 1, pid_status)
         yield self.stop_arbiter()
 
@@ -74,6 +59,7 @@ class TestPluginWatchDog(TestCircus):
 
         config = {'loop_rate': 0.1, 'watchers_regex': "^foo.*$"}
         with warnings.catch_warnings():
-            pid_status = yield async_run_plugin(WatchDog, config)
+            pid_status = yield async_run_plugin(WatchDog, config,
+                                                get_pid_status)
         self.assertEqual(len(pid_status), 0, pid_status)
         yield self.stop_arbiter()
