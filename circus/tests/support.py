@@ -164,14 +164,13 @@ class TestCircus(AsyncTestCase):
         #arbiter.start()
         return testfile, arbiter
 
-    @tornado.gen.coroutine
     def _run_circus(self, callable, plugins=None, stats=False, **kw):
 
-        testfile, arbiter = yield TestCircus._create_circus(callable, plugins,
-                                                            stats, **kw)
+        testfile, arbiter = TestCircus._create_circus(callable, plugins, stats,
+                                                      **kw)
         self.arbiters.append(arbiter)
         self.files.append(testfile)
-        raise tornado.gen.Return(testfile)
+        return testfile
 
     def _stop_runners(self):
         for arbiter in self.arbiters:

@@ -3,12 +3,13 @@ from circus.plugins.statsd import FullStats
 
 
 class TestFullStats(TestCircus):
-
-    def test_full_stats(self):
+    def setUp(self):
+        super(TestFullStats, self).setUp()
         dummy_process = 'circus.tests.support.run_process'
-        self.test_file = yield self._run_circus(dummy_process)
+        self.test_file = self._run_circus(dummy_process)
         poll_for(self.test_file, 'START')
 
+    def test_full_stats(self):
         config = {'loop_rate': 0.2}
         _statsd = run_plugin(FullStats, config, 1000)
 

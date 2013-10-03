@@ -1,3 +1,4 @@
+from tornado.testing import gen_test
 from circus.tests.support import TestCircus, poll_for
 
 
@@ -9,6 +10,8 @@ def Dummy(test_file):
 
 class TestRunner(TestCircus):
 
+    @gen_test
     def test_dummy(self):
-        test_file = yield self._run_circus('circus.tests.test_runner.Dummy')
-        self.assertTrue(poll_for(test_file, '..........'))
+        yield self.start_arbiter('circus.tests.test_runner.Dummy')
+        self.assertTrue(poll_for(self.test_file, '..........'))
+        yield self.stop_arbiter()
