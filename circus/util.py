@@ -8,9 +8,15 @@ import shlex
 import socket
 import sys
 import time
-from ConfigParser import (
-    ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
-)
+from circus.py3compat import integer_types, bytestring, raise_with_tb
+try:
+    from configparser import (
+        ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
+    )
+except ImportError:
+    from ConfigParser import (
+        ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
+    )
 from datetime import timedelta
 from functools import wraps
 
@@ -72,7 +78,7 @@ def get_working_dir():
 def bytes2human(n):
     """Translates bytes into a human repr.
     """
-    if not isinstance(n, (int, long)):
+    if not isinstance(n, integer_types):
         raise TypeError(n)
 
     prefix = {}
@@ -251,7 +257,7 @@ def parse_env_str(env_str):
 
 def parse_env_dict(env):
     ret = dict()
-    for k, v in env.iteritems():
+    for k, v in env.items():
         v = re.sub(r'\$([A-Z]+[A-Z0-9_]*)', replace_env, v)
         ret[k.strip()] = v.strip()
     return ret
@@ -290,15 +296,16 @@ def debuglog(func):
         from circus import logger
         cls = self.__class__.__name__
         global INDENTATION_LEVEL
+        func_name = func.func_name if hasattr(func, 'func_name') else func.__name__
         logger.debug("    " * INDENTATION_LEVEL +
-                     "'%s.%s' starts" % (cls, func.func_name))
+                     "'%s.%s' starts" % (cls, func_name))
         INDENTATION_LEVEL += 1
         try:
             return func(self, *args, **kw)
         finally:
             INDENTATION_LEVEL -= 1
             logger.debug("    " * INDENTATION_LEVEL +
-                         "'%s.%s' ends" % (cls, func.func_name))
+                         "'%s.%s' ends" % (cls, func_name))
 
     return _log
 
@@ -375,8 +382,7 @@ def resolve_name(import_name, silent=False):
     :return: imported object
     """
     # force the import name to automatically convert to strings
-    if isinstance(import_name, unicode):
-        import_name = str(import_name)
+    import_name = bytestring(import_name)
     try:
         if ':' in import_name:
             module, obj = import_name.split(':', 1)
@@ -386,8 +392,7 @@ def resolve_name(import_name, silent=False):
             return __import__(import_name)
             # __import__ is not able to handle unicode strings in the fromlist
         # if the module is a package
-        if isinstance(obj, unicode):
-            obj = obj.encode('utf-8')
+        obj = bytestring(obj)
         try:
             return getattr(__import__(module, None, None, [obj]), obj)
         except (ImportError, AttributeError):
@@ -396,9 +401,9 @@ def resolve_name(import_name, silent=False):
             modname = module + '.' + obj
             __import__(modname)
             return sys.modules[modname]
-    except ImportError, e:
+    except ImportError as e:
         if not silent:
-            raise ImportStringError(import_name, e), None, sys.exc_info()[2]
+            raise_with_tb(ImportStringError(import_name, e), None, sys.exc_info()[2])
 
 
 _PATTERN1 = r'\$\(%s\.([\w\.]+)\)'
@@ -647,7 +652,7 @@ def create_udp_socket(mcast_addr, mcast_port):
     mcast_addr must be between 224.0.0.0 and 239.255.255.255
     """
     try:
-        ip_splitted = map(int, mcast_addr.split('.'))
+        ip_splitted = list(map(int, mcast_addr.split('.')))
         mcast_port = int(mcast_port)
     except ValueError:
         raise ValueError('Wrong UDP multicast_endpoint configuration. Should '

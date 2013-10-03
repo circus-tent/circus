@@ -49,7 +49,7 @@ class Flapping(CircusPlugin):
         self.max_retry = int(config.get('max_retry', 5))
 
     def handle_stop(self):
-        for _, timer in self.timers.items():
+        for _, timer in list(self.timers.items()):
             timer.cancel()
 
     def handle_recv(self, data):

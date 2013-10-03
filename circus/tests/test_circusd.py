@@ -1,6 +1,11 @@
-from unittest2 import TestCase, skipIf
 import sys
 import os
+
+if sys.version_info >= (2, 7, 0, 'final'):
+    from unittest import TestCase, skipIf
+else:
+    from unittest2 import TestCase, skipIf
+
 import tempfile
 from copy import copy
 

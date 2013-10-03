@@ -105,7 +105,7 @@ class TestWatcher(TestCircus):
         to_kill = []
         nb_proc = len(watcher.processes)
 
-        for process in watcher.processes.values():
+        for process in list(watcher.processes.values()):
             to_kill.append(process.pid)
             # the process is killed in an unsual way
             try:
@@ -128,7 +128,7 @@ class TestWatcher(TestCircus):
         # watcher ids should have been reused
         wids = [p.wid for p in watcher.processes.values()]
         self.assertEqual(max(wids), watcher.numprocesses)
-        self.assertEqual(sum(wids), sum(xrange(1, watcher.numprocesses + 1)))
+        self.assertEqual(sum(wids), sum(range(1, watcher.numprocesses + 1)))
 
         # we should have a new process here now
         self.assertEquals(len(watcher.processes), nb_proc)
@@ -144,7 +144,7 @@ class TestWatcher(TestCircus):
         self.assertTrue("test" in resp)
         watchers = resp['test']
 
-        self.assertEqual(watchers[watchers.keys()[0]]['cmdline'],
+        self.assertEqual(watchers[list(watchers.keys())[0]]['cmdline'],
                          sys.executable.split(os.sep)[-1])
 
     def test_max_age(self):

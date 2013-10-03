@@ -8,7 +8,10 @@ import cProfile
 import pstats
 import shutil
 
-import unittest2 as unittest
+if sys.version_info >= (2, 7, 0, 'final'):
+    import unittest
+else:
+    import unittest2 as unittest
 
 from circus import get_arbiter
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,

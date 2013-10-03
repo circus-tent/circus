@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 from datetime import datetime
-from cStringIO import StringIO
+from circus.py3compat import StringIO
 
 from circus.client import make_message
 from circus.tests.support import TestCircus, poll_for, truncate_file

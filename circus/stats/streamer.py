@@ -46,9 +46,9 @@ class StatsStreamer(object):
     def get_pids(self, watcher=None):
         if watcher is not None:
             if watcher == 'circus':
-                return self.circus_pids.keys()
+                return list(self.circus_pids.keys())
             return self._pids[watcher]
-        return chain(*self._pids.values())
+        return chain(*list(self._pids.values()))
 
     def get_circus_pids(self):
         watchers = self.client.send_message('list').get('watchers', [])

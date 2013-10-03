@@ -36,7 +36,7 @@ class TestResourceWatcher(TestCircus):
             os.remove(cls.file)
 
     def _check_statsd(self, statsd, name):
-        res = statsd.increments.items()
+        res = list(statsd.increments.items())
         self.assertTrue(len(res) > 0)
         for stat, items in res:
             if name == stat and items > 0:

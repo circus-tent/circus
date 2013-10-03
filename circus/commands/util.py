@@ -102,7 +102,7 @@ def validate_option(key, val):
 
     if key in ('warmup_delay', 'flapping_window', 'retry_in',
                'graceful_timeout',):
-        if not isinstance(val, (int, float,)):
+        if not isinstance(val, (int, float)):
             raise MessageError("%r isn't a number" % key)
 
     if key in ('uid', 'gid',):

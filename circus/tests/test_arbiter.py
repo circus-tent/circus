@@ -7,7 +7,10 @@ import unittest
 from mock import patch
 from tempfile import mkstemp
 from time import time, sleep
-from urlparse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 from circus.arbiter import Arbiter, ThreadedArbiter
 from circus.client import CallError, CircusClient, make_message
@@ -343,7 +346,7 @@ class TestTrainer(TestCircus):
             endpoints.append(endpoint)
 
         if not resp:
-            print endpoints
+            print(endpoints)
 
         self.assertTrue(resp)
 

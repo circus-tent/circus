@@ -26,10 +26,13 @@ class RedirectorHandler(object):
                            'name': self.name}
                 datamap.update(self.redirector.extra_info)
                 self.redirector.redirect(datamap)
-        except IOError, ex:
-            if ex[0] != errno.EAGAIN:
+        except IOError as ex:
+            if ex.args[0] != errno.EAGAIN:
                 raise
-            sys.exc_clear()
+            try:
+                sys.exc_clear()
+            except Exception:
+                pass
 
 
 class Redirector(object):

@@ -36,11 +36,14 @@ class StatsClient(CircusConsumer):
 
                 try:
                     topic, stat = recv()
-                except zmq.core.error.ZMQError, e:
+                except zmq.core.error.ZMQError as e:
                     if e.errno != errno.EINTR:
                         raise
                     else:
-                        sys.exc_clear()
+                        try:
+                            sys.exc_clear()
+                        except Exception:
+                            pass
                         continue
 
                 topic = topic.split('.')
@@ -86,7 +89,7 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
 
     addstr(0, 0, 'Circus Top')
     addstr(1, 0, '-' * current_w)
-    names = watchers.keys()
+    names = list(watchers.keys())
     names.sort()
     line = 2
     for name in names:

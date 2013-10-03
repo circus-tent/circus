@@ -5,7 +5,10 @@ import signal
 import time
 import sys
 from random import randint
-from itertools import izip_longest
+try:
+    from itertools import zip_longest as izip_longest
+except ImportError:
+    from itertools import izip_longest
 import site
 import functools
 
@@ -18,6 +21,7 @@ from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
 from circus.util import parse_env_dict, resolve_name
+from circus.py3compat import bytestring, is_callable
 
 
 class Watcher(object):
@@ -305,7 +309,7 @@ class Watcher(object):
             self.stderr_redirector = None
 
     def _resolve_hook(self, name, callable_or_name, ignore_failure):
-        if callable(callable_or_name):
+        if is_callable(callable_or_name):
             self.hooks[name] = callable_or_name
         else:
             # will raise ImportError on failure
@@ -345,14 +349,8 @@ class Watcher(object):
     def notify_event(self, topic, msg):
         """Publish a message on the event publisher channel"""
 
-        json_msg = json.dumps(msg)
-        if isinstance(json_msg, unicode):
-            json_msg = json_msg.encode('utf8')
-
-        if isinstance(self.res_name, unicode):
-            name = self.res_name.encode('utf8')
-        else:
-            name = self.res_name
+        json_msg = bytestring(json.dumps(msg))
+        name = bytestring(self.res_name)
 
         multipart_msg = ["watcher.%s.%s" % (name, topic), json.dumps(msg)]
 
@@ -425,7 +423,7 @@ class Watcher(object):
         if self.max_age:
             max_age = self.max_age + randint(0, self.max_age_variance)
 
-            for process in list(self.processes.itervalues()):
+            for process in list(self.processes.values()):
                 if process.age() <= max_age:
                     continue
 
@@ -725,7 +723,7 @@ class Watcher(object):
     @property
     def _nextwid(self):
         used_wids = sorted([p.wid for p in self.processes.values()])
-        all_wids = xrange(1, self.numprocesses + 1)
+        all_wids = range(1, self.numprocesses + 1)
         for slot, wid in izip_longest(all_wids, used_wids, fillvalue=None):
             if slot is None:
                 # should never happen
@@ -744,7 +742,7 @@ class Watcher(object):
                 error = None
                 self.notify_event("hook_success",
                                   {"name": hook_name, "time": time.time()})
-            except Exception, error:
+            except Exception as error:
                 logger.exception('Hook %r failed' % hook_name)
                 result = hook_name in self.ignore_hook_failure
                 self.notify_event("hook_failure",

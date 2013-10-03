@@ -199,7 +199,8 @@ class TestUtil(unittest.TestCase):
 
         self.assertEquals(3, len(py_version))
 
-        map(lambda x: self.assertEquals(int, type(x)), py_version)
+        for x in py_version:
+            self.assertEquals(int, type(x))
 
         self.assertGreaterEqual(py_version[0], 2)
         self.assertGreaterEqual(py_version[1], 0)

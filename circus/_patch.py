@@ -84,8 +84,8 @@ else:
                 _active[self._ident] = self
                 del _limbo[self]
 
-            #if _trace_hook:
-            #    _sys.settrace(_trace_hook)
+            if _trace_hook:
+                _sys.settrace(_trace_hook)
             if _profile_hook:
                 _sys.setprofile(_profile_hook)
 
@@ -100,19 +100,20 @@ else:
                 else:
                     exc_type, exc_value, exc_tb = self._exc_info()
                     try:
-                        print((
-                            "Exception in thread " + self.name +
-                            " (most likely raised during interpreter shutdown):"), file=self._stderr)
-                        print((
-                            "Traceback (most recent call last):"), file=self._stderr)
+                        self._stderr.write(
+                            "Exception in thread " + self.name + " (most likely "
+                            "raised during interpreter shutdown):")
+
+                        self._stderr.write("Traceback (most recent call last):")
                         while exc_tb:
-                            print((
+                            self._stderr.write(
                                 '  File "%s", line %s, in %s' %
                                 (exc_tb.tb_frame.f_code.co_filename,
                                     exc_tb.tb_lineno,
-                                    exc_tb.tb_frame.f_code.co_name)), file=self._stderr)
+                                    exc_tb.tb_frame.f_code.co_name))
+
                             exc_tb = exc_tb.tb_next
-                        print(("%s: %s" % (exc_type, exc_value)), file=self._stderr)
+                        self._stderr.write("%s: %s" % (exc_type, exc_value))
                     finally:
                         del exc_type, exc_value, exc_tb
             finally:

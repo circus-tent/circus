@@ -41,7 +41,7 @@ class ResourceWatcher(BaseObserver):
         cpus = []
         mems = []
 
-        for sub_info in stats.itervalues():
+        for sub_info in stats.values():
             if isinstance(sub_info,  dict):
                 cpus.append(sub_info['cpu'])
                 mems.append(sub_info['mem'])

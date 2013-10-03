@@ -206,7 +206,7 @@ class WatchDog(CircusPlugin):
 
         max_timeout = self.loop_rate * self.max_count
         too_old_time = time.time() - max_timeout
-        for pid, detail in self.pid_status.iteritems():
+        for pid, detail in self.pid_status.items():
             if detail['last_activity'] < too_old_time:
                 logger.info("watcher:%s, pid:%s is not responding. Kill it !",
                             detail['watcher'],

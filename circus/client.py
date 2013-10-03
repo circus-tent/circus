@@ -63,7 +63,7 @@ class CircusClient(object):
 
         try:
             self.socket.send(cmd)
-        except zmq.ZMQError, e:
+        except zmq.ZMQError as e:
             raise CallError(str(e))
 
         while True:
@@ -73,7 +73,7 @@ class CircusClient(object):
                 if e.errno == errno.EINTR:
                     continue
                 else:
-                    print str(e)
+                    print(str(e))
                     raise CallError(str(e))
 
             if len(events) == 0:

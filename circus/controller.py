@@ -3,10 +3,11 @@ import traceback
 import functools
 try:
     from queue import Queue, Empty  # NOQA
+    from urllib.parse import urlparse
 except ImportError:
     from Queue import Queue, Empty  # NOQA
+    from urlparse import urlparse
 
-from urlparse import urlparse
 
 import zmq
 from zmq.utils.jsonapi import jsonmod as json
@@ -16,7 +17,7 @@ from circus.util import create_udp_socket
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError
-from circus.py3compat import string_types
+from circus.py3compat import string_types, bytestring
 from circus.sighandler import SysHandler
 
 
@@ -141,7 +142,7 @@ class Controller(object):
         if resp is None:
             resp = ok()
 
-        if not isinstance(resp, (dict, list,)):
+        if not isinstance(resp, (dict, list)):
             msg = "msg %r tried to send a non-dict: %s" % (msg, str(resp))
             logger.error("msg %r tried to send a non-dict: %s", msg, str(resp))
             return self.send_error(mid, cid, msg, "server error", cast=cast,
@@ -180,8 +181,7 @@ class Controller(object):
         resp['id'] = mid
         resp = json.dumps(resp)
 
-        if isinstance(resp, unicode):
-            resp = resp.encode('utf8')
+        resp = bytestring(resp)
 
         try:
             self.stream.send(cid, zmq.SNDMORE)

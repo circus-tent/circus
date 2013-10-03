@@ -49,7 +49,7 @@ class IncrProcTest(TestCircus):
         self.assertTrue(message['properties'], {'name': 'dummy'})
 
         message = cmd.message('dummy', 3)
-        props = message['properties'].items()
+        props = list(message['properties'].items())
         props.sort()
         self.assertEqual(props, [('name', 'dummy'), ('nb', 3)])
 
