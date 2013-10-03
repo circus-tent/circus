@@ -3,6 +3,8 @@ import time
 import os
 import warnings
 
+from tornado.gen import coroutine
+
 from circus.tests.support import TestCircus, Process, poll_for
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 from circus.plugins.watchdog import WatchDog
@@ -50,10 +52,14 @@ fqn = 'circus.tests.test_plugin_watchdog.run_dummy_watchdogged'
 class TestPluginWatchDog(TestCircus):
     def setUp(self):
         super(TestPluginWatchDog, self).setUp()
-        self.test_file = self._run_circus(fqn)
+
+    @coroutine
+    def start_circus(self):
+        self.test_file = yield self._run_circus(fqn)
         poll_for(self.test_file, 'START')
 
     def test_watchdog_discovery_found(self):
+        yield self.start_circus()
         config = {'loop_rate': 0.1, 'watchers_regex': "^test.*$"}
         with warnings.catch_warnings():
             watchdog = run_plugin(WatchDog, config)
@@ -61,6 +67,7 @@ class TestPluginWatchDog(TestCircus):
         self.assertEqual(len(watchdog.pid_status), 1, watchdog.pid_status)
 
     def test_watchdog_discovery_not_found(self):
+        yield self.start_circus()
         config = {'loop_rate': 0.3, 'watchers_regex': "^foo.*$"}
         watchdog = run_plugin(WatchDog, config)
         time.sleep(.4)  # ensure at least one loop in plugin

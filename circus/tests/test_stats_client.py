@@ -44,9 +44,9 @@ class TestStatsClient(TestCircus):
     def test_handler(self):
         log = self._get_file()
         stream = {'stream': FileStream(log)}
-        self._run_circus('circus.tests.test_stats_client.run_process',
-                         stdout_stream=stream, stderr_stream=stream,
-                         stats=True)
+        yield self._run_circus('circus.tests.test_stats_client.run_process',
+                               stdout_stream=stream, stderr_stream=stream,
+                               stats=True)
 
         # waiting for data to appear in the file stream
         empty = True
