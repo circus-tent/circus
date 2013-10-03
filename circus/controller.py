@@ -15,6 +15,7 @@ from tornado.concurrent import Future
 from tornado import gen
 
 from circus.util import create_udp_socket
+from circus.util import check_future_exception_and_log
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError, ConflictError
@@ -110,11 +111,8 @@ class Controller(object):
 
     def _dispatch_callback_future(self, msg, cid, mid, cast, cmd_name,
                                   send_resp, future):
-        if future.exception() is not None:
-            logger.error("exception %s caught" % future.exception())
-            if hasattr(future, "exc_info"):
-                exc_info = future.exc_info()
-                traceback.print_tb(exc_info[2])
+        exception = check_future_exception_and_log(future)
+        if exception is not None:
             if send_resp:
                 self.send_error(mid, cid, msg, "server error", cast=cast,
                                 errno=errors.BAD_MSG_DATA_ERROR)

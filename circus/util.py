@@ -9,6 +9,7 @@ import socket
 import sys
 import time
 import functools
+import traceback
 from tornado.ioloop import IOLoop
 from tornado import gen
 from tornado import concurrent
@@ -24,6 +25,7 @@ from zmq import ssh
 from psutil import AccessDenied, NoSuchProcess, Process
 
 from circus.exc import ConflictError
+from circus import logger
 
 
 # default endpoints
@@ -736,13 +738,16 @@ def synchronized(name):
                     raise ConflictError("arbiter is already running %s command"
                                         % arbiter._exclusive_running_command)
                 arbiter._exclusive_running_command = name
-            resp = f(self, *args, **kwargs)
-            if isinstance(resp, concurrent.Future):
-                cb = functools.partial(_synchronized_cb, arbiter)
-                resp.add_done_callback(cb)
-            else:
-                if arbiter is not None:
-                    arbiter._exclusive_running_command = None
+            resp = None
+            try:
+                resp = f(self, *args, **kwargs)
+            finally:
+                if isinstance(resp, concurrent.Future):
+                    cb = functools.partial(_synchronized_cb, arbiter)
+                    resp.add_done_callback(cb)
+                else:
+                    if arbiter is not None:
+                        arbiter._exclusive_running_command = None
             return resp
         return wrapper
     return real_decorator
@@ -793,3 +798,14 @@ class TransformableFuture(concurrent.Future):
             return self._exception
         else:
             return None
+
+
+def check_future_exception_and_log(future):
+    if isinstance(future, concurrent.Future):
+        exception = future.exception()
+        if exception is not None:
+            logger.error("exception %s caught" % exception)
+            if hasattr(future, "exc_info"):
+                exc_info = future.exc_info()
+                traceback.print_tb(exc_info[2])
+            return exception

@@ -38,4 +38,4 @@ class ReloadConfig(Command):
         return self.make_message()
 
     def execute(self, arbiter, props):
-        arbiter.reload_from_config()
+        return arbiter.reload_from_config()

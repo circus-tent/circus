@@ -766,7 +766,7 @@ class Watcher(object):
 
         if not self.call_hook('after_start'):
             logger.debug('Aborting startup')
-            yield self.stop()
+            yield self._stop()
             return
 
         if self.stdout_redirector is not None:

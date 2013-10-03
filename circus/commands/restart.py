@@ -67,4 +67,4 @@ class Restart(Command):
             watcher = self._get_watcher(arbiter, props['name'])
             return watcher.restart()
         else:
-            return arbiter.restart()
+            return arbiter.restart(inside_circusd=True)

@@ -44,6 +44,7 @@ class Plugin(CircusPlugin):
 class TestTrainer(TestCircus):
 
     @classmethod
+    @tornado.gen.coroutine
     def setUpClass(cls):
         cmd = 'circus.tests.support.run_process'
         cls.stream = QueueStream()
@@ -52,13 +53,14 @@ class TestTrainer(TestCircus):
             debug=True, async=True)
         cls.test_file = testfile
         cls.arbiter = arbiter
-        cls.arbiter.start(start_ioloop=False)
+        yield cls.arbiter.start()
 
     @classmethod
+    @tornado.gen.coroutine
     def tearDownClass(cls):
         for watcher in cls.arbiter.iter_watchers():
             cls.arbiter.rm_watcher(watcher)
-        cls.arbiter.stop(stop_ioloop=False)
+        yield cls.arbiter.stop()
 
     def setUp(self):
         super(TestTrainer, self).setUp()
@@ -151,6 +153,9 @@ class TestTrainer(TestCircus):
                                 options=self._get_options())
         self.assertEqual(resp.get("status"), "ok")
 
+        resp = yield self._call("start")
+        self.assertEqual(resp.get("status"), "ok")
+
     @tornado.testing.gen_test
     def test_add_watcher1(self):
         name = "test_add_watcher1"
@@ -171,13 +176,14 @@ class TestTrainer(TestCircus):
         self.assertEqual(resp.get("numwatchers"), before + 1)
 
     @tornado.testing.gen_test
-    def test_add_watcher3(self):
-        options = {'name': 'test1', 'cmd': self._get_cmd(),
+    def test_add_watcher_already_exists(self):
+        options = {'name': 'test_add_watcher3', 'cmd': self._get_cmd(),
                    'options': self._get_options()}
 
         yield self._call("add", **options)
         resp = yield self._call("add", **options)
         self.assertTrue(resp.get('status'), 'error')
+        self.assertTrue(self.arbiter._exclusive_running_command is None)
 
     @tornado.testing.gen_test
     def test_add_watcher4(self):
@@ -289,6 +295,11 @@ class TestTrainer(TestCircus):
         yield self._call("stop")
         resp = yield self._call("status", name="test")
         self.assertEqual(resp.get("status"), "stopped")
+
+        yield self._call("start")
+
+        resp = yield self._call("status", name="test")
+        self.assertEqual(resp.get("status"), 'active')
 
     @tornado.testing.gen_test
     def test_stop_watchers3(self):
