@@ -92,6 +92,8 @@ class CommandlineTest(TestCircus):
     @gen_test
     def test_add_start(self):
         yield self.start_arbiter()
+        poll_for(self.test_file, 'START')
+
         stdout, stderr = yield async_run_ctl('add --start test2 "sleep 1"')
         self.assertEqual(stderr, '')
         self.assertEqual(stdout, 'ok\n')
