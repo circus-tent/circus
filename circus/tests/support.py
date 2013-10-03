@@ -7,12 +7,13 @@ from collections import defaultdict
 import cProfile
 import pstats
 import shutil
-from zmq.eventloop import ioloop
-from tornado.testing import AsyncTestCase
-import tornado
-import mock
+import functools
+import multiprocessing
 
-import unittest2 as unittest
+from tornado.testing import AsyncTestCase
+from zmq.eventloop import ioloop
+import mock
+import tornado
 
 from circus import get_arbiter
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
@@ -293,7 +294,7 @@ def truncate_file(filename):
     open(filename, 'w').close()  # opening as 'w' overwrites the file
 
 
-def run_plugin(klass, config, duration=300):
+def run_plugin(klass, config, plugin_info_callback=None, duration=300):
     endpoint = DEFAULT_ENDPOINT_DEALER
     pubsub_endpoint = DEFAULT_ENDPOINT_SUB
     check_delay = 1
@@ -317,7 +318,23 @@ def run_plugin(klass, config, duration=300):
     deadline = time() + (duration / 1000.)
     plugin.loop.add_timeout(deadline, plugin.loop.stop)
     plugin.start()
+    if plugin_info_callback:
+        plugin_info_callback(plugin)
     return _statsd
+
+
+@tornado.gen.coroutine
+def async_run_plugin(klass, config, plugin_info_callback):
+    queue = multiprocessing.Queue()
+    plugin_info_callback = functools.partial(plugin_info_callback, queue)
+    circusctl_process = multiprocessing.Process(
+        target=run_plugin,
+        args=(klass, config, plugin_info_callback))
+    circusctl_process.start()
+    while queue.empty():
+        yield tornado_sleep(.1)
+    result = queue.get()
+    raise tornado.gen.Return(result)
 
 
 class FakeProcess(object):
