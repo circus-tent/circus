@@ -58,9 +58,7 @@ else:
 
     BytesIO = StringIO
 
-    def raise_with_tb(E, V, T):     # NOQA
-        raise E(V).with_traceback(T)
-        #raise E, V, T
+    from py2raise import raise_with_tb
 
     def is_callable(c):
         return callable(c)
