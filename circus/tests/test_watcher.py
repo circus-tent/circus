@@ -16,7 +16,10 @@ from circus.tests.support import TestCircus, poll_for, truncate_file
 from circus.util import get_python_version
 from circus.watcher import Watcher
 
-from test.test_support import captured_output
+try:
+    from test.support import captured_output
+except ImportError:
+    from test.test_support import captured_output
 
 warnings.filterwarnings('ignore',
                         module='threading', message='sys.exc_clear')
