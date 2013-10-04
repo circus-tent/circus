@@ -1,7 +1,7 @@
 import os
 import warnings
 
-from circus.tests.support import TestCircus, poll_for, Process, run_plugin
+from circus.tests.support import TestCircus, poll_for, Process, run_plugin, ifSupportsSetUpClass
 from circus.plugins.resource_watcher import ResourceWatcher
 
 
@@ -21,6 +21,7 @@ def run_leaky(test_file):
     return 1
 
 
+@ifSupportsSetUpClass
 class TestResourceWatcher(TestCircus):
 
     @classmethod
