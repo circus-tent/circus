@@ -9,7 +9,7 @@ import sys
 from psutil import Popen
 import mock
 
-from circus.tests.support import unittest
+from circus.tests.support import TestCase
 
 from circus import util
 from circus.util import (
@@ -19,7 +19,7 @@ from circus.util import (
 )
 
 
-class TestUtil(unittest.TestCase):
+class TestUtil(TestCase):
 
     def setUp(self):
         self.dirs = []

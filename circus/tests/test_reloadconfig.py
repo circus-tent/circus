@@ -1,8 +1,7 @@
-import unittest
 import os
 
 from circus.arbiter import Arbiter, ReloadArbiterException
-
+from circus.tests.support import TestCase
 
 HERE = os.path.join(os.path.dirname(__file__))
 CONFIG_DIR = os.path.join(HERE, 'config')
@@ -35,7 +34,7 @@ class FakeSocket(object):
     close = send_multipart
 
 
-class TestConfig(unittest.TestCase):
+class TestConfig(TestCase):
 
     def setUp(self):
         self.a = self._load_base_arbiter()

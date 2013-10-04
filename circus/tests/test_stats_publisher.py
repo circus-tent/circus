@@ -3,11 +3,11 @@ import json
 
 import zmq
 
-from circus.tests.support import unittest
+from circus.tests.support import TestCase
 from circus.stats.publisher import StatsPublisher
 
 
-class TestStatsPublisher(unittest.TestCase):
+class TestStatsPublisher(TestCase):
 
     def test_publish(self):
         publisher = StatsPublisher()

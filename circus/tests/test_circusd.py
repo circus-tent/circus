@@ -1,11 +1,6 @@
 import sys
 import os
 
-if sys.version_info >= (2, 7, 0, 'final'):
-    from unittest import TestCase, skipIf
-else:
-    from unittest2 import TestCase, skipIf
-
 import tempfile
 from copy import copy
 
@@ -14,7 +9,7 @@ from circus import circusd
 from circus.arbiter import Arbiter
 from circus.util import REDIRECT_TO
 from circus import util
-from circus.tests.support import has_gevent
+from circus.tests.support import has_gevent, TestCase, skipIf
 
 
 CIRCUS_INI = os.path.join(os.path.dirname(__file__), 'config', 'circus.ini')

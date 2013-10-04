@@ -5,11 +5,11 @@ import IN
 
 import mock
 
-from circus.tests.support import unittest
+from circus.tests.support import TestCase, skipIf
 from circus.sockets import CircusSocket, CircusSockets
 
 
-class TestSockets(unittest.TestCase):
+class TestSockets(TestCase):
 
     def test_socket(self):
         sock = CircusSocket('somename', 'localhost', 0)
@@ -83,8 +83,8 @@ class TestSockets(unittest.TestCase):
             sockets.close_all()
             self.assertTrue(not os.path.exists(sockfile))
 
-    @unittest.skipIf(not hasattr(IN, 'SO_BINDTODEVICE'),
-                     'SO_BINDTODEVICE unsupported')
+    @skipIf(not hasattr(IN, 'SO_BINDTODEVICE'),
+            'SO_BINDTODEVICE unsupported')
     def test_bind_to_interface(self):
         config = {'name': '', 'host': 'localhost', 'port': 0,
                   'interface': 'lo'}

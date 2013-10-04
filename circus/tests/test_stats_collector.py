@@ -7,10 +7,10 @@ from zmq.eventloop import ioloop
 
 from circus.stats import collector as collector_module
 from circus.stats.collector import SocketStatsCollector, WatcherStatsCollector
-from circus.tests.support import unittest
+from circus.tests.support import TestCase
 
 
-class TestCollector(unittest.TestCase):
+class TestCollector(TestCase):
 
     def setUp(self):
         # let's create 10 sockets and their clients

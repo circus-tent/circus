@@ -1,9 +1,9 @@
-from circus.tests.support import unittest
+from circus.tests.support import TestCase
 
 from circus.commands.util import convert_option, ArgumentError
 
 
-class TestConvertOption(unittest.TestCase):
+class TestConvertOption(TestCase):
 
     def test_env(self):
         env = convert_option("env", {"port": "8080"})

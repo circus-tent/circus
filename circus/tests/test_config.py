@@ -1,4 +1,3 @@
-import unittest
 import os
 from mock import patch
 
@@ -7,6 +6,7 @@ from circus.config import get_config
 from circus.watcher import Watcher
 from circus.process import Process
 from circus.sockets import CircusSocket
+from circus.tests.support import TestCase
 
 
 HERE = os.path.join(os.path.dirname(__file__))
@@ -36,7 +36,7 @@ def hook(watcher, hook_name):
     pass
 
 
-class TestConfig(unittest.TestCase):
+class TestConfig(TestCase):
 
     def test_issue310(self):
         '''

@@ -1,4 +1,4 @@
-from unittest import TestCase
+from circus.tests.support import TestCase
 from circus.controller import Controller
 
 from zmq.eventloop import ioloop

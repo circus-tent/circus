@@ -1,12 +1,11 @@
-import unittest
-
+from circus.tests.support import TestCase
 from mock import patch
 
 from circus.commands.util import validate_option
 from circus.exc import MessageError
 
 
-class TestValidateOption(unittest.TestCase):
+class TestValidateOption(TestCase):
 
     def test_uidgid(self):
         self.assertRaises(MessageError, validate_option, 'uid', {})

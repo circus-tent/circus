@@ -12,7 +12,7 @@ from circus import logger
 from circus.process import RUNNING, UNEXISTING
 
 from circus.stream import QueueStream
-from circus.tests.support import TestCircus, poll_for, truncate_file
+from circus.tests.support import TestCircus, ifSupportsSetUpClass, poll_for, truncate_file
 from circus.util import get_python_version
 from circus.watcher import Watcher
 
@@ -34,6 +34,7 @@ class FakeProcess(object):
         self.age = age
 
 
+@ifSupportsSetUpClass
 class TestWatcher(TestCircus):
 
     runner = None

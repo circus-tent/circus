@@ -1,12 +1,12 @@
-import unittest
 import tempfile
 import os
 import subprocess
 
 from circus.pidfile import Pidfile
+from circus.tests.support import TestCase
 
 
-class TestPidfile(unittest.TestCase):
+class TestPidfile(TestCase):
     def test_pidfile(self):
         proc = subprocess.Popen('sleep 120', shell=True)
         fd, path = tempfile.mkstemp()

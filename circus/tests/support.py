@@ -8,10 +8,16 @@ import cProfile
 import pstats
 import shutil
 
-if sys.version_info >= (2, 7, 0, 'final'):
-    import unittest
-else:
-    import unittest2 as unittest
+try:
+    from unittest import skipIf, TestCase
+    def ifSupportsSetUpClass(obj):
+        return obj
+except ImportError:
+    from unittest2 import skipIf, TestCase
+    def ifSupportsSetUpClass(obj):
+        class Dummy(object):
+            pass
+        return Dummy
 
 from circus import get_arbiter
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
@@ -56,7 +62,7 @@ def resolve_name(name):
 _CMD = sys.executable
 
 
-class TestCircus(unittest.TestCase):
+class TestCircus(TestCase):
 
     arbiter_factory = get_arbiter
 

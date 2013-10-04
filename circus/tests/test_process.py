@@ -1,13 +1,9 @@
 import os
 import sys
 import time
-if sys.version_info >= (2, 7, 0, 'final'):
-    from unittest import skipIf
-else:
-    from unittest2 import skipIf
 
 from circus.process import Process, RUNNING
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, skipIf
 import circus.py3compat
 
 

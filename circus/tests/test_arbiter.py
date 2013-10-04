@@ -2,7 +2,6 @@ import json
 import os
 import socket
 import sys
-import unittest
 
 from mock import patch
 from tempfile import mkstemp
@@ -15,7 +14,7 @@ except ImportError:
 from circus.arbiter import Arbiter, ThreadedArbiter
 from circus.client import CallError, CircusClient, make_message
 from circus.plugins import CircusPlugin
-from circus.tests.support import TestCircus, poll_for, truncate_file
+from circus.tests.support import TestCase, TestCircus, poll_for, truncate_file
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
                          DEFAULT_ENDPOINT_SUB)
 from circus.watcher import Watcher
@@ -357,7 +356,7 @@ class MockWatcher(Watcher):
         self.started = True
 
 
-class TestArbiter(unittest.TestCase):
+class TestArbiter(TestCase):
     """
     Unit tests for the arbiter class to codify requirements within
     behavior.
