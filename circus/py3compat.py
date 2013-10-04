@@ -1,9 +1,6 @@
 import sys
 
-from circus.util import get_python_version
-
-
-PY3 = get_python_version()[0] == 3
+PY3 = sys.version_info[0] >= 3
 
 if PY3:
     import collections
@@ -62,7 +59,8 @@ else:
     BytesIO = StringIO
 
     def raise_with_tb(E, V, T):     # NOQA
-        raise E, V, T
+        raise E(V).with_traceback(T)
+        #raise E, V, T
 
     def is_callable(c):
         return callable(c)
