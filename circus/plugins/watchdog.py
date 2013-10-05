@@ -5,6 +5,7 @@ import signal
 
 from zmq.eventloop import ioloop
 import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import u
 from circus.plugins import CircusPlugin
 from circus import logger
 
@@ -88,7 +89,7 @@ class WatchDog(CircusPlugin):
         - reap: remove a killed child pid from monitoring
         """
         topic, msg = data
-        topic_parts = topic.split(".")
+        topic_parts = u(topic).split(".")
         logger.debug("received data from circusd: %s, %s", topic_parts, msg)
         # check if monitored watchers:
         if (topic_parts[0] == 'watcher' and

@@ -121,8 +121,8 @@ class TestProcess(TestCircus):
             time.sleep(1)
 
         # the pipes should be empty
-        self.assertEqual(process.stdout.read(), '')
-        self.assertEqual(process.stderr.read(), '')
+        self.assertEqual(process.stdout.read(), b'')
+        self.assertEqual(process.stderr.read(), b'')
 
         # 2. streams sent to /dev/null, no PIPEs
         process = Process('test', cmd, args=args, close_child_stdout=True,

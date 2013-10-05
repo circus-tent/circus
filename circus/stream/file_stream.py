@@ -2,6 +2,7 @@ import os
 import tempfile
 from datetime import datetime
 from circus import logger
+from zmq.utils.strtypes import u
 
 
 class FileStream(object):
@@ -61,7 +62,7 @@ class FileStream(object):
             self._do_rollover()
 
         # If we want to prefix the stream with the current datetime
-        for line in data['data'].split('\n'):
+        for line in u(data['data']).split('\n'):
             if not line:
                 continue
             if self.time_format is not None:

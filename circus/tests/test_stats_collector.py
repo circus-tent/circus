@@ -172,7 +172,7 @@ class TestCollector(TestCase):
         # doing some socket things as a client
         for i in range(10):
             for client in self.clients:
-                client.send('ok')
+                client.send(b'ok')
                 #client.recv(2)
 
         # stopping

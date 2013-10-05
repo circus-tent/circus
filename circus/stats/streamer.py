@@ -18,7 +18,7 @@ from circus import logger
 class StatsStreamer(object):
     def __init__(self, endpoint, pubsub_endoint, stats_endpoint,
                  ssh_server=None, delay=1., loop=None):
-        self.topic = 'watcher.'
+        self.topic = b'watcher.'
         self.delay = delay
         self.ctx = zmq.Context()
         self.pubsub_endpoint = pubsub_endoint

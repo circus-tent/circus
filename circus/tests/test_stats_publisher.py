@@ -15,7 +15,7 @@ class TestStatsPublisher(TestCase):
         stat = {'subtopic': 1, 'foo': 'bar'}
         publisher.publish('foobar', stat)
         publisher.socket.send_multipart.assert_called_with(
-            ['stat.foobar.1', json.dumps(stat)])
+            [b'stat.foobar.1', json.dumps(stat)])
 
     def test_publish_reraise_zmq_errors(self):
         publisher = StatsPublisher()
