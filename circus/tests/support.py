@@ -282,8 +282,6 @@ def async_poll_for(filename, needles, timeout=5):
         for needle in needles:
             if needle in content:
                 raise tornado.gen.Return(True)
-        # When using gevent this will make sure the redirector greenlets are
-        # scheduled.
         yield tornado_sleep(0.1)
     raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
         filename, needle, content))
