@@ -229,9 +229,9 @@ class TestUtil(TestCase):
         # we want virtualenv directory to contain a site-packages
         self.assertRaises(ValueError, load_virtualenv, watcher)
 
-        minor = sys.version_info[1]
+        py_ver = sys.version.split()[0][:3]
         site_pkg = os.path.join(watcher.virtualenv, 'lib',
-                                'python2.%s' % minor, 'site-packages')
+                                'python%s' % py_ver, 'site-packages')
         os.makedirs(site_pkg)
         watcher.env = {}
         load_virtualenv(watcher)
