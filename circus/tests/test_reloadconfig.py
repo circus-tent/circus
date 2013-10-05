@@ -24,6 +24,7 @@ _CONF = {
                                          'reload_changesockets.ini'),
     'reload_changearbiter': os.path.join(CONFIG_DIR,
                                          'reload_changearbiter.ini'),
+    'reload_statsd': os.path.join(CONFIG_DIR, 'reload_statsd.ini'),
 }
 
 
@@ -48,8 +49,8 @@ class TestConfig(unittest.TestCase):
             watcher.stop()
         a.sockets.close_all()
 
-    def _load_base_arbiter(self):
-        a = Arbiter.load_from_config(_CONF['reload_base'])
+    def _load_base_arbiter(self, name='reload_base'):
+        a = Arbiter.load_from_config(_CONF[name])
         a.evpub_socket = FakeSocket()
         # initialize watchers
         for watcher in a.iter_watchers():
@@ -144,3 +145,11 @@ class TestConfig(unittest.TestCase):
         finally:
             del os.environ['SHRUBBERY']
             self._tear_down_arbiter(a)
+
+    def test_reload_ignorearbiterwatchers(self):
+        a = self._load_base_arbiter('reload_statsd')
+        statsd = a.get_watcher('circusd-stats')
+
+        a.reload_from_config(_CONF['reload_statsd'])
+
+        self.assertEqual(statsd, a.get_watcher('circusd-stats'))
