@@ -441,8 +441,7 @@ class Watcher(object):
             self.spawn_processes()
 
         # removing extra processes
-        processes = list(self.processes.values())
-        processes.sort(key=lambda o: id(o))
+        processes = sorted(self.processes.values(), key=lambda process: process.pid)
 
         while len(processes) > self.numprocesses:
             process = processes.pop(0)
