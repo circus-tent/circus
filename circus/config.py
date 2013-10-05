@@ -89,7 +89,10 @@ class DefaultConfigParser(StrictConfigParser):
 def read_config(config_path):
     cfg = DefaultConfigParser()
     with open(config_path) as f:
-        cfg.readfp(f)
+        if hasattr(cfg, 'read_file'):
+            cfg.read_file(f)
+        else:
+            cfg.readfp(f)
 
     current_dir = os.path.dirname(config_path)
 
