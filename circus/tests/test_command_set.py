@@ -10,7 +10,7 @@ class FakeWatcher(object):
     def set_opt(self, key, val):
         self.options[key] = val
 
-    def do_action(self, action, callback):
+    def do_action(self, action):
         self.actions.append(action)
 
 
