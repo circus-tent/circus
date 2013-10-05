@@ -273,7 +273,7 @@ def replace_env(var):
 def env_to_str(env):
     if not env:
         return ""
-    return ",".join(["%s=%s" % (k, v) for k, v in env.items()])
+    return ",".join(["%s=%s" % (k, v) for k, v in sorted(env.items(), key=lambda i: i[0])])
 
 
 def close_on_exec(fd):

@@ -91,7 +91,7 @@ class TestUtil(TestCase):
             self.assertRaises(ValueError, to_bool, value)
 
     def test_parse_env_str(self):
-        env = 'test=1,booo=2'
+        env = 'booo=2,test=1'
         parsed = parse_env_str(env)
         self.assertEqual(parsed, {'test': '1', 'booo': '2'})
         self.assertEqual(env_to_str(parsed), env)
