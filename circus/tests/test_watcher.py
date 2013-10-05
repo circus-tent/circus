@@ -148,8 +148,8 @@ class TestWatcher(TestCircus):
         self.assertTrue("test" in resp)
         watchers = resp['test']
 
-        self.assertEqual(watchers[list(watchers.keys())[0]]['cmdline'],
-                         sys.executable.split(os.sep)[-1])
+        self.assertEqual(watchers[list(watchers.keys())[0]]['cmdline'].lower(),
+                         sys.executable.split(os.sep)[-1].lower())
 
     def test_max_age(self):
         # let's run 15 processes
