@@ -67,7 +67,7 @@ class Redirector(object):
             del self._active[fd]
 
     def stop(self):
-        for fd in self._active.keys():
+        for fd in list(self._active.keys()):
             self._stop_one(fd)
         self.running = False
 
