@@ -1,4 +1,3 @@
-import json
 import os
 import socket
 import sys
@@ -6,6 +5,7 @@ import sys
 from mock import patch
 from tempfile import mkstemp
 from time import time, sleep
+import zmq.utils.jsonapi as json
 try:
     from urllib.parse import urlparse
 except ImportError:

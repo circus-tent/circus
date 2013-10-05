@@ -1,6 +1,5 @@
 import argparse
 import sys
-import json
 import curses
 from collections import defaultdict
 import errno
@@ -9,6 +8,7 @@ import time
 import logging
 
 import zmq
+import zmq.utils.jsonapi as json
 
 from circus.consumer import CircusConsumer
 from circus import __version__

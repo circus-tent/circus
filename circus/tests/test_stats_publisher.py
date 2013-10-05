@@ -1,7 +1,7 @@
 import mock
-import json
 
 import zmq
+import zmq.utils.jsonapi as json
 
 from circus.tests.support import TestCase
 from circus.stats.publisher import StatsPublisher

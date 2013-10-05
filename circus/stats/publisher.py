@@ -1,5 +1,5 @@
 import zmq
-import json
+import zmq.utils.jsonapi as json
 
 from circus import logger
 
