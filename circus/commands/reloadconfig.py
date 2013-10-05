@@ -18,6 +18,7 @@ class ReloadConfig(Command):
 
             {
                 "command": "reloadconfig",
+                "waiting": False
             }
 
         The response return the status "ok". If the property graceful is
@@ -29,13 +30,14 @@ class ReloadConfig(Command):
 
         ::
 
-            $ circusctl reloadconfig
+            $ circusctl reloadconfig [--waiting]
 
     """
     name = "reloadconfig"
+    options = Command.waiting_options
 
     def message(self, *args, **opts):
-        return self.make_message()
+        return self.make_message(**opts)
 
     def execute(self, arbiter, props):
-        arbiter.reload_from_config()
+        return arbiter.reload_from_config()

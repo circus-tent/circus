@@ -8,6 +8,11 @@ import shlex
 import socket
 import sys
 import time
+import functools
+import traceback
+from tornado.ioloop import IOLoop
+from tornado import gen
+from tornado import concurrent
 from ConfigParser import (
     ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
 )
@@ -18,6 +23,9 @@ from zmq import ssh
 
 
 from psutil import AccessDenied, NoSuchProcess, Process
+
+from circus.exc import ConflictError
+from circus import logger
 
 
 # default endpoints
@@ -709,3 +717,95 @@ class DictDiffer(object):
 
 def dict_differ(dict1, dict2):
     return len(DictDiffer(dict1, dict2).changed()) > 0
+
+
+def _synchronized_cb(arbiter, future):
+    if arbiter is not None:
+        arbiter._exclusive_running_command = None
+
+
+def synchronized(name):
+    def real_decorator(f):
+        @wraps(f)
+        def wrapper(self, *args, **kwargs):
+            arbiter = None
+            if hasattr(self, "arbiter"):
+                arbiter = self.arbiter
+            elif hasattr(self, "_exclusive_running_command"):
+                arbiter = self
+            if arbiter is not None:
+                if arbiter._exclusive_running_command is not None:
+                    raise ConflictError("arbiter is already running %s command"
+                                        % arbiter._exclusive_running_command)
+                arbiter._exclusive_running_command = name
+            resp = None
+            try:
+                resp = f(self, *args, **kwargs)
+            finally:
+                if isinstance(resp, concurrent.Future):
+                    cb = functools.partial(_synchronized_cb, arbiter)
+                    resp.add_done_callback(cb)
+                else:
+                    if arbiter is not None:
+                        arbiter._exclusive_running_command = None
+            return resp
+        return wrapper
+    return real_decorator
+
+
+def tornado_sleep(duration):
+    """Sleep without blocking the tornado event loop
+
+    To use with a gen.coroutines decorated function
+    Thanks to http://stackoverflow.com/a/11135204/433050
+    """
+    return gen.Task(IOLoop.instance().add_timeout, time.time() + duration)
+
+
+class TransformableFuture(concurrent.Future):
+
+    _upstream_future = None
+    _upstream_callback = None
+    _transform_function = lambda x: x
+    _result = None
+    _exception = None
+
+    def set_transform_function(self, fn):
+        self._transform_function = fn
+
+    def set_upstream_future(self, upstream_future):
+        self._upstream_future = upstream_future
+
+    def result(self, timeout=None):
+        if self._upstream_future is None:
+            raise Exception("upstream_future is not set")
+        return self._transform_function(self._result)
+
+    def _internal_callback(self, future):
+        self._result = future.result()
+        self._exception = future.exception()
+        if self._upstream_callback is not None:
+            self._upstream_callback(self)
+
+    def add_done_callback(self, fn):
+        if self._upstream_future is None:
+            raise Exception("upstream_future is not set")
+        self._upstream_callback = fn
+        self._upstream_future.add_done_callback(self._internal_callback)
+
+    def exception(self, timeout=None):
+        if self._exception:
+            return self._exception
+        else:
+            return None
+
+
+def check_future_exception_and_log(future):
+    if isinstance(future, concurrent.Future):
+        exception = future.exception()
+        if exception is not None:
+            logger.error("exception %s caught" % exception)
+            if hasattr(future, "exc_info"):
+                exc_info = future.exc_info()
+                traceback.print_tb(exc_info[2])
+            return exception
