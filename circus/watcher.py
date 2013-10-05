@@ -410,7 +410,7 @@ class Watcher(object):
             return
 
         # reap_process changes our dict, look through the copy of keys
-        for pid in self.processes.keys():
+        for pid in list(self.processes.keys()):
             self.reap_process(pid)
 
     @util.debuglog
@@ -440,7 +440,7 @@ class Watcher(object):
             self.spawn_processes()
 
         # removing extra processes
-        processes = self.processes.values()
+        processes = list(self.processes.values())
         processes.sort()
 
         while len(processes) > self.numprocesses:
