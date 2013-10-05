@@ -9,12 +9,6 @@ if PY3:
     text_type = str
     long = int
 
-    def b2s(s):     # NOQA
-        return s.decode('latin1')
-
-    def s2b(s):     # NOQA
-        return s.encode('latin1')
-
     def bytestring(s):  # NOQA
         return s
 
@@ -37,12 +31,6 @@ else:
     integer_types = (int, long)
     text_type = unicode
     long = long
-
-    def b2s(s):     # NOQA
-        return s
-
-    def s2b(s):     # NOQA
-        return s
 
     def bytestring(s):  # NOQA
         if isinstance(s, unicode):

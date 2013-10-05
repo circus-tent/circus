@@ -11,13 +11,14 @@ except ImportError:
 
 import zmq
 import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import b
 from zmq.eventloop import ioloop, zmqstream
 
 from circus.util import create_udp_socket
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError
-from circus.py3compat import string_types, bytestring
+from circus.py3compat import string_types
 from circus.sighandler import SysHandler
 
 
@@ -180,8 +181,6 @@ class Controller(object):
 
         resp['id'] = mid
         resp = json.dumps(resp)
-
-        resp = bytestring(resp)
 
         try:
             self.stream.send(cid, zmq.SNDMORE)

@@ -5,6 +5,7 @@ import uuid
 
 import zmq
 import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import b
 
 from circus.exc import CallError
 from circus.py3compat import string_types
@@ -28,7 +29,7 @@ class CircusClient(object):
                  timeout=5.0, ssh_server=None, ssh_keyfile=None):
         self._init_context(context)
         self.endpoint = endpoint
-        self._id = uuid.uuid4().hex
+        self._id = b(uuid.uuid4().hex)
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)

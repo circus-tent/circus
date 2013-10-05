@@ -14,6 +14,7 @@ import functools
 
 from psutil import NoSuchProcess
 import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import b
 from zmq.eventloop import ioloop
 
 from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
@@ -352,7 +353,7 @@ class Watcher(object):
         json_msg = bytestring(json.dumps(msg))
         name = bytestring(self.res_name)
 
-        multipart_msg = ["watcher.%s.%s" % (name, topic), json.dumps(msg)]
+        multipart_msg = [b("watcher.%s.%s" % (name, topic)), b(json.dumps(msg))]
 
         if self.evpub_socket is not None and not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)
