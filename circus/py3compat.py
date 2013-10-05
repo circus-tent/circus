@@ -16,8 +16,8 @@ if PY3:
     StringIO = io.StringIO      # NOQA
     BytesIO = io.BytesIO        # NOQA
 
-    def raise_with_tb(E, V, T):     # NOQA
-        raise E(V).with_traceback(T)
+    def raise_with_tb(E):     # NOQA
+        raise E.with_traceback(sys.exc_info()[2])
 
     def is_callable(c):
         return isinstance(c, collections.Callable)

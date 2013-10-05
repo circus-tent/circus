@@ -1,2 +1,5 @@
-def raise_with_tb(E, V, T):     # NOQA
-    raise E, V, T
+import sys
+
+
+def raise_with_tb(E):     # NOQA
+    raise E, None, sys.exc_info()[2]
