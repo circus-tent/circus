@@ -8,6 +8,7 @@ import logging
 
 import mock
 from zmq.eventloop import ioloop
+from zmq.utils.strtypes import u
 
 from circus import logger
 from circus.process import RUNNING, UNEXISTING
@@ -237,7 +238,7 @@ class TestWatcherInitialization(TestCircus):
         # wait for watcher data at most 5s
         data = watcher.stream.get(timeout=5)
         watcher.stop()
-        data = data['data']
+        data = u(data['data'])
         self.assertTrue('XYZ' in data, data)
 
     def test_venv(self):
