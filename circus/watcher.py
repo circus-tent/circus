@@ -420,6 +420,11 @@ class Watcher(object):
         if self.stopped:
             return
 
+        # remove dead or zombie processes first
+        for process in list(self.processes.values()):
+            if process.status == DEAD_OR_ZOMBIE:
+                self.processes.pop(process.pid)
+
         # removing old processes
         if self.max_age:
             max_age = self.max_age + randint(0, self.max_age_variance)
@@ -441,15 +446,11 @@ class Watcher(object):
             self.spawn_processes()
 
         # removing extra processes
-        processes = sorted(self.processes.values(), key=lambda process: process.pid)
-
-        while len(processes) > self.numprocesses:
-            process = processes.pop(0)
-            if process.status == DEAD_OR_ZOMBIE:
+        if len(self.processes) > self.numprocesses:
+            for process in sorted(self.processes.values(), key=lambda process: process.started, reverse=True)[self.numprocesses:]:
                 self.processes.pop(process.pid)
-            else:
-                self.processes.pop(process.pid)
-                self.kill_process(process)
+                if process != DEAD_OR_ZOMBIE:
+                    self.kill_process(process)
 
     @util.debuglog
     def reap_and_manage_processes(self):
