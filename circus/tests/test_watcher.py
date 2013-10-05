@@ -12,7 +12,8 @@ from circus import logger
 from circus.process import RUNNING, UNEXISTING
 
 from circus.stream import QueueStream
-from circus.tests.support import TestCircus, poll_for, truncate_file
+from circus.tests.support import TestCircus, truncate_file
+from circus.tests.support import async_poll_for
 from circus.tests.support import MagicMockFuture
 from circus.util import get_python_version, tornado_sleep
 from circus.watcher import Watcher
@@ -63,7 +64,8 @@ class TestWatcher(TestCircus):
         resp = yield self.numprocesses('incr', name='test')
         self.assertEquals(resp, 2)
         # wait for both to have started
-        self.assertTrue(poll_for(self.test_file, 'STARTSTART'))
+        resp = yield async_poll_for(self.test_file, 'STARTSTART')
+        self.assertTrue(resp)
         truncate_file(self.test_file)
 
         pids = yield self.pids()
@@ -74,8 +76,8 @@ class TestWatcher(TestCircus):
         self.assertEquals(status, 'ok')
 
         # make sure the process is restarted
-        yield tornado_sleep(2)  # FIXME: async polling
-        self.assertTrue(poll_for(self.test_file, 'START'))
+        res = yield async_poll_for(self.test_file, 'START')
+        self.assertTrue(res)
 
         # we still should have two processes, but not the same pids for them
         pids = yield self.pids()
@@ -150,7 +152,7 @@ class TestWatcher(TestCircus):
 
         # we want to make sure the watcher is really up and running 14
         # processes, and stable
-        poll_for(self.test_file, 'START' * 15)
+        async_poll_for(self.test_file, 'START' * 15)
         truncate_file(self.test_file)  # make sure we have a clean slate
 
         # we want a max age of 1 sec.
@@ -236,7 +238,7 @@ class TestWatcherInitialization(TestCircus):
         watcher = SomeWatcher(virtualenv=venv)
         yield watcher.run()
         try:
-            yield tornado_sleep(1)
+            #yield tornado_sleep(1)  # FIXME
             py_version = get_python_version()
             major = py_version[0]
             minor = py_version[1]
