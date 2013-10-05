@@ -10,7 +10,7 @@ except ImportError:
 
 
 import zmq
-from zmq.utils.jsonapi import jsonmod as json
+import zmq.utils.jsonapi as json
 from zmq.eventloop import ioloop, zmqstream
 
 from circus.util import create_udp_socket

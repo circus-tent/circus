@@ -4,7 +4,7 @@ import errno
 import uuid
 
 import zmq
-from zmq.utils.jsonapi import jsonmod as json
+import zmq.utils.jsonapi as json
 
 from circus.exc import CallError
 from circus.py3compat import string_types
