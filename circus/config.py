@@ -58,11 +58,6 @@ class DefaultConfigParser(StrictConfigParser):
     def set_env(self, env):
         self._env = dict(env)
 
-    def toboolean(self, value):
-        if value.lower() not in self._boolean_states:
-            raise ValueError('Not a boolean: %s' % value)
-        return self._boolean_states[value.lower()]
-
     def get(self, section, option):
         res = StrictConfigParser.get(self, section, option)
         return replace_gnu_args(res, env=self._env)

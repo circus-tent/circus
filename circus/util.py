@@ -13,10 +13,13 @@ try:
     from configparser import (
         ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
     )
+    new_config_parser = True
 except ImportError:
     from ConfigParser import (
         ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
     )
+    new_config_parser = False
+
 from datetime import timedelta
 from functools import wraps
 
@@ -475,6 +478,17 @@ def configure_logger(logger, level='INFO', output="-"):
 
 
 class StrictConfigParser(ConfigParser):
+
+    if new_config_parser:
+        def toboolean(self, value):
+            if value.lower() not in self.BOOLEAN_STATES:
+                raise ValueError('Not a boolean: %s' % value)
+            return self.BOOLEAN_STATES[value.lower()]
+    else:
+        def toboolean(self, value):
+            if value.lower() not in self._boolean_states:
+                raise ValueError('Not a boolean: %s' % value)
+            return self._boolean_states[value.lower()]
 
     def _read(self, fp, fpname):
         cursect = None                        # None, or a dictionary
