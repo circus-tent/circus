@@ -236,9 +236,15 @@ class TestWatcherInitialization(TestCircus):
         watcher = SomeWatcher()
         watcher.start()
         # wait for watcher data at most 5s
-        data = watcher.stream.get(timeout=5)
+        data = watcher.stream.get(timeout=5)['data']
+        while True:
+            try:
+                more = watcher.stream.get(timeout=.1)['data']
+                data += more
+            except Exception:
+                break
         watcher.stop()
-        data = u(data['data'])
+        data = u(data)
         self.assertTrue('XYZ' in data, data)
 
     def test_venv(self):
@@ -289,7 +295,7 @@ class SomeWatcher(threading.Thread):
         old_environ = os.environ
         old_paths = sys.path[:]
         try:
-            sys.path = ['XYZ']
+            sys.path[:] = ['XYZ']
             os.environ = {'COCONUTS': 'MIGRATE'}
             cmd = ('%s -c "import sys; '
                    'sys.stdout.write(\':\'.join(sys.path)); '
