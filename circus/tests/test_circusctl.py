@@ -13,18 +13,14 @@ def run_ctl(args, stdin=''):
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
-    if stdin:
-        proc.stdin.write(b(stdin))
-
-    stderr = u(proc.stderr.read())
-    stdout = u(proc.stdout.read())
+    stdout, stderr = proc.communicate(b(stdin) if stdin else None)
     proc.wait()
     try:
         import gevent
         gevent.shutdown()
     except ImportError:
         pass
-    return stdout, stderr
+    return u(stdout), u(stderr)
 
 
 class CommandlineTest(TestCircus):
