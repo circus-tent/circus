@@ -4,6 +4,7 @@ import os
 import threading
 import time
 import warnings
+import logging
 
 import mock
 from zmq.eventloop import ioloop
@@ -104,6 +105,8 @@ class TestWatcher(TestCircus):
         self.assertTrue(to_kill not in pids)
 
     def test_unexisting(self):
+        # may cause an exception in tornado ioloop so mask it
+        logging.getLogger('tornado.application').setLevel(logging.CRITICAL)
         watcher = self.arbiter.get_watcher("test")
 
         to_kill = []
@@ -113,7 +116,8 @@ class TestWatcher(TestCircus):
             to_kill.append(process.pid)
             # the process is killed in an unsual way
             try:
-                os.kill(process.pid, signal.SIGSEGV)
+                # use SIGKILL instead of SIGSEGV so we don't get 'app crashed' dialogs on OS X
+                os.kill(process.pid, signal.SIGKILL)
             except OSError:
                 pass
 
