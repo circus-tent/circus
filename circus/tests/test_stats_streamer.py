@@ -102,18 +102,18 @@ class TestStatsStreamer(TestCircus):
     def test_get_pids_circus(self):
         streamer = FakeStreamer()
         streamer.circus_pids = {1234: 'circus-top', 1235: 'circusd'}
-        self.assertEquals(streamer.get_pids('circus'), [1234, 1235])
+        self.assertEqual(streamer.get_pids('circus'), [1234, 1235])
 
     def test_get_pids(self):
         streamer = FakeStreamer()
         streamer._pids['foobar'] = [1234, 1235]
-        self.assertEquals(streamer.get_pids('foobar'), [1234, 1235])
+        self.assertEqual(streamer.get_pids('foobar'), [1234, 1235])
 
     def test_get_all_pids(self):
         streamer = FakeStreamer()
         streamer._pids['foobar'] = [1234, 1235]
         streamer._pids['barbaz'] = [1236, 1237]
-        self.assertEquals(set(streamer.get_pids()),
+        self.assertEqual(set(streamer.get_pids()),
                           set([1234, 1235, 1236, 1237]))
 
     @mock.patch('os.getpid', lambda: 2222)
@@ -131,7 +131,7 @@ class TestStatsStreamer(TestCircus):
         streamer.client = mock.MagicMock()
         streamer.client.send_message = _send_message
 
-        self.assertEquals(
+        self.assertEqual(
             streamer.get_circus_pids(),
             {1111: 'circusd', 2222: 'circusd-stats',
              3333: 'circushttpd'})

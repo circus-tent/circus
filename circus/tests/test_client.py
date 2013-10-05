@@ -32,28 +32,28 @@ class TestClient(TestCircus):
         msg = make_message("numwatchers")
         resp = self.cli.call(msg)
         self.assertEqual(resp.get("numwatchers"), 1)
-        self.assertEquals(self.numprocesses("numprocesses"), 1)
+        self.assertEqual(self.numprocesses("numprocesses"), 1)
 
-        self.assertEquals(self.set("test", numprocesses=2), 'ok')
-        self.assertEquals(self.numprocesses("numprocesses"), 2)
+        self.assertEqual(self.set("test", numprocesses=2), 'ok')
+        self.assertEqual(self.numprocesses("numprocesses"), 2)
 
-        self.assertEquals(self.set("test", numprocesses=1), 'ok')
-        self.assertEquals(self.numprocesses("numprocesses"), 1)
-        self.assertEquals(self.numwatchers("numwatchers"), 1)
+        self.assertEqual(self.set("test", numprocesses=1), 'ok')
+        self.assertEqual(self.numprocesses("numprocesses"), 1)
+        self.assertEqual(self.numwatchers("numwatchers"), 1)
 
-        self.assertEquals(self.call("list").get('watchers'), ['test'])
-        self.assertEquals(self.numprocesses("incr", name="test"), 2)
-        self.assertEquals(self.numprocesses("numprocesses"), 2)
-        self.assertEquals(self.numprocesses("incr", name="test", nb=2), 4)
-        self.assertEquals(self.numprocesses("decr", name="test", nb=3), 1)
-        self.assertEquals(self.numprocesses("numprocesses"), 1)
-        self.assertEquals(self.set("test", env={"test": 1, "test": 2}),
+        self.assertEqual(self.call("list").get('watchers'), ['test'])
+        self.assertEqual(self.numprocesses("incr", name="test"), 2)
+        self.assertEqual(self.numprocesses("numprocesses"), 2)
+        self.assertEqual(self.numprocesses("incr", name="test", nb=2), 4)
+        self.assertEqual(self.numprocesses("decr", name="test", nb=3), 1)
+        self.assertEqual(self.numprocesses("numprocesses"), 1)
+        self.assertEqual(self.set("test", env={"test": 1, "test": 2}),
                           'error')
-        self.assertEquals(self.set("test", env={"test": '1', "test": '2'}),
+        self.assertEqual(self.set("test", env={"test": '1', "test": '2'}),
                           'ok')
         resp = self.call('get', name='test', keys=['env'])
         options = resp.get('options', {})
-        self.assertEquals(options.get('env'), {'test': '1', 'test': '2'})
+        self.assertEqual(options.get('env'), {'test': '1', 'test': '2'})
 
         resp = self.call('stats', name='test')
         self.assertEqual(resp['status'], 'ok')

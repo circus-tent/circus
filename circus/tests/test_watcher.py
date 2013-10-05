@@ -80,15 +80,15 @@ class TestWatcher(TestCircus):
         self.assertEqual(res, 1)
 
     def test_signal(self):
-        self.assertEquals(self.numprocesses('incr', name='test'), 2)
+        self.assertEqual(self.numprocesses('incr', name='test'), 2)
         # wait for both to have started
         self.assertTrue(poll_for(self.test_file, 'STARTSTART'))
         truncate_file(self.test_file)
 
         pids = self.pids()
-        self.assertEquals(len(pids), 2)
+        self.assertEqual(len(pids), 2)
         to_kill = pids[0]
-        self.assertEquals(self.status('signal', name='test', pid=to_kill,
+        self.assertEqual(self.status('signal', name='test', pid=to_kill,
                                       signum=signal.SIGKILL), 'ok')
 
         # make sure the process is restarted
@@ -100,7 +100,7 @@ class TestWatcher(TestCircus):
         while len(pids) < 2 and count < 10:
             pids = self.pids()
             time.sleep(.1)
-        self.assertEquals(len(pids), 2)
+        self.assertEqual(len(pids), 2)
         self.assertTrue(to_kill not in pids)
 
     def test_unexisting(self):
@@ -124,7 +124,7 @@ class TestWatcher(TestCircus):
                 pass
 
             # ansure the old process is considered "unexisting"
-            self.assertEquals(process.status, UNEXISTING)
+            self.assertEqual(process.status, UNEXISTING)
 
         # this should clean up and create a new process
         watcher.reap_and_manage_processes()
@@ -135,7 +135,7 @@ class TestWatcher(TestCircus):
         self.assertEqual(sum(wids), sum(range(1, watcher.numprocesses + 1)))
 
         # we should have a new process here now
-        self.assertEquals(len(watcher.processes), nb_proc)
+        self.assertEqual(len(watcher.processes), nb_proc)
         for p in watcher.processes.values():
             # and that one needs to have a new pid.
             self.assertFalse(p.pid in to_kill)
@@ -165,7 +165,7 @@ class TestWatcher(TestCircus):
         result = self.call('set', name='test',
                            options={'max_age': 1, 'max_age_variance': 0})
 
-        self.assertEquals(result.get('status'), 'ok')
+        self.assertEqual(result.get('status'), 'ok')
 
         # we want to wait for all 15 processes to restart
         ready = False
@@ -199,11 +199,11 @@ class TestWatcherInitialization(TestCircus):
         try:
             os.environ = {'COCONUTS': 'MIGRATE'}
             watcher = Watcher("foo", "foobar", copy_env=True)
-            self.assertEquals(watcher.env, os.environ)
+            self.assertEqual(watcher.env, os.environ)
 
             watcher = Watcher("foo", "foobar", copy_env=True,
                               env={"AWESOMENESS": "YES"})
-            self.assertEquals(watcher.env,
+            self.assertEqual(watcher.env,
                               {'COCONUTS': 'MIGRATE', 'AWESOMENESS': 'YES'})
         finally:
             os.environ = old_environ
@@ -223,7 +223,7 @@ class TestWatcherInitialization(TestCircus):
 
             watcher = Watcher("foo", "foobar", copy_env=True, hooks=hooks)
 
-            self.assertEquals(watcher.env, os.environ)
+            self.assertEqual(watcher.env, os.environ)
         finally:
             os.environ = old_environ
 
@@ -233,8 +233,7 @@ class TestWatcherInitialization(TestCircus):
         # wait for watcher data at most 5s
         data = watcher.stream.get(timeout=5)
         watcher.stop()
-        data = [v for k, v in data.items()][1]
-        data = ''.join(data)
+        data = data['data']
         self.assertTrue('XYZ' in data, data)
 
     def test_venv(self):
@@ -466,18 +465,18 @@ class RespawnTest(TestCircus):
             # Per default, we shouldn't respawn processes,
             # so we should have one process, even if in a dead state.
             resp = self.call("numprocesses", name="test")
-            self.assertEquals(resp['numprocesses'], 1)
+            self.assertEqual(resp['numprocesses'], 1)
 
             # let's reap processes and explicitely ask for process management
             watcher.reap_and_manage_processes()
 
             # we should have zero processes (the process shouldn't respawn)
-            self.assertEquals(len(watcher.processes), 0)
+            self.assertEqual(len(watcher.processes), 0)
 
             # If we explicitely ask the watcher to respawn its processes,
             # ensure it's doing so.
             watcher.spawn_processes()
-            self.assertEquals(len(watcher.processes), 1)
+            self.assertEqual(len(watcher.processes), 1)
         finally:
             arbiter.stop()
 
