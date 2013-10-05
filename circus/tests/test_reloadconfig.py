@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from circus.arbiter import Arbiter, ReloadArbiterException
+from circus.arbiter import Arbiter
 
 
 HERE = os.path.join(os.path.dirname(__file__))

@@ -249,7 +249,6 @@ class Arbiter(object):
 
     @synchronized("arbiter_reload_config")
     @gen.coroutine
-    # FIXME: fix async
     def reload_from_config(self, config_file=None, inside_circusd=False):
         new_cfg = get_config(config_file if config_file else self.config_file)
         # if arbiter is changed, reload everything
@@ -361,7 +360,7 @@ class Arbiter(object):
         # delete watchers
         for n in deleted_wn:
             w = self.get_watcher(n)
-            w.stop()
+            yield w.stop()
             del self._watchers_names[w.name.lower()]
             self.watchers.remove(w)
 
@@ -372,11 +371,9 @@ class Arbiter(object):
 
             w = Watcher.load_from_config(new_watcher_cfg)
             w.initialize(self.evpub_socket, self.sockets, self)
-            self.start_watcher(w)
+            yield self.start_watcher(w)
             self.watchers.append(w)
             self._watchers_names[w.name.lower()] = w
-
-        raise gen.Return(False)
 
     @classmethod
     def load_from_config(cls, config_file, loop=None):
@@ -599,6 +596,8 @@ class Arbiter(object):
                 self._start_watchers()
                 self.socket_event = False
 
+    @synchronized("arbiter_reload")
+    @gen.coroutine
     @debuglog
     def reload(self, graceful=True):
         """Reloads everything.
@@ -621,8 +620,8 @@ class Arbiter(object):
 
         # gracefully reload watchers
         for watcher in self.iter_watchers():
-            watcher._reload(graceful=graceful)
-            sleep(self.warmup_delay)
+            yield watcher._reload(graceful=graceful)
+            tornado_sleep(self.warmup_delay)
 
     def numprocesses(self):
         """Return the number of processes running across all watchers."""
