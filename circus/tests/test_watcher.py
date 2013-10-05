@@ -218,19 +218,24 @@ class TestWatcherInitialization(TestCircus):
         watcher = SomeWatcher()
         yield watcher.run()
         # wait for watcher data at most 5s
-        i = 0
-        while i < 50:
-            yield tornado_sleep(0.1)
+        messages = []
+        resp = False
+        start_time = time.time()
+        while (time.time() - start_time) <= 5:
+            yield tornado_sleep(0.5)
+            # More than one Queue.get call is needed to get full
+            # output from a watcher in an environment with rich sys.path.
             try:
-                data = watcher.stream.get(block=False)
-                break
+                m = watcher.stream.get(block=False)
+                messages.append(m)
             except Queue.Empty:
                 pass
-            i = i + 1
+            data = ''.join(m['data'] for m in messages)
+            if 'XYZ' in data:
+                resp = True
+                break
+        self.assertTrue(resp)
         yield watcher.stop()
-        data = [v for k, v in data.items()][1]
-        data = ''.join(data)
-        self.assertTrue('XYZ' in data, data)
 
     @tornado.testing.gen_test
     def test_venv(self):
