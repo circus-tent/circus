@@ -7,6 +7,7 @@ from circus.watcher import Watcher
 from circus.process import Process
 from circus.sockets import CircusSocket
 from circus.tests.support import TestCase
+from circus.py3compat import PY3
 
 
 HERE = os.path.join(os.path.dirname(__file__))
@@ -149,7 +150,10 @@ class TestConfig(TestCase):
         watchers = conf['watchers']
         self.assertEqual(len(watchers), 3)
         watchers = conf['watchers']
-        watchers.sort()
+        if PY3:
+            watchers = sorted(watchers, key=lambda a: a['__name__'])
+        else:
+            watchers.sort()
         self.assertEqual(watchers[2]['env']['INI'], 'private.ini')
         self.assertEqual(conf['check'], 555)
 
