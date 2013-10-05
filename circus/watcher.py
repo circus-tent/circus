@@ -456,7 +456,6 @@ class Watcher(object):
         expired_processes = [p for p in self.processes.values()
                              if p.age() > max_age]
         yield [self.kill_process(x) for x in expired_processes]
-        # FIXME : self.processes ?
 
     @gen.coroutine
     @util.debuglog
