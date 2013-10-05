@@ -4,6 +4,7 @@ import shlex
 
 from circus.circusctl import USAGE, VERSION, CircusCtl
 from circus.tests.support import TestCircus, poll_for
+from zmq.utils.strtypes import b, u
 
 
 def run_ctl(args, stdin=''):
@@ -13,10 +14,10 @@ def run_ctl(args, stdin=''):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     if stdin:
-        proc.stdin.write(stdin)
+        proc.stdin.write(b(stdin))
 
-    stderr = proc.stderr.read()
-    stdout = proc.stdout.read()
+    stderr = u(proc.stderr.read())
+    stdout = u(proc.stdout.read())
     proc.wait()
     try:
         import gevent
