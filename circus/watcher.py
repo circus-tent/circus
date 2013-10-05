@@ -350,10 +350,10 @@ class Watcher(object):
     def notify_event(self, topic, msg):
         """Publish a message on the event publisher channel"""
 
-        json_msg = bytestring(json.dumps(msg))
+        json_msg = json.dumps(msg)
         name = bytestring(self.res_name)
 
-        multipart_msg = [b("watcher.%s.%s" % (name, topic)), b(json.dumps(msg))]
+        multipart_msg = [b("watcher.%s.%s" % (name, topic)), json.dumps(msg)]
 
         if self.evpub_socket is not None and not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)
@@ -442,7 +442,7 @@ class Watcher(object):
 
         # removing extra processes
         processes = list(self.processes.values())
-        processes.sort()
+        processes.sort(key=lambda o: id(o))
 
         while len(processes) > self.numprocesses:
             process = processes.pop(0)
