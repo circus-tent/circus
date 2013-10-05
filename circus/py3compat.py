@@ -23,7 +23,7 @@ if PY3:
         return isinstance(c, collections.Callable)
 
     def get_next(c):
-        return c.__next_
+        return c.__next__
 
     MAXSIZE = sys.maxsize       # NOQA
 else:
