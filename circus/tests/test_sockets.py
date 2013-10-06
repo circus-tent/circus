@@ -5,7 +5,7 @@ import IN
 
 import mock
 
-from circus.tests.support import TestCase, skipIf
+from circus.tests.support import TestCase, skipIf, EasyTestSuite
 from circus.sockets import CircusSocket, CircusSockets
 
 
@@ -113,3 +113,5 @@ class TestSockets(TestCase):
             self.assertNotEqual(sock.port, 0)
         finally:
             sock.close()
+
+test_suite = EasyTestSuite(__name__)

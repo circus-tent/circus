@@ -1,4 +1,4 @@
-from circus.tests.support import TestCase
+from circus.tests.support import TestCase, EasyTestSuite
 from mock import patch
 
 from circus.commands.util import validate_option
@@ -45,3 +45,5 @@ class TestValidateOption(TestCase):
         # make sure we control the hook names
         self.assertRaises(MessageError, validate_option, 'hooks',
                           {'IDONTEXIST': ['all', False]})
+
+test_suite = EasyTestSuite(__name__)

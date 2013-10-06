@@ -3,7 +3,7 @@ import time
 import os
 import warnings
 
-from circus.tests.support import TestCircus, Process, poll_for
+from circus.tests.support import TestCircus, Process, poll_for, EasyTestSuite
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 from circus.plugins.watchdog import WatchDog
 
@@ -65,3 +65,5 @@ class TestPluginWatchDog(TestCircus):
         watchdog = run_plugin(WatchDog, config)
         time.sleep(.4)  # ensure at least one loop in plugin
         self.assertEqual(len(watchdog.pid_status), 0)
+
+test_suite = EasyTestSuite(__name__)

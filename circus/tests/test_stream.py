@@ -7,7 +7,7 @@ from datetime import datetime
 from circus.py3compat import StringIO
 
 from circus.client import make_message
-from circus.tests.support import TestCase, TestCircus, poll_for, truncate_file, ifSupportsSetUpClass
+from circus.tests.support import TestCase, TestCircus, poll_for, truncate_file, ifSupportsSetUpClass, EasyTestSuite
 from circus.stream import FileStream
 from circus.stream import FancyStdoutStream
 
@@ -214,3 +214,5 @@ class TestFileStream(TestCase):
         output = stream._file.getvalue()
 
         self.assertEqual(len(output.split('\n')), 4)
+
+test_suite = EasyTestSuite(__name__)

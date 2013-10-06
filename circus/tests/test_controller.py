@@ -1,4 +1,4 @@
-from circus.tests.support import TestCase
+from circus.tests.support import TestCase, EasyTestSuite
 from circus.controller import Controller
 
 from zmq.eventloop import ioloop
@@ -34,3 +34,5 @@ class TestController(TestCase):
         controller.start()
         loop.start()
         self.assertTrue(controller.called)
+
+test_suite = EasyTestSuite(__name__)

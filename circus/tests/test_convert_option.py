@@ -1,4 +1,4 @@
-from circus.tests.support import TestCase
+from circus.tests.support import TestCase, EasyTestSuite
 
 from circus.commands.util import convert_option, ArgumentError
 
@@ -45,3 +45,5 @@ class TestConvertOption(TestCase):
 
         self.assertRaises(ArgumentError, convert_option, 'hooks',
                           'before_start:one:two')
+
+test_suite = EasyTestSuite(__name__)

@@ -3,7 +3,7 @@ import tempfile
 import os
 import sys
 
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.client import CircusClient
 from circus.stream import FileStream
 from circus.py3compat import get_next
@@ -80,3 +80,5 @@ class TestStatsClient(TestCircus):
             watcher, pid, stat = next()
             self.assertTrue(watcher in ('test', 'circusd-stats', 'circus'),
                             watcher)
+
+test_suite = EasyTestSuite(__name__)

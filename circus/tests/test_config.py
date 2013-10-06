@@ -6,7 +6,7 @@ from circus.config import get_config
 from circus.watcher import Watcher
 from circus.process import Process
 from circus.sockets import CircusSocket
-from circus.tests.support import TestCase
+from circus.tests.support import TestCase, EasyTestSuite
 from circus.py3compat import PY3
 
 
@@ -182,3 +182,5 @@ class TestConfig(TestCase):
         conf = get_config(_CONF['expand_vars'])
         watcher = conf['watchers'][0]
         self.assertEqual(watcher['stdout_stream']['filename'], '/tmp/echo.log')
+
+test_suite = EasyTestSuite(__name__)

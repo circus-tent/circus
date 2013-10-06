@@ -1,4 +1,4 @@
-from circus.tests.support import TestCircus, poll_for
+from circus.tests.support import TestCircus, poll_for, EasyTestSuite
 
 
 class TestSigHandler(TestCircus):
@@ -15,3 +15,5 @@ class TestSigHandler(TestCircus):
 
         # wait for the process to be stopped
         self.assertTrue(poll_for(test_file, 'QUIT'))
+
+test_suite = EasyTestSuite(__name__)

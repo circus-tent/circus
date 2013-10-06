@@ -9,7 +9,7 @@ import sys
 from psutil import Popen
 import mock
 
-from circus.tests.support import TestCase
+from circus.tests.support import TestCase, EasyTestSuite
 
 from circus import util
 from circus.util import (
@@ -252,3 +252,5 @@ class TestUtil(TestCase):
             self.assertEqual(get_working_dir(), '/path/to/pwd')
         finally:
             util.os.stat = _old_os_stat
+
+test_suite = EasyTestSuite(__name__)

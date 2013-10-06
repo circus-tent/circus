@@ -3,7 +3,7 @@ import sys
 import shlex
 
 from circus.circusctl import USAGE, VERSION, CircusCtl
-from circus.tests.support import TestCircus, poll_for
+from circus.tests.support import TestCircus, poll_for, EasyTestSuite
 from zmq.utils.strtypes import b, u
 
 
@@ -95,3 +95,5 @@ class CLITest(TestCircus):
         prompt = stdout.splitlines()
         # first two lines are VERSION and prompt, followed by a blank line
         self.assertEqual(prompt[3], "Documented commands (type help <topic>):")
+
+test_suite = EasyTestSuite(__name__)

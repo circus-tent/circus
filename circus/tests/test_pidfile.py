@@ -3,7 +3,7 @@ import os
 import subprocess
 
 from circus.pidfile import Pidfile
-from circus.tests.support import TestCase
+from circus.tests.support import TestCase, EasyTestSuite
 
 
 class TestPidfile(TestCase):
@@ -24,3 +24,5 @@ class TestPidfile(TestCase):
             self.assertFalse(os.path.exists(path))
         finally:
             os.remove(path + '.2')
+
+test_suite = EasyTestSuite(__name__)

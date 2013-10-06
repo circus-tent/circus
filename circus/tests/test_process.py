@@ -3,7 +3,7 @@ import sys
 import time
 
 from circus.process import Process, RUNNING
-from circus.tests.support import TestCircus, skipIf
+from circus.tests.support import TestCircus, skipIf, EasyTestSuite
 import circus.py3compat
 
 
@@ -147,3 +147,4 @@ class TestProcess(TestCircus):
         # the pipes should be unexistant
         self.assertEqual(len(process.stdout.read()), 2890)
         self.assertEqual(len(process.stderr.read()), 2890)
+test_suite = EasyTestSuite(__name__)

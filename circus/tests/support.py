@@ -9,11 +9,11 @@ import pstats
 import shutil
 
 try:
-    from unittest import skipIf, TestCase
+    from unittest import skipIf, TestCase, TestSuite, findTestCases
     def ifSupportsSetUpClass(obj):
         return obj
 except ImportError:
-    from unittest2 import skipIf, TestCase
+    from unittest2 import skipIf, TestCase, TestSuite, findTestCases
     def ifSupportsSetUpClass(obj):
         class Dummy(object):
             pass
@@ -23,6 +23,11 @@ from circus import get_arbiter
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_STATS)
 from circus.client import CircusClient, make_message
+
+
+class EasyTestSuite(TestSuite):
+    def __init__(self, name):
+        super(EasyTestSuite, self).__init__(findTestCases(sys.modules[name]))
 
 
 def resolve_name(name):

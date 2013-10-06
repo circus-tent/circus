@@ -1,7 +1,7 @@
 import os
 
 from circus.arbiter import Arbiter, ReloadArbiterException
-from circus.tests.support import TestCase
+from circus.tests.support import TestCase, EasyTestSuite
 
 HERE = os.path.join(os.path.dirname(__file__))
 CONFIG_DIR = os.path.join(HERE, 'config')
@@ -143,3 +143,5 @@ class TestConfig(TestCase):
         finally:
             del os.environ['SHRUBBERY']
             self._tear_down_arbiter(a)
+
+test_suite = EasyTestSuite(__name__)

@@ -1,4 +1,4 @@
-from circus.tests.support import TestCircus, poll_for, run_plugin
+from circus.tests.support import TestCircus, poll_for, run_plugin, EasyTestSuite
 from circus.plugins.statsd import FullStats
 
 
@@ -21,3 +21,5 @@ class TestFullStats(TestCircus):
                   '_stats.test.mem_max', '_stats.test.mem_sum',
                   '_stats.test.watchers_num']
         self.assertEqual(last_batch, wanted)
+
+test_suite = EasyTestSuite(__name__)

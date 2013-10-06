@@ -1,7 +1,7 @@
 import os
 import warnings
 
-from circus.tests.support import TestCircus, poll_for, Process, run_plugin, ifSupportsSetUpClass
+from circus.tests.support import TestCircus, poll_for, Process, run_plugin, ifSupportsSetUpClass, EasyTestSuite
 from circus.plugins.resource_watcher import ResourceWatcher
 
 
@@ -179,3 +179,5 @@ class TestResourceWatcher(TestCircus):
             warnings.simplefilter("always")
             _statsd = run_plugin(ResourceWatcher, config)
             assert len(w) == numws - 1
+
+test_suite = EasyTestSuite(__name__)

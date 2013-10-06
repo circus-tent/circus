@@ -14,7 +14,7 @@ from circus import logger
 from circus.process import RUNNING, UNEXISTING
 
 from circus.stream import QueueStream
-from circus.tests.support import TestCircus, ifSupportsSetUpClass, poll_for, truncate_file
+from circus.tests.support import TestCircus, ifSupportsSetUpClass, poll_for, truncate_file, EasyTestSuite
 from circus.util import get_python_version
 from circus.watcher import Watcher
 
@@ -517,3 +517,5 @@ class RespawnTest(TestCircus):
 
         # And be sure we don't spawn new processes in the meantime.
         self.assertFalse(watcher.spawn_processes.called)
+
+test_suite = EasyTestSuite(__name__)

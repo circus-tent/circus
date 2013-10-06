@@ -3,7 +3,7 @@ import mock
 import zmq
 import zmq.utils.jsonapi as json
 
-from circus.tests.support import TestCase
+from circus.tests.support import TestCase, EasyTestSuite
 from circus.stats.publisher import StatsPublisher
 
 
@@ -34,3 +34,5 @@ class TestStatsPublisher(TestCase):
 
         stat = {'subtopic': 1, 'foo': 'bar'}
         publisher.publish('foobar', stat)
+
+test_suite = EasyTestSuite(__name__)

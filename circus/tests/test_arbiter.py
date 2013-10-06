@@ -14,7 +14,7 @@ except ImportError:
 from circus.arbiter import Arbiter, ThreadedArbiter
 from circus.client import CallError, CircusClient, make_message
 from circus.plugins import CircusPlugin
-from circus.tests.support import TestCase, TestCircus, poll_for, truncate_file
+from circus.tests.support import TestCase, TestCircus, poll_for, truncate_file, EasyTestSuite
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
                          DEFAULT_ENDPOINT_SUB)
 from circus.watcher import Watcher
@@ -398,3 +398,5 @@ class TestArbiter(TestCase):
             self.assertEqual(arbiter.watchers[0].status(), 'active')
         finally:
             arbiter.stop()
+
+test_suite = EasyTestSuite(__name__)

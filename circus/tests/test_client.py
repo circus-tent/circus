@@ -1,6 +1,6 @@
 import time
 
-from circus.tests.support import TestCircus, poll_for
+from circus.tests.support import TestCircus, poll_for, EasyTestSuite
 from circus.client import make_message, CallError
 from circus.stream import QueueStream
 
@@ -107,3 +107,5 @@ class TestWithHook(TestCircus):
             self.assertEqual(resp.get("numwatchers"), 1)
         finally:
             arbiter.stop()
+
+test_suite = EasyTestSuite(__name__)

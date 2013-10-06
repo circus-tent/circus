@@ -7,7 +7,7 @@ from zmq.eventloop import ioloop
 
 from circus.stats import collector as collector_module
 from circus.stats.collector import SocketStatsCollector, WatcherStatsCollector
-from circus.tests.support import TestCase
+from circus.tests.support import TestCase, EasyTestSuite
 
 
 class TestCollector(TestCase):
@@ -186,3 +186,5 @@ class TestCollector(TestCase):
         stat = self.streamer.stats[0]
         self.assertTrue(stat['fd'] in self.fds)
         self.assertTrue(stat['reads'] > 1)
+
+test_suite = EasyTestSuite(__name__)

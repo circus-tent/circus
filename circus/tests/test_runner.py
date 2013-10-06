@@ -1,4 +1,4 @@
-from circus.tests.support import TestCircus, poll_for
+from circus.tests.support import TestCircus, poll_for, EasyTestSuite
 
 
 def Dummy(test_file):
@@ -12,3 +12,5 @@ class TestRunner(TestCircus):
     def test_dummy(self):
         test_file = self._run_circus('circus.tests.test_runner.Dummy')
         self.assertTrue(poll_for(test_file, '..........'))
+
+test_suite = EasyTestSuite(__name__)
