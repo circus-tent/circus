@@ -48,20 +48,23 @@ class TestConfig(TestCase):
         conf = get_config(_CONF['issue310'])
         watcher = Watcher.load_from_config(conf['watchers'][0])
         socket = CircusSocket.load_from_config(conf['sockets'][0])
-        watcher.initialize(None, {'web': socket}, None)
-        process = Process(watcher._nextwid, watcher.cmd,
-                          args=watcher.args, working_dir=watcher.working_dir,
-                          shell=watcher.shell, uid=watcher.uid,
-                          gid=watcher.gid, env=watcher.env,
-                          rlimits=watcher.rlimits, spawn=False,
-                          executable=watcher.executable,
-                          use_fds=watcher.use_sockets, watcher=watcher)
+        try:
+            watcher.initialize(None, {'web': socket}, None)
+            process = Process(watcher._nextwid, watcher.cmd,
+                              args=watcher.args, working_dir=watcher.working_dir,
+                              shell=watcher.shell, uid=watcher.uid,
+                              gid=watcher.gid, env=watcher.env,
+                              rlimits=watcher.rlimits, spawn=False,
+                              executable=watcher.executable,
+                              use_fds=watcher.use_sockets, watcher=watcher)
 
-        fd = watcher._get_sockets_fds()['web']
-        formatted_args = process.format_args()
+            fd = watcher._get_sockets_fds()['web']
+            formatted_args = process.format_args()
 
-        self.assertEqual(formatted_args,
-                          ['foo', '--fd', str(fd)])
+            self.assertEqual(formatted_args,
+                              ['foo', '--fd', str(fd)])
+        finally:
+            socket.close()
 
     def test_issue137(self):
         conf = get_config(_CONF['issue137'])
