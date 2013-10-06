@@ -36,8 +36,10 @@ class TestWatcher(TestCircus):
         os.close(fd)
         fd, cls.stderr = tempfile.mkstemp()
         os.close(fd)
-        stdout = {'stream': FileStream(cls.stdout)}
-        stderr = {'stream': FileStream(cls.stderr)}
+        cls.stdout_stream = FileStream(cls.stdout)
+        cls.stderr_stream = FileStream(cls.stderr)
+        stdout = {'stream': cls.stdout_stream}
+        stderr = {'stream': cls.stderr_stream}
         cls.file, cls.arbiter = cls._create_circus(dummy_process,
                                                    stdout_stream=stdout,
                                                    stderr_stream=stderr,
@@ -48,6 +50,8 @@ class TestWatcher(TestCircus):
     @classmethod
     def tearDownClass(cls):
         cls.arbiter.stop()
+        cls.stdout_stream.close()
+        cls.stderr_stream.close()
         if os.path.exists(cls.file):
             os.remove(cls.file)
         os.remove(cls.stdout)
@@ -61,6 +65,7 @@ class TestWatcher(TestCircus):
         stream = FileStream(self.stdout, max_bytes='12', backup_count='3')
         self.assertTrue(isinstance(stream._max_bytes, int))
         self.assertTrue(isinstance(stream._backup_count, int))
+        stream.close()
 
     def test_stream(self):
         # wait for the process to be started
@@ -106,6 +111,7 @@ class TestFancyStdoutStream(TestCase):
         # get the output
         stream(data)
         output = stream.out.getvalue()
+        stream.out.close()
 
         expected = self.color_start(stream.color_code)
         expected += stream.now().strftime(stream.time_format) + " "
@@ -134,6 +140,7 @@ class TestFancyStdoutStream(TestCase):
 
         stream(data)
         output = stream.out.getvalue()
+        stream.out.close()
 
         # NOTE: We expect 4 b/c the last line needs to add a newline
         #       in order to prepare for the next chunk
@@ -148,6 +155,7 @@ class TestFancyStdoutStream(TestCase):
 
         stream(data)
         output = stream.out.getvalue()
+        stream.out.close()
 
         self.assertEqual(len(output.split('\n')), 4)
 
@@ -157,6 +165,7 @@ class TestFancyStdoutStream(TestCase):
         for i, color in enumerate(FancyStdoutStream.colors):
             stream = self.get_stream(color)
             self.assertEqual(i + 1, stream.color_code)
+            stream.out.close()
 
 
 class TestFileStream(TestCase):
@@ -167,6 +176,7 @@ class TestFileStream(TestCase):
         stream = FileStream(*args, **kw)
 
         # patch some details that will be used
+        stream._file.close()
         stream._file = StringIO()
         stream._open = lambda: stream._file
         stream.now = lambda: now
@@ -181,6 +191,7 @@ class TestFileStream(TestCase):
         # get the output
         stream(data)
         output = stream._file.getvalue()
+        stream._file.close()
 
         expected = stream.now().strftime(stream.time_format) + " "
         expected += "[333] | " + data['data'] + '\n'
@@ -198,6 +209,7 @@ class TestFileStream(TestCase):
 
         stream(data)
         output = stream._file.getvalue()
+        stream._file.close()
 
         # NOTE: We expect 4 b/c the last line needs to add a newline
         #       in order to prepare for the next chunk
@@ -212,6 +224,7 @@ class TestFileStream(TestCase):
 
         stream(data)
         output = stream._file.getvalue()
+        stream._file.close()
 
         self.assertEqual(len(output.split('\n')), 4)
 
