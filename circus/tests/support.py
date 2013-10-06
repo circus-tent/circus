@@ -322,12 +322,12 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
 
 
 @tornado.gen.coroutine
-def async_run_plugin(klass, config, plugin_info_callback):
+def async_run_plugin(klass, config, plugin_info_callback, duration=300):
     queue = multiprocessing.Queue()
     plugin_info_callback = functools.partial(plugin_info_callback, queue)
     circusctl_process = multiprocessing.Process(
         target=run_plugin,
-        args=(klass, config, plugin_info_callback))
+        args=(klass, config, plugin_info_callback, duration))
     circusctl_process.start()
     while queue.empty():
         yield tornado_sleep(.1)
