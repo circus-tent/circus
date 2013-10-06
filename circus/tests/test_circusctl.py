@@ -10,7 +10,7 @@ from zmq.utils.strtypes import b, u
 def run_ctl(args, stdin=''):
     cmd = '%s -m circus.circusctl' % sys.executable
     proc = subprocess.Popen(cmd.split() + shlex.split(args),
-                            stdin=subprocess.PIPE,
+                            stdin=subprocess.PIPE if stdin else None,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     stdout, stderr = proc.communicate(b(stdin) if stdin else None)
