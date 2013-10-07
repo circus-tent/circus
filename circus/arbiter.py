@@ -249,8 +249,11 @@ class Arbiter(object):
         if self.get_arbiter_config(new_cfg) != self._cfg:
             raise ReloadArbiterException
 
+        ignore_sn = set(['circushttpd'])
+        ignore_wn = set(['circushttpd', 'circusd-stats'])
+
         # Gather socket names.
-        current_sn = set([i.name for i in self.sockets.values()])
+        current_sn = set([i.name for i in self.sockets.values()]) - ignore_sn
         new_sn = set([i['name'] for i in new_cfg.get('sockets', [])])
         added_sn = new_sn - current_sn
         deleted_sn = current_sn - new_sn
@@ -304,7 +307,7 @@ class Arbiter(object):
                 watcher.initialize(self.evpub_socket, self.sockets, self)
 
         # Gather watcher names.
-        current_wn = set([i.name for i in self.iter_watchers()])
+        current_wn = set([i.name for i in self.iter_watchers()]) - ignore_wn
         new_wn = set([i['name'] for i in new_cfg.get('watchers', [])])
         new_wn = new_wn | set([i['name'] for i in new_cfg.get('plugins', [])])
         added_wn = (new_wn - current_wn) | wn_with_changed_socket

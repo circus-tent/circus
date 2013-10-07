@@ -4,6 +4,7 @@ import os
 import threading
 import time
 import warnings
+import Queue
 import logging
 
 import mock
@@ -60,7 +61,7 @@ class TestWatcher(TestCircus):
         super(TestCircus, self).tearDown()
         current = self.numprocesses('numprocesses')
         if current > 1:
-            self.numprocesses('decr', name='test', nb=current-1)
+            self.numprocesses('decr', name='test', nb=current - 1)
 
     def status(self, cmd, **props):
         resp = self.call(cmd, **props)
@@ -233,18 +234,17 @@ class TestWatcherInitialization(TestCircus):
             os.environ = old_environ
 
     def test_copy_path(self):
+        messages = []
         watcher = SomeWatcher()
         watcher.start()
-        # wait for watcher data at most 5s
-        data = watcher.stream.get(timeout=5)['data']
         while True:
             try:
-                more = watcher.stream.get(timeout=.1)['data']
-                data += more
-            except Exception:
+                m = watcher.stream.get(timeout=1)
+            except Queue.Empty:
                 break
+            messages.append(m)
         watcher.stop()
-        data = u(data)
+        data = ''.join(u(m['data']) for m in messages)
         self.assertTrue('XYZ' in data, data)
 
     def test_venv(self):
@@ -295,7 +295,7 @@ class SomeWatcher(threading.Thread):
         old_environ = os.environ
         old_paths = sys.path[:]
         try:
-            sys.path[:] = ['XYZ']
+            sys.path = ['XYZ']
             os.environ = {'COCONUTS': 'MIGRATE'}
             cmd = ('%s -c "import sys; '
                    'sys.stdout.write(\':\'.join(sys.path)); '
