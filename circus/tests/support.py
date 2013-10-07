@@ -88,11 +88,11 @@ class TestCircus(AsyncTestCase):
         super(TestCircus, self).tearDown()
 
     @tornado.gen.coroutine
-    def start_arbiter(self, cmd='circus.tests.support.run_process'):
+    def start_arbiter(self, cmd='circus.tests.support.run_process', **kw):
         self.stream = QueueStream()
         testfile, arbiter = self._create_circus(
             cmd, stdout_stream={'stream': self.stream},
-            debug=True, async=True)
+            debug=True, async=True, **kw)
         self.test_file = testfile
         self.arbiter = arbiter
         yield self.arbiter.start()
