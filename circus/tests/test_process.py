@@ -54,16 +54,18 @@ class TestProcess(TestCircus):
                    'nproc': 20}
 
         process = Process('test', cmd, args=args, rlimits=rlimits)
-        # wait for the process to finish
-        while process.status == RUNNING:
-            time.sleep(1)
+        try:
+            # wait for the process to finish
+            while process.status == RUNNING:
+                time.sleep(1)
+        finally:
+            process.stop()
 
-        f = open(output_file, 'r')
-        output = {}
-        for line in f.readlines():
-            limit, value = line.rstrip().split('=', 1)
-            output[limit] = value
-        f.close()
+        with open(output_file, 'r') as f:
+            output = {}
+            for line in f.readlines():
+                limit, value = line.rstrip().split('=', 1)
+                output[limit] = value
 
         def srt2ints(val):
             return [circus.py3compat.long(key) for key in val[1:-1].split(',')]
