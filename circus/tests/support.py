@@ -138,7 +138,8 @@ class TestCircus(AsyncTestCase):
         return file
 
     @classmethod
-    def _create_circus(cls, callable, plugins=None, stats=False, async=False, **kw):
+    def _create_circus(cls, callable, plugins=None, stats=False,
+                       async=False, **kw):
         resolve_name(callable)   # used to check the callable
         fd, testfile = mkstemp()
         os.close(fd)
@@ -152,16 +153,17 @@ class TestCircus(AsyncTestCase):
         fact = cls.arbiter_factory
         if async:
             arbiter = fact([worker], background=False, plugins=plugins,
-                           debug=debug, loop=tornado.ioloop.IOLoop().instance())
+                           debug=debug,
+                           loop=tornado.ioloop.IOLoop().instance())
         else:
             if stats:
                 arbiter = fact([worker], background=True, plugins=plugins,
                                stats_endpoint=DEFAULT_ENDPOINT_STATS,
-                            statsd=True,
-                            debug=debug, statsd_close_outputs=not debug)
+                               statsd=True,
+                               debug=debug, statsd_close_outputs=not debug)
             else:
                 arbiter = fact([worker], background=True, plugins=plugins,
-                            debug=debug)
+                               debug=debug)
         #arbiter.start()
         return testfile, arbiter
 
