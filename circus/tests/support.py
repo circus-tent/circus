@@ -249,14 +249,19 @@ def run_plugin(klass, config, duration=300):
         def increment(self, name):
             self.increments[name] += 1
 
+        def stop(self):
+            pass
+
     _statsd = _Statsd()
     plugin = klass(endpoint, pubsub_endpoint, check_delay, ssh_server,
                    **config)
+    plugin.statsd.stop()
     plugin.statsd = _statsd
 
     deadline = time() + (duration / 1000.)
     plugin.loop.add_timeout(deadline, plugin.loop.stop)
     plugin.start()
+    plugin.stop()
     return _statsd
 
 
