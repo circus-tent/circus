@@ -4,7 +4,10 @@ import os
 import threading
 import time
 import warnings
-import Queue
+try:
+    import queue as Queue
+except ImportError:
+    import Queue
 import logging
 
 import mock
