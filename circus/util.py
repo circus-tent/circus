@@ -395,7 +395,6 @@ def resolve_name(import_name, silent=False):
             return __import__(import_name)
             # __import__ is not able to handle unicode strings in the fromlist
         # if the module is a package
-        obj = bytestring(obj)
         try:
             return getattr(__import__(module, None, None, [obj]), obj)
         except (ImportError, AttributeError):
