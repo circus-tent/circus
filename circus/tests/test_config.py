@@ -7,6 +7,7 @@ from circus.watcher import Watcher
 from circus.process import Process
 from circus.sockets import CircusSocket
 from circus.tests.support import TestCase, EasyTestSuite
+from circus.util import replace_gnu_args
 from circus.py3compat import PY3
 
 
@@ -29,6 +30,7 @@ _CONF = {
     'unexistant': os.path.join(CONFIG_DIR, 'unexistant.ini'),
     'issue442': os.path.join(CONFIG_DIR, 'issue442.ini'),
     'expand_vars': os.path.join(CONFIG_DIR, 'expand_vars.ini'),
+    'issue546': os.path.join(CONFIG_DIR, 'issue546.ini')
 }
 
 
@@ -185,5 +187,11 @@ class TestConfig(TestCase):
         conf = get_config(_CONF['expand_vars'])
         watcher = conf['watchers'][0]
         self.assertEqual(watcher['stdout_stream']['filename'], '/tmp/echo.log')
+
+    def test_dashes(self):
+        conf = get_config(_CONF['issue546'])
+        replaced = replace_gnu_args(conf['watchers'][0]['cmd'],
+                                    sockets={'some-socket': 3})
+        self.assertEqual(replaced, '../bin/chaussette --fd 3')
 
 test_suite = EasyTestSuite(__name__)

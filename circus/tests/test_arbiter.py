@@ -14,10 +14,11 @@ except ImportError:
 from circus.arbiter import Arbiter, ThreadedArbiter
 from circus.client import CallError, CircusClient, make_message
 from circus.plugins import CircusPlugin
-from circus.tests.support import TestCase, TestCircus, poll_for, truncate_file, EasyTestSuite
+from circus.tests.support import TestCase, TestCircus, poll_for, skipIf, truncate_file, EasyTestSuite
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
                          DEFAULT_ENDPOINT_SUB)
 from circus.watcher import Watcher
+from circus.tests.support import has_circusweb, poll_for_callable
 
 
 _GENERIC = os.path.join(os.path.dirname(__file__), 'generic.py')
@@ -398,5 +399,17 @@ class TestArbiter(TestCase):
             self.assertEqual(arbiter.watchers[0].status(), 'active')
         finally:
             arbiter.stop()
+
+
+@skipIf(not has_circusweb(), 'Tests for circus-web')
+class TestCircusWeb(TestCircus):
+
+    def test_circushttpd(self):
+        fact = self.arbiter_factory
+        arbiter = fact([], background=True, debug=True, httpd=True)
+        self.arbiters.append(arbiter)
+        arbiter.start()
+        poll_for_callable(self.assertDictEqual,
+        arbiter.statuses, {'circushttpd': 'active'})
 
 test_suite = EasyTestSuite(__name__)

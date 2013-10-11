@@ -200,8 +200,40 @@ def has_gevent():
         return False
 
 
+def has_circusweb():
+    try:
+        import circusweb       # NOQA
+        return True
+    except ImportError:
+        return False
+
+
 class TimeoutException(Exception):
     pass
+
+
+def poll_for_callable(func, *args, **kwargs):
+    """Replay to update the status during timeout seconds."""
+    timeout = 5
+
+    if 'timeout' in kwargs:
+        timeout = kwargs.pop('timeout')
+
+    start = time()
+    while time() - start < timeout:
+        try:
+            func_args = []
+            for arg in args:
+                if callable(arg):
+                    func_args.append(arg())
+                else:
+                    func_args.append(arg)
+            func(*func_args)
+        except AssertionError as e:
+            sleep(0.1)
+        else:
+            return True
+    raise e
 
 
 def poll_for(filename, needles, timeout=5):
