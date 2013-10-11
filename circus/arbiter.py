@@ -144,7 +144,6 @@ class Arbiter(object):
 
         # adding the httpd
         if httpd:
-
             # adding the socket
             httpd_socket = CircusSocket(name='circushttpd', host=httpd_host,
                                         port=httpd_port)
