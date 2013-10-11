@@ -29,7 +29,8 @@ _CONF = {
     'unexistant': os.path.join(CONFIG_DIR, 'unexistant.ini'),
     'issue442': os.path.join(CONFIG_DIR, 'issue442.ini'),
     'expand_vars': os.path.join(CONFIG_DIR, 'expand_vars.ini'),
-    'issue546': os.path.join(CONFIG_DIR, 'issue546.ini')
+    'issue546': os.path.join(CONFIG_DIR, 'issue546.ini'),
+    'env_everywhere': os.path.join(CONFIG_DIR, 'env_everywhere.ini')
 }
 
 
@@ -186,3 +187,10 @@ class TestConfig(unittest.TestCase):
         replaced = replace_gnu_args(conf['watchers'][0]['cmd'],
                                     sockets={'some-socket': 3})
         self.assertEqual(replaced, '../bin/chaussette --fd 3')
+
+    def test_env_everywhere(self):
+        conf = get_config(_CONF['env_everywhere'])
+
+        self.assertEqual(conf['endpoint'], 'tcp://127.0.0.1:1234')
+        self.assertEqual(conf['sockets'][0]['path'], '/var/run/broken.sock')
+        self.assertEqual(conf['plugins'][0]['use'], 'bad.has.been.broken')
