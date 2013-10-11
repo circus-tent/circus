@@ -401,8 +401,9 @@ def resolve_name(import_name, silent=False):
             raise ImportStringError(import_name, e), None, sys.exc_info()[2]
 
 
-_PATTERN1 = r'\$\(%s\.([\w\.]+)\)'
-_PATTERN2 = r'\(\(%s\.([\w\.]+)\)\)'
+_SECTION_NAME = '\w\.\-'
+_PATTERN1 = r'\$\(%%s\.([%s]+)\)' % _SECTION_NAME
+_PATTERN2 = r'\(\(%%s\.([%s]+)\)\)' % _SECTION_NAME
 _CIRCUS_VAR = re.compile(_PATTERN1 % 'circus' + '|' +
                          _PATTERN2 % 'circus', re.I)
 
@@ -424,7 +425,9 @@ def replace_gnu_args(data, prefix='circus', **options):
             fmt_options[key] = value
 
     if prefix is None:
-        match = re.compile(r'\$\(([\w\.]+)\)|\(\(([\w\.]+)\)\)', re.I)
+        pattern = r'\$\(([%s]+)\)|\(\(([%s]+)\)\)' % (_SECTION_NAME,
+                                                      _SECTION_NAME)
+        match = re.compile(pattern, re.I)
     elif prefix == 'circus':
         match = _CIRCUS_VAR
     else:
