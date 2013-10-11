@@ -19,7 +19,7 @@ class ArbiterHandler(object):
                  statsd_close_outputs=False,
                  multicast_endpoint=None,
                  env=None, name=None, context=None,
-                 background=False, stream_backend="thread",
+                 background=False, stream_backend="thread", httpd=False,
                  plugins=None, debug=False, proc_name="circusd"):
         """Creates a Arbiter and a single watcher in it.
 
@@ -128,7 +128,7 @@ class ArbiterHandler(object):
             _watchers.append(Watcher.load_from_config(watcher))
 
         return Arbiter(_watchers, controller, pubsub_endpoint,
-                       statsd=statsd,
+                       httpd=httpd, statsd=statsd,
                        stats_endpoint=stats_endpoint,
                        statsd_close_outputs=statsd_close_outputs,
                        multicast_endpoint=multicast_endpoint,

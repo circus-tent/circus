@@ -144,6 +144,14 @@ class Arbiter(object):
 
         # adding the httpd
         if httpd:
+            # adding the socket
+            httpd_socket = CircusSocket(name='circushttpd', host=httpd_host,
+                                        port=httpd_port)
+            if sockets is None:
+                sockets = [httpd_socket]
+            else:
+                sockets.append(httpd_socket)
+
             cmd = ("%s -c 'from circusweb import circushttpd; "
                    "circushttpd.main()'") % sys.executable
             cmd += ' --endpoint %s' % self.endpoint
@@ -151,6 +159,7 @@ class Arbiter(object):
             if ssh_server is not None:
                 cmd += ' --ssh %s' % ssh_server
 
+            # Adding the watcher
             httpd_watcher = Watcher('circushttpd', cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=self.stdout_stream,
@@ -158,16 +167,7 @@ class Arbiter(object):
                                     copy_env=True, copy_path=True,
                                     close_child_stderr=httpd_close_outputs,
                                     close_child_stdout=httpd_close_outputs)
-
             self.watchers.append(httpd_watcher)
-            httpd_socket = CircusSocket(name='circushttpd', host=httpd_host,
-                                        port=httpd_port)
-
-            # adding the socket
-            if sockets is None:
-                sockets = [httpd_socket]
-            else:
-                sockets.append(httpd_socket)
 
         # adding each plugin as a watcher
         ch_stderr = self.stderr_stream is None
