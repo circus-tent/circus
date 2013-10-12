@@ -573,11 +573,10 @@ class Arbiter(object):
                 else:
                     raise
 
+    @synchronized("manage_watchers")
     @gen.coroutine
     def manage_watchers(self):
         if self._stopping:
-            return
-        if self._exclusive_running_command is not None:
             return
 
         need_on_demand = False
