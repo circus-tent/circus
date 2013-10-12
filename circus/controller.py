@@ -9,10 +9,10 @@ except ImportError:
 from urlparse import urlparse
 
 import zmq
+import time
 from zmq.utils.jsonapi import jsonmod as json
 from zmq.eventloop import ioloop, zmqstream
 from tornado.concurrent import Future
-from tornado import gen
 
 from circus.util import create_udp_socket
 from circus.util import check_future_exception_and_log
@@ -67,12 +67,18 @@ class Controller(object):
                                   self.handle_autodiscover_message,
                                   ioloop.IOLoop.READ)
 
-    @gen.coroutine
     def manage_watchers(self):
         if self._managing_watchers_future is not None:
+            logger.debug("manage_watchers is already running...")
             return
-        self._managing_watchers_future = self.arbiter.manage_watchers()
-        yield self._managing_watchers_future
+        try:
+            self._managing_watchers_future = self.arbiter.manage_watchers()
+            self.loop.add_future(self._managing_watchers_future,
+                                 self._manage_watchers_cb)
+        except ConflictError:
+            logger.debug("manage_watchers is conflicting with another command")
+
+    def _manage_watchers_cb(self, future):
         self._managing_watchers_future = None
 
     def start(self):
@@ -143,12 +149,6 @@ class Controller(object):
             self.arbiter.stop()
 
     def dispatch(self, job, future=None):
-        if self._managing_watchers_future is not None:
-            # The arbiter is running manage_watchers()
-            # we are going to wait
-            cb = functools.partial(self.dispatch, job)
-            self.loop.add_future(self._managing_watchers_future, cb)
-            return
         cid, msg = job
         try:
             json_msg = json.loads(msg)
@@ -189,6 +189,14 @@ class Controller(object):
             return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.MESSAGE_ERROR)
         except ConflictError as e:
+            if self._managing_watchers_future is not None:
+                logger.debug("the command conflicts with running "
+                             "manage_watchers, re-executing it at "
+                             "the end")
+                cb = functools.partial(self.dispatch, job)
+                self.loop.add_future(self._managing_watchers_future, cb)
+                return
+            # conflicts between two commands, sending error...
             return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.COMMAND_ERROR)
         except OSError as e:

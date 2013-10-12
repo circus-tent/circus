@@ -455,7 +455,10 @@ class Watcher(object):
         max_age = self.max_age + randint(0, self.max_age_variance)
         expired_processes = [p for p in self.processes.values()
                              if p.age() > max_age]
-        yield [self.kill_process(x) for x in expired_processes]
+        removes = yield [self.kill_process(x) for x in expired_processes]
+        for i, process in enumerate(expired_processes):
+            if removes[i]:
+                self.processes.pop(process.pid)
 
     @gen.coroutine
     @util.debuglog
