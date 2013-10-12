@@ -32,8 +32,6 @@ class Controller(object):
         self.context = context
         self.loop = loop
         self.check_delay = check_delay * 1000
-        self.ctrl_socket = None
-        self.udp_socket = None
         self.started = False
 
         # initialize the sys handler
@@ -76,7 +74,6 @@ class Controller(object):
 
     def stop(self):
         if self.started:
-            self.started = False
             self.caller.stop()
             try:
                 self.stream.flush()
@@ -85,8 +82,6 @@ class Controller(object):
                 pass
             self.ctrl_socket.close()
         self.sys_hdl.stop()
-        if self.udp_socket:
-            self.udp_socket.close()
 
     def handle_message(self, raw_msg):
         cid, msg = raw_msg
@@ -103,11 +98,10 @@ class Controller(object):
         self.loop.add_callback(functools.partial(self.dispatch, (cid, msg)))
 
     def handle_autodiscover_message(self, fd_no, type):
-        if self.started:
-            data, address = self.udp_socket.recvfrom(1024)
-            data = json.loads(data)
-            self.udp_socket.sendto(json.dumps({'endpoint': self.endpoint}),
-                                   address)
+        data, address = self.udp_socket.recvfrom(1024)
+        data = json.loads(data)
+        self.udp_socket.sendto(json.dumps({'endpoint': self.endpoint}),
+                               address)
 
     def dispatch(self, job):
         cid, msg = job
