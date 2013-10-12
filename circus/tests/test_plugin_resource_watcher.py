@@ -7,7 +7,7 @@ from circus.tests.support import async_run_plugin
 from circus.plugins.resource_watcher import ResourceWatcher
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 
-# Make we don't allow more than 300MB in case things go wrong
+# Make sure we don't allow more than 300MB in case things go wrong
 MAX_CHUNKS = 10000
 CHUNK_SIZE = 30000
 
