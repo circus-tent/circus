@@ -4,7 +4,6 @@ import logging
 import os
 import resource
 
-import circus._patch
 from circus import logger
 from circus.arbiter import Arbiter, ReloadArbiterException
 from circus.pidfile import Pidfile

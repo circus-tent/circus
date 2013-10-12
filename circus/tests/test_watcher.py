@@ -1,7 +1,7 @@
 import signal
 import sys
 import os
-import threading
+import circus.fixed_threading as threading
 import time
 import warnings
 try:

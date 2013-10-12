@@ -1,11 +1,7 @@
 import errno
 import logging
 import os
-from threading import Thread, RLock
-try:
-    from threading import get_ident
-except ImportError:
-    from thread import get_ident
+from circus.fixed_threading import Thread, RLock, get_ident
 import sys
 from time import sleep
 import select

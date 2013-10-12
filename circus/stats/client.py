@@ -3,7 +3,7 @@ import sys
 import curses
 from collections import defaultdict
 import errno
-import threading
+import circus.fixed_threading as threading
 import time
 import logging
 
