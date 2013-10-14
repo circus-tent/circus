@@ -39,8 +39,8 @@ For #1, make sure you are hitting the right place
 by checking your --endpoint option.
 
 For #2, if you are not expecting a result to
-come back, like for any restart, incr, decr
-etc. operations, use the --async option
+come back, increase your timeout option value
+(particularly with waiting switches)
 """
 
 
@@ -391,7 +391,6 @@ def main():
     logging.basicConfig()
     # TODO, we should ask the server for its command list
     commands = get_commands()
-
     globalopts = parse_arguments(sys.argv[1:], commands)
     if globalopts['endpoint'] is None:
         globalopts['endpoint'] = os.environ.get('CIRCUSCTL_ENDPOINT',

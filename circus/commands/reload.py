@@ -27,7 +27,8 @@ class Reload(Command):
                 "command": "reload",
                 "propeties": {
                     "name": '<name>",
-                    "graceful": true
+                    "graceful": true,
+                    "waiting": False
                 }
             }
 
@@ -43,7 +44,7 @@ class Reload(Command):
 
         ::
 
-            $ circusctl reload [<name>] [--terminate]
+            $ circusctl reload [<name>] [--terminate] [--waiting]
 
         Options
         +++++++
@@ -53,23 +54,24 @@ class Reload(Command):
 
     """
     name = "reload"
-    options = (Command.options +
+    options = (Command.options + Command.waiting_options +
                [('', 'terminate', False, "stop immediately")])
-    async = True
 
     def message(self, *args, **opts):
         if len(args) > 1:
             raise ArgumentError("invalid number of arguments")
 
         graceful = not opts.get("terminate", False)
+        waiting = opts.get("waiting", False)
         if len(args) == 1:
-            return self.make_message(name=args[0], graceful=graceful)
+            return self.make_message(name=args[0], graceful=graceful,
+                                     waiting=waiting)
         else:
-            return self.make_message(graceful=graceful)
+            return self.make_message(graceful=graceful, waiting=waiting)
 
     def execute(self, arbiter, props):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            watcher.reload(graceful=props.get('graceful', True))
+            return watcher.reload(graceful=props.get('graceful', True))
         else:
-            arbiter.reload(graceful=props.get('graceful', True))
+            return arbiter.reload(graceful=props.get('graceful', True))

@@ -5,7 +5,7 @@ import IN
 
 import mock
 
-from circus.tests.support import unittest
+import unittest2 as unittest
 from circus.sockets import CircusSocket, CircusSockets
 
 

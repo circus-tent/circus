@@ -3,7 +3,7 @@ import json
 
 import zmq
 
-from circus.tests.support import unittest
+import unittest2 as unittest
 from circus.stats.publisher import StatsPublisher
 
 
