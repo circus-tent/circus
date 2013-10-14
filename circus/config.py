@@ -137,9 +137,11 @@ def get_config(config_file):
     global_env = dict(_upper(os.environ.items()))
 
     if 'env' in cfg.sections():
-        global_env.update(dict(_upper(cfg.items('env'))))
-
-    cfg.set_env(global_env)
+        local_env = dict(_upper(cfg.items('env')))
+        global_env.update(local_env)
+        cfg.set_env(global_env)
+    else:
+        local_env = {}
 
     # main circus options
     config['check'] = dget('circus', 'check_delay', 5, int)
@@ -188,7 +190,6 @@ def get_config(config_file):
         if section.startswith("watcher:"):
             watcher = watcher_defaults()
             watcher['name'] = section.split("watcher:", 1)[1]
-            watcher['env'] = dict(global_env)
 
             # create watcher options
             for opt, val in cfg.items(section, noreplace=True):
@@ -272,6 +273,11 @@ def get_config(config_file):
                 else:
                     # freeform
                     watcher[opt] = val
+
+            if watcher['copy_env']:
+                watcher['env'] = dict(global_env)
+            else:
+                watcher['env'] = dict(local_env)
 
             watchers.append(watcher)
 
