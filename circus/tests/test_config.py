@@ -31,7 +31,8 @@ _CONF = {
     'expand_vars': os.path.join(CONFIG_DIR, 'expand_vars.ini'),
     'issue546': os.path.join(CONFIG_DIR, 'issue546.ini'),
     'env_everywhere': os.path.join(CONFIG_DIR, 'env_everywhere.ini'),
-    'copy_env': os.path.join(CONFIG_DIR, 'copy_env.ini')
+    'copy_env': os.path.join(CONFIG_DIR, 'copy_env.ini'),
+    'issue567': os.path.join(CONFIG_DIR, 'issue567.ini')
 }
 
 
@@ -213,3 +214,11 @@ class TestConfig(unittest.TestCase):
             else:
                 self.assertTrue('BAM' in watcher['env'])
             self.assertTrue('TEST1' in watcher['env'])
+
+    def test_issue567(self):
+        os.environ['GRAVITY'] = 'down'
+        conf = get_config(_CONF['issue567'])
+
+        # make sure the global environment makes it into the cfg environment
+        # even without [env] section
+        self.assertEqual(conf['watchers'][0]['cmd'], 'down')

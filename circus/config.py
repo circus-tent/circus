@@ -135,13 +135,15 @@ def get_config(config_file):
         return [(key.upper(), value) for key, value in items]
 
     global_env = dict(_upper(os.environ.items()))
+    local_env = dict()
 
+    # update environments with [env] section
     if 'env' in cfg.sections():
-        local_env = dict(_upper(cfg.items('env')))
+        local_env.update(dict(_upper(cfg.items('env'))))
         global_env.update(local_env)
-        cfg.set_env(global_env)
-    else:
-        local_env = {}
+
+    # always set the cfg environment
+    cfg.set_env(global_env)
 
     # main circus options
     config['check'] = dget('circus', 'check_delay', 5, int)
@@ -305,7 +307,7 @@ def get_config(config_file):
                 continue
             _expand_vars(section, option, env)
 
-    # build and expand environment for watcher sections
+    # build environment for watcher sections
     for section in cfg.sections():
         if section.startswith('env:'):
             section_elements = section.split("env:", 1)[1]
@@ -317,7 +319,12 @@ def get_config(config_file):
 
                 for watcher in match:
                     watcher['env'].update(env_items)
-                    _expand_section(watcher, watcher['env'])
+
+    # expand environment for watcher sections
+    for watcher in watchers:
+        env = dict(global_env)
+        env.update(watcher['env'])
+        _expand_section(watcher, env)
 
     config['watchers'] = watchers
     config['plugins'] = plugins
