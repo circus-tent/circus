@@ -410,6 +410,13 @@ Example::
     bar = $(circus.env.yeah)
     sup = $(circus.env.oh)
 
+    [socket:socket1]
+    port = $(circus.env.port)
+
+    [plugin:plugin1]
+    use = some.path
+    parameter1 = $(circus.env.plugin_param)
+
     [env]
     yeah = boo
 
@@ -420,6 +427,9 @@ If a variable is defined in several places, the most specialized
 value has precedence: a variable defined in *env:XXX* will override
 a variable defined in *env*, which will override a variable
 defined in *os.environ*.
+
+environment substitutions can be used in any section of the configuration
+in any section variable.
 
 
 .. _formatting_cmd:

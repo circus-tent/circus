@@ -2,12 +2,11 @@ import glob
 import os
 import warnings
 from fnmatch import fnmatch
-from collections import defaultdict
 
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
-                         StrictConfigParser, parse_env_str, replace_gnu_args)
+                         StrictConfigParser, replace_gnu_args)
 
 
 def watcher_defaults():
@@ -66,8 +65,8 @@ class DefaultConfigParser(StrictConfigParser):
         items = StrictConfigParser.items(self, section)
         if noreplace:
             return items
-        env = dict(os.environ)
-        return [(key, replace_gnu_args(value, env=env))
+
+        return [(key, replace_gnu_args(value, env=self._env))
                 for key, value in items]
 
     def dget(self, section, option, default=None, type=str):
@@ -134,10 +133,14 @@ def get_config(config_file):
         return [(key.upper(), value) for key, value in items]
 
     global_env = dict(_upper(os.environ.items()))
+    local_env = dict()
 
+    # update environments with [env] section
     if 'env' in cfg.sections():
-        global_env.update(dict(_upper(cfg.items('env'))))
+        local_env.update(dict(_upper(cfg.items('env'))))
+        global_env.update(local_env)
 
+    # always set the cfg environment
     cfg.set_env(global_env)
 
     # main circus options
@@ -256,11 +259,6 @@ def get_config(config_file):
                 elif opt == 'respawn':
                     watcher['respawn'] = dget(section, "respawn", True, bool)
 
-                elif opt == 'env':
-                    logger.warning('the env option is deprecated the use of '
-                                   'env sections is recommended')
-                    watcher['env'] = parse_env_str(val)
-
                 elif opt == 'autostart':
                     watcher['autostart'] = dget(section, "autostart", True,
                                                 bool)
@@ -276,34 +274,20 @@ def get_config(config_file):
                     # freeform
                     watcher[opt] = val
 
+            if watcher['copy_env']:
+                watcher['env'] = dict(global_env)
+            else:
+                watcher['env'] = dict(local_env)
+
             watchers.append(watcher)
 
     # Second pass to make sure env sections apply to all watchers.
-    environs = defaultdict(dict)
 
-    # global env first
     def _extend(target, source):
         for name, value in source:
             if name in target:
                 continue
             target[name] = value
-
-    for watcher in watchers:
-        _extend(environs[watcher['name']], global_env.items())
-
-    # then per-watcher env
-    for section in cfg.sections():
-        if section.startswith('env:'):
-            section_elements = section.split("env:", 1)[1]
-            watcher_patterns = [s.strip() for s in section_elements.split(',')]
-
-            for pattern in watcher_patterns:
-                match = [w for w in watchers if fnmatch(w['name'], pattern)]
-
-                for watcher in match:
-                    watcher_name = watcher['name']
-                    extra = cfg.items(section, noreplace=True)
-                    environs[watcher_name].update(_upper(extra))
 
     def _expand_vars(target, key, env):
         if isinstance(target[key], str):
@@ -312,16 +296,33 @@ def get_config(config_file):
             for k in target[key].keys():
                 _expand_vars(target[key], k, env)
 
-    for watcher in watchers:
-        if watcher['name'] in environs:
-            if not 'env' in watcher:
-                watcher['env'] = dict()
-            _extend(watcher['env'], environs[watcher['name']].items())
+    def _expand_section(section, env, exclude=None):
+        if exclude is None:
+            exclude = ('name', 'env')
 
-        for option in watcher.keys():
-            if option in ('name', 'env'):
+        for option in section.keys():
+            if option in exclude:
                 continue
-            _expand_vars(watcher, option, watcher['env'])
+            _expand_vars(section, option, env)
+
+    # build environment for watcher sections
+    for section in cfg.sections():
+        if section.startswith('env:'):
+            section_elements = section.split("env:", 1)[1]
+            watcher_patterns = [s.strip() for s in section_elements.split(',')]
+            env_items = dict(_upper(cfg.items(section, noreplace=True)))
+
+            for pattern in watcher_patterns:
+                match = [w for w in watchers if fnmatch(w['name'], pattern)]
+
+                for watcher in match:
+                    watcher['env'].update(env_items)
+
+    # expand environment for watcher sections
+    for watcher in watchers:
+        env = dict(global_env)
+        env.update(watcher['env'])
+        _expand_section(watcher, env)
 
     config['watchers'] = watchers
     config['plugins'] = plugins

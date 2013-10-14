@@ -30,7 +30,10 @@ _CONF = {
     'unexistant': os.path.join(CONFIG_DIR, 'unexistant.ini'),
     'issue442': os.path.join(CONFIG_DIR, 'issue442.ini'),
     'expand_vars': os.path.join(CONFIG_DIR, 'expand_vars.ini'),
-    'issue546': os.path.join(CONFIG_DIR, 'issue546.ini')
+    'issue546': os.path.join(CONFIG_DIR, 'issue546.ini'),
+    'env_everywhere': os.path.join(CONFIG_DIR, 'env_everywhere.ini'),
+    'copy_env': os.path.join(CONFIG_DIR, 'copy_env.ini'),
+    'issue567': os.path.join(CONFIG_DIR, 'issue567.ini')
 }
 
 
@@ -40,6 +43,12 @@ def hook(watcher, hook_name):
 
 
 class TestConfig(TestCase):
+
+    def setUp(self):
+        self.saved = os.environ.copy()
+
+    def tearDown(self):
+        os.environ = self.saved
 
     def test_issue310(self):
         '''
@@ -193,5 +202,32 @@ class TestConfig(TestCase):
         replaced = replace_gnu_args(conf['watchers'][0]['cmd'],
                                     sockets={'some-socket': 3})
         self.assertEqual(replaced, '../bin/chaussette --fd 3')
+
+    def test_env_everywhere(self):
+        conf = get_config(_CONF['env_everywhere'])
+
+        self.assertEqual(conf['endpoint'], 'tcp://127.0.0.1:1234')
+        self.assertEqual(conf['sockets'][0]['path'], '/var/run/broken.sock')
+        self.assertEqual(conf['plugins'][0]['use'], 'bad.has.been.broken')
+
+    def test_copy_env(self):
+        # #564 make sure we respect copy_env
+        os.environ['BAM'] = '1'
+        conf = get_config(_CONF['copy_env'])
+        for watcher in conf['watchers']:
+            if watcher['name'] == 'watcher1':
+
+                self.assertFalse('BAM' in watcher['env'])
+            else:
+                self.assertTrue('BAM' in watcher['env'])
+            self.assertTrue('TEST1' in watcher['env'])
+
+    def test_issue567(self):
+        os.environ['GRAVITY'] = 'down'
+        conf = get_config(_CONF['issue567'])
+
+        # make sure the global environment makes it into the cfg environment
+        # even without [env] section
+        self.assertEqual(conf['watchers'][0]['cmd'], 'down')
 
 test_suite = EasyTestSuite(__name__)
