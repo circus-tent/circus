@@ -1,6 +1,7 @@
 from circus.commands.incrproc import IncrProc
 from circus.util import TransformableFuture
 
+
 class DecrProcess(IncrProc):
     """\
         Decrement the number of processes in a watcher
