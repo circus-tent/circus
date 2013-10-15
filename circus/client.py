@@ -64,7 +64,7 @@ class AsyncCircusClient(object):
 
         try:
             yield tornado.gen.Task(self.stream.send, cmd)
-        except zmq.ZMQError, e:
+        except zmq.ZMQError as e:
             raise CallError(str(e))
 
         while True:
