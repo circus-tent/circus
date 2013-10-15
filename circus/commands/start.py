@@ -53,6 +53,6 @@ class Start(Command):
     def execute(self, arbiter, props):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
-            watcher.start()
+            return watcher.start()
         else:
-            arbiter.start_watchers()
+            return arbiter.start_watchers()

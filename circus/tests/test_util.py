@@ -9,7 +9,7 @@ import sys
 from psutil import Popen
 import mock
 
-from circus.tests.support import unittest
+import unittest2 as unittest
 
 from circus import util
 from circus.util import (

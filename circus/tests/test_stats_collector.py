@@ -7,7 +7,7 @@ from zmq.eventloop import ioloop
 
 from circus.stats import collector as collector_module
 from circus.stats.collector import SocketStatsCollector, WatcherStatsCollector
-from circus.tests.support import unittest
+import unittest2 as unittest
 
 
 class TestCollector(unittest.TestCase):
