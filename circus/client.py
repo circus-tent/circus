@@ -32,7 +32,7 @@ class AsyncCircusClient(object):
                  timeout=5.0, ssh_server=None, ssh_keyfile=None):
         self._init_context(context)
         self.endpoint = endpoint
-        self._id = uuid.uuid4().hex
+        self._id = b(uuid.uuid4().hex)
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)
