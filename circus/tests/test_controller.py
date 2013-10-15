@@ -29,7 +29,7 @@ class TestController(TestCase):
         controller = MockedController('endpoint', 'multicast_endpoint',
                                       mock.sentinel.context, loop, arbiter)
 
-        controller.add_job(None, 'something')
+        controller.dispatch((None, 'something'))
         loop.add_timeout(loop.time() + 1, loop.stop)
         controller.start()
         loop.start()

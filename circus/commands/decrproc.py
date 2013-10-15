@@ -1,4 +1,5 @@
 from circus.commands.incrproc import IncrProc
+from circus.util import TransformableFuture
 
 
 class DecrProcess(IncrProc):
@@ -18,6 +19,7 @@ class DecrProcess(IncrProc):
                 "propeties": {
                     "name": "<watchername>"
                     "nb": <nbprocess>
+                    "waiting": False
                 }
             }
 
@@ -31,7 +33,7 @@ class DecrProcess(IncrProc):
 
         ::
 
-            $ circusctl descr <name> [<nb>]
+            $ circusctl descr <name> [<nb>] [--waiting]
 
         Options
         +++++++
@@ -46,4 +48,7 @@ class DecrProcess(IncrProc):
     def execute(self, arbiter, props):
         watcher = self._get_watcher(arbiter, props.get('name'))
         nb = props.get('nb', 1)
-        return {"numprocesses": watcher.decr(nb)}
+        resp = TransformableFuture()
+        resp.set_upstream_future(watcher.decr(nb))
+        resp.set_transform_function(lambda x: {"numprocesses": x})
+        return resp

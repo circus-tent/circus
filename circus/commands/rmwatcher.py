@@ -19,21 +19,26 @@ class RmWatcher(Command):
                 "command": "rm",
                 "properties": {
                     "name": "<nameofwatcher>",
+                    "waiting": False
                 }
             }
 
-        A message contains 1 property:
-
-        - name: name of watcher
-
         The response return a status "ok".
+
+        If ``waiting`` is False (default), the call will return immediatly
+        after starting to remove and stop the corresponding watcher.
+
+        If ``waiting`` is True, the call will return only when the remove and
+        stop process is completly ended. Because of the
+        :ref:`graceful_timeout option <graceful_timeout>`, it can take some
+        time.
 
         Command line
         ------------
 
         ::
 
-            $ circusctl rm <name>
+            $ circusctl rm <name> [--waiting]
 
         Options
         +++++++
@@ -44,6 +49,7 @@ class RmWatcher(Command):
 
     name = "rm"
     properties = ['name']
+    options = Command.waiting_options
 
     def message(self, *args, **opts):
         if len(args) < 1 or len(args) > 1:
@@ -53,4 +59,4 @@ class RmWatcher(Command):
 
     def execute(self, arbiter, props):
         self._get_watcher(arbiter, props['name'])
-        arbiter.rm_watcher(props['name'])
+        return arbiter.rm_watcher(props['name'])

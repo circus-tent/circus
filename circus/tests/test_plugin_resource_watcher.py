@@ -1,16 +1,24 @@
-import os
 import warnings
 
-from circus.tests.support import TestCircus, poll_for, Process, run_plugin, ifSupportsSetUpClass, EasyTestSuite
+from tornado.testing import gen_test
+
+from circus.tests.support import TestCircus, poll_for, Process, async_run_plugin, EasyTestSuite
 from circus.plugins.resource_watcher import ResourceWatcher
+from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
+
+# Make sure we don't allow more than 300MB in case things go wrong
+MAX_CHUNKS = 10000
+CHUNK_SIZE = 30000
 
 
 class Leaky(Process):
     def run(self):
         self._write('START')
         m = ' '
-        while self.alive:
-            m += '***' * 10000  # for memory
+        chunks_count = 0
+        while self.alive and chunks_count < MAX_CHUNKS:
+            m += '*' * CHUNK_SIZE  # for memory
+            chunks_count += 1
 
         self._write('STOP')
 
@@ -21,143 +29,92 @@ def run_leaky(test_file):
     return 1
 
 
-@ifSupportsSetUpClass
+fqn = 'circus.tests.test_plugin_resource_watcher.run_leaky'
+
+
+def get_statsd_increments(queue, plugin):
+    queue.put(plugin.statsd.increments)
+
+
 class TestResourceWatcher(TestCircus):
 
-    @classmethod
-    def setUpClass(cls):
-        dummy_process = 'circus.tests.test_plugin_resource_watcher.run_leaky'
-        cls.file, cls.arbiter = cls._create_circus(dummy_process)
-        poll_for(cls.file, 'START')
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.arbiter.stop()
-        if os.path.exists(cls.file):
-            os.remove(cls.file)
-
-    def _check_statsd(self, statsd, name):
-        res = list(statsd.increments.items())
+    def _check_statsd(self, increments, name):
+        res = list(increments.items())
         self.assertTrue(len(res) > 0)
         for stat, items in res:
             if name == stat and items > 0:
                 return
         raise AssertionError("%r stat not found" % name)
 
+    def make_plugin(self, *args, **kwargs):
+        return ResourceWatcher(DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
+                               1, None, *args, **kwargs)
+
+    def test_service_config_param_is_deprecated(self):
+        with warnings.catch_warnings(record=True) as ws:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            self.make_plugin(service='whatever')
+            self.assertIn('ResourceWatcher', str(ws[0].message))
+            self.assertTrue(any('ResourceWatcher' in w.message.args[0] for w in ws))
+
+    def test_watcher_config_param_is_required(self):
+        self.assertRaises(NotImplementedError, self.make_plugin),
+
+    @gen_test
     def test_resource_watcher_max_mem(self):
-        config = {'loop_rate': 0.1, 'max_mem': 0.05}
+        yield self.start_arbiter(fqn)
+        poll_for(self.test_file, 'START')
+        config = {'loop_rate': 0.1, 'max_mem': 0.05, 'watcher': 'test'}
 
-        self.assertRaises(NotImplementedError, run_plugin,
-                          ResourceWatcher, config)
+        statsd_increments = yield async_run_plugin(ResourceWatcher,
+                                                   config,
+                                                   get_statsd_increments)
 
-        # Test that service is deprecated
-        config['service'] = 'test'
-        found = False
-        with warnings.catch_warnings(record=True) as ws:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            _statsd = run_plugin(ResourceWatcher, config)
-            if not any('ResourceWatcher' in w.message.args[0] for w in ws):
-                raise AssertionError('ResourceWatcher not found')
+        self._check_statsd(statsd_increments,
+                           '_resource_watcher.test.over_memory')
+        yield self.stop_arbiter()
 
-        self._check_statsd(_statsd, '_resource_watcher.test.over_memory')
-
-        # Test that watcher is ok and not deprecated
-        config['watcher'] = config['service']
-        del config['service']
-
-        with warnings.catch_warnings(record=True) as ws:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            _statsd = run_plugin(ResourceWatcher, config)
-            if any('ResourceWatcher' in w.message.args[0] for w in ws):
-                raise AssertionError('ResourceWatcher found')
-
+    @gen_test
     def test_resource_watcher_min_mem(self):
-        config = {'loop_rate': 0.1, 'min_mem': 100000.1}
+        yield self.start_arbiter(fqn)
+        poll_for(self.test_file, 'START')
+        config = {'loop_rate': 0.1, 'min_mem': 100000.1, 'watcher': 'test'}
 
-        self.assertRaises(NotImplementedError, run_plugin,
-                          ResourceWatcher, config)
+        statsd_increments = yield async_run_plugin(ResourceWatcher,
+                                                   config,
+                                                   get_statsd_increments)
 
-        # Test that service is deprecated
-        config['service'] = 'test'
+        self._check_statsd(statsd_increments,
+                           '_resource_watcher.test.under_memory')
+        yield self.stop_arbiter()
 
-        with warnings.catch_warnings(record=True) as ws:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            _statsd = run_plugin(ResourceWatcher, config)
-            if not any('ResourceWatcher' in w.message.args[0] for w in ws):
-                raise AssertionError('ResourceWatcher not found')
-
-        self._check_statsd(_statsd, '_resource_watcher.test.under_memory')
-
-        # Test that watcher is ok and not deprecated
-        config['watcher'] = config['service']
-        del config['service']
-
-        with warnings.catch_warnings(record=True) as ws:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            _statsd = run_plugin(ResourceWatcher, config)
-            if any('ResourceWatcher' in w.message.args[0] for w in ws):
-                raise AssertionError('ResourceWatcher found')
-
+    @gen_test
     def test_resource_watcher_max_cpu(self):
-        config = {'loop_rate': 0.1, 'max_cpu': 0.1}
+        yield self.start_arbiter(fqn)
+        poll_for(self.test_file, 'START')
+        config = {'loop_rate': 0.1, 'max_cpu': 0.1, 'watcher': 'test'}
 
-        self.assertRaises(NotImplementedError, run_plugin,
-                          ResourceWatcher, config)
+        statsd_increments = yield async_run_plugin(ResourceWatcher,
+                                                   config,
+                                                   get_statsd_increments)
 
-        # Test that service is deprecated
-        config['service'] = 'test'
+        self._check_statsd(statsd_increments,
+                           '_resource_watcher.test.over_cpu')
+        yield self.stop_arbiter()
 
-        with warnings.catch_warnings(record=True) as ws:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            _statsd = run_plugin(ResourceWatcher, config)
-            if not any('ResourceWatcher' in w.message.args[0] for w in ws):
-                raise AssertionError('ResourceWatcher not found')
-
-        self._check_statsd(_statsd, '_resource_watcher.test.over_cpu')
-
-        # Test that watcher is ok and not deprecated
-        config['watcher'] = config['service']
-        del config['service']
-
-        with warnings.catch_warnings(record=True) as ws:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            _statsd = run_plugin(ResourceWatcher, config)
-            if any('ResourceWatcher' in w.message.args[0] for w in ws):
-                raise AssertionError('ResourceWatcher found')
-
+    @gen_test
     def test_resource_watcher_min_cpu(self):
-        config = {'loop_rate': 0.1, 'min_cpu': 99.0}
+        yield self.start_arbiter(fqn)
+        poll_for(self.test_file, 'START')
+        config = {'loop_rate': 0.1, 'min_cpu': 99.0, 'watcher': 'test'}
 
-        self.assertRaises(NotImplementedError, run_plugin,
-                          ResourceWatcher, config)
+        statsd_increments = yield async_run_plugin(ResourceWatcher,
+                                                   config,
+                                                   get_statsd_increments)
 
-        # Test that service is deprecated
-        config['service'] = 'test'
-
-        with warnings.catch_warnings(record=True) as ws:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            _statsd = run_plugin(ResourceWatcher, config)
-            if not any('ResourceWatcher' in w.message.args[0] for w in ws):
-                raise AssertionError('ResourceWatcher not found')
-
-        self._check_statsd(_statsd, '_resource_watcher.test.under_cpu')
-
-        # Test that watcher is ok and not deprecated
-        config['watcher'] = config['service']
-        del config['service']
-
-        with warnings.catch_warnings(record=True) as ws:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            _statsd = run_plugin(ResourceWatcher, config)
-            if any('ResourceWatcher' in w.message.args[0] for w in ws):
-                raise AssertionError('ResourceWatcher found')
+        self._check_statsd(statsd_increments,
+                           '_resource_watcher.test.under_cpu')
+        yield self.stop_arbiter()
 
 test_suite = EasyTestSuite(__name__)

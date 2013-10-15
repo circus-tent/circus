@@ -57,17 +57,16 @@ class SysHandler(object):
                 sys.exit(1)
 
     def handle_int(self):
-        self.controller.add_job(None, make_json("quit"))
+        self.controller.dispatch((None, make_json("quit")))
 
     def handle_term(self):
-        self.controller.add_job(None, make_json("quit"))
+        self.controller.dispatch((None, make_json("quit")))
 
     def handle_quit(self):
-        self.controller.add_job(None, make_json("quit"))
+        self.controller.dispatch((None, make_json("quit")))
 
     def handle_winch(self):
         pass
 
     def handle_hup(self):
-        self.controller.add_job(None, make_json("reload", graceful=True,
-                                                async=True))
+        self.controller.dispatch((None, make_json("reload", graceful=True)))

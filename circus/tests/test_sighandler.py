@@ -1,19 +1,21 @@
+from tornado.testing import gen_test
+
 from circus.tests.support import TestCircus, poll_for, EasyTestSuite
 
 
 class TestSigHandler(TestCircus):
 
+    @gen_test
     def test_handler(self):
-        test_file = self._run_circus(
-            'circus.tests.support.run_process')
+        yield self.start_arbiter()
 
         # wait for the process to be started
-        self.assertTrue(poll_for(test_file, 'START'))
+        self.assertTrue(poll_for(self.test_file, 'START'))
 
         # stopping...
-        self._stop_runners()
+        yield self.arbiter.stop()
 
         # wait for the process to be stopped
-        self.assertTrue(poll_for(test_file, 'QUIT'))
+        self.assertTrue(poll_for(self.test_file, 'QUIT'))
 
 test_suite = EasyTestSuite(__name__)
