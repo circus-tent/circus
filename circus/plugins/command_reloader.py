@@ -52,5 +52,5 @@ class CommandReloader(CircusPlugin):
                                               self.loop)
         self.period.start()
 
-    def handle_recv(self, _):
+    def handle_recv(self, data):
         pass
