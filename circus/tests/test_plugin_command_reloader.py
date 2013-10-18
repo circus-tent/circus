@@ -91,3 +91,7 @@ class TestCommandReloader(TestCircus):
         plugin.look_after()
 
         self.assertNotIn('foo', plugin.cmd_files)
+
+    def test_handle_recv_implemented(self):
+        plugin = self.make_plugin()
+        plugin.handle_recv('whatever')
