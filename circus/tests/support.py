@@ -64,8 +64,11 @@ class TestCircus(AsyncTestCase):
 
     arbiter_factory = get_arbiter
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         ioloop.install()
+
+    def setUp(self):
         super(TestCircus, self).setUp()
         self.arbiters = []
         self.files = []
@@ -77,14 +80,11 @@ class TestCircus(AsyncTestCase):
         return tornado.ioloop.IOLoop().instance()
 
     def tearDown(self):
-        self._stop_runners()
         for file in self.files + self.tmpfiles:
             if os.path.exists(file):
                 os.remove(file)
-
         for dir in self.dirs:
             shutil.rmtree(dir)
-        self.cli.stop()
         super(TestCircus, self).tearDown()
 
     @tornado.gen.coroutine
@@ -185,9 +185,10 @@ class TestCircus(AsyncTestCase):
         self.files.append(testfile)
         return testfile
 
+    @tornado.gen.coroutine
     def _stop_runners(self):
         for arbiter in self.arbiters:
-            arbiter.stop()
+            yield arbiter.stop()
         self.arbiters = []
 
     @tornado.gen.coroutine
