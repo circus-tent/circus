@@ -103,7 +103,7 @@ class TestCircus(AsyncTestCase):
     @tornado.gen.coroutine
     def stop_arbiter(self):
         for watcher in self.arbiter.iter_watchers():
-            self.arbiter.rm_watcher(watcher)
+            yield self.arbiter.rm_watcher(watcher.name)
         yield self.arbiter.stop()
 
     @tornado.gen.coroutine
