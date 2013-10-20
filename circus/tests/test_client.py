@@ -39,23 +39,22 @@ class TestClient(TestCircus):
         self.assertEqual(resp.get("numwatchers"), 1)
         self.assertEqual((yield self.numprocesses("numprocesses")), 1)
 
-        self.assertEqual(self.set("test", numprocesses=2), 'ok')
-        self.assertEqual(self.numprocesses("numprocesses"), 2)
+        self.assertEqual((yield self.set("test", numprocesses=2)), 'ok')
+        self.assertEqual((yield self.numprocesses("numprocesses")), 2)
 
-        self.assertEqual(self.set("test", numprocesses=1), 'ok')
-        self.assertEqual(self.numprocesses("numprocesses"), 1)
-        self.assertEqual(self.numwatchers("numwatchers"), 1)
+        self.assertEqual((yield self.set("test", numprocesses=1)), 'ok')
+        self.assertEqual((yield self.numprocesses("numprocesses")), 1)
+        self.assertEqual((yield self.numwatchers("numwatchers")), 1)
 
-        self.assertEqual(self.call("list").get('watchers'), ['test'])
-        self.assertEqual(self.numprocesses("incr", name="test"), 2)
-        self.assertEqual(self.numprocesses("numprocesses"), 2)
-        self.assertEqual(self.numprocesses("incr", name="test", nb=2), 4)
-        self.assertEqual(self.numprocesses("decr", name="test", nb=3), 1)
-        self.assertEqual(self.numprocesses("numprocesses"), 1)
-        self.assertEqual(self.set("test", env={"test": 1, "test": 2}),
-                          'error')
-        self.assertEqual((yield self.set("test",
-                                         env={"test": '1', "test": '2'})),
+        self.assertEqual((yield self.call("list")).get('watchers'), ['test'])
+        self.assertEqual((yield self.numprocesses("incr", name="test")), 2)
+        self.assertEqual((yield self.numprocesses("numprocesses")), 2)
+        self.assertEqual((yield self.numprocesses("incr", name="test", nb=2)), 4)
+        self.assertEqual((yield self.numprocesses("decr", name="test", nb=3)), 1)
+        self.assertEqual((yield self.numprocesses("numprocesses")), 1)
+        self.assertEqual((yield self.set("test", env={"test": 1, "test": 2})),
+                         'error')
+        self.assertEqual((yield self.set("test", env={"test": '1', "test": '2'})),
                          'ok')
         resp = yield self.call('get', name='test', keys=['env'])
         options = resp.get('options', {})

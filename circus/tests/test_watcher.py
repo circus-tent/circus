@@ -74,11 +74,12 @@ class TestWatcher(TestCircus):
         self.assertTrue(resp)
         truncate_file(self.test_file)
 
-        pids = self.pids()
+        pids = yield self.pids()
         self.assertEqual(len(pids), 2)
         to_kill = pids[0]
-        self.assertEqual(self.status('signal', name='test', pid=to_kill,
-                                     signum=signal.SIGKILL), 'ok')
+        status = yield self.status('signal', name='test', pid=to_kill,
+                                   signum=signal.SIGKILL)
+        self.assertEqual(status, 'ok')
 
         # make sure the process is restarted
         res = yield async_poll_for(self.test_file, 'START')
@@ -96,6 +97,7 @@ class TestWatcher(TestCircus):
 
     @tornado.testing.gen_test
     def test_unexisting(self):
+        yield self.start_arbiter()
         watcher = self.arbiter.get_watcher("test")
 
         to_kill = []
@@ -146,6 +148,7 @@ class TestWatcher(TestCircus):
 
         self.assertEqual(watchers[watchers.keys()[0]]['cmdline'],
                          sys.executable.split(os.sep)[-1])
+        yield self.stop_arbiter()
 
     @tornado.testing.gen_test
     def test_max_age(self):
@@ -238,9 +241,8 @@ class TestWatcherInitialization(TestCircus):
             if 'XYZ' in data:
                 resp = True
                 break
-        watcher.stop()
-        data = ''.join(m['data'] for m in messages)
-        self.assertTrue('XYZ' in data, data)
+        self.assertTrue(resp)
+        yield watcher.stop()
 
     @tornado.testing.gen_test
     def test_venv(self):
@@ -498,7 +500,7 @@ class RespawnTest(TestCircus):
         try:
             # Per default, we shouldn't respawn processes,
             # so we should have one process, even if in a dead state.
-            resp = self.call("numprocesses", name="test")
+            resp = yield self.call("numprocesses", name="test")
             self.assertEqual(resp['numprocesses'], 1)
 
             # let's reap processes and explicitely ask for process management
