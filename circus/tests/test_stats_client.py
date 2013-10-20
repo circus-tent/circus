@@ -4,9 +4,10 @@ import os
 import sys
 import tornado
 
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.client import AsyncCircusClient
 from circus.stream import FileStream
+from circus.py3compat import get_next
 from circus.util import tornado_sleep
 
 
@@ -76,10 +77,12 @@ class TestStatsClient(TestCircus):
         # playing around with the stats now: we should get some !
         from circus.stats.client import StatsClient
         client = StatsClient()
-        next = client.iter_messages().next
+        next = get_next(client.iter_messages())
 
         for i in range(10):
             watcher, pid, stat = next()
             self.assertTrue(watcher in ('test', 'circusd-stats', 'circus'),
                             watcher)
         yield self.stop_arbiter()
+
+test_suite = EasyTestSuite(__name__)

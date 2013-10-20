@@ -7,7 +7,6 @@ try:
     import queue as Queue
 except ImportError:
     import Queue
-import logging
 
 import tornado
 import mock
@@ -17,7 +16,7 @@ from circus import logger
 from circus.process import RUNNING, UNEXISTING
 
 from circus.stream import QueueStream
-from circus.tests.support import skip, TestCircus, ifSupportsSetUpClass, async_poll_for, truncate_file, EasyTestSuite
+from circus.tests.support import TestCircus, ifSupportsSetUpClass, async_poll_for, truncate_file, EasyTestSuite
 from circus.tests.support import MagicMockFuture
 from circus.util import get_python_version, tornado_sleep
 from circus.watcher import Watcher
