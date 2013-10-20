@@ -84,7 +84,7 @@ class TestCollector(TestCase):
                 'age': 154058.91111397743 + i,
                 'children': [],
                 'cmdline': 'python',
-                'cpu': 0.0 + i/10.,
+                'cpu': 0.0 + i / 10.,
                 'create_time': 1378663281.96,
                 'ctime': '0:00.0',
                 'mem': 0.0,

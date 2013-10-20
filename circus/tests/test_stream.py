@@ -84,7 +84,6 @@ class TestWatcher(TestCircus):
         yield self.stop_arbiter()
         stream.close()
 
-    @skip("FIXME: random fails")
     @tornado.testing.gen_test
     def test_stream(self):
         yield self.start_arbiter()

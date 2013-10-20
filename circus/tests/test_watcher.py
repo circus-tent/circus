@@ -218,7 +218,6 @@ class TestWatcherInitialization(TestCircus):
         finally:
             os.environ = old_environ
 
-    @skip("FIXME: random fails")
     @tornado.testing.gen_test
     def test_copy_path(self):
         messages = []
@@ -251,7 +250,6 @@ class TestWatcherInitialization(TestCircus):
         watcher = SomeWatcher(virtualenv=venv)
         yield watcher.run()
         try:
-            #yield tornado_sleep(1)  # FIXME
             py_version = get_python_version()
             major = py_version[0]
             minor = py_version[1]

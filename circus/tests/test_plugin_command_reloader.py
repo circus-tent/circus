@@ -92,4 +92,8 @@ class TestCommandReloader(TestCircus):
 
         self.assertNotIn('foo', plugin.cmd_files)
 
+    def test_handle_recv_implemented(self):
+        plugin = self.make_plugin()
+        plugin.handle_recv('whatever')
+
 test_suite = EasyTestSuite(__name__)
