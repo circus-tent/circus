@@ -12,14 +12,8 @@ import multiprocessing
 
 try:
     from unittest import skip, skipIf, TestCase, TestSuite, findTestCases
-    def ifSupportsSetUpClass(obj):
-        return obj
 except ImportError:
     from unittest2 import skip, skipIf, TestCase, TestSuite, findTestCases
-    def ifSupportsSetUpClass(obj):
-        class Dummy(object):
-            pass
-        return Dummy
 
 from tornado.testing import AsyncTestCase
 from zmq.eventloop import ioloop
@@ -376,7 +370,6 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
     _statsd = _Statsd()
     plugin = klass(endpoint, pubsub_endpoint, check_delay, ssh_server,
                    **config)
-    plugin.statsd.stop()
     plugin.statsd = _statsd
 
     deadline = time() + (duration / 1000.)
@@ -385,6 +378,7 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
     if plugin_info_callback:
         plugin_info_callback(plugin)
     plugin.stop()
+    #plugin.statsd.stop()
     return _statsd
 
 

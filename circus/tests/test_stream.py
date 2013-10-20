@@ -8,7 +8,7 @@ from datetime import datetime
 from circus.py3compat import StringIO
 
 from circus.client import make_message
-from circus.tests.support import TestCase, TestCircus, async_poll_for, truncate_file, ifSupportsSetUpClass, EasyTestSuite
+from circus.tests.support import TestCase, TestCircus, async_poll_for, truncate_file, EasyTestSuite
 from circus.stream import FileStream
 from circus.stream import FancyStdoutStream
 
@@ -27,7 +27,6 @@ def run_process(testfile, *args, **kw):
         return 1
 
 
-@ifSupportsSetUpClass
 class TestWatcher(TestCircus):
 
     @classmethod
