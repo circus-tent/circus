@@ -1,13 +1,22 @@
 import os
 import socket
 import tempfile
-import IN
-
+try:
+    import IN
+except ImportError:
+    pass
 import mock
 
 import unittest2 as unittest
 from circus.sockets import CircusSocket, CircusSockets
 
+def so_bindtodevice_supported():
+    try:
+        if hasattr(IN, 'SO_BINDTODEVICE'):
+            return True
+    except NameError:
+        pass
+    return False
 
 class TestSockets(unittest.TestCase):
 
@@ -83,7 +92,7 @@ class TestSockets(unittest.TestCase):
             sockets.close_all()
             self.assertTrue(not os.path.exists(sockfile))
 
-    @unittest.skipIf(not hasattr(IN, 'SO_BINDTODEVICE'),
+    @unittest.skipIf(not so_bindtodevice_supported(),
                      'SO_BINDTODEVICE unsupported')
     def test_bind_to_interface(self):
         config = {'name': '', 'host': 'localhost', 'port': 0,
