@@ -6,7 +6,6 @@ import warnings
 import Queue
 import tornado
 import mock
-import unittest2
 
 from circus import logger
 from circus.process import RUNNING, UNEXISTING

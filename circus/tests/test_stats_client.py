@@ -3,7 +3,6 @@ import tempfile
 import os
 import sys
 import tornado
-import unittest2
 
 from circus.tests.support import TestCircus
 from circus.client import AsyncCircusClient

@@ -4,7 +4,6 @@ import os
 import tempfile
 import unittest
 import tornado
-import unittest2
 
 from datetime import datetime
 from cStringIO import StringIO
