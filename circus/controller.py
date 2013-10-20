@@ -11,7 +11,6 @@ except ImportError:
 
 import zmq
 import zmq.utils.jsonapi as json
-from zmq.utils.strtypes import b
 from zmq.eventloop import ioloop, zmqstream
 from tornado.concurrent import Future
 
@@ -132,7 +131,7 @@ class Controller(object):
         if resp is None:
             resp = ok()
 
-        if not isinstance(resp, (dict, list,)):
+        if not isinstance(resp, (dict, list)):
             msg = "msg %r tried to send a non-dict: %s" % (msg, str(resp))
             logger.error("msg %r tried to send a non-dict: %s", msg, str(resp))
             return self.send_error(mid, cid, msg, "server error", cast=cast,

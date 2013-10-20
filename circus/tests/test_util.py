@@ -124,12 +124,12 @@ class TestUtil(TestCase):
             return val
 
         def uid_min_max():
-            uids = sorted(map(lambda e: int32(e[2]), pwd.getpwall()))
+            uids = sorted([int32(e[2]) for e in pwd.getpwall()])
             uids[0] = uids[0] if uids[0] < 0 else -1
             return (uids[0], uids[-1])
 
         def gid_min_max():
-            gids = sorted(map(lambda e: int32(e[2]), grp.getgrall()))
+            gids = sorted([int32(e[2]) for e in grp.getgrall()])
             gids[0] = gids[0] if gids[0] < 0 else -1
             return (gids[0], gids[-1])
 
