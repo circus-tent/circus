@@ -4,7 +4,6 @@ import os
 import tempfile
 import unittest
 import tornado
-import unittest2
 
 from datetime import datetime
 from cStringIO import StringIO
@@ -79,7 +78,6 @@ class TestWatcher(TestCircus):
         self.assertTrue(isinstance(stream._backup_count, int))
         yield self.stop_arbiter()
 
-    @unittest2.skip("FIXME: random fails")
     @tornado.testing.gen_test
     def test_stream(self):
         yield self.start_arbiter()
