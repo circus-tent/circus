@@ -3,21 +3,26 @@ import sys
 import os
 import time
 import warnings
-import Queue
+try:
+    import queue as Queue
+    from test.support import captured_output
+except ImportError:
+    import Queue  # NOQA
+    from test.test_support import captured_output  # NOQA
+
 import tornado
 import mock
+from zmq.utils.strtypes import u
 
 from circus import logger
 from circus.process import RUNNING, UNEXISTING
 
 from circus.stream import QueueStream
 from circus.tests.support import TestCircus, truncate_file
-from circus.tests.support import async_poll_for
+from circus.tests.support import async_poll_for, EasyTestSuite
 from circus.tests.support import MagicMockFuture
 from circus.util import get_python_version, tornado_sleep
 from circus.watcher import Watcher
-
-from test.test_support import captured_output
 
 warnings.filterwarnings('ignore',
                         module='threading', message='sys.exc_clear')
@@ -61,18 +66,18 @@ class TestWatcher(TestCircus):
     def test_signal(self):
         yield self.start_arbiter()
         resp = yield self.numprocesses('incr', name='test')
-        self.assertEquals(resp, 2)
+        self.assertEqual(resp, 2)
         # wait for both to have started
         resp = yield async_poll_for(self.test_file, 'STARTSTART')
         self.assertTrue(resp)
         truncate_file(self.test_file)
 
         pids = yield self.pids()
-        self.assertEquals(len(pids), 2)
+        self.assertEqual(len(pids), 2)
         to_kill = pids[0]
         status = yield self.status('signal', name='test', pid=to_kill,
                                    signum=signal.SIGKILL)
-        self.assertEquals(status, 'ok')
+        self.assertEqual(status, 'ok')
 
         # make sure the process is restarted
         res = yield async_poll_for(self.test_file, 'START')
@@ -84,7 +89,7 @@ class TestWatcher(TestCircus):
         while len(pids) < 2 and count < 10:
             pids = yield self.pids()
             time.sleep(.1)
-        self.assertEquals(len(pids), 2)
+        self.assertEqual(len(pids), 2)
         self.assertTrue(to_kill not in pids)
         yield self.stop_arbiter()
 
@@ -96,11 +101,13 @@ class TestWatcher(TestCircus):
         to_kill = []
         nb_proc = len(watcher.processes)
 
-        for process in watcher.processes.values():
+        for process in list(watcher.processes.values()):
             to_kill.append(process.pid)
             # the process is killed in an unsual way
             try:
-                os.kill(process.pid, signal.SIGSEGV)
+                # use SIGKILL instead of SIGSEGV so we don't get
+                # 'app crashed' dialogs on OS X
+                os.kill(process.pid, signal.SIGKILL)
             except OSError:
                 pass
 
@@ -111,7 +118,7 @@ class TestWatcher(TestCircus):
                 pass
 
             # ansure the old process is considered "unexisting"
-            self.assertEquals(process.status, UNEXISTING)
+            self.assertEqual(process.status, UNEXISTING)
 
         # this should clean up and create a new process
         yield watcher.reap_and_manage_processes()
@@ -119,10 +126,10 @@ class TestWatcher(TestCircus):
         # watcher ids should have been reused
         wids = [p.wid for p in watcher.processes.values()]
         self.assertEqual(max(wids), watcher.numprocesses)
-        self.assertEqual(sum(wids), sum(xrange(1, watcher.numprocesses + 1)))
+        self.assertEqual(sum(wids), sum(range(1, watcher.numprocesses + 1)))
 
         # we should have a new process here now
-        self.assertEquals(len(watcher.processes), nb_proc)
+        self.assertEqual(len(watcher.processes), nb_proc)
         for p in watcher.processes.values():
             # and that one needs to have a new pid.
             self.assertFalse(p.pid in to_kill)
@@ -138,8 +145,8 @@ class TestWatcher(TestCircus):
         self.assertTrue("test" in resp.get('infos'))
         watchers = resp.get('infos')['test']
 
-        self.assertEqual(watchers[watchers.keys()[0]]['cmdline'],
-                         sys.executable.split(os.sep)[-1])
+        self.assertEqual(watchers[list(watchers.keys())[0]]['cmdline'].lower(),
+                         sys.executable.split(os.sep)[-1].lower())
         yield self.stop_arbiter()
 
     @tornado.testing.gen_test
@@ -159,7 +166,7 @@ class TestWatcher(TestCircus):
         result = yield self.call('set', name='test', waiting=True,
                                  options=options)
 
-        self.assertEquals(result.get('status'), 'ok')
+        self.assertEqual(result.get('status'), 'ok')
 
         current_pids = yield self.pids()
         self.assertEqual(len(current_pids), 15)
@@ -182,12 +189,12 @@ class TestWatcherInitialization(TestCircus):
         try:
             os.environ = {'COCONUTS': 'MIGRATE'}
             watcher = Watcher("foo", "foobar", copy_env=True)
-            self.assertEquals(watcher.env, os.environ)
+            self.assertEqual(watcher.env, os.environ)
 
             watcher = Watcher("foo", "foobar", copy_env=True,
                               env={"AWESOMENESS": "YES"})
-            self.assertEquals(watcher.env,
-                              {'COCONUTS': 'MIGRATE', 'AWESOMENESS': 'YES'})
+            self.assertEqual(watcher.env,
+                             {'COCONUTS': 'MIGRATE', 'AWESOMENESS': 'YES'})
         finally:
             os.environ = old_environ
 
@@ -207,7 +214,7 @@ class TestWatcherInitialization(TestCircus):
 
             watcher = Watcher("foo", "foobar", copy_env=True, hooks=hooks)
 
-            self.assertEquals(watcher.env, os.environ)
+            self.assertEqual(watcher.env, os.environ)
         finally:
             os.environ = old_environ
 
@@ -229,7 +236,7 @@ class TestWatcherInitialization(TestCircus):
                 messages.append(m)
             except Queue.Empty:
                 pass
-            data = ''.join(m['data'] for m in messages)
+            data = ''.join(u(m['data']) for m in messages)
             if 'XYZ' in data:
                 resp = True
                 break
@@ -493,18 +500,18 @@ class RespawnTest(TestCircus):
             # Per default, we shouldn't respawn processes,
             # so we should have one process, even if in a dead state.
             resp = yield self.call("numprocesses", name="test")
-            self.assertEquals(resp['numprocesses'], 1)
+            self.assertEqual(resp['numprocesses'], 1)
 
             # let's reap processes and explicitely ask for process management
             yield watcher.reap_and_manage_processes()
 
             # we should have zero processes (the process shouldn't respawn)
-            self.assertEquals(len(watcher.processes), 0)
+            self.assertEqual(len(watcher.processes), 0)
 
             # If we explicitely ask the watcher to respawn its processes,
             # ensure it's doing so.
             yield watcher.spawn_processes()
-            self.assertEquals(len(watcher.processes), 1)
+            self.assertEqual(len(watcher.processes), 1)
         finally:
             yield arbiter.stop()
 
@@ -533,3 +540,5 @@ class RespawnTest(TestCircus):
         yield watcher.manage_processes()
         # And be sure we don't spawn new processes in the meantime.
         self.assertFalse(watcher.spawn_processes.called)
+
+test_suite = EasyTestSuite(__name__)

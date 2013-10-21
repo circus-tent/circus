@@ -1,4 +1,3 @@
-from unittest2 import TestCase, skipIf
 import sys
 import os
 import tempfile
@@ -9,7 +8,7 @@ from circus import circusd
 from circus.arbiter import Arbiter
 from circus.util import REDIRECT_TO
 from circus import util
-from circus.tests.support import has_gevent
+from circus.tests.support import has_gevent, TestCase, skipIf, EasyTestSuite
 
 
 CIRCUS_INI = os.path.join(os.path.dirname(__file__), 'config', 'circus.ini')
@@ -116,3 +115,5 @@ class TestCircusd(TestCase):
         sys.argv = ['circusd', CIRCUS_INI, '--pidfile', pid_file]
         main()
         self.assertFalse(os.path.exists(pid_file))
+
+test_suite = EasyTestSuite(__name__)

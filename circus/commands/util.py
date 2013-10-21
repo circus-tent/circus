@@ -102,7 +102,7 @@ def validate_option(key, val):
 
     if key in ('warmup_delay', 'flapping_window', 'retry_in',
                'graceful_timeout',):
-        if not isinstance(val, (int, float,)):
+        if not isinstance(val, (int, float)):
             raise MessageError("%r isn't a number" % key)
 
     if key in ('uid', 'gid',):
@@ -135,5 +135,5 @@ def validate_option(key, val):
         if not 'class' in val:
             raise MessageError("%r must have a 'class' key" % key)
         if 'refresh_time' in val:
-            warnings.warn(u"'refresh_time' is deprecated and not useful "
-                          u"anymore for %r" % key)
+            warnings.warn("'refresh_time' is deprecated and not useful "
+                          "anymore for %r" % key)

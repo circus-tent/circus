@@ -1,5 +1,5 @@
 from tornado.testing import gen_test
-from circus.tests.support import TestCircus, poll_for
+from circus.tests.support import TestCircus, poll_for, EasyTestSuite
 
 
 def Dummy(test_file):
@@ -15,3 +15,5 @@ class TestRunner(TestCircus):
         yield self.start_arbiter('circus.tests.test_runner.Dummy')
         self.assertTrue(poll_for(self.test_file, '..........'))
         yield self.stop_arbiter()
+
+test_suite = EasyTestSuite(__name__)

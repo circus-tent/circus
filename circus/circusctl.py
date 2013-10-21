@@ -69,8 +69,7 @@ class _Help(argparse.HelpFormatter):
             return super(_Help, self)._metavar_formatter(action,
                                                          default_metavar)
 
-        commands = self.commands.items()
-        commands.sort()
+        commands = sorted(self.commands.items())
         max_len = max([len(name) for name, help in commands])
 
         output = []
@@ -126,7 +125,7 @@ class ControllerApp(object):
             return 1
         except KeyboardInterrupt:
             return 1
-        except Exception, e:
+        except Exception:
             sys.stderr.write(traceback.format_exc())
             return 1
 
@@ -139,7 +138,7 @@ class ControllerApp(object):
                 opts[name] = getattr(args, name)
 
         if args.help:
-            print textwrap.dedent(cmd.__doc__)
+            print(textwrap.dedent(cmd.__doc__))
             return 0
         else:
             if hasattr(args, 'start'):
@@ -208,13 +207,13 @@ class CircusCtl(cmd.Cmd, object):
         cls.commands = commands
         cls.controller = ControllerApp(commands, client)
         cls.client = client
-        for name, cmd in commands.iteritems():
+        for name, cmd in commands.items():
             cls._add_do_cmd(name, cmd)
             cls._add_complete_cmd(name, cmd)
         return super(CircusCtl, cls).__new__(cls, *args, **kw)
 
     def __init__(self, client, *args, **kwargs):
-        return super(CircusCtl, self).__init__()
+        super(CircusCtl, self).__init__()
 
     @classmethod
     def _add_do_cmd(cls, cmd_name, cmd):
@@ -232,8 +231,8 @@ class CircusCtl(cmd.Cmd, object):
             if hasattr(cmd, 'autocomplete'):
                 try:
                     return cmd.autocomplete(cls.client, *args, **kwargs)
-                except Exception, e:
-                    sys.stderr.write(e.message + "\n")
+                except Exception as e:
+                    sys.stderr.write(str(e) + "\n")
                     traceback.print_exc(file=sys.stderr)
             else:
                 return []
@@ -285,8 +284,8 @@ class CircusCtl(cmd.Cmd, object):
         subcommands = get_commands()
 
         if cword == 1:  # if completing the command name
-            print(' '.join(sorted(filter(lambda x: x.startswith(curr),
-                                         subcommands))))
+            print(' '.join(sorted([x for x in subcommands
+                                   if x.startswith(curr)])))
         sys.exit(1)
 
     def start(self, globalopts):
@@ -301,7 +300,7 @@ class CircusCtl(cmd.Cmd, object):
             sys.exit(self.controller.run(globalopts['args']))
 
         if args.help:
-            for command in self.commands:
+            for command in sorted(self.commands.keys()):
                 doc = textwrap.dedent(self.commands[command].__doc__)
                 help = doc.split('\n')[0]
                 parser.add_argument(command, help=help)
@@ -309,7 +308,7 @@ class CircusCtl(cmd.Cmd, object):
             sys.exit(0)
 
         # no command, no --help: enter the CLI
-        print VERSION
+        print(VERSION)
         self.do_status('')
         try:
             self.cmdloop()
@@ -358,7 +357,7 @@ def parse_arguments(args, commands):
         description="Controls a Circus daemon",
         formatter_class=_Help, usage=USAGE, add_help=False)
 
-    for option in options:
+    for option in sorted(options.keys()):
         parser.add_argument('--' + option, **options[option])
 
     if any([value in commands for value in args]):

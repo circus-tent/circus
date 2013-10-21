@@ -24,7 +24,7 @@ try:
 except ImportError:
     def closerange(fd_low, fd_high):    # NOQA
         # Iterate through and close all file descriptors.
-        for fd in xrange(fd_low, fd_high):
+        for fd in range(fd_low, fd_high):
             try:
                 os.close(fd)
             except OSError:    # ERROR, fd wasn't open to begin with (ignored)
@@ -69,8 +69,8 @@ def main():
 
     # XXX we should be able to add all these options in the config file as well
     parser.add_argument('--log-level', dest='loglevel',
-                        choices=LOG_LEVELS.keys() + [key.upper() for key in
-                                                     LOG_LEVELS.keys()],
+                        choices=list(LOG_LEVELS.keys()) + [
+                            key.upper() for key in LOG_LEVELS.keys()],
                         help="log level")
     parser.add_argument('--log-output', dest='logoutput', help=(
         "The location where the logs will be written. The default behavior "
@@ -109,7 +109,7 @@ def main():
 
         try:
             pidfile.create(os.getpid())
-        except RuntimeError, e:
+        except RuntimeError as e:
             print(str(e))
             sys.exit(1)
 

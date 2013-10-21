@@ -3,7 +3,7 @@ import time
 from tornado.testing import gen_test
 from tornado.gen import coroutine, Return
 
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.client import make_message, CallError
 from circus.stream import QueueStream
 
@@ -37,32 +37,31 @@ class TestClient(TestCircus):
         msg = make_message("numwatchers")
         resp = yield self.cli.call(msg)
         self.assertEqual(resp.get("numwatchers"), 1)
-        self.assertEquals((yield self.numprocesses("numprocesses")), 1)
+        self.assertEqual((yield self.numprocesses("numprocesses")), 1)
 
-        self.assertEquals((yield self.set("test", numprocesses=2)), 'ok')
-        self.assertEquals((yield self.numprocesses("numprocesses")), 2)
+        self.assertEqual((yield self.set("test", numprocesses=2)), 'ok')
+        self.assertEqual((yield self.numprocesses("numprocesses")), 2)
 
-        self.assertEquals((yield self.set("test", numprocesses=1)), 'ok')
-        self.assertEquals((yield self.numprocesses("numprocesses")), 1)
-        self.assertEquals((yield self.numwatchers("numwatchers")), 1)
+        self.assertEqual((yield self.set("test", numprocesses=1)), 'ok')
+        self.assertEqual((yield self.numprocesses("numprocesses")), 1)
+        self.assertEqual((yield self.numwatchers("numwatchers")), 1)
 
-        self.assertEquals((yield self.call("list")).get('watchers'), ['test'])
+        self.assertEqual((yield self.call("list")).get('watchers'), ['test'])
         self.assertEqual((yield self.numprocesses("incr", name="test")), 2)
-        self.assertEquals((yield self.numprocesses("numprocesses")), 2)
-        self.assertEquals((yield self.numprocesses("incr", name="test", nb=2)),
-                          4)
-        self.assertEquals((yield self.numprocesses("decr", name="test", nb=3)),
-                          1)
-        self.assertEquals((yield self.numprocesses("numprocesses")), 1)
-        self.assertEquals((yield self.set("test",
-                                          env={"test": 1, "test": 2})),
-                          'error')
-        self.assertEquals((yield self.set("test",
-                                          env={"test": '1', "test": '2'})),
-                          'ok')
+        self.assertEqual((yield self.numprocesses("numprocesses")), 2)
+        self.assertEqual((yield self.numprocesses("incr", name="test", nb=2)),
+                         4)
+        self.assertEqual((yield self.numprocesses("decr", name="test", nb=3)),
+                         1)
+        self.assertEqual((yield self.numprocesses("numprocesses")), 1)
+        self.assertEqual((yield self.set("test", env={"test": 1, "test": 2})),
+                         'error')
+        self.assertEqual((yield self.set("test", env={"test": '1',
+                                                      "test": '2'})),
+                         'ok')
         resp = yield self.call('get', name='test', keys=['env'])
         options = resp.get('options', {})
-        self.assertEquals(options.get('env'), {'test': '1', 'test': '2'})
+        self.assertEqual(options.get('env'), {'test': '1', 'test': '2'})
 
         resp = yield self.call('stats', name='test')
         self.assertEqual(resp['status'], 'ok')
@@ -117,3 +116,5 @@ class TestWithHook(TestCircus):
             self.assertEqual(resp.get("numwatchers"), 1)
         finally:
             arbiter.stop()
+
+test_suite = EasyTestSuite(__name__)

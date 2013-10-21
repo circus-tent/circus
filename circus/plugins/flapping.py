@@ -1,4 +1,4 @@
-from threading import Timer
+from circus.fixed_threading import Timer
 import time
 
 from circus import logger
@@ -49,7 +49,7 @@ class Flapping(CircusPlugin):
         self.max_retry = int(config.get('max_retry', 5))
 
     def handle_stop(self):
-        for _, timer in self.timers.items():
+        for timer in list(self.timers.values()):
             timer.cancel()
 
     def handle_recv(self, data):

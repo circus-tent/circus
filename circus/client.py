@@ -4,7 +4,8 @@ import errno
 import uuid
 
 import zmq
-from zmq.utils.jsonapi import jsonmod as json
+import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import b
 from zmq.eventloop.zmqstream import ZMQStream
 import tornado
 
@@ -31,7 +32,7 @@ class AsyncCircusClient(object):
                  timeout=5.0, ssh_server=None, ssh_keyfile=None):
         self._init_context(context)
         self.endpoint = endpoint
-        self._id = uuid.uuid4().hex
+        self._id = b(uuid.uuid4().hex)
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)
@@ -63,7 +64,7 @@ class AsyncCircusClient(object):
 
         try:
             yield tornado.gen.Task(self.stream.send, cmd)
-        except zmq.ZMQError, e:
+        except zmq.ZMQError as e:
             raise CallError(str(e))
 
         while True:
@@ -84,7 +85,7 @@ class CircusClient(object):
                  timeout=5.0, ssh_server=None, ssh_keyfile=None):
         self._init_context(context)
         self.endpoint = endpoint
-        self._id = uuid.uuid4().hex
+        self._id = b(uuid.uuid4().hex)
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)
@@ -119,7 +120,7 @@ class CircusClient(object):
 
         try:
             self.socket.send(cmd)
-        except zmq.ZMQError, e:
+        except zmq.ZMQError as e:
             raise CallError(str(e))
 
         while True:
@@ -129,7 +130,7 @@ class CircusClient(object):
                 if e.errno == errno.EINTR:
                     continue
                 else:
-                    print str(e)
+                    print(str(e))
                     raise CallError(str(e))
 
             if len(events) == 0:

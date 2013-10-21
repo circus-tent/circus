@@ -10,6 +10,12 @@ import shutil
 import functools
 import multiprocessing
 
+try:
+    from unittest import skip, skipIf, TestCase, TestSuite, findTestCases
+except ImportError:
+    from unittest2 import skip, skipIf, TestCase, TestSuite  # NOQA
+    from unittest2 import findTestCases  # NOQA
+
 from tornado.testing import AsyncTestCase
 from zmq.eventloop import ioloop
 import mock
@@ -21,6 +27,11 @@ from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
 from circus.util import tornado_sleep
 from circus.client import AsyncCircusClient, make_message
 from circus.stream import QueueStream
+
+
+class EasyTestSuite(TestSuite):
+    def __init__(self, name):
+        super(EasyTestSuite, self).__init__(findTestCases(sys.modules[name]))
 
 
 def resolve_name(name):
@@ -286,6 +297,7 @@ def poll_for_callable(func, *args, **kwargs):
             sleep(0.1)
         else:
             return True
+    # TODO: This HAS to be wrong
     raise e
 
 
@@ -353,6 +365,9 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
         def increment(self, name):
             self.increments[name] += 1
 
+        def stop(self):
+            pass
+
     _statsd = _Statsd()
     plugin = klass(endpoint, pubsub_endpoint, check_delay, ssh_server,
                    **config)
@@ -363,6 +378,8 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
     plugin.start()
     if plugin_info_callback:
         plugin_info_callback(plugin)
+    plugin.stop()
+    #plugin.statsd.stop()
     return _statsd
 
 
