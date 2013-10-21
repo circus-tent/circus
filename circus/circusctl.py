@@ -69,8 +69,7 @@ class _Help(argparse.HelpFormatter):
             return super(_Help, self)._metavar_formatter(action,
                                                          default_metavar)
 
-        commands = self.commands.items()
-        commands.sort()
+        commands = sorted(self.commands.items())
         max_len = max([len(name) for name, help in commands])
 
         output = []
@@ -285,8 +284,8 @@ class CircusCtl(cmd.Cmd, object):
         subcommands = get_commands()
 
         if cword == 1:  # if completing the command name
-            print(' '.join(sorted(filter(lambda x: x.startswith(curr),
-                                         subcommands))))
+            print(' '.join(sorted([x for x in subcommands
+                                   if x.startswith(curr)])))
         sys.exit(1)
 
     def start(self, globalopts):

@@ -426,10 +426,7 @@ class Arbiter(object):
         return arbiter
 
     def iter_watchers(self, reverse=True):
-        watchers = [(watcher.priority, watcher) for watcher in self.watchers]
-        watchers.sort(reverse=reverse)
-        for __, watcher in watchers:
-            yield watcher
+        return sorted(self.watchers, key=lambda a: a.priority, reverse=reverse)
 
     @debuglog
     def initialize(self):

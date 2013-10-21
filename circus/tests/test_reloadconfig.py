@@ -67,8 +67,7 @@ class TestConfig(tornado.testing.AsyncTestCase):
         return a
 
     def test_watcher_names(self):
-        watcher_names = [i.name for i in self.a.watchers]
-        watcher_names.sort()
+        watcher_names = sorted(i.name for i in self.a.watchers)
         self.assertEqual(watcher_names, ['plugin:myplugin', 'test1', 'test2'])
 
     @tornado.testing.gen_test

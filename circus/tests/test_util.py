@@ -91,7 +91,7 @@ class TestUtil(TestCase):
             self.assertRaises(ValueError, to_bool, value)
 
     def test_parse_env_str(self):
-        env = 'test=1,booo=2'
+        env = 'booo=2,test=1'
         parsed = parse_env_str(env)
         self.assertEqual(parsed, {'test': '1', 'booo': '2'})
         self.assertEqual(env_to_str(parsed), env)
@@ -124,12 +124,12 @@ class TestUtil(TestCase):
             return val
 
         def uid_min_max():
-            uids = sorted(map(lambda e: int32(e[2]), pwd.getpwall()))
+            uids = sorted([int32(e[2]) for e in pwd.getpwall()])
             uids[0] = uids[0] if uids[0] < 0 else -1
             return (uids[0], uids[-1])
 
         def gid_min_max():
-            gids = sorted(map(lambda e: int32(e[2]), grp.getgrall()))
+            gids = sorted([int32(e[2]) for e in grp.getgrall()])
             gids[0] = gids[0] if gids[0] < 0 else -1
             return (gids[0], gids[-1])
 
@@ -199,7 +199,8 @@ class TestUtil(TestCase):
 
         self.assertEqual(3, len(py_version))
 
-        map(lambda x: self.assertEquals(int, type(x)), py_version)
+        for x in py_version:
+            self.assertEqual(int, type(x))
 
         self.assertGreaterEqual(py_version[0], 2)
         self.assertGreaterEqual(py_version[1], 0)
