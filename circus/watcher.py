@@ -421,6 +421,11 @@ class Watcher(object):
         if self.is_stopped():
             return
 
+        # remove dead or zombie processes first
+        for process in list(self.processes.values()):
+            if process.status == DEAD_OR_ZOMBIE:
+                self.processes.pop(process.pid)
+
         if self.max_age:
             yield self.remove_expired_processes()
 
@@ -430,22 +435,21 @@ class Watcher(object):
             yield self.spawn_processes()
 
         # removing extra processes
-        processes = self.processes.values()
-        processes.sort()
+        if len(self.processes) > self.numprocesses:
+            processes_to_kill = []
+            for process in sorted(self.processes.values(),
+                                  key=lambda process: process.started,
+                                  reverse=True)[self.numprocesses:]:
+                if process.status == DEAD_OR_ZOMBIE:
+                    self.processes.pop(process.pid)
+                else:
+                    processes_to_kill.append(process)
 
-        processes_to_kill = []
-        while len(processes) > self.numprocesses:
-            process = processes.pop(0)
-            if process.status == DEAD_OR_ZOMBIE:
-                self.processes.pop(process.pid)
-            else:
-                processes_to_kill.append(process)
-
-        removes = yield [self.kill_process(proc)
-                         for proc in processes_to_kill]
-        for i, process in enumerate(processes_to_kill):
-            if removes[i]:
-                self.processes.pop(process.pid)
+            removes = yield [self.kill_process(process)
+                             for process in processes_to_kill]
+            for i, process in enumerate(processes_to_kill):
+                if removes[i]:
+                    self.processes.pop(process.pid)
 
     @gen.coroutine
     @util.debuglog
