@@ -1,7 +1,7 @@
 from mock import patch
 
 from circus.plugins.command_reloader import CommandReloader
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 
 
@@ -55,7 +55,7 @@ class TestCommandReloader(TestCircus):
         plugin.cmd_files = {'foo': {'path': '/bar/quux', 'mtime': 1}}
         self.assertIs(plugin.is_modified('foo', 1, '/bar/quux'), False)
 
-    def test_look_after_kown_watcher_triggers_restart(self):
+    def test_look_after_known_watcher_triggers_restart(self):
         call_mock = self.setup_call_mock(watcher_name='foo')
         self.setup_os_mock(realpath='/bar/foo', mtime=42)
         plugin = self.make_plugin()
@@ -95,3 +95,5 @@ class TestCommandReloader(TestCircus):
     def test_handle_recv_implemented(self):
         plugin = self.make_plugin()
         plugin.handle_recv('whatever')
+
+test_suite = EasyTestSuite(__name__)

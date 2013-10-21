@@ -7,31 +7,27 @@ from tornado.testing import gen_test
 from tornado.gen import coroutine, Return
 
 from circus.circusctl import USAGE, VERSION, CircusCtl
-from circus.tests.support import TestCircus, poll_for
+from circus.tests.support import TestCircus, poll_for, EasyTestSuite
+from zmq.utils.strtypes import b, u
 from circus.util import tornado_sleep
 
 
 def run_ctl(args, queue=None, stdin=''):
     cmd = '%s -m circus.circusctl' % sys.executable
     proc = subprocess.Popen(cmd.split() + shlex.split(args),
-                            stdin=subprocess.PIPE,
+                            stdin=subprocess.PIPE if stdin else None,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
-    if stdin:
-        proc.stdin.write(stdin)
-
-    stderr = proc.stderr.read()
-    stdout = proc.stdout.read()
+    stdout, stderr = proc.communicate(b(stdin) if stdin else None)
     if queue:
         queue.put(stderr)
         queue.put(stdout)
-    proc.wait()
     try:
         import gevent
         gevent.shutdown()
     except ImportError:
         pass
-    return stdout, stderr
+    return u(stdout), u(stderr)
 
 
 @coroutine
@@ -49,7 +45,7 @@ def async_run_ctl(args, stdin=''):
         yield tornado_sleep(.1)
     stderr = queue.get()
     stdout = queue.get()
-    raise Return((stdout, stderr))
+    raise Return((u(stdout), u(stderr)))
 
 
 class CommandlineTest(TestCircus):
@@ -134,3 +130,5 @@ class CLITest(TestCircus):
         prompt = stdout.splitlines()
         # first two lines are VERSION and prompt, followed by a blank line
         self.assertEqual(prompt[3], "Documented commands (type help <topic>):")
+
+test_suite = EasyTestSuite(__name__)

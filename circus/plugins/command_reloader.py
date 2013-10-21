@@ -29,7 +29,7 @@ class CommandReloader(CircusPlugin):
         watchers = [watcher for watcher in list_['watchers']
                     if not watcher.startswith('plugin:')]
 
-        for watcher in self.cmd_files.keys():
+        for watcher in list(self.cmd_files.keys()):
             if watcher not in watchers:
                 del self.cmd_files[watcher]
 

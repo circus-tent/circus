@@ -1,16 +1,16 @@
 import socket
 import time
 from collections import defaultdict
-from threading import Thread
+from circus.fixed_threading import Thread
 
 from zmq.eventloop import ioloop
 
 from circus.stats import collector as collector_module
 from circus.stats.collector import SocketStatsCollector, WatcherStatsCollector
-import unittest2 as unittest
+from circus.tests.support import TestCase, EasyTestSuite
 
 
-class TestCollector(unittest.TestCase):
+class TestCollector(TestCase):
 
     def setUp(self):
         # let's create 10 sockets and their clients
@@ -111,19 +111,19 @@ class TestCollector(unittest.TestCase):
             collector = WatcherStatsCollector(self._get_streamer(), 'firefox')
 
             stats = list(collector.collect_stats())
-            self.assertEquals(len(stats), 3)
+            self.assertEqual(len(stats), 3)
 
             stats = list(collector.collect_stats())
-            self.assertEquals(len(stats), 3)
+            self.assertEqual(len(stats), 3)
 
             stats = list(collector.collect_stats())
-            self.assertEquals(len(stats), 1)
+            self.assertEqual(len(stats), 1)
 
             self.circus_pids = {1234: 'ohyeah'}
             self.pids['circus'] = [1234]
             collector = WatcherStatsCollector(self._get_streamer(), 'circus')
             stats = list(collector.collect_stats())
-            self.assertEquals(stats[0]['name'], 'ohyeah')
+            self.assertEqual(stats[0]['name'], 'ohyeah')
 
         finally:
             collector_module.util.get_info = old_info
@@ -137,14 +137,14 @@ class TestCollector(unittest.TestCase):
                 'age': 154058.91111397743, 'children': [],
                 'cmdline': 'python', 'cpu': 0.0 + i / 10.,
                 'create_time': 1378663281.96,
-                'ctime': '0:00.0', 'mem': 0.0 + i / 10,
+                'ctime': '0:00.0', 'mem': 0.0 + i // 10,
                 'mem_info1': '52K', 'mem_info2': '39M',
                 'username': 'alexis', 'subtopic': pid, 'name': 'firefox'}
 
         res = collector._aggregate(aggregate)
-        self.assertEquals(res['mem'], 0)
-        self.assertEquals(len(res['pid']), 10)
-        self.assertEquals(res['cpu'], 0.45)
+        self.assertEqual(res['mem'], 0)
+        self.assertEqual(len(res['pid']), 10)
+        self.assertEqual(res['cpu'], 0.45)
 
     def test_collector_aggregation_when_unknown_values(self):
         collector = WatcherStatsCollector(self._get_streamer(), 'firefox')
@@ -160,9 +160,9 @@ class TestCollector(unittest.TestCase):
 
         res = collector._aggregate(aggregate)
         res = collector._aggregate(aggregate)
-        self.assertEquals(res['mem'], 'N/A')
-        self.assertEquals(len(res['pid']), 10)
-        self.assertEquals(res['cpu'], 'N/A')
+        self.assertEqual(res['mem'], 'N/A')
+        self.assertEqual(len(res['pid']), 10)
+        self.assertEqual(res['cpu'], 'N/A')
 
     def test_socketstats(self):
         collector = self._get_collector(SocketStatsCollector)
@@ -172,7 +172,7 @@ class TestCollector(unittest.TestCase):
         # doing some socket things as a client
         for i in range(10):
             for client in self.clients:
-                client.send('ok')
+                client.send(b'ok')
                 #client.recv(2)
 
         # stopping
@@ -186,3 +186,5 @@ class TestCollector(unittest.TestCase):
         stat = self.streamer.stats[0]
         self.assertTrue(stat['fd'] in self.fds)
         self.assertTrue(stat['reads'] > 1)
+
+test_suite = EasyTestSuite(__name__)

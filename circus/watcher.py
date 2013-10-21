@@ -5,12 +5,16 @@ import signal
 import time
 import sys
 from random import randint
-from itertools import izip_longest
+try:
+    from itertools import zip_longest as izip_longest
+except ImportError:
+    from itertools import izip_longest
 import site
 from tornado import gen
 
 from psutil import NoSuchProcess
-from zmq.utils.jsonapi import jsonmod as json
+import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import b
 from zmq.eventloop import ioloop
 
 from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
@@ -18,6 +22,7 @@ from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
 from circus.util import parse_env_dict, resolve_name, tornado_sleep
+from circus.py3compat import bytestring, is_callable
 
 
 class Watcher(object):
@@ -304,7 +309,7 @@ class Watcher(object):
             self.stderr_redirector = None
 
     def _resolve_hook(self, name, callable_or_name, ignore_failure):
-        if callable(callable_or_name):
+        if is_callable(callable_or_name):
             self.hooks[name] = callable_or_name
         else:
             # will raise ImportError on failure
@@ -345,15 +350,9 @@ class Watcher(object):
         """Publish a message on the event publisher channel"""
 
         json_msg = json.dumps(msg)
-        if isinstance(json_msg, unicode):
-            json_msg = json_msg.encode('utf8')
+        name = bytestring(self.res_name)
 
-        if isinstance(self.res_name, unicode):
-            name = self.res_name.encode('utf8')
-        else:
-            name = self.res_name
-
-        multipart_msg = ["watcher.%s.%s" % (name, topic), json.dumps(msg)]
+        multipart_msg = [b("watcher.%s.%s" % (name, topic)), json.dumps(msg)]
 
         if self.evpub_socket is not None and not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)
@@ -413,7 +412,7 @@ class Watcher(object):
             return
 
         # reap_process changes our dict, look through the copy of keys
-        for pid in self.processes.keys():
+        for pid in list(self.processes.keys()):
             self.reap_process(pid)
 
     @gen.coroutine
@@ -422,6 +421,11 @@ class Watcher(object):
         """Manage processes."""
         if self.is_stopped():
             return
+
+        # remove dead or zombie processes first
+        for process in list(self.processes.values()):
+            if process.status == DEAD_OR_ZOMBIE:
+                self.processes.pop(process.pid)
 
         if self.max_age:
             yield self.remove_expired_processes()
@@ -432,22 +436,19 @@ class Watcher(object):
             yield self.spawn_processes()
 
         # removing extra processes
-        processes = self.processes.values()
-        processes.sort()
+        if len(self.processes) > self.numprocesses:
+            processes_to_kill = []
+            for process in sorted(self.processes.values(), key=lambda process: process.started, reverse=True)[self.numprocesses:]:
+                if process.status == DEAD_OR_ZOMBIE:
+                    self.processes.pop(process.pid)
+                else:
+                    processes_to_kill.append(process)
 
-        processes_to_kill = []
-        while len(processes) > self.numprocesses:
-            process = processes.pop(0)
-            if process.status == DEAD_OR_ZOMBIE:
-                self.processes.pop(process.pid)
-            else:
-                processes_to_kill.append(process)
-
-        removes = yield [self.kill_process(process)
-                         for process in processes_to_kill]
-        for i, process in enumerate(processes_to_kill):
-            if removes[i]:
-                self.processes.pop(process.pid)
+            removes = yield [self.kill_process(process)
+                             for process in processes_to_kill]
+            for i, process in enumerate(processes_to_kill):
+                if removes[i]:
+                    self.processes.pop(process.pid)
 
     @gen.coroutine
     @util.debuglog
@@ -710,7 +711,7 @@ class Watcher(object):
     @property
     def _nextwid(self):
         used_wids = sorted([p.wid for p in self.processes.values()])
-        all_wids = xrange(1, self.numprocesses + 1)
+        all_wids = range(1, self.numprocesses + 1)
         for slot, wid in izip_longest(all_wids, used_wids, fillvalue=None):
             if slot is None:
                 # should never happen
@@ -729,7 +730,7 @@ class Watcher(object):
                 error = None
                 self.notify_event("hook_success",
                                   {"name": hook_name, "time": time.time()})
-            except Exception, error:
+            except Exception as error:
                 logger.exception('Hook %r failed' % hook_name)
                 result = hook_name in self.ignore_hook_failure
                 self.notify_event("hook_failure",

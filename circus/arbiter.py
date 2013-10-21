@@ -1,8 +1,7 @@
 import errno
 import logging
 import os
-from threading import Thread
-from thread import get_ident
+from circus.fixed_threading import Thread, RLock, get_ident
 import sys
 from time import sleep
 import select
@@ -96,7 +95,11 @@ class Arbiter(object):
         self.loglevel = loglevel
         self.logoutput = logoutput
 
-        socket_fqdn = socket.getfqdn()
+        try:
+            # getfqdn appears to fail in Python3.3 in the unittest framework so fall back to gethostname
+            socket_fqdn = socket.getfqdn()
+        except KeyError:
+            socket_fqdn = socket.gethostname()
         if fqdn_prefix is None:
             fqdn = socket_fqdn
         else:
@@ -427,10 +430,7 @@ class Arbiter(object):
         return arbiter
 
     def iter_watchers(self, reverse=True):
-        watchers = [(watcher.priority, watcher) for watcher in self.watchers]
-        watchers.sort(reverse=reverse)
-        for __, watcher in watchers:
-            yield watcher
+        return sorted(self.watchers, key=lambda a: a.priority, reverse=reverse)
 
     @debuglog
     def initialize(self):
@@ -718,7 +718,7 @@ class Arbiter(object):
         yield self._restart(inside_circusd=inside_circusd)
 
 
-class ThreadedArbiter(Arbiter, Thread):
+class ThreadedArbiter(Thread, Arbiter):
 
     def __init__(self, *args, **kw):
         Thread.__init__(self)

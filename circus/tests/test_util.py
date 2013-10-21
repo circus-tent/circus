@@ -9,7 +9,7 @@ import sys
 from psutil import Popen
 import mock
 
-import unittest2 as unittest
+from circus.tests.support import TestCase, EasyTestSuite
 
 from circus import util
 from circus.util import (
@@ -19,7 +19,7 @@ from circus.util import (
 )
 
 
-class TestUtil(unittest.TestCase):
+class TestUtil(TestCase):
 
     def setUp(self):
         self.dirs = []
@@ -57,23 +57,23 @@ class TestUtil(unittest.TestCase):
 
         info = get_info(worker)
 
-        self.assertEquals(info['mem'], 'N/A')
-        self.assertEquals(info['cpu'], 'N/A')
-        self.assertEquals(info['ctime'], 'N/A')
-        self.assertEquals(info['pid'], 'N/A')
-        self.assertEquals(info['username'], 'N/A')
-        self.assertEquals(info['nice'], 'N/A')
-        self.assertEquals(info['create_time'], 'N/A')
-        self.assertEquals(info['age'], 'N/A')
+        self.assertEqual(info['mem'], 'N/A')
+        self.assertEqual(info['cpu'], 'N/A')
+        self.assertEqual(info['ctime'], 'N/A')
+        self.assertEqual(info['pid'], 'N/A')
+        self.assertEqual(info['username'], 'N/A')
+        self.assertEqual(info['nice'], 'N/A')
+        self.assertEqual(info['create_time'], 'N/A')
+        self.assertEqual(info['age'], 'N/A')
 
         worker.get_nice = mock.MagicMock(side_effect=util.NoSuchProcess(1234))
-        self.assertEquals(get_info(worker)['nice'], 'Zombie')
+        self.assertEqual(get_info(worker)['nice'], 'Zombie')
 
     def test_convert_opt(self):
-        self.assertEquals(util.convert_opt('env', {'key': 'value'}),
+        self.assertEqual(util.convert_opt('env', {'key': 'value'}),
                           'key=value')
-        self.assertEquals(util.convert_opt('test', None), '')
-        self.assertEquals(util.convert_opt('test', 1), '1')
+        self.assertEqual(util.convert_opt('test', None), '')
+        self.assertEqual(util.convert_opt('test', 1), '1')
 
     def test_bytes2human(self):
         self.assertEqual(bytes2human(10000), '9K')
@@ -91,7 +91,7 @@ class TestUtil(unittest.TestCase):
             self.assertRaises(ValueError, to_bool, value)
 
     def test_parse_env_str(self):
-        env = 'test=1,booo=2'
+        env = 'booo=2,test=1'
         parsed = parse_env_str(env)
         self.assertEqual(parsed, {'test': '1', 'booo': '2'})
         self.assertEqual(env_to_str(parsed), env)
@@ -124,12 +124,12 @@ class TestUtil(unittest.TestCase):
             return val
 
         def uid_min_max():
-            uids = sorted(map(lambda e: int32(e[2]), pwd.getpwall()))
+            uids = sorted([int32(e[2]) for e in pwd.getpwall()])
             uids[0] = uids[0] if uids[0] < 0 else -1
             return (uids[0], uids[-1])
 
         def gid_min_max():
-            gids = sorted(map(lambda e: int32(e[2]), grp.getgrall()))
+            gids = sorted([int32(e[2]) for e in grp.getgrall()])
             gids[0] = gids[0] if gids[0] < 0 else -1
             return (gids[0], gids[-1])
 
@@ -149,57 +149,58 @@ class TestUtil(unittest.TestCase):
     def test_replace_gnu_args(self):
         repl = replace_gnu_args
 
-        self.assertEquals('dont change --fd ((circus.me)) please',
+        self.assertEqual('dont change --fd ((circus.me)) please',
                           repl('dont change --fd ((circus.me)) please'))
 
-        self.assertEquals('dont change --fd $(circus.me) please',
+        self.assertEqual('dont change --fd $(circus.me) please',
                           repl('dont change --fd $(circus.me) please'))
 
-        self.assertEquals('thats an int 2',
+        self.assertEqual('thats an int 2',
                           repl('thats an int $(circus.me)',
                                me=2))
 
-        self.assertEquals('foobar', replace_gnu_args('$(circus.test)',
+        self.assertEqual('foobar', replace_gnu_args('$(circus.test)',
                           test='foobar'))
-        self.assertEquals('foobar', replace_gnu_args('$(circus.test)',
+        self.assertEqual('foobar', replace_gnu_args('$(circus.test)',
                           test='foobar'))
-        self.assertEquals('foo, foobar, baz',
+        self.assertEqual('foo, foobar, baz',
                           replace_gnu_args('foo, $(circus.test), baz',
                                            test='foobar'))
-        self.assertEquals('foo, foobar, baz',
+        self.assertEqual('foo, foobar, baz',
                           replace_gnu_args('foo, ((circus.test)), baz',
                                            test='foobar'))
 
-        self.assertEquals('foobar', replace_gnu_args('$(cir.test)',
+        self.assertEqual('foobar', replace_gnu_args('$(cir.test)',
                                                      prefix='cir',
                                                      test='foobar'))
 
-        self.assertEquals('foobar', replace_gnu_args('((cir.test))',
+        self.assertEqual('foobar', replace_gnu_args('((cir.test))',
                                                      prefix='cir',
                                                      test='foobar'))
 
-        self.assertEquals('thats an int 2',
+        self.assertEqual('thats an int 2',
                           repl('thats an int $(s.me)', prefix='s',
                                me=2))
 
-        self.assertEquals('thats an int 2',
+        self.assertEqual('thats an int 2',
                           repl('thats an int ((s.me))', prefix='s',
                                me=2))
 
-        self.assertEquals('thats an int 2',
+        self.assertEqual('thats an int 2',
                           repl('thats an int $(me)', prefix=None,
                                me=2))
 
-        self.assertEquals('thats an int 2',
+        self.assertEqual('thats an int 2',
                           repl('thats an int ((me))', prefix=None,
                                me=2))
 
     def test_get_python_version(self):
         py_version = get_python_version()
 
-        self.assertEquals(3, len(py_version))
+        self.assertEqual(3, len(py_version))
 
-        map(lambda x: self.assertEquals(int, type(x)), py_version)
+        for x in py_version:
+            self.assertEqual(int, type(x))
 
         self.assertGreaterEqual(py_version[0], 2)
         self.assertGreaterEqual(py_version[1], 0)
@@ -228,9 +229,9 @@ class TestUtil(unittest.TestCase):
         # we want virtualenv directory to contain a site-packages
         self.assertRaises(ValueError, load_virtualenv, watcher)
 
-        minor = sys.version_info[1]
+        py_ver = sys.version.split()[0][:3]
         site_pkg = os.path.join(watcher.virtualenv, 'lib',
-                                'python2.%s' % minor, 'site-packages')
+                                'python%s' % py_ver, 'site-packages')
         os.makedirs(site_pkg)
         watcher.env = {}
         load_virtualenv(watcher)
@@ -248,6 +249,8 @@ class TestUtil(unittest.TestCase):
             _old_os_stat = util.os.stat
             util.os.stat = _stat
 
-            self.assertEquals(get_working_dir(), '/path/to/pwd')
+            self.assertEqual(get_working_dir(), '/path/to/pwd')
         finally:
             util.os.stat = _old_os_stat
+
+test_suite = EasyTestSuite(__name__)

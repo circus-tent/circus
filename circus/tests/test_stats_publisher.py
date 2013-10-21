@@ -1,13 +1,13 @@
 import mock
-import json
 
 import zmq
+import zmq.utils.jsonapi as json
 
-import unittest2 as unittest
+from circus.tests.support import TestCase, EasyTestSuite
 from circus.stats.publisher import StatsPublisher
 
 
-class TestStatsPublisher(unittest.TestCase):
+class TestStatsPublisher(TestCase):
 
     def test_publish(self):
         publisher = StatsPublisher()
@@ -15,7 +15,7 @@ class TestStatsPublisher(unittest.TestCase):
         stat = {'subtopic': 1, 'foo': 'bar'}
         publisher.publish('foobar', stat)
         publisher.socket.send_multipart.assert_called_with(
-            ['stat.foobar.1', json.dumps(stat)])
+            [b'stat.foobar.1', json.dumps(stat)])
 
     def test_publish_reraise_zmq_errors(self):
         publisher = StatsPublisher()
@@ -34,3 +34,5 @@ class TestStatsPublisher(unittest.TestCase):
 
         stat = {'subtopic': 1, 'foo': 'bar'}
         publisher.publish('foobar', stat)
+
+test_suite = EasyTestSuite(__name__)

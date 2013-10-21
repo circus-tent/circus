@@ -7,7 +7,8 @@ import uuid
 import argparse
 
 import zmq
-from zmq.utils.jsonapi import jsonmod as json
+import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import b
 from zmq.eventloop import ioloop, zmqstream
 
 from circus import logger, __version__
@@ -42,7 +43,7 @@ class CircusPlugin(object):
         self.check_delay = check_delay
         self.ssh_server = ssh_server
         self.loop = ioloop.IOLoop()
-        self._id = uuid.uuid4().hex    # XXX os.getpid()+thread id is enough...
+        self._id = b(uuid.uuid4().hex)    # XXX os.getpid()+thread id is enough...
         self.running = False
 
     @debuglog

@@ -1,10 +1,10 @@
 import os
 import sys
 import time
-from unittest2 import skipIf
 
 from circus.process import Process, RUNNING
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, skipIf, EasyTestSuite
+import circus.py3compat
 
 
 RLIMIT = """\
@@ -54,21 +54,23 @@ class TestProcess(TestCircus):
                    'nproc': 20}
 
         process = Process('test', cmd, args=args, rlimits=rlimits)
-        # wait for the process to finish
-        while process.status == RUNNING:
-            time.sleep(1)
+        try:
+            # wait for the process to finish
+            while process.status == RUNNING:
+                time.sleep(1)
+        finally:
+            process.stop()
 
-        f = open(output_file, 'r')
-        output = {}
-        for line in f.readlines():
-            limit, value = line.rstrip().split('=', 1)
-            output[limit] = value
-        f.close()
+        with open(output_file, 'r') as f:
+            output = {}
+            for line in f.readlines():
+                limit, value = line.rstrip().split('=', 1)
+                output[limit] = value
 
         def srt2ints(val):
-            return [long(key) for key in val[1:-1].split(',')]
+            return [circus.py3compat.long(key) for key in val[1:-1].split(',')]
 
-        wanted = [20L, 20L]
+        wanted = [circus.py3compat.long(20), circus.py3compat.long(20)]
 
         self.assertEqual(srt2ints(output['NOFILE']), wanted)
         self.assertEqual(srt2ints(output['NPROC']), wanted)
@@ -94,16 +96,16 @@ class TestProcess(TestCircus):
                      '$(circus.wid) --type $(circus.env.type)',
                      shell=False, spawn=False, env={'type': 'macchiato'})
 
-        self.assertEquals(['make-me-a-coffee', '1', '--type', 'macchiato'],
+        self.assertEqual(['make-me-a-coffee', '1', '--type', 'macchiato'],
                           p1.format_args())
 
         p2 = Process('1', 'yeah $(CIRCUS.WID)', spawn=False)
-        self.assertEquals(['yeah', '1'], p2.format_args())
+        self.assertEqual(['yeah', '1'], p2.format_args())
 
         os.environ['coffee_type'] = 'american'
         p3 = Process('1', 'yeah $(circus.env.type)', shell=False, spawn=False,
                      env={'type': 'macchiato'})
-        self.assertEquals(['yeah', 'macchiato'], p3.format_args())
+        self.assertEqual(['yeah', 'macchiato'], p3.format_args())
         os.environ.pop('coffee_type')
 
     @skipIf(not hasattr(sys.stdout, 'fileno'), 'Nose runs without -s')
@@ -115,35 +117,45 @@ class TestProcess(TestCircus):
         # 1. streams sent to /dev/null
         process = Process('test', cmd, args=args, close_child_stdout=True,
                           close_child_stderr=True)
+        try:
+            # wait for the process to finish
+            while process.status == RUNNING:
+                time.sleep(1)
 
-        # wait for the process to finish
-        while process.status == RUNNING:
-            time.sleep(1)
-
-        # the pipes should be empty
-        self.assertEqual(process.stdout.read(), '')
-        self.assertEqual(process.stderr.read(), '')
+            # the pipes should be empty
+            self.assertEqual(process.stdout.read(), b'')
+            self.assertEqual(process.stderr.read(), b'')
+        finally:
+            process.stop()
 
         # 2. streams sent to /dev/null, no PIPEs
         process = Process('test', cmd, args=args, close_child_stdout=True,
                           close_child_stderr=True, pipe_stdout=False,
                           pipe_stderr=False)
 
-        # wait for the process to finish
-        while process.status == RUNNING:
-            time.sleep(1)
+        try:
+            # wait for the process to finish
+            while process.status == RUNNING:
+                time.sleep(1)
 
-        # the pipes should be unexistant
-        self.assertTrue(process.stdout is None)
-        self.assertTrue(process.stderr is None)
+            # the pipes should be unexistant
+            self.assertTrue(process.stdout is None)
+            self.assertTrue(process.stderr is None)
+        finally:
+            process.stop()
 
         # 3. streams & pipes open
         process = Process('test', cmd, args=args)
 
-        # wait for the process to finish
-        while process.status == RUNNING:
-            time.sleep(1)
+        try:
+            # wait for the process to finish
+            while process.status == RUNNING:
+                time.sleep(1)
 
-        # the pipes should be unexistant
-        self.assertEqual(len(process.stdout.read()), 2890)
-        self.assertEqual(len(process.stderr.read()), 2890)
+            # the pipes should be unexistant
+            self.assertEqual(len(process.stdout.read()), 2890)
+            self.assertEqual(len(process.stderr.read()), 2890)
+        finally:
+            process.stop()
+
+test_suite = EasyTestSuite(__name__)

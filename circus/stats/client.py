@@ -1,14 +1,15 @@
 import argparse
 import sys
-import json
 import curses
 from collections import defaultdict
 import errno
-import threading
+import circus.fixed_threading as threading
 import time
 import logging
 
 import zmq
+import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import u
 
 from circus.consumer import CircusConsumer
 from circus import __version__
@@ -36,14 +37,17 @@ class StatsClient(CircusConsumer):
 
                 try:
                     topic, stat = recv()
-                except zmq.core.error.ZMQError, e:
+                except zmq.core.error.ZMQError as e:
                     if e.errno != errno.EINTR:
                         raise
                     else:
-                        sys.exc_clear()
+                        try:
+                            sys.exc_clear()
+                        except Exception:
+                            pass
                         continue
 
-                topic = topic.split('.')
+                topic = u(topic).split('.')
                 if len(topic) == 3:
                     __, watcher, subtopic = topic
                     yield watcher, subtopic, json.loads(stat)
@@ -86,8 +90,7 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
 
     addstr(0, 0, 'Circus Top')
     addstr(1, 0, '-' * current_w)
-    names = watchers.keys()
-    names.sort()
+    names = sorted(watchers.keys())
     line = 2
     for name in names:
         if name in ('circusd-stats', 'circushttpd'):

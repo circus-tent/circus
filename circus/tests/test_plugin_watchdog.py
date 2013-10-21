@@ -5,8 +5,7 @@ import warnings
 
 from tornado.testing import gen_test
 
-from circus.tests.support import TestCircus, Process, poll_for
-from circus.tests.support import async_run_plugin
+from circus.tests.support import TestCircus, Process, poll_for, async_run_plugin, EasyTestSuite
 from circus.plugins.watchdog import WatchDog
 
 
@@ -63,3 +62,5 @@ class TestPluginWatchDog(TestCircus):
                                                 get_pid_status)
         self.assertEqual(len(pid_status), 0, pid_status)
         yield self.stop_arbiter()
+
+test_suite = EasyTestSuite(__name__)

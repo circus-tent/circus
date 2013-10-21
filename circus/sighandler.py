@@ -3,15 +3,12 @@ import traceback
 import sys
 
 from circus import logger
-from client import make_json
+from circus.client import make_json
 
 
 class SysHandler(object):
 
-    SIGNALS = map(
-        lambda x: getattr(signal, "SIG%s" % x),
-        "HUP QUIT INT TERM WINCH".split()
-    )
+    SIGNALS = [getattr(signal, "SIG%s" % x) for x in "HUP QUIT INT TERM WINCH".split()]
 
     SIG_NAMES = dict(
         (getattr(signal, name), name[3:].lower()) for name in dir(signal)

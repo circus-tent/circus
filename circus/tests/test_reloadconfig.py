@@ -3,7 +3,7 @@ import tornado
 import tornado.testing
 
 from circus.arbiter import Arbiter
-
+from circus.tests.support import EasyTestSuite
 
 HERE = os.path.join(os.path.dirname(__file__))
 CONFIG_DIR = os.path.join(HERE, 'config')
@@ -66,8 +66,7 @@ class TestConfig(tornado.testing.AsyncTestCase):
         return a
 
     def test_watcher_names(self):
-        watcher_names = [i.name for i in self.a.watchers]
-        watcher_names.sort()
+        watcher_names = sorted(i.name for i in self.a.watchers)
         self.assertEqual(watcher_names, ['plugin:myplugin', 'test1', 'test2'])
 
     @tornado.testing.gen_test
@@ -168,3 +167,5 @@ class TestConfig(tornado.testing.AsyncTestCase):
         statsd = a.get_watcher('circusd-stats')
         yield a.reload_from_config(_CONF['reload_statsd'])
         self.assertEqual(statsd, a.get_watcher('circusd-stats'))
+
+test_suite = EasyTestSuite(__name__)

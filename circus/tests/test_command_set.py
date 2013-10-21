@@ -1,4 +1,4 @@
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.tests.test_command_incrproc import FakeArbiter as _FakeArbiter
 from circus.commands.set import Set
 
@@ -52,3 +52,5 @@ class SetTest(TestCircus):
                          'some')
         self.assertEqual(watcher.options['hooks.after_start'],
                          'hook')
+
+test_suite = EasyTestSuite(__name__)

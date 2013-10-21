@@ -2,8 +2,7 @@ import warnings
 
 from tornado.testing import gen_test
 
-from circus.tests.support import TestCircus, poll_for, Process
-from circus.tests.support import async_run_plugin
+from circus.tests.support import TestCircus, poll_for, Process, async_run_plugin, EasyTestSuite
 from circus.plugins.resource_watcher import ResourceWatcher
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 
@@ -40,7 +39,7 @@ def get_statsd_increments(queue, plugin):
 class TestResourceWatcher(TestCircus):
 
     def _check_statsd(self, increments, name):
-        res = increments.items()
+        res = list(increments.items())
         self.assertTrue(len(res) > 0)
         for stat, items in res:
             if name == stat and items > 0:
@@ -57,6 +56,7 @@ class TestResourceWatcher(TestCircus):
             warnings.simplefilter("always")
             self.make_plugin(service='whatever')
             self.assertIn('ResourceWatcher', str(ws[0].message))
+            self.assertTrue(any('ResourceWatcher' in w.message.args[0] for w in ws))
 
     def test_watcher_config_param_is_required(self):
         self.assertRaises(NotImplementedError, self.make_plugin),
@@ -116,3 +116,5 @@ class TestResourceWatcher(TestCircus):
         self._check_statsd(statsd_increments,
                            '_resource_watcher.test.under_cpu')
         yield self.stop_arbiter()
+
+test_suite = EasyTestSuite(__name__)

@@ -1,11 +1,12 @@
 from collections import defaultdict
-import json
 from itertools import chain
 import os
 import errno
 import socket
 
 import zmq
+import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import u
 from zmq.eventloop import ioloop, zmqstream
 
 from circus.commands import get_commands
@@ -18,7 +19,7 @@ from circus import logger
 class StatsStreamer(object):
     def __init__(self, endpoint, pubsub_endoint, stats_endpoint,
                  ssh_server=None, delay=1., loop=None):
-        self.topic = 'watcher.'
+        self.topic = b'watcher.'
         self.delay = delay
         self.ctx = zmq.Context()
         self.pubsub_endpoint = pubsub_endoint
@@ -46,9 +47,9 @@ class StatsStreamer(object):
     def get_pids(self, watcher=None):
         if watcher is not None:
             if watcher == 'circus':
-                return self.circus_pids.keys()
+                return list(self.circus_pids.keys())
             return self._pids[watcher]
-        return chain(*self._pids.values())
+        return chain(*list(self._pids.values()))
 
     def get_circus_pids(self):
         watchers = self.client.send_message('list').get('watchers', [])
@@ -182,6 +183,7 @@ class StatsStreamer(object):
         logger.debug('Received an event from circusd: %s' % str(data))
         topic, msg = data
         try:
+            topic = u(topic)
             watcher = topic.split('.')[1:-1][0]
             action = topic.split('.')[-1]
             msg = json.loads(msg)

@@ -1,17 +1,19 @@
-import json
 import os
 import socket
 import sys
-from unittest2 import skipIf
 import tornado
 from tempfile import mkstemp
 from time import time, sleep
-from urlparse import urlparse
+import zmq.utils.jsonapi as json
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 from circus.arbiter import Arbiter, ThreadedArbiter
 from circus.client import CircusClient
 from circus.plugins import CircusPlugin
-from circus.tests.support import TestCircus, poll_for, truncate_file
+from circus.tests.support import TestCircus, poll_for, skipIf, truncate_file, EasyTestSuite
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
                          DEFAULT_ENDPOINT_SUB)
 from circus.watcher import Watcher
@@ -425,7 +427,7 @@ class TestTrainer(TestCircus):
             endpoints.append(endpoint)
 
         if not resp:
-            print endpoints
+            print(endpoints)
 
         self.assertTrue(resp)
 
@@ -504,4 +506,6 @@ class TestCircusWeb(TestCircus):
         self.arbiters.append(arbiter)
         yield arbiter.start()
         poll_for_callable(self.assertDictEqual,
-                          arbiter.statuses, {'circushttpd': 'active'})
+        arbiter.statuses, {'circushttpd': 'active'})
+
+test_suite = EasyTestSuite(__name__)
