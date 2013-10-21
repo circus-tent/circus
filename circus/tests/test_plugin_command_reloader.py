@@ -1,7 +1,7 @@
 from mock import patch
 
 from circus.plugins.command_reloader import CommandReloader
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 
 
@@ -95,3 +95,5 @@ class TestCommandReloader(TestCircus):
     def test_handle_recv_implemented(self):
         plugin = self.make_plugin()
         plugin.handle_recv('whatever')
+
+test_suite = EasyTestSuite(__name__)

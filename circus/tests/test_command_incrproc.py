@@ -1,4 +1,4 @@
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.commands.incrproc import IncrProc
 
 
@@ -64,3 +64,5 @@ class IncrProcTest(TestCircus):
         props = cmd.message('dummy', 3)['properties']
         cmd.execute(arbiter, props)
         self.assertEqual(arbiter.watchers[0].nb, size_before + 3)
+
+test_suite = EasyTestSuite(__name__)

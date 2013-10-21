@@ -1,5 +1,5 @@
 from circus.tests.test_command_incrproc import FakeArbiter
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.commands.quit import Quit
 
 
@@ -11,3 +11,5 @@ class QuitTest(TestCircus):
         props = cmd.message('dummy')['properties']
         cmd.execute(arbiter, props)
         self.assertEqual(len(arbiter.watchers), 0)
+
+test_suite = EasyTestSuite(__name__)

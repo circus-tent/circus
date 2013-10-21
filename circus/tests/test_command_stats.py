@@ -1,4 +1,4 @@
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.commands.stats import Stats, MessageError
 
 
@@ -74,3 +74,5 @@ class StatsCommandTest(TestCircus):
         # info that breaks
         props = {'name': 'meh', 'process': 'meh'}
         self.assertRaises(MessageError, cmd.execute, arbiter, props)
+
+test_suite = EasyTestSuite(__name__)

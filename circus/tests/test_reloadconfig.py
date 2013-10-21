@@ -3,6 +3,7 @@ import tornado
 import tornado.testing
 
 from circus.arbiter import Arbiter
+from circus.tests.support import EasyTestSuite
 
 
 HERE = os.path.join(os.path.dirname(__file__))
@@ -168,3 +169,5 @@ class TestConfig(tornado.testing.AsyncTestCase):
         statsd = a.get_watcher('circusd-stats')
         yield a.reload_from_config(_CONF['reload_statsd'])
         self.assertEqual(statsd, a.get_watcher('circusd-stats'))
+
+test_suite = EasyTestSuite(__name__)

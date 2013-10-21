@@ -2,7 +2,6 @@ import time
 import sys
 import os
 import tempfile
-import unittest
 import tornado
 
 from datetime import datetime
@@ -10,6 +9,7 @@ from cStringIO import StringIO
 
 from circus.client import make_message
 from circus.tests.support import TestCircus, async_poll_for, truncate_file
+from circus.tests.support import TestCase, EasyTestSuite
 from circus.stream import FileStream
 from circus.stream import FancyStdoutStream
 
@@ -102,7 +102,7 @@ class TestWatcher(TestCircus):
         yield self.stop_arbiter()
 
 
-class TestFancyStdoutStream(unittest.TestCase):
+class TestFancyStdoutStream(TestCase):
 
     def color_start(self, code):
         return '\033[0;3%s;40m' % code
@@ -182,7 +182,7 @@ class TestFancyStdoutStream(unittest.TestCase):
             self.assertEquals(i + 1, stream.color_code)
 
 
-class TestFileStream(unittest.TestCase):
+class TestFileStream(TestCase):
 
     def get_stream(self, *args, **kw):
         # need a constant timestamp
@@ -237,3 +237,4 @@ class TestFileStream(unittest.TestCase):
         output = stream._file.getvalue()
 
         self.assertEquals(len(output.split('\n')), 4)
+test_suite = EasyTestSuite(__name__)

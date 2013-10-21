@@ -10,6 +10,12 @@ import shutil
 import functools
 import multiprocessing
 
+try:
+    from unittest import skip, skipIf, TestCase, TestSuite, findTestCases
+except ImportError:
+    from unittest2 import skip, skipIf, TestCase, TestSuite  # NOQA
+    from unittest2 import findTestCases  # NOQA
+
 from tornado.testing import AsyncTestCase
 from zmq.eventloop import ioloop
 import mock
@@ -21,6 +27,11 @@ from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
 from circus.util import tornado_sleep
 from circus.client import AsyncCircusClient, make_message
 from circus.stream import QueueStream
+
+
+class EasyTestSuite(TestSuite):
+    def __init__(self, name):
+        super(EasyTestSuite, self).__init__(findTestCases(sys.modules[name]))
 
 
 def resolve_name(name):

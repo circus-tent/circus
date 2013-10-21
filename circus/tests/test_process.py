@@ -1,10 +1,9 @@
 import os
 import sys
 import time
-from unittest2 import skipIf
 
 from circus.process import Process, RUNNING
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, skipIf, EasyTestSuite
 
 
 RLIMIT = """\
@@ -147,3 +146,4 @@ class TestProcess(TestCircus):
         # the pipes should be unexistant
         self.assertEqual(len(process.stdout.read()), 2890)
         self.assertEqual(len(process.stderr.read()), 2890)
+test_suite = EasyTestSuite(__name__)

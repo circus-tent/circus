@@ -1,7 +1,7 @@
 from tornado.testing import gen_test
 
 from circus.tests.support import TestCircus, poll_for
-from circus.tests.support import async_run_plugin
+from circus.tests.support import async_run_plugin, EasyTestSuite
 from circus.plugins.statsd import FullStats
 
 
@@ -32,3 +32,5 @@ class TestFullStats(TestCircus):
                   '_stats.test.watchers_num']
         self.assertEqual(last_batch, wanted)
         yield self.stop_arbiter()
+
+test_suite = EasyTestSuite(__name__)

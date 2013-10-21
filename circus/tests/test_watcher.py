@@ -12,7 +12,7 @@ from circus.process import RUNNING, UNEXISTING
 
 from circus.stream import QueueStream
 from circus.tests.support import TestCircus, truncate_file
-from circus.tests.support import async_poll_for
+from circus.tests.support import async_poll_for, EasyTestSuite
 from circus.tests.support import MagicMockFuture
 from circus.util import get_python_version, tornado_sleep
 from circus.watcher import Watcher
@@ -533,3 +533,5 @@ class RespawnTest(TestCircus):
         yield watcher.manage_processes()
         # And be sure we don't spawn new processes in the meantime.
         self.assertFalse(watcher.spawn_processes.called)
+
+test_suite = EasyTestSuite(__name__)

@@ -7,10 +7,10 @@ from zmq.eventloop import ioloop
 
 from circus.stats import collector as collector_module
 from circus.stats.collector import SocketStatsCollector, WatcherStatsCollector
-import unittest2 as unittest
+from circus.tests.support import TestCase, EasyTestSuite
 
 
-class TestCollector(unittest.TestCase):
+class TestCollector(TestCase):
 
     def setUp(self):
         # let's create 10 sockets and their clients
@@ -186,3 +186,5 @@ class TestCollector(unittest.TestCase):
         stat = self.streamer.stats[0]
         self.assertTrue(stat['fd'] in self.fds)
         self.assertTrue(stat['reads'] > 1)
+
+test_suite = EasyTestSuite(__name__)

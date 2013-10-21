@@ -7,7 +7,7 @@ from zmq.eventloop import ioloop
 import zmq.utils.jsonapi as json
 
 from circus.stats.collector import SocketStatsCollector
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.stats.streamer import StatsStreamer
 from circus import util
 from circus import client
@@ -145,3 +145,5 @@ class TestStatsStreamer(TestCircus):
 
         streamer.remove_pid('foobar', 1235)
         self.assertTrue(streamer._callbacks['foobar'].stop.called)
+
+test_suite = EasyTestSuite(__name__)

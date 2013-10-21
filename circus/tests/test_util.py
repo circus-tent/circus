@@ -9,7 +9,7 @@ import sys
 from psutil import Popen
 import mock
 
-import unittest2 as unittest
+from circus.tests.support import TestCase, EasyTestSuite
 
 from circus import util
 from circus.util import (
@@ -19,7 +19,7 @@ from circus.util import (
 )
 
 
-class TestUtil(unittest.TestCase):
+class TestUtil(TestCase):
 
     def setUp(self):
         self.dirs = []
@@ -251,3 +251,5 @@ class TestUtil(unittest.TestCase):
             self.assertEquals(get_working_dir(), '/path/to/pwd')
         finally:
             util.os.stat = _old_os_stat
+
+test_suite = EasyTestSuite(__name__)

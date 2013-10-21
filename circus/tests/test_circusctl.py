@@ -7,7 +7,7 @@ from tornado.testing import gen_test
 from tornado.gen import coroutine, Return
 
 from circus.circusctl import USAGE, VERSION, CircusCtl
-from circus.tests.support import TestCircus, poll_for
+from circus.tests.support import TestCircus, poll_for, EasyTestSuite
 from circus.util import tornado_sleep
 
 
@@ -134,3 +134,5 @@ class CLITest(TestCircus):
         prompt = stdout.splitlines()
         # first two lines are VERSION and prompt, followed by a blank line
         self.assertEqual(prompt[3], "Documented commands (type help <topic>):")
+
+test_suite = EasyTestSuite(__name__)

@@ -1,4 +1,3 @@
-import unittest
 import os
 from mock import patch
 
@@ -7,6 +6,7 @@ from circus.config import get_config
 from circus.watcher import Watcher
 from circus.process import Process
 from circus.sockets import CircusSocket
+from circus.tests.support import TestCase, EasyTestSuite
 from circus.util import replace_gnu_args
 
 
@@ -41,7 +41,7 @@ def hook(watcher, hook_name):
     pass
 
 
-class TestConfig(unittest.TestCase):
+class TestConfig(TestCase):
 
     def setUp(self):
         self.saved = os.environ.copy()
@@ -222,3 +222,5 @@ class TestConfig(unittest.TestCase):
         # make sure the global environment makes it into the cfg environment
         # even without [env] section
         self.assertEqual(conf['watchers'][0]['cmd'], 'down')
+
+test_suite = EasyTestSuite(__name__)

@@ -1,9 +1,9 @@
-import unittest2 as unittest
+from circus.tests.support import TestCase, EasyTestSuite
 
 from circus.commands.util import convert_option, ArgumentError
 
 
-class TestConvertOption(unittest.TestCase):
+class TestConvertOption(TestCase):
 
     def test_env(self):
         env = convert_option("env", {"port": "8080"})
@@ -45,3 +45,5 @@ class TestConvertOption(unittest.TestCase):
 
         self.assertRaises(ArgumentError, convert_option, 'hooks',
                           'before_start:one:two')
+
+test_suite = EasyTestSuite(__name__)
