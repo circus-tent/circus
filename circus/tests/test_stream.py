@@ -5,7 +5,7 @@ import tempfile
 import tornado
 
 from datetime import datetime
-from cStringIO import StringIO
+from circus.py3compat import StringIO
 
 from circus.client import make_message
 from circus.tests.support import TestCircus, async_poll_for, truncate_file

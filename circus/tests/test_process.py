@@ -4,6 +4,7 @@ import time
 
 from circus.process import Process, RUNNING
 from circus.tests.support import TestCircus, skipIf, EasyTestSuite
+import circus.py3compat
 
 
 RLIMIT = """\
@@ -65,9 +66,9 @@ class TestProcess(TestCircus):
         f.close()
 
         def srt2ints(val):
-            return [long(key) for key in val[1:-1].split(',')]
+            return [circus.py3compat.long(key) for key in val[1:-1].split(',')]
 
-        wanted = [20L, 20L]
+        wanted = [circus.py3compat.long(20), circus.py3compat.long(20)]
 
         self.assertEqual(srt2ints(output['NOFILE']), wanted)
         self.assertEqual(srt2ints(output['NPROC']), wanted)

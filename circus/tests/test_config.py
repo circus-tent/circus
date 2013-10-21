@@ -8,6 +8,7 @@ from circus.process import Process
 from circus.sockets import CircusSocket
 from circus.tests.support import TestCase, EasyTestSuite
 from circus.util import replace_gnu_args
+from circus.py3compat import PY3
 
 
 HERE = os.path.join(os.path.dirname(__file__))

@@ -14,6 +14,7 @@ from tornado import gen
 
 from psutil import NoSuchProcess
 import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import b
 from zmq.eventloop import ioloop
 
 from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
@@ -21,6 +22,7 @@ from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
 from circus.util import parse_env_dict, resolve_name, tornado_sleep
+from circus.py3compat import bytestring, is_callable
 
 
 class Watcher(object):
@@ -307,7 +309,7 @@ class Watcher(object):
             self.stderr_redirector = None
 
     def _resolve_hook(self, name, callable_or_name, ignore_failure):
-        if callable(callable_or_name):
+        if is_callable(callable_or_name):
             self.hooks[name] = callable_or_name
         else:
             # will raise ImportError on failure
@@ -347,16 +349,9 @@ class Watcher(object):
     def notify_event(self, topic, msg):
         """Publish a message on the event publisher channel"""
 
-        json_msg = json.dumps(msg)
-        if isinstance(json_msg, unicode):
-            json_msg = json_msg.encode('utf8')
+        name = bytestring(self.res_name)
 
-        if isinstance(self.res_name, unicode):
-            name = self.res_name.encode('utf8')
-        else:
-            name = self.res_name
-
-        multipart_msg = ["watcher.%s.%s" % (name, topic), json.dumps(msg)]
+        multipart_msg = [b("watcher.%s.%s" % (name, topic)), json.dumps(msg)]
 
         if self.evpub_socket is not None and not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)

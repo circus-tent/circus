@@ -413,7 +413,7 @@ def resolve_name(import_name, silent=False):
             return sys.modules[modname]
     except ImportError as e:
         if not silent:
-            raise ImportStringError(import_name, e), None, sys.exc_info()[2]
+            raise_with_tb(ImportStringError(import_name, e))
 
 
 _SECTION_NAME = '\w\.\-'

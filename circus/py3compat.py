@@ -1,20 +1,13 @@
 import sys
 
-from circus.util import get_python_version
-
-
-PY3 = get_python_version()[0] == 3
+PY3 = sys.version_info[0] >= 3
 
 if PY3:
+    import collections
     string_types = str
     integer_types = int
     text_type = str
-
-    def b2s(s):     # NOQA
-        return s.decode('latin1')
-
-    def s2b(s):     # NOQA
-        return s.encode('latin1')
+    long = int
 
     def bytestring(s):  # NOQA
         return s
@@ -23,20 +16,21 @@ if PY3:
     StringIO = io.StringIO      # NOQA
     BytesIO = io.BytesIO        # NOQA
 
-    def raise_with_tb(E, V, T):     # NOQA
-        raise E(V).with_traceback(T)
+    def raise_with_tb(E):     # NOQA
+        raise E.with_traceback(sys.exc_info()[2])
+
+    def is_callable(c):
+        return isinstance(c, collections.Callable)
+
+    def get_next(c):
+        return c.__next__
 
     MAXSIZE = sys.maxsize       # NOQA
 else:
     string_types = basestring
     integer_types = (int, long)
     text_type = unicode
-
-    def b2s(s):     # NOQA
-        return s
-
-    def s2b(s):     # NOQA
-        return s
+    long = long
 
     def bytestring(s):  # NOQA
         if isinstance(s, unicode):
@@ -52,8 +46,13 @@ else:
 
     BytesIO = StringIO
 
-    def raise_with_tb(E, V, T):     # NOQA
-        raise E, V, T
+    from py2raise import raise_with_tb  # NOQA
+
+    def is_callable(c):  # NOQA
+        return callable(c)
+
+    def get_next(c):  # NOQA
+        return c.next
 
     # It's possible to have sizeof(long) != sizeof(Py_ssize_t).
     class X(object):
