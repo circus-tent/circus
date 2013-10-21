@@ -96,7 +96,7 @@ class FullStats(BaseObserver):
             self.statsd.increment("_stats.error")
             return
 
-        for name, stats in info['infos'].iteritems():
+        for name, stats in info['infos'].items():
             if name.startswith("plugin:"):
                 # ignore plugins
                 continue
@@ -104,7 +104,7 @@ class FullStats(BaseObserver):
             cpus = []
             mems = []
 
-            for sub_name, sub_info in stats.iteritems():
+            for sub_name, sub_info in stats.items():
                 if isinstance(sub_info,  dict):
                     cpus.append(sub_info['cpu'])
                     mems.append(sub_info['mem'])

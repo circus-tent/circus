@@ -30,8 +30,8 @@ class BaseStatsCollector(ioloop.PeriodicCallback):
 
 class WatcherStatsCollector(BaseStatsCollector):
     def _aggregate(self, aggregate):
-        res = {'pid': aggregate.keys()}
-        stats = aggregate.values()
+        res = {'pid': list(aggregate.keys())}
+        stats = list(aggregate.values())
 
         # aggregating CPU does not mean anything
         # but the average can be a good indicator

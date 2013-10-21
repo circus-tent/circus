@@ -259,7 +259,7 @@ def parse_env_str(env_str):
 
 def parse_env_dict(env):
     ret = dict()
-    for k, v in env.iteritems():
+    for k, v in env.items():
         v = re.sub(r'\$([A-Z]+[A-Z0-9_]*)', replace_env, v)
         ret[k.strip()] = v.strip()
     return ret
@@ -659,7 +659,7 @@ def create_udp_socket(mcast_addr, mcast_port):
     mcast_addr must be between 224.0.0.0 and 239.255.255.255
     """
     try:
-        ip_splitted = map(int, mcast_addr.split('.'))
+        ip_splitted = list(map(int, mcast_addr.split('.')))
         mcast_port = int(mcast_port)
     except ValueError:
         raise ValueError('Wrong UDP multicast_endpoint configuration. Should '

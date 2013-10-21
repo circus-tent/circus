@@ -207,7 +207,7 @@ class CircusCtl(cmd.Cmd, object):
         cls.commands = commands
         cls.controller = ControllerApp(commands, client)
         cls.client = client
-        for name, cmd in commands.iteritems():
+        for name, cmd in commands.items():
             cls._add_do_cmd(name, cmd)
             cls._add_complete_cmd(name, cmd)
         return super(CircusCtl, cls).__new__(cls, *args, **kw)

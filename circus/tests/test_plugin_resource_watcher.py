@@ -40,7 +40,7 @@ def get_statsd_increments(queue, plugin):
 class TestResourceWatcher(TestCircus):
 
     def _check_statsd(self, increments, name):
-        res = increments.items()
+        res = list(increments.items())
         self.assertTrue(len(res) > 0)
         for stat, items in res:
             if name == stat and items > 0:

@@ -413,7 +413,7 @@ class Watcher(object):
             return
 
         # reap_process changes our dict, look through the copy of keys
-        for pid in self.processes.keys():
+        for pid in list(self.processes.keys()):
             self.reap_process(pid)
 
     @gen.coroutine

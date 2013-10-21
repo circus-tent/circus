@@ -96,7 +96,7 @@ class TestWatcher(TestCircus):
         to_kill = []
         nb_proc = len(watcher.processes)
 
-        for process in watcher.processes.values():
+        for process in list(watcher.processes.values()):
             to_kill.append(process.pid)
             # the process is killed in an unsual way
             try:

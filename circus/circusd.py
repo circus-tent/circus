@@ -69,8 +69,8 @@ def main():
 
     # XXX we should be able to add all these options in the config file as well
     parser.add_argument('--log-level', dest='loglevel',
-                        choices=LOG_LEVELS.keys() + [key.upper() for key in
-                                                     LOG_LEVELS.keys()],
+                        choices=list(LOG_LEVELS.keys()) + [
+                            key.upper() for key in LOG_LEVELS.keys()],
                         help="log level")
     parser.add_argument('--log-output', dest='logoutput', help=(
         "The location where the logs will be written. The default behavior "
