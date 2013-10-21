@@ -48,6 +48,7 @@ class TestSockets(TestCase):
         config = {'name': ''}
         sock = CircusSocket.load_from_config(config)
         self.assertEqual(sock.proto, 0)
+        sock.close()
 
     def test_load_from_config_unknown_proto(self):
         """Unknown proto in the config raises an error."""

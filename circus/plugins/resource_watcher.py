@@ -15,6 +15,7 @@ class ResourceWatcher(BaseObserver):
             if self.watcher is None:
                 self.watcher = self.service
         if self.watcher is None:
+            self.statsd.stop()
             raise NotImplementedError('watcher is mandatory for now.')
         self.max_cpu = float(config.get("max_cpu", 90))  # in %
         self.max_mem = float(config.get("max_mem", 90))  # in %

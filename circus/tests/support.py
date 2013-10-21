@@ -365,6 +365,9 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
         def increment(self, name):
             self.increments[name] += 1
 
+        def stop(self):
+            pass
+
     _statsd = _Statsd()
     plugin = klass(endpoint, pubsub_endpoint, check_delay, ssh_server,
                    **config)
@@ -375,6 +378,8 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
     plugin.start()
     if plugin_info_callback:
         plugin_info_callback(plugin)
+    plugin.stop()
+    #plugin.statsd.stop()
     return _statsd
 
 

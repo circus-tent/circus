@@ -36,6 +36,9 @@ class StatsdClient(object):
     def timed(self, bucket, value):
         self.send(bucket, "%s|ms" % value)
 
+    def stop(self):
+        self.socket.close()
+
 
 class StatsdEmitter(CircusPlugin):
     """Plugin that sends stuff to statsd
@@ -78,6 +81,7 @@ class BaseObserver(StatsdEmitter):
 
     def handle_stop(self):
         self.period.stop()
+        self.statsd.stop()
 
     def handle_recv(self, data):
         pass
