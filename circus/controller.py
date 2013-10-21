@@ -231,9 +231,6 @@ class Controller(object):
         resp['id'] = mid
         resp = json.dumps(resp)
 
-        if isinstance(resp, unicode):
-            resp = resp.encode('utf8')
-
         try:
             self.stream.send(cid, zmq.SNDMORE)
             self.stream.send(resp)

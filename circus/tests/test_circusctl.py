@@ -8,6 +8,7 @@ from tornado.gen import coroutine, Return
 
 from circus.circusctl import USAGE, VERSION, CircusCtl
 from circus.tests.support import TestCircus, poll_for, EasyTestSuite
+from zmq.utils.strtypes import b, u
 from circus.util import tornado_sleep
 
 
@@ -22,6 +23,8 @@ def run_ctl(args, queue=None, stdin=''):
 
     stderr = proc.stderr.read()
     stdout = proc.stdout.read()
+    stdout = u(stdout)
+    stderr = u(stderr)
     if queue:
         queue.put(stderr)
         queue.put(stdout)

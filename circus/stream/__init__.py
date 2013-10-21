@@ -7,6 +7,7 @@ from Queue import Queue
 from circus.util import resolve_name
 from circus.stream.file_stream import FileStream
 from circus.stream.redirector import Redirector
+from zmq.utils.strtypes import u
 
 
 class QueueStream(Queue):
@@ -26,7 +27,7 @@ class StdoutStream(object):
         pass
 
     def __call__(self, data):
-        sys.stdout.write(data['data'])
+        sys.stdout.write(u(data['data']))
         sys.stdout.flush()
 
     def close(self):

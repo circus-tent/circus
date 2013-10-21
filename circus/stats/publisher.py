@@ -1,5 +1,6 @@
 import zmq
 import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import b
 
 from circus import logger
 
@@ -15,13 +16,13 @@ class StatsPublisher(object):
 
     def publish(self, name, stat):
         try:
-            topic = b'stat.%s' % str(name)
+            topic = 'stat.%s' % str(name)
             if 'subtopic' in stat:
                 topic += '.%d' % stat['subtopic']
 
             stat = json.dumps(stat)
             logger.debug('Sending %s' % stat)
-            self.socket.send_multipart([topic, stat])
+            self.socket.send_multipart([b(topic), stat])
 
         except zmq.ZMQError:
             if self.socket.closed:

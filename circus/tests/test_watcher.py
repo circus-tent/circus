@@ -6,6 +6,7 @@ import warnings
 import Queue
 import tornado
 import mock
+from zmq.utils.strtypes import u
 
 from circus import logger
 from circus.process import RUNNING, UNEXISTING
@@ -229,7 +230,7 @@ class TestWatcherInitialization(TestCircus):
                 messages.append(m)
             except Queue.Empty:
                 pass
-            data = ''.join(m['data'] for m in messages)
+            data = ''.join(u(m['data']) for m in messages)
             if 'XYZ' in data:
                 resp = True
                 break
