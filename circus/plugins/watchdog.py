@@ -110,7 +110,9 @@ class WatchDog(CircusPlugin):
                     logger.info("added new monitored pid for %s:%s",
                                 topic_parts[1],
                                 pid)
-                elif topic_parts[2] == "reap":
+                # very questionable fix for Py3 here!
+                # had to add check for pid in self.pid_status
+                elif topic_parts[2] == "reap" and pid in self.pid_status:
                     old_pid = self.pid_status.pop(pid)
                     logger.info("removed monitored pid for %s:%s",
                                 old_pid['watcher'],
