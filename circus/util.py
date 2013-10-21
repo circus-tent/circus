@@ -404,7 +404,7 @@ def resolve_name(import_name, silent=False):
             modname = module + '.' + obj
             __import__(modname)
             return sys.modules[modname]
-    except ImportError, e:
+    except ImportError as e:
         if not silent:
             raise ImportStringError(import_name, e), None, sys.exc_info()[2]
 

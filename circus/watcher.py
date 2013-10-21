@@ -729,7 +729,7 @@ class Watcher(object):
                 error = None
                 self.notify_event("hook_success",
                                   {"name": hook_name, "time": time.time()})
-            except Exception, error:
+            except Exception as error:
                 logger.exception('Hook %r failed' % hook_name)
                 result = hook_name in self.ignore_hook_failure
                 self.notify_event("hook_failure",

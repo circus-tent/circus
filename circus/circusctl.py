@@ -126,7 +126,7 @@ class ControllerApp(object):
             return 1
         except KeyboardInterrupt:
             return 1
-        except Exception, e:
+        except Exception:
             sys.stderr.write(traceback.format_exc())
             return 1
 
@@ -232,8 +232,8 @@ class CircusCtl(cmd.Cmd, object):
             if hasattr(cmd, 'autocomplete'):
                 try:
                     return cmd.autocomplete(cls.client, *args, **kwargs)
-                except Exception, e:
-                    sys.stderr.write(e.message + "\n")
+                except Exception as e:
+                    sys.stderr.write(str(e) + "\n")
                     traceback.print_exc(file=sys.stderr)
             else:
                 return []
