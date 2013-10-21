@@ -105,7 +105,9 @@ class TestWatcher(TestCircus):
             to_kill.append(process.pid)
             # the process is killed in an unsual way
             try:
-                os.kill(process.pid, signal.SIGSEGV)
+                # use SIGKILL instead of SIGSEGV so we don't get
+                # 'app crashed' dialogs on OS X
+                os.kill(process.pid, signal.SIGKILL)
             except OSError:
                 pass
 
