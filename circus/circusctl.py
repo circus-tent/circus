@@ -69,8 +69,7 @@ class _Help(argparse.HelpFormatter):
             return super(_Help, self)._metavar_formatter(action,
                                                          default_metavar)
 
-        commands = list(self.commands.items())
-        commands.sort()
+        commands = sorted(self.commands.items())
         max_len = max([len(name) for name, help in commands])
 
         output = []

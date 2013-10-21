@@ -63,8 +63,7 @@ class TestStatsClient(TestCircus):
         # checking that our system is live and running
         client = AsyncCircusClient()
         res = yield client.send_message('list')
-        watchers = res['watchers']
-        watchers.sort()
+        watchers = sorted(res['watchers'])
         self.assertEqual(['circusd-stats', 'test'], watchers)
 
         # making sure the stats process run

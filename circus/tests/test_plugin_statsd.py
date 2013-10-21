@@ -24,8 +24,7 @@ class TestFullStats(TestCircus):
 
         # we should have a bunch of stats events here
         self.assertTrue(len(gauges) >= 5)
-        last_batch = [name for name, value in gauges[-5:]]
-        last_batch.sort()
+        last_batch = sorted(name for name, value in gauges[-5:])
         wanted = ['_stats.test.cpu_max', '_stats.test.cpu_sum',
                   '_stats.test.mem_max', '_stats.test.mem_sum',
                   '_stats.test.watchers_num']

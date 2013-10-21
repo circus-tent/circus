@@ -90,8 +90,7 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
 
     addstr(0, 0, 'Circus Top')
     addstr(1, 0, '-' * current_w)
-    names = list(watchers.keys())
-    names.sort()
+    names = sorted(watchers.keys())
     line = 2
     for name in names:
         if name in ('circusd-stats', 'circushttpd'):

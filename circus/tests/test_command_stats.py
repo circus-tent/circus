@@ -58,16 +58,14 @@ class StatsCommandTest(TestCircus):
         # info about a specific watcher
         props = {'name': 'one'}
         res = cmd.execute(arbiter, props)
-        res = list(res.items())
-        res.sort()
+        res = sorted(res.items())
         wanted = [('info', 'yeah'), ('name', 'one')]
         self.assertEqual(wanted, res)
 
         # info about a specific process
         props = {'process': '123', 'name': 'one'}
         res = cmd.execute(arbiter, props)
-        res = list(res.items())
-        res.sort()
+        res = sorted(res.items())
         wanted = [('info', 'yeah'), ('process', '123')]
         self.assertEqual(wanted, res)
 
