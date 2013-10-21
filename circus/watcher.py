@@ -710,7 +710,7 @@ class Watcher(object):
     @property
     def _nextwid(self):
         used_wids = sorted([p.wid for p in self.processes.values()])
-        all_wids = xrange(1, self.numprocesses + 1)
+        all_wids = range(1, self.numprocesses + 1)
         for slot, wid in izip_longest(all_wids, used_wids, fillvalue=None):
             if slot is None:
                 # should never happen
