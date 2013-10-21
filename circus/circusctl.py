@@ -139,7 +139,7 @@ class ControllerApp(object):
                 opts[name] = getattr(args, name)
 
         if args.help:
-            print textwrap.dedent(cmd.__doc__)
+            print(textwrap.dedent(cmd.__doc__))
             return 0
         else:
             if hasattr(args, 'start'):
@@ -309,7 +309,7 @@ class CircusCtl(cmd.Cmd, object):
             sys.exit(0)
 
         # no command, no --help: enter the CLI
-        print VERSION
+        print(VERSION)
         self.do_status('')
         try:
             self.cmdloop()

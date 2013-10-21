@@ -425,7 +425,7 @@ class TestTrainer(TestCircus):
             endpoints.append(endpoint)
 
         if not resp:
-            print endpoints
+            print(endpoints)
 
         self.assertTrue(resp)
 
