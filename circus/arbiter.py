@@ -1,8 +1,7 @@
 import errno
 import logging
 import os
-from threading import Thread
-from thread import get_ident
+from circus.fixed_threading import Thread, get_ident
 import sys
 from time import sleep
 import select

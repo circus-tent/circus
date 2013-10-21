@@ -1,4 +1,4 @@
-from threading import Timer
+from circus.fixed_threading import Timer
 import time
 
 from circus import logger
