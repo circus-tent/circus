@@ -80,7 +80,7 @@ def get_working_dir():
 def bytes2human(n):
     """Translates bytes into a human repr.
     """
-    if not isinstance(n, (int, long)):
+    if not isinstance(n, integer_types):
         raise TypeError(n)
 
     prefix = {}
