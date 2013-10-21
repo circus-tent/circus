@@ -308,15 +308,17 @@ def debuglog(func):
         from circus import logger
         cls = self.__class__.__name__
         global INDENTATION_LEVEL
+        func_name = func.func_name if hasattr(func, 'func_name')\
+            else func.__name__
         logger.debug("    " * INDENTATION_LEVEL +
-                     "'%s.%s' starts" % (cls, func.func_name))
+                     "'%s.%s' starts" % (cls, func_name))
         INDENTATION_LEVEL += 1
         try:
             return func(self, *args, **kw)
         finally:
             INDENTATION_LEVEL -= 1
             logger.debug("    " * INDENTATION_LEVEL +
-                         "'%s.%s' ends" % (cls, func.func_name))
+                         "'%s.%s' ends" % (cls, func_name))
 
     return _log
 
