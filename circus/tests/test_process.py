@@ -93,16 +93,16 @@ class TestProcess(TestCircus):
                      '$(circus.wid) --type $(circus.env.type)',
                      shell=False, spawn=False, env={'type': 'macchiato'})
 
-        self.assertEquals(['make-me-a-coffee', '1', '--type', 'macchiato'],
-                          p1.format_args())
+        self.assertEqual(['make-me-a-coffee', '1', '--type', 'macchiato'],
+                         p1.format_args())
 
         p2 = Process('1', 'yeah $(CIRCUS.WID)', spawn=False)
-        self.assertEquals(['yeah', '1'], p2.format_args())
+        self.assertEqual(['yeah', '1'], p2.format_args())
 
         os.environ['coffee_type'] = 'american'
         p3 = Process('1', 'yeah $(circus.env.type)', shell=False, spawn=False,
                      env={'type': 'macchiato'})
-        self.assertEquals(['yeah', 'macchiato'], p3.format_args())
+        self.assertEqual(['yeah', 'macchiato'], p3.format_args())
         os.environ.pop('coffee_type')
 
     @skipIf(not hasattr(sys.stdout, 'fileno'), 'Nose runs without -s')

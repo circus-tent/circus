@@ -81,12 +81,12 @@ class TestConfig(TestCase):
     def test_include_wildcards(self):
         conf = get_config(_CONF['include'])
         watchers = conf['watchers']
-        self.assertEquals(len(watchers), 4)
+        self.assertEqual(len(watchers), 4)
 
     def test_include_multiple_wildcards(self):
         conf = get_config(_CONF['multiple_wildcard'])
         watchers = conf['watchers']
-        self.assertEquals(len(watchers), 3)
+        self.assertEqual(len(watchers), 3)
 
     @patch.object(logger, 'warn')
     def test_empty_include(self, mock_logger_warn):
@@ -111,7 +111,7 @@ class TestConfig(TestCase):
     def test_watcher_env_var(self):
         conf = get_config(_CONF['env_var'])
         watcher = Watcher.load_from_config(conf['watchers'][0])
-        self.assertEquals("%s:/bin" % os.getenv('PATH'), watcher.env['PATH'])
+        self.assertEqual("%s:/bin" % os.getenv('PATH'), watcher.env['PATH'])
         watcher.stop()
 
     def test_env_section(self):
@@ -122,21 +122,21 @@ class TestConfig(TestCase):
         watcher1 = Watcher.load_from_config(watchers_conf['watcher1'])
         watcher2 = Watcher.load_from_config(watchers_conf['watcher2'])
 
-        self.assertEquals('lie', watcher1.env['CAKE'])
-        self.assertEquals('cake', watcher2.env['LIE'])
+        self.assertEqual('lie', watcher1.env['CAKE'])
+        self.assertEqual('cake', watcher2.env['LIE'])
 
         for watcher in [watcher1, watcher2]:
-            self.assertEquals("%s:/bin" % os.getenv('PATH'),
-                              watcher.env['PATH'])
+            self.assertEqual("%s:/bin" % os.getenv('PATH'),
+                             watcher.env['PATH'])
 
-        self.assertEquals('test1', watcher1.env['TEST1'])
-        self.assertEquals('test1', watcher2.env['TEST1'])
+        self.assertEqual('test1', watcher1.env['TEST1'])
+        self.assertEqual('test1', watcher2.env['TEST1'])
 
-        self.assertEquals('test2', watcher1.env['TEST2'])
-        self.assertEquals('test2', watcher2.env['TEST2'])
+        self.assertEqual('test2', watcher1.env['TEST2'])
+        self.assertEqual('test2', watcher2.env['TEST2'])
 
-        self.assertEquals('test3', watcher1.env['TEST3'])
-        self.assertEquals('test3', watcher2.env['TEST3'])
+        self.assertEqual('test3', watcher1.env['TEST3'])
+        self.assertEqual('test3', watcher2.env['TEST3'])
 
     def test_issue395(self):
         conf = get_config(_CONF['issue395'])
@@ -145,23 +145,23 @@ class TestConfig(TestCase):
 
     def test_pidfile(self):
         conf = get_config(_CONF['circus'])
-        self.assertEquals(conf['pidfile'], 'pidfile')
+        self.assertEqual(conf['pidfile'], 'pidfile')
 
     def test_logoutput(self):
         conf = get_config(_CONF['circus'])
-        self.assertEquals(conf['logoutput'], 'logoutput')
+        self.assertEqual(conf['logoutput'], 'logoutput')
 
     def test_loglevel(self):
         conf = get_config(_CONF['circus'])
-        self.assertEquals(conf['loglevel'], 'debug')
+        self.assertEqual(conf['loglevel'], 'debug')
 
     def test_override(self):
         conf = get_config(_CONF['multiple_wildcard'])
         watchers = conf['watchers']
-        self.assertEquals(len(watchers), 3)
+        self.assertEqual(len(watchers), 3)
         watchers = conf['watchers']
         watchers.sort()
-        self.assertEquals(watchers[2]['env']['INI'], 'private.ini')
+        self.assertEqual(watchers[2]['env']['INI'], 'private.ini')
         self.assertEqual(conf['check'], 555)
 
     def test_config_unexistant(self):

@@ -111,19 +111,19 @@ class TestCollector(TestCase):
             collector = WatcherStatsCollector(self._get_streamer(), 'firefox')
 
             stats = list(collector.collect_stats())
-            self.assertEquals(len(stats), 3)
+            self.assertEqual(len(stats), 3)
 
             stats = list(collector.collect_stats())
-            self.assertEquals(len(stats), 3)
+            self.assertEqual(len(stats), 3)
 
             stats = list(collector.collect_stats())
-            self.assertEquals(len(stats), 1)
+            self.assertEqual(len(stats), 1)
 
             self.circus_pids = {1234: 'ohyeah'}
             self.pids['circus'] = [1234]
             collector = WatcherStatsCollector(self._get_streamer(), 'circus')
             stats = list(collector.collect_stats())
-            self.assertEquals(stats[0]['name'], 'ohyeah')
+            self.assertEqual(stats[0]['name'], 'ohyeah')
 
         finally:
             collector_module.util.get_info = old_info
@@ -142,9 +142,9 @@ class TestCollector(TestCase):
                 'username': 'alexis', 'subtopic': pid, 'name': 'firefox'}
 
         res = collector._aggregate(aggregate)
-        self.assertEquals(res['mem'], 0)
-        self.assertEquals(len(res['pid']), 10)
-        self.assertEquals(res['cpu'], 0.45)
+        self.assertEqual(res['mem'], 0)
+        self.assertEqual(len(res['pid']), 10)
+        self.assertEqual(res['cpu'], 0.45)
 
     def test_collector_aggregation_when_unknown_values(self):
         collector = WatcherStatsCollector(self._get_streamer(), 'firefox')
@@ -160,9 +160,9 @@ class TestCollector(TestCase):
 
         res = collector._aggregate(aggregate)
         res = collector._aggregate(aggregate)
-        self.assertEquals(res['mem'], 'N/A')
-        self.assertEquals(len(res['pid']), 10)
-        self.assertEquals(res['cpu'], 'N/A')
+        self.assertEqual(res['mem'], 'N/A')
+        self.assertEqual(len(res['pid']), 10)
+        self.assertEqual(res['cpu'], 'N/A')
 
     def test_socketstats(self):
         collector = self._get_collector(SocketStatsCollector)
