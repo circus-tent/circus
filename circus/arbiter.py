@@ -719,7 +719,7 @@ class Arbiter(object):
         yield self._restart(inside_circusd=inside_circusd)
 
 
-class ThreadedArbiter(Arbiter, Thread):
+class ThreadedArbiter(Thread, Arbiter):
 
     def __init__(self, *args, **kw):
         Thread.__init__(self)
