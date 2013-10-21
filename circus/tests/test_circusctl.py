@@ -26,7 +26,8 @@ def run_ctl(args, queue=None, stdin=''):
         queue.put(stdout)
     try:
         import gevent
-        gevent.shutdown()
+        if hasattr(gevent, 'shutdown'):
+            gevent.shutdown()
     except ImportError:
         pass
     return stdout, stderr

@@ -79,7 +79,7 @@ class TestCircusd(TestCase):
             if module.startswith('gevent'):
                 del sys.modules[module]
 
-        from gevent.dns import resolve_ipv4     # NOQA
+        from gevent import socket   # NOQA
         self.assertRaises(ValueError, daemonize)
 
     def test_maxfd(self):
