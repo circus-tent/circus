@@ -146,8 +146,8 @@ class TestWatcher(TestCircus):
         self.assertTrue("test" in resp.get('infos'))
         watchers = resp.get('infos')['test']
 
-        self.assertEqual(watchers[watchers.keys()[0]]['cmdline'],
-                         sys.executable.split(os.sep)[-1])
+        self.assertEqual(watchers[list(watchers.keys())[0]]['cmdline'].lower(),
+                         sys.executable.split(os.sep)[-1].lower())
         yield self.stop_arbiter()
 
     @tornado.testing.gen_test
