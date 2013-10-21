@@ -297,6 +297,7 @@ def poll_for_callable(func, *args, **kwargs):
             sleep(0.1)
         else:
             return True
+    # TODO: This HAS to be wrong
     raise e
 
 
