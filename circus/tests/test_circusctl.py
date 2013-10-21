@@ -15,20 +15,15 @@ from circus.util import tornado_sleep
 def run_ctl(args, queue=None, stdin=''):
     cmd = '%s -m circus.circusctl' % sys.executable
     proc = subprocess.Popen(cmd.split() + shlex.split(args),
-                            stdin=subprocess.PIPE,
+                            stdin=subprocess.PIPE if stdin else None,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
-    if stdin:
-        proc.stdin.write(stdin)
-
-    stderr = proc.stderr.read()
-    stdout = proc.stdout.read()
+    stdout, stderr = proc.communicate(b(stdin) if stdin else None)
     stdout = u(stdout)
     stderr = u(stderr)
     if queue:
         queue.put(stderr)
         queue.put(stdout)
-    proc.wait()
     try:
         import gevent
         gevent.shutdown()
