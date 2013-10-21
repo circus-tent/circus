@@ -95,7 +95,12 @@ class Arbiter(object):
         self.loglevel = loglevel
         self.logoutput = logoutput
 
-        socket_fqdn = socket.getfqdn()
+        try:
+            # getfqdn appears to fail in Python3.3 in the unittest
+            # framework so fall back to gethostname
+            socket_fqdn = socket.getfqdn()
+        except KeyError:
+            socket_fqdn = socket.gethostname()
         if fqdn_prefix is None:
             fqdn = socket_fqdn
         else:
