@@ -5,7 +5,10 @@ import signal
 import time
 import sys
 from random import randint
-from itertools import izip_longest
+try:
+    from itertools import zip_longest as izip_longest
+except ImportError:
+    from itertools import izip_longest  # NOQA
 import site
 from tornado import gen
 

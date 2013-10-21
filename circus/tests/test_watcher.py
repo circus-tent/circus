@@ -3,7 +3,13 @@ import sys
 import os
 import time
 import warnings
-import Queue
+try:
+    import queue as Queue
+    from test.support import captured_output
+except ImportError:
+    import Queue  # NOQA
+    from test.test_support import captured_output  # NOQA
+
 import tornado
 import mock
 from zmq.utils.strtypes import u
@@ -17,8 +23,6 @@ from circus.tests.support import async_poll_for, EasyTestSuite
 from circus.tests.support import MagicMockFuture
 from circus.util import get_python_version, tornado_sleep
 from circus.watcher import Watcher
-
-from test.test_support import captured_output
 
 warnings.filterwarnings('ignore',
                         module='threading', message='sys.exc_clear')

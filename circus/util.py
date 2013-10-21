@@ -13,9 +13,18 @@ import traceback
 from tornado.ioloop import IOLoop
 from tornado import gen
 from tornado import concurrent
-from ConfigParser import (
-    ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
-)
+from circus.py3compat import integer_types, bytestring, raise_with_tb
+try:
+    from configparser import (
+        ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
+    )
+    new_config_parser = True
+except ImportError:
+    from ConfigParser import (  # NOQA
+        ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
+    )
+    new_config_parser = False
+
 from datetime import timedelta
 from functools import wraps
 

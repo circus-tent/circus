@@ -4,8 +4,11 @@ import sys
 import tornado
 from tempfile import mkstemp
 from time import time, sleep
-from urlparse import urlparse
 import zmq.utils.jsonapi as json
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse  # NOQA
 
 from circus.arbiter import Arbiter, ThreadedArbiter
 from circus.client import CircusClient
