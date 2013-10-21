@@ -56,7 +56,8 @@ class TestResourceWatcher(TestCircus):
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
             self.make_plugin(service='whatever')
-            self.assertIn('ResourceWatcher', str(ws[0].message))
+            self.assertTrue(any('ResourceWatcher' in w.message.args[0]
+                                for w in ws))
 
     def test_watcher_config_param_is_required(self):
         self.assertRaises(NotImplementedError, self.make_plugin),
