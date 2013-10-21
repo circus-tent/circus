@@ -301,7 +301,7 @@ class CircusCtl(cmd.Cmd, object):
             sys.exit(self.controller.run(globalopts['args']))
 
         if args.help:
-            for command in self.commands:
+            for command in sorted(self.commands.keys()):
                 doc = textwrap.dedent(self.commands[command].__doc__)
                 help = doc.split('\n')[0]
                 parser.add_argument(command, help=help)
@@ -358,7 +358,7 @@ def parse_arguments(args, commands):
         description="Controls a Circus daemon",
         formatter_class=_Help, usage=USAGE, add_help=False)
 
-    for option in options:
+    for option in sorted(options.keys()):
         parser.add_argument('--' + option, **options[option])
 
     if any([value in commands for value in args]):
