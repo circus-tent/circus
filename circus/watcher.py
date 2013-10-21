@@ -10,7 +10,7 @@ import site
 from tornado import gen
 
 from psutil import NoSuchProcess
-from zmq.utils.jsonapi import jsonmod as json
+import zmq.utils.jsonapi as json
 from zmq.eventloop import ioloop
 
 from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING

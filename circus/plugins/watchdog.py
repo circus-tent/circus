@@ -1,10 +1,10 @@
 import re
 import socket
 import time
-import json
 import signal
 
 from zmq.eventloop import ioloop
+import zmq.utils.jsonapi as json
 from circus.plugins import CircusPlugin
 from circus import logger
 

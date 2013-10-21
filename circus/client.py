@@ -4,7 +4,7 @@ import errno
 import uuid
 
 import zmq
-from zmq.utils.jsonapi import jsonmod as json
+import zmq.utils.jsonapi as json
 from zmq.eventloop.zmqstream import ZMQStream
 import tornado
 

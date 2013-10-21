@@ -1,7 +1,7 @@
 import mock
-import json
 
 import zmq
+import zmq.utils.jsonapi as json
 
 import unittest2 as unittest
 from circus.stats.publisher import StatsPublisher

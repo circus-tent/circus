@@ -1,11 +1,11 @@
 from collections import defaultdict
-import json
 from itertools import chain
 import os
 import errno
 import socket
 
 import zmq
+import zmq.utils.jsonapi as json
 from zmq.eventloop import ioloop, zmqstream
 
 from circus.commands import get_commands

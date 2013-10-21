@@ -1,4 +1,3 @@
-import json
 import os
 import socket
 import sys
@@ -7,6 +6,7 @@ import tornado
 from tempfile import mkstemp
 from time import time, sleep
 from urlparse import urlparse
+import zmq.utils.jsonapi as json
 
 from circus.arbiter import Arbiter, ThreadedArbiter
 from circus.client import CircusClient

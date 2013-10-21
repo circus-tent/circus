@@ -9,7 +9,7 @@ except ImportError:
 from urlparse import urlparse
 
 import zmq
-from zmq.utils.jsonapi import jsonmod as json
+import zmq.utils.jsonapi as json
 from zmq.eventloop import ioloop, zmqstream
 from tornado.concurrent import Future
 

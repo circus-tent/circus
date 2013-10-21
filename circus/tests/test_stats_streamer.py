@@ -1,10 +1,10 @@
 import os
-import json
 import tempfile
 import time
 
 import mock
 from zmq.eventloop import ioloop
+import zmq.utils.jsonapi as json
 
 from circus.stats.collector import SocketStatsCollector
 from circus.tests.support import TestCircus
