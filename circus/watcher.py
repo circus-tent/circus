@@ -443,8 +443,8 @@ class Watcher(object):
             else:
                 processes_to_kill.append(process)
 
-        removes = yield [self.kill_process(process)
-                         for process in processes_to_kill]
+        removes = yield [self.kill_process(proc)
+                         for proc in processes_to_kill]
         for i, process in enumerate(processes_to_kill):
             if removes[i]:
                 self.processes.pop(process.pid)

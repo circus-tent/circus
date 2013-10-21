@@ -10,6 +10,7 @@ import mock
 import unittest2 as unittest
 from circus.sockets import CircusSocket, CircusSockets
 
+
 def so_bindtodevice_supported():
     try:
         if hasattr(IN, 'SO_BINDTODEVICE'):
@@ -17,6 +18,7 @@ def so_bindtodevice_supported():
     except NameError:
         pass
     return False
+
 
 class TestSockets(unittest.TestCase):
 
