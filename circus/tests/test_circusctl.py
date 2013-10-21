@@ -22,7 +22,6 @@ def run_ctl(args, queue=None, stdin=''):
     if queue:
         queue.put(stderr)
         queue.put(stdout)
-    proc.wait()
     try:
         import gevent
         gevent.shutdown()
@@ -46,7 +45,7 @@ def async_run_ctl(args, stdin=''):
         yield tornado_sleep(.1)
     stderr = queue.get()
     stdout = queue.get()
-    raise Return((stdout, stderr))
+    raise Return((u(stdout), u(stderr)))
 
 
 class CommandlineTest(TestCircus):

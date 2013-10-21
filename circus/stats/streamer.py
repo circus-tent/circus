@@ -6,6 +6,7 @@ import socket
 
 import zmq
 import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import u
 from zmq.eventloop import ioloop, zmqstream
 
 from circus.commands import get_commands
@@ -182,6 +183,7 @@ class StatsStreamer(object):
         logger.debug('Received an event from circusd: %s' % str(data))
         topic, msg = data
         try:
+            topic = u(topic)
             watcher = topic.split('.')[1:-1][0]
             action = topic.split('.')[-1]
             msg = json.loads(msg)
