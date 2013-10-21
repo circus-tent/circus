@@ -213,7 +213,7 @@ class CircusCtl(cmd.Cmd, object):
         return super(CircusCtl, cls).__new__(cls, *args, **kw)
 
     def __init__(self, client, *args, **kwargs):
-        return super(CircusCtl, self).__init__()
+        super(CircusCtl, self).__init__()
 
     @classmethod
     def _add_do_cmd(cls, cmd_name, cmd):
