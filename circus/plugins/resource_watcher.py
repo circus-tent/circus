@@ -41,10 +41,12 @@ class ResourceWatcher(BaseObserver):
         cpus = []
         mems = []
 
-        for sub_info in stats.itervalues():
-            if isinstance(sub_info,  dict):
-                cpus.append(sub_info['cpu'])
-                mems.append(sub_info['mem'])
+        for sub_info in stats.values():
+            if isinstance(sub_info, dict):
+                cpus.append(100 if sub_info['cpu'] == 'N/A' else
+                            float(sub_info['cpu']))
+                mems.append(100 if sub_info['mem'] == 'N/A' else
+                            float(sub_info['mem']))
 
         if cpus:
             max_cpu = max(cpus)
@@ -53,7 +55,7 @@ class ResourceWatcher(BaseObserver):
             min_mem = min(mems)
         else:
             # we dont' have any process running. max = 0 then
-            max_cpu = max_mem = 0
+            max_cpu = max_mem = min_cpu = min_mem = 0
 
         if self.max_cpu and max_cpu > self.max_cpu:
             self.statsd.increment("_resource_watcher.%s.over_cpu" %
