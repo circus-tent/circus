@@ -137,7 +137,7 @@ class TestCollector(TestCase):
                 'age': 154058.91111397743, 'children': [],
                 'cmdline': 'python', 'cpu': 0.0 + i / 10.,
                 'create_time': 1378663281.96,
-                'ctime': '0:00.0', 'mem': 0.0 + i / 10,
+                'ctime': '0:00.0', 'mem': 0.0 + i // 10,
                 'mem_info1': '52K', 'mem_info2': '39M',
                 'username': 'alexis', 'subtopic': pid, 'name': 'firefox'}
 
