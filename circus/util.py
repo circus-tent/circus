@@ -511,7 +511,7 @@ class StrictConfigParser(ConfigParser):
             line = fp.readline()
             if not line:
                 break
-            lineno = lineno + 1
+            lineno += 1
             # comment or blank line?
             if line.strip() == '' or line[0] in '#;':
                 continue

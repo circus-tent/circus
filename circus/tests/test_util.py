@@ -119,19 +119,19 @@ class TestUtil(TestCase):
         # 32-bit and 64-bit Linux, all negative values throw KeyError as do
         # requests for non-existent uid/gid.
         def int32(val):
-            if (val & 0x80000000):
-                val = -0x100000000 + val
+            if val & 0x80000000:
+                val += -0x100000000
             return val
 
         def uid_min_max():
             uids = sorted([int32(e[2]) for e in pwd.getpwall()])
             uids[0] = uids[0] if uids[0] < 0 else -1
-            return (uids[0], uids[-1])
+            return uids[0], uids[-1]
 
         def gid_min_max():
             gids = sorted([int32(e[2]) for e in grp.getgrall()])
             gids[0] = gids[0] if gids[0] < 0 else -1
-            return (gids[0], gids[-1])
+            return gids[0], gids[-1]
 
         uid_min, uid_max = uid_min_max()
         gid_min, gid_max = gid_min_max()

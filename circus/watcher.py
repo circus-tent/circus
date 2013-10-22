@@ -597,7 +597,7 @@ class Watcher(object):
         waited = 0
         while waited < self.graceful_timeout:
             yield tornado_sleep(1)
-            waited = waited + 1
+            waited += 1
             if not process.is_alive():
                 break
         if waited >= self.graceful_timeout:
