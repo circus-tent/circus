@@ -54,14 +54,13 @@ class TestClient(TestCircus):
         self.assertEqual((yield self.numprocesses("decr", name="test", nb=3)),
                          1)
         self.assertEqual((yield self.numprocesses("numprocesses")), 1)
-        self.assertEqual((yield self.set("test", env={"test": 1, "test": 2})),
+        self.assertEqual((yield self.set("test", env={"test": 2})),
                          'error')
-        self.assertEqual((yield self.set("test", env={"test": '1',
-                                                      "test": '2'})),
+        self.assertEqual((yield self.set("test", env={"test": '2'})),
                          'ok')
         resp = yield self.call('get', name='test', keys=['env'])
         options = resp.get('options', {})
-        self.assertEqual(options.get('env'), {'test': '1', 'test': '2'})
+        self.assertEqual(options.get('env'), {'test': '2'})
 
         resp = yield self.call('stats', name='test')
         self.assertEqual(resp['status'], 'ok')
