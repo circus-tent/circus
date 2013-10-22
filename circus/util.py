@@ -85,6 +85,22 @@ def bytes2human(n):
             return '%s%s' % (value, s)
     return "%sB" % n
 
+def human2bytes(s):
+    """Translates a human representation into bytes.
+    """
+    if not isinstance(s, str) and not isinstance(s, unicode):
+        raise TypeError(s)
+    
+    if s[-1] == 'B': # no symbol
+        return int(s[:-1])
+
+    n, symbol = s[:-1], s[-1]
+    resp = 0
+    for i, sym in enumerate(_SYMBOLS):
+        if symbol == sym:
+            resp = 1 << (i+1)*10
+    resp *= int(n)
+    return resp
 
 # XXX weak dict ?
 _PROCS = {}
