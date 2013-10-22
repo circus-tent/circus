@@ -49,10 +49,10 @@ class TestStatsStreamer(TestCircus):
         elif what == 'dstats':
             return {'info': {'pid': 789}}
         elif what == 'listsockets':
-            return {'status': u'ok',
+            return {'status': 'ok',
                     'sockets': [{'path': self._unix,
                                 'fd': 5,
-                                'name': u'XXXX',
+                                'name': 'XXXX',
                                 'backlog': 2048}],
                     'time': 1369647058.967524}
 
