@@ -1,4 +1,6 @@
 language: python
+before_install:
+    - sudo apt-get install -y libev-dev
 python: 2.7
 env:
   - TOX_ENV=py33
@@ -12,6 +14,7 @@ env:
 script:
     - tox -e $TOX_ENV
 install:
+
     - pip install tox
 notifications:
     email: tarek@mozilla.com
