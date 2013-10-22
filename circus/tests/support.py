@@ -31,7 +31,11 @@ from circus.stream import QueueStream
 
 class EasyTestSuite(TestSuite):
     def __init__(self, name):
-        super(EasyTestSuite, self).__init__(findTestCases(sys.modules[name]))
+        try:
+            super(EasyTestSuite, self).__init__(
+                findTestCases(sys.modules[name]))
+        except KeyError:
+            pass
 
 
 def resolve_name(name):
