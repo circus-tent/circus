@@ -31,6 +31,7 @@ class StatsClient(CircusConsumer):
                 except zmq.ZMQError as e:
                     if e.errno == errno.EINTR:
                         continue
+                    raise
 
                 if len(events) == 0:
                     continue
