@@ -127,6 +127,7 @@ class SocketStatsCollector(BaseStatsCollector):
         except socket.error as err:
             if err.errno == errno.EBADF:
                 return
+            raise
 
         if len(rlist) == 0:
             return

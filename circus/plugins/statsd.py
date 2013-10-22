@@ -15,7 +15,7 @@ class StatsdClient(object):
     def send(self, bucket, value, sample_rate=None):
         sample_rate = sample_rate or self.sample_rate
         if sample_rate != 1:
-            value += b"|@" + sample_rate
+            value += "|@%s" % sample_rate
 
         if self.prefix:
             bucket = "%s.%s" % (self.prefix, bucket)
@@ -109,7 +109,7 @@ class FullStats(BaseObserver):
             mems = []
 
             for sub_name, sub_info in stats.items():
-                if isinstance(sub_info,  dict):
+                if isinstance(sub_info, dict):
                     cpus.append(sub_info['cpu'])
                     mems.append(sub_info['mem'])
                 elif sub_name == "spawn_count":
