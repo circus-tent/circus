@@ -31,7 +31,11 @@ from circus.stream import QueueStream
 
 class EasyTestSuite(TestSuite):
     def __init__(self, name):
-        super(EasyTestSuite, self).__init__(findTestCases(sys.modules[name]))
+        try:
+            super(EasyTestSuite, self).__init__(
+                findTestCases(sys.modules[name]))
+        except KeyError:
+            pass
 
 
 def resolve_name(name):
@@ -152,13 +156,13 @@ class TestCircus(AsyncTestCase):
         return file
 
     @classmethod
-    def _create_circus(cls, callable, plugins=None, stats=False,
+    def _create_circus(cls, callable_path, plugins=None, stats=False,
                        async=False, **kw):
-        resolve_name(callable)   # used to check the callable
+        resolve_name(callable_path)   # used to check the callable
         fd, testfile = mkstemp()
         os.close(fd)
         wdir = os.path.dirname(__file__)
-        args = ['generic.py', callable, testfile]
+        args = ['generic.py', callable_path, testfile]
         worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
                   'name': 'test', 'graceful_timeout': 2}
         worker.update(kw)
@@ -188,10 +192,10 @@ class TestCircus(AsyncTestCase):
         #arbiter.start()
         return testfile, arbiter
 
-    def _run_circus(self, callable, plugins=None, stats=False, **kw):
+    def _run_circus(self, callable_path, plugins=None, stats=False, **kw):
 
-        testfile, arbiter = TestCircus._create_circus(callable, plugins, stats,
-                                                      **kw)
+        testfile, arbiter = TestCircus._create_circus(callable_path,
+                                                      plugins, stats, **kw)
         self.arbiters.append(arbiter)
         self.files.append(testfile)
         return testfile
@@ -284,6 +288,7 @@ def poll_for_callable(func, *args, **kwargs):
         timeout = kwargs.pop('timeout')
 
     start = time()
+    last_exception = None
     while time() - start < timeout:
         try:
             func_args = []
@@ -294,11 +299,11 @@ def poll_for_callable(func, *args, **kwargs):
                     func_args.append(arg)
             func(*func_args)
         except AssertionError as e:
+            last_exception = e
             sleep(0.1)
         else:
             return True
-    # TODO: This HAS to be wrong
-    raise e
+    raise last_exception or AssertionError('No exception triggered yet')
 
 
 def poll_for(filename, needles, timeout=5):
@@ -312,6 +317,7 @@ def poll_for(filename, needles, timeout=5):
         needles = [needles]
 
     start = time()
+    needle = content = None
     while time() - start < timeout:
         with open(filename) as f:
             content = f.read()
@@ -333,6 +339,7 @@ def async_poll_for(filename, needles, timeout=5):
         needles = [needles]
 
     start = time()
+    needle = content = None
     while time() - start < timeout:
         with open(filename) as f:
             content = f.read()

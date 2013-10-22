@@ -597,7 +597,7 @@ class Watcher(object):
         waited = 0
         while waited < self.graceful_timeout:
             yield tornado_sleep(1)
-            waited = waited + 1
+            waited += 1
             if not process.is_alive():
                 break
         if waited >= self.graceful_timeout:
@@ -728,7 +728,6 @@ class Watcher(object):
         if hook_name in self.hooks:
             try:
                 result = self.hooks[hook_name](**hook_kwargs)
-                error = None
                 self.notify_event("hook_success",
                                   {"name": hook_name, "time": time.time()})
             except Exception as error:

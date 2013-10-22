@@ -83,7 +83,7 @@ class Flapping(CircusPlugin):
         return conf
 
     def reset(self, watcher_name):
-        self.timeline[watcher_name] = []
+        self.timelines[watcher_name] = []
         self.tries[watcher_name] = 0
         if watcher_name is self.timers:
             timer = self.timers.pop(watcher_name)

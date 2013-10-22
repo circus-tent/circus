@@ -88,14 +88,6 @@ class TestCircusd(TestCase):
 
     @skipIf(has_gevent(), "Gevent is loaded")
     def test_daemonize(self):
-        def check_pid(pid):
-            try:
-                os.kill(pid, 0)
-            except OSError:
-                return False
-            else:
-                return True
-
         daemonize()
         self.assertEqual(self.forked, 2)
 

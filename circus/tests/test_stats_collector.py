@@ -103,8 +103,8 @@ class TestCollector(TestCase):
             calls[pid] += 1
             return data
 
+        old_info = collector_module.util.get_info
         try:
-            old_info = collector_module.util.get_info
             collector_module.util.get_info = _get_info
 
             self.pids['firefox'] = [2353, 2354]
@@ -158,7 +158,6 @@ class TestCollector(TestCase):
                 'mem_info2': '39M', 'nice': 0, 'pid': pid,
                 'username': 'alexis', 'subtopic': pid, 'name': 'firefox'}
 
-        res = collector._aggregate(aggregate)
         res = collector._aggregate(aggregate)
         self.assertEqual(res['mem'], 'N/A')
         self.assertEqual(len(res['pid']), 10)
