@@ -25,9 +25,9 @@ class SysHandler(object):
         self._register()
 
     def stop(self):
-        for sig, callable in self._old.items():
+        for sig, callback in self._old.items():
             try:
-                signal.signal(sig, callable)
+                signal.signal(sig, callback)
             except ValueError:
                 pass
 
