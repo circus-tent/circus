@@ -159,7 +159,6 @@ class TestCollector(TestCase):
                 'username': 'alexis', 'subtopic': pid, 'name': 'firefox'}
 
         res = collector._aggregate(aggregate)
-        res = collector._aggregate(aggregate)
         self.assertEqual(res['mem'], 'N/A')
         self.assertEqual(len(res['pid']), 10)
         self.assertEqual(res['cpu'], 'N/A')

@@ -728,7 +728,6 @@ class Watcher(object):
         if hook_name in self.hooks:
             try:
                 result = self.hooks[hook_name](**hook_kwargs)
-                error = None
                 self.notify_event("hook_success",
                                   {"name": hook_name, "time": time.time()})
             except Exception as error:

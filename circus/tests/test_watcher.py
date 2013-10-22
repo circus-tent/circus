@@ -113,7 +113,7 @@ class TestWatcher(TestCircus):
 
             # and wait for it to die
             try:
-                pid, status = os.waitpid(process.pid, 0)
+                os.waitpid(process.pid, 0)
             except OSError:
                 pass
 
@@ -220,7 +220,6 @@ class TestWatcherInitialization(TestCircus):
 
     @tornado.testing.gen_test
     def test_copy_path(self):
-        messages = []
         watcher = SomeWatcher()
         yield watcher.run()
         # wait for watcher data at most 5s
