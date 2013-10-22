@@ -110,8 +110,7 @@ class Controller(object):
             self.dispatch((cid, msg))
 
     def handle_autodiscover_message(self, fd_no, type):
-        data, address = self.udp_socket.recvfrom(1024)
-        #data = json.loads(data)
+        __, address = self.udp_socket.recvfrom(1024)
         self.udp_socket.sendto(json.dumps({'endpoint': self.endpoint}),
                                address)
 
