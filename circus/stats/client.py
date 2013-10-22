@@ -108,7 +108,8 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
 
             fds = []
 
-            for __, stats in watchers[name].items():
+            total = 0
+            for stats in watchers[name].values():
                 if 'addresses' in stats:
                     total = stats['reads']
                     continue
