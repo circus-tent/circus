@@ -97,8 +97,8 @@ class TestWithHook(TestCircus):
 
     def test_message_id(self):
         hooks = {'before_stop': ('circus.tests.test_client.long_hook', False)}
+        testfile, arbiter = self.run_with_hooks(hooks)
         try:
-            testfile, arbiter = self.run_with_hooks(hooks)
             msg = make_message("numwatchers")
             resp = yield self.cli.call(msg)
             self.assertEqual(resp.get("numwatchers"), 1)

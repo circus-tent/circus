@@ -103,8 +103,8 @@ class TestCollector(TestCase):
             calls[pid] += 1
             return data
 
+        old_info = collector_module.util.get_info
         try:
-            old_info = collector_module.util.get_info
             collector_module.util.get_info = _get_info
 
             self.pids['firefox'] = [2353, 2354]

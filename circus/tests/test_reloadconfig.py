@@ -153,8 +153,8 @@ class TestConfig(tornado.testing.AsyncTestCase):
     def test_reload_envdictparsed(self):
         # environ var that needs a `circus.util.parse_env_dict` treatment
         os.environ['SHRUBBERY'] = ' NI '
+        a = self._load_base_arbiter()
         try:
-            a = self._load_base_arbiter()
             w = a.get_watcher('test1')
             yield a.reload_from_config(_CONF['reload_base'])
             self.assertEqual(a.get_watcher('test1'), w)

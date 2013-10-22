@@ -245,8 +245,8 @@ class TestUtil(TestCase):
             stat.ino = 'path'
             stat.dev = 'dev'
             return stat
+        _old_os_stat = util.os.stat
         try:
-            _old_os_stat = util.os.stat
             util.os.stat = _stat
 
             self.assertEqual(get_working_dir(), '/path/to/pwd')
