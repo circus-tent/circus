@@ -5,7 +5,6 @@ from tornado.testing import gen_test
 from circus.tests.support import TestCircus, poll_for, Process
 from circus.tests.support import async_run_plugin, EasyTestSuite
 from circus.plugins.resource_watcher import ResourceWatcher
-from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 
 # Make sure we don't allow more than 300MB in case things go wrong
 MAX_CHUNKS = 10000

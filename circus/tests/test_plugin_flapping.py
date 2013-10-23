@@ -2,7 +2,6 @@ from mock import patch
 
 from circus.tests.support import TestCircus, EasyTestSuite
 from circus.plugins.flapping import Flapping
-from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 
 
 class TestFlapping(TestCircus):

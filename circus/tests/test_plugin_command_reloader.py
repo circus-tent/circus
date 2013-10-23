@@ -2,7 +2,6 @@ from mock import patch
 
 from circus.plugins.command_reloader import CommandReloader
 from circus.tests.support import TestCircus, EasyTestSuite
-from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 
 
 class TestCommandReloader(TestCircus):
