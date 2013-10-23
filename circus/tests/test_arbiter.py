@@ -441,7 +441,7 @@ class TestTrainer(TestCircus):
         @tornado.gen.coroutine
         def _sleep(duration):
             called.append(duration)
-            loop = tornado.ioloop.IOLoop().instance()
+            loop = tornado.ioloop.IOLoop.instance()
             yield tornado.gen.Task(loop.add_timeout, time() + duration)
 
         watcher_mod.tornado_sleep = _sleep

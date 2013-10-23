@@ -55,10 +55,10 @@ class TestConfig(tornado.testing.AsyncTestCase):
         a.sockets.close_all()
 
     def get_new_ioloop(self):
-        return tornado.ioloop.IOLoop().instance()
+        return tornado.ioloop.IOLoop.instance()
 
     def _load_base_arbiter(self, name='reload_base'):
-        loop = tornado.ioloop.IOLoop().instance()
+        loop = tornado.ioloop.IOLoop.instance()
         a = Arbiter.load_from_config(_CONF[name], loop=loop)
         a.evpub_socket = FakeSocket()
         # initialize watchers

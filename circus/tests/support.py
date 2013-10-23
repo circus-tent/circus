@@ -92,7 +92,7 @@ class TestCircus(AsyncTestCase):
         self.cli = AsyncCircusClient()
 
     def get_new_ioloop(self):
-        return tornado.ioloop.IOLoop().instance()
+        return tornado.ioloop.IOLoop.instance()
 
     def tearDown(self):
         for file in self.files + self.tmpfiles:
@@ -100,6 +100,7 @@ class TestCircus(AsyncTestCase):
                 os.remove(file)
         for dir in self.dirs:
             shutil.rmtree(dir)
+        self.cli.stop()
         super(TestCircus, self).tearDown()
 
     @tornado.gen.coroutine
@@ -174,12 +175,12 @@ class TestCircus(AsyncTestCase):
                 arbiter = fact([worker], background=False, plugins=plugins,
                                debug=debug, statsd=True,
                                stats_endpoint=DEFAULT_ENDPOINT_STATS,
-                               loop=tornado.ioloop.IOLoop().instance(),
+                               loop=tornado.ioloop.IOLoop.instance(),
                                statsd_close_outputs=not debug)
             else:
                 arbiter = fact([worker], background=False, plugins=plugins,
                                debug=debug,
-                               loop=tornado.ioloop.IOLoop().instance())
+                               loop=tornado.ioloop.IOLoop.instance())
         else:
             if stats:
                 arbiter = fact([worker], background=True, plugins=plugins,

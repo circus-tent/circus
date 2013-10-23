@@ -285,7 +285,7 @@ class SomeWatcher(object):
         self.watcher = None
         self.kw = kw
         if loop is None:
-            self.loop = tornado.ioloop.IOLoop().instance()
+            self.loop = tornado.ioloop.IOLoop.instance()
         else:
             self.loop = loop
 
