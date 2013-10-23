@@ -30,6 +30,8 @@ class TestFullStats(TestCircus):
                   '_stats.test.mem_max', '_stats.test.mem_sum',
                   '_stats.test.watchers_num']
         self.assertEqual(last_batch, wanted)
+
         yield self.stop_arbiter()
+
 
 test_suite = EasyTestSuite(__name__)

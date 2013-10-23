@@ -136,6 +136,7 @@ class TestWatcher(TestCircus):
 
             # and should not be unexisting...
             self.assertNotEqual(p.status, UNEXISTING)
+
         yield self.stop_arbiter()
 
     @tornado.testing.gen_test

@@ -79,6 +79,7 @@ class WatchDog(CircusPlugin):
     def handle_stop(self):
         if self.period is not None:
             self.period.stop()
+        self.sock.close()
         self.sock = None
 
     def handle_recv(self, data):

@@ -15,14 +15,15 @@ class DummyWatchDogged(Process):
         self._write('START')
         sock = socket.socket(socket.AF_INET,
                              socket.SOCK_DGRAM)  # UDP
-        my_pid = os.getpid()
-        for _ in range(5):
-            message = "{pid};{time}".format(pid=my_pid, time=time.time())
-            #print('sending:{0}'.format(message))
-            sock.sendto(message, ('127.0.0.1', 1664))
-            time.sleep(0.5)
-
-        self._write('STOP')
+        try:
+            my_pid = os.getpid()
+            for _ in range(5):
+                message = "{pid};{time}".format(pid=my_pid, time=time.time())
+                sock.sendto(message, ('127.0.0.1', 1664))
+                time.sleep(0.5)
+            self._write('STOP')
+        finally:
+            sock.close()
 
 
 def run_dummy_watchdogged(test_file):
