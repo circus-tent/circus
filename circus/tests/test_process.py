@@ -5,6 +5,7 @@ import time
 from circus.process import Process, RUNNING
 from circus.tests.support import TestCircus, skipIf, EasyTestSuite
 import circus.py3compat
+from circus.py3compat import StringIO
 
 
 RLIMIT = """\
@@ -108,7 +109,7 @@ class TestProcess(TestCircus):
         self.assertEqual(['yeah', 'macchiato'], p3.format_args())
         os.environ.pop('coffee_type')
 
-    @skipIf(not hasattr(sys.stdout, 'fileno'), 'Nose runs without -s')
+    @skipIf(isinstance(sys.stdout, StringIO), 'Nose runs without -s')
     def test_streams(self):
         script_file = self.get_tmpfile(VERBOSE)
         cmd = sys.executable
