@@ -47,20 +47,17 @@ class TestResourceWatcher(TestCircus):
                 return
         raise AssertionError("%r stat not found" % name)
 
-    def make_plugin(self, *args, **kwargs):
-        return ResourceWatcher(DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                               1, None, *args, **kwargs)
-
     def test_service_config_param_is_deprecated(self):
         with warnings.catch_warnings(record=True) as ws:
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
-            self.make_plugin(service='whatever')
+            self.make_plugin(ResourceWatcher, service='whatever')
             self.assertTrue(any('ResourceWatcher' in w.message.args[0]
                                 for w in ws))
 
     def test_watcher_config_param_is_required(self):
-        self.assertRaises(NotImplementedError, self.make_plugin),
+        self.assertRaises(NotImplementedError, self.make_plugin,
+                          ResourceWatcher)
 
     @gen_test
     def test_resource_watcher_max_mem(self):

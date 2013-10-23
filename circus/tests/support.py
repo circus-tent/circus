@@ -90,6 +90,7 @@ class TestCircus(AsyncTestCase):
         self.dirs = []
         self.tmpfiles = []
         self.cli = AsyncCircusClient()
+        self.plugins = []
 
     def get_new_ioloop(self):
         return tornado.ioloop.IOLoop.instance()
@@ -101,7 +102,17 @@ class TestCircus(AsyncTestCase):
         for dir in self.dirs:
             shutil.rmtree(dir)
         self.cli.stop()
+        for plugin in self.plugins:
+            plugin.stop()
         super(TestCircus, self).tearDown()
+
+    def make_plugin(self, klass, endpoint=DEFAULT_ENDPOINT_DEALER,
+                    sub=DEFAULT_ENDPOINT_SUB, check_delay=1,
+                    **config):
+        config['active'] = True
+        plugin = klass(endpoint, sub, check_delay, None, **config)
+        self.plugins.append(plugin)
+        return plugin
 
     @tornado.gen.coroutine
     def start_arbiter(self, cmd='circus.tests.support.run_process',
@@ -379,6 +390,11 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
     _statsd = _Statsd()
     plugin = klass(endpoint, pubsub_endpoint, check_delay, ssh_server,
                    **config)
+
+    # make sure we close the existing statsd client
+    if hasattr(plugin, 'statsd'):
+        plugin.statsd.stop()
+
     plugin.statsd = _statsd
 
     deadline = time() + (duration / 1000.)
@@ -386,8 +402,8 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
     plugin.start()
     if plugin_info_callback:
         plugin_info_callback(plugin)
+
     plugin.stop()
-    #plugin.statsd.stop()
     return _statsd
 
 
