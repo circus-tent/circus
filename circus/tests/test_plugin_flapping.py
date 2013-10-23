@@ -7,12 +7,22 @@ from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
 
 class TestFlapping(TestCircus):
 
+    def setUp(self):
+        super(TestFlapping, self).setUp()
+        self.plugins = []
+
+    def tearDown(self):
+        for plugin in self.plugins:
+            plugin.stop()
+        super(TestFlapping, self).tearDown()
+
     def make_plugin(self, **config):
         config['active'] = True
         plugin = Flapping(DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                           1, None, **config)
         plugin.configs['test'] = {'active': True}
         plugin.timelines['test'] = [1, 2]
+        self.plugins.append(plugin)
         return plugin
 
     def test_default_config(self):
