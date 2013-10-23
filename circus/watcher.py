@@ -380,6 +380,7 @@ class Watcher(object):
                         self.notify_event(
                             "reap",
                             {"process_pid": pid, "time": time.time()})
+                        process.stop()
                         return
                     else:
                         raise
