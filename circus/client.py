@@ -45,6 +45,7 @@ class AsyncCircusClient(object):
         self.context = context or zmq.Context.instance()
 
     def stop(self):
+        self.stream.stop_on_recv()
         self.socket.close()
 
     def send_message(self, command, **props):
