@@ -55,7 +55,8 @@ class CommandlineTest(TestCircus):
 
     def test_help_switch_no_command(self):
         stdout, stderr = run_ctl('--help')
-        self.assertEqual(stderr, '')
+        if stderr:
+            self.assertIn('UserWarning', stderr)
         output = stdout.splitlines()
         self.assertEqual(output[0], 'usage: ' + USAGE)
         self.assertEqual(output[2], 'Controls a Circus daemon')
@@ -65,13 +66,16 @@ class CommandlineTest(TestCircus):
         stdout, stderr = run_ctl('foo')
         self.assertEqual(stdout, '')
         err = stderr.splitlines()
+        while err and 'import' in err[0]:
+            del err[0]
         self.assertEqual(err[0], 'usage: ' + USAGE)
         self.assertEqual(err[1],
                          'circusctl.py: error: unrecognized arguments: foo')
 
     def test_help_for_add_command(self):
         stdout, stderr = run_ctl('--help add')
-        self.assertEqual(stderr, '')
+        if stderr:
+            self.assertIn('UserWarning', stderr)
         self.assertEqual(stdout.splitlines()[0], 'Add a watcher')
 
     @gen_test
@@ -80,11 +84,13 @@ class CommandlineTest(TestCircus):
         poll_for(self.test_file, 'START')
 
         stdout, stderr = yield async_run_ctl('add test2 "sleep 1"')
-        self.assertEqual(stderr, '')
+        if stderr:
+            self.assertIn('UserWarning', stderr)
         self.assertEqual(stdout, 'ok\n')
 
         stdout, stderr = yield async_run_ctl('status test2')
-        self.assertEqual(stderr, '')
+        if stderr:
+            self.assertIn('UserWarning', stderr)
         self.assertEqual(stdout, 'stopped\n')
         yield self.stop_arbiter()
 
@@ -94,10 +100,12 @@ class CommandlineTest(TestCircus):
         poll_for(self.test_file, 'START')
 
         stdout, stderr = yield async_run_ctl('add --start test2 "sleep 1"')
-        self.assertEqual(stderr, '')
+        if stderr:
+            self.assertIn('UserWarning', stderr)
         self.assertEqual(stdout, 'ok\n')
         stdout, stderr = yield async_run_ctl('status test2')
-        self.assertEqual(stderr, '')
+        if stderr:
+            self.assertIn('UserWarning', stderr)
         self.assertEqual(stdout, 'active\n')
         yield self.stop_arbiter()
 
@@ -118,7 +126,8 @@ class CLITest(TestCircus):
         poll_for(self.test_file, 'START')
 
         stdout, stderr = yield self.run_ctl()
-        self.assertEqual(stderr, '')
+        if stderr:
+            self.assertIn('UserWarning', stderr)
         output = stdout.splitlines()
         self.assertEqual(output[0], VERSION)
         # strip of term escape characters, if any

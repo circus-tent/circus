@@ -101,7 +101,7 @@ class TestUtil(TestCase):
             m = mock.Mock()
             m.pw_uid = '1000'
             getpw.return_value = m
-            uid = to_uid(u'user')
+            uid = to_uid('user')
             self.assertEqual('1000', uid)
             uid = to_uid('user')
             self.assertEqual('1000', uid)
