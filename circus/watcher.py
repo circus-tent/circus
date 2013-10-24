@@ -59,6 +59,9 @@ class Watcher(object):
     - **send_hup**: if True, a process reload will be done by sending
       the SIGHUP signal. Defaults to False.
 
+    - **stop_signal**: the signal to send when stopping the process.
+      Defaults to SIGTERM.
+
     - **env**: a mapping containing the environment variables the command
       will run with. Optional.
 
@@ -170,8 +173,8 @@ class Watcher(object):
 
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None, max_retry=5,
-                 gid=None, send_hup=False, env=None,
-                 graceful_timeout=30., prereload_fn=None,
+                 gid=None, send_hup=False, stop_signal=signal.SIGTERM,
+                 env=None, graceful_timeout=30., prereload_fn=None,
                  rlimits=None, executable=None, stdout_stream=None,
                  stderr_stream=None, priority=0, loop=None,
                  singleton=False, use_sockets=False, copy_env=False,
@@ -219,10 +222,11 @@ class Watcher(object):
                              " watcher" % self.numprocesses)
 
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
-                          "uid", "gid", "send_hup", "shell", "env",
-                          "max_retry", "cmd", "args", "graceful_timeout",
-                          "executable", "use_sockets", "priority", "copy_env",
-                          "singleton", "stdout_stream_conf", "on_demand",
+                          "uid", "gid", "send_hup", "stop_signal", "shell",
+                          "env", "max_retry", "cmd", "args",
+                          "graceful_timeout", "executable", "use_sockets",
+                          "priority", "copy_env", "singleton",
+                          "stdout_stream_conf", "on_demand",
                           "stderr_stream_conf", "max_age", "max_age_variance",
                           "close_child_stdout", "close_child_stderr")
                          + tuple(options.keys()))
@@ -263,6 +267,7 @@ class Watcher(object):
 
         self.rlimits = rlimits
         self.send_hup = send_hup
+        self.stop_signal = stop_signal
         self.sockets = self.evpub_socket = None
         self.arbiter = None
         self.hooks = {}
@@ -588,12 +593,12 @@ class Watcher(object):
     @gen.coroutine
     @util.debuglog
     def kill_process(self, process):
-        """Kill process (SIGTERM, graceful_timeout then SIGKILL)
+        """Kill process (stop_signal, graceful_timeout then SIGKILL)
         """
         if process.stopping:
             raise gen.Return(False)
         logger.debug("%s: kill process %s", self.name, process.pid)
-        self.send_signal_process(process, signal.SIGTERM)
+        self.send_signal_process(process, self.stop_signal)
         process.stopping = True
         waited = 0
         while waited < self.graceful_timeout:
@@ -612,7 +617,7 @@ class Watcher(object):
     @gen.coroutine
     @util.debuglog
     def kill_processes(self):
-        """Kill all processes (SIGTERM, graceful_timeout then SIGKILL)
+        """Kill all processes (stop_signal, graceful_timeout then SIGKILL)
         """
         active_processes = self.get_active_processes()
         try:
@@ -881,6 +886,8 @@ class Watcher(object):
             action = 1
         elif key == "send_hup":
             self.send_hup = val
+        elif key == "stop_signal":
+            self.stop_signal = util.to_signum(val)
         elif key == "shell":
             self.shell = val
             action = 1

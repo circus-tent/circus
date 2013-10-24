@@ -28,7 +28,7 @@ class Stop(Command):
         will get stopped.
 
         If ``waiting`` is False (default), the call will return immediatly
-        after calling SIGTERM on each process.
+        after calling `stop_signal` on each process.
 
         If ``waiting`` is True, the call will return only when the stop process
         is completly ended. Because of the

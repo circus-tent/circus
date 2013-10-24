@@ -182,8 +182,15 @@ watcher:NAME - as many sections as you want
         /dev/null after the fork. Defaults to False.
 
     **send_hup**
-        if True, a process reload will be done by sending the SIGHUP signal.
+        If True, a process reload will be done by sending the SIGHUP signal.
         Defaults to False.
+
+    **stop_signal**
+        The signal to send when stopping the process. Can be specified as a
+        number or a signal name. Signal names are case-insensitive and can
+        include 'SIG' or not. So valid examples include `quit`, `INT`,
+        `SIGTERM` and `3`.
+        Defaults to SIGTERM.
 
     **max_retry**
         The number of times we attempt to start a process, before
@@ -196,7 +203,7 @@ watcher:NAME - as many sections as you want
         The number of seconds to wait for a process to terminate gracefully
         before killing it.
 
-        When stopping a process, we first send it a SIGTERM signal. A worker
+        When stopping a process, we first send it a :ref:`stop_signal`. A worker
         may catch this signal to perform clean up operations before exiting.
         If the worker is still active after graceful_timeout seconds, we send
         it a SIGKILL signal.  It is not possible to catch SIGKILL signals so

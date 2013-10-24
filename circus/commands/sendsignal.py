@@ -1,8 +1,6 @@
-import signal
-
 from circus.commands.base import Command
 from circus.exc import ArgumentError, MessageError
-from circus.py3compat import string_types
+from circus.util import to_signum
 
 
 class Signal(Command):
@@ -162,21 +160,13 @@ class Signal(Command):
     def validate(self, props):
         super(Signal, self).validate(props)
 
-        signum = props.get('signum')
         if 'statspid' in props and not 'pid' in props:
             raise ArgumentError('cannot specify childpid without pid')
         if 'children' in props and not 'pid' in props:
             raise ArgumentError('cannot specify children without pid')
 
-        if isinstance(signum, int):
-            if signum not in (signal.SIGQUIT, signal.SIGHUP, signal.SIGKILL,
-                              signal.SIGTERM, signal.SIGTTIN, signal.SIGTTOU,
-                              signal.SIGUSR1, signal.SIGUSR2):
-                raise MessageError('signal invalid')
-
-        elif isinstance(signum, string_types):
-            if signum.lower() in ('quit', 'hup', 'kill', 'term', 'ttin',
-                                  'ttou', 'usr1', 'usr2'):
-                props['signum'] = getattr(signal, "SIG%s" % signum.upper())
-            else:
+        if 'signum' in props:
+            try:
+                props['signum'] = to_signum(props['signum'])
+            except ValueError:
                 raise MessageError('signal invalid')
