@@ -27,6 +27,7 @@ except ImportError:
 
 from datetime import timedelta
 from functools import wraps
+import signal
 
 from zmq import ssh
 
@@ -35,6 +36,7 @@ from psutil import AccessDenied, NoSuchProcess, Process
 
 from circus.exc import ConflictError
 from circus import logger
+from circus.py3compat import string_types
 
 
 # default endpoints
@@ -70,6 +72,7 @@ LOG_LEVELS = {
 LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
 LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
 _SYMBOLS = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+_all_signals = {}
 
 
 def get_working_dir():
@@ -207,6 +210,23 @@ def to_bool(s):
         return False
     else:
         raise ValueError("%r is not a boolean" % s)
+
+
+def to_signum(signum):
+    if not _all_signals:
+        for name in dir(signal):
+            if name.startswith('SIG'):
+                value = getattr(signal, name)
+                _all_signals[name[3:]] = value
+                _all_signals[name] = value
+                _all_signals[value] = value
+
+    try:
+        if isinstance(signum, string_types):
+            signum = signum.upper()
+        return _all_signals[signum]
+    except KeyError:
+        raise ValueError('signal invalid')
 
 
 def to_uid(name):

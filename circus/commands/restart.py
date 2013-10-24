@@ -29,7 +29,7 @@ class Restart(Command):
         to the watcher.
 
         If ``waiting`` is False (default), the call will return immediatly
-        after calling SIGTERM on each process.
+        after calling `stop_signal` on each process.
 
         If ``waiting`` is True, the call will return only when the restart
         process is completly ended. Because of the

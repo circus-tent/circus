@@ -20,11 +20,11 @@ class Quit(Command):
 
         The response return the status "ok".
 
-        If ``waiting`` is False (default), the call will return immediatly
-        after calling SIGTERM on each process.
+        If ``waiting`` is False (default), the call will return immediately
+        after calling ``stop_signal`` on each process.
 
         If ``waiting`` is True, the call will return only when the stop process
-        is completly ended. Because of the
+        is completely ended. Because of the
         :ref:`graceful_timeout option <graceful_timeout>`, it can take some
         time.
 
