@@ -7,4 +7,4 @@ topic = 'show:'
 
 for message, message_topic in CircusConsumer(topic, endpoint=ZMQ_ENDPOINT):
     response = json.dumps(dict(message=message, topic=message_topic))
-    print response
+    print(response)
