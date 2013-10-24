@@ -2,5 +2,6 @@
 
 flake8==1.7.0
 mock==1.0.1
+unittest2==0.5.1
 python-coveralls==2.4.0
 nose-cov==1.6
