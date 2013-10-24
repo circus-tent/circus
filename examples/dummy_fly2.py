@@ -23,7 +23,7 @@ class DummyFly(object):
         return
 
     def run(self):
-        print "hello, fly 2 #%s (pid: %s) is alive" % (self.wid, os.getpid())
+        print("hello, fly 2 #%s (pid: %s) is alive" % (self.wid, os.getpid()))
 
         while self.alive:
             time.sleep(0.1)
