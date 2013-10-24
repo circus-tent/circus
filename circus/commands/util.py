@@ -21,6 +21,8 @@ def convert_option(key, val):
         return val
     elif key == "send_hup":
         return util.to_bool(val)
+    elif key == "stop_signal":
+        return util.to_signum(val)
     elif key == "shell":
         return util.to_bool(val)
     elif key == "copy_env":

@@ -1,4 +1,5 @@
 import os
+import signal
 from mock import patch
 
 from circus import logger
@@ -33,7 +34,8 @@ _CONF = {
     'issue546': os.path.join(CONFIG_DIR, 'issue546.ini'),
     'env_everywhere': os.path.join(CONFIG_DIR, 'env_everywhere.ini'),
     'copy_env': os.path.join(CONFIG_DIR, 'copy_env.ini'),
-    'issue567': os.path.join(CONFIG_DIR, 'issue567.ini')
+    'issue567': os.path.join(CONFIG_DIR, 'issue567.ini'),
+    'issue594': os.path.join(CONFIG_DIR, 'issue594.ini'),
 }
 
 
@@ -231,5 +233,12 @@ class TestConfig(TestCase):
         # make sure the global environment makes it into the cfg environment
         # even without [env] section
         self.assertEqual(conf['watchers'][0]['cmd'], 'down')
+
+    def test_watcher_stop_signal(self):
+        conf = get_config(_CONF['issue594'])
+        self.assertEqual(conf['watchers'][0]['stop_signal'], signal.SIGINT)
+        watcher = Watcher.load_from_config(conf['watchers'][0])
+        watcher.stop()
+
 
 test_suite = EasyTestSuite(__name__)
