@@ -473,14 +473,14 @@ class TestArbiter(TestCircus):
     @tornado.testing.gen_test
     def test_start_watcher(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1)
-        arbiter = Arbiter([], None, None)
+        arbiter = Arbiter([], None, None, check_delay=-1)
         yield arbiter.start_watcher(watcher)
         self.assertTrue(watcher.is_active())
 
     def test_start_watchers_with_autostart(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1,
                               autostart=False)
-        arbiter = Arbiter([], None, None)
+        arbiter = Arbiter([], None, None, check_delay=-1)
         arbiter.start_watcher(watcher)
         self.assertFalse(getattr(watcher, 'started', False))
 
