@@ -72,7 +72,7 @@ class Arbiter(object):
                          instance on the cluster.
     """
 
-    def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=.5,
+    def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.0,
                  prereload_fn=None, context=None, loop=None, statsd=False,
                  stats_endpoint=None, statsd_close_outputs=False,
                  multicast_endpoint=None, plugins=None,
@@ -367,7 +367,7 @@ class Arbiter(object):
         # delete watchers
         for n in deleted_wn:
             w = self.get_watcher(n)
-            yield w.stop()
+            yield w._stop()
             del self._watchers_names[w.name.lower()]
             self.watchers.remove(w)
 

@@ -6,7 +6,7 @@ from threading import (_active_limbo_lock, _limbo, _active, _sys, _trace_hook,
 debugger = False
 try:
     import pydevd
-    debugger=pydevd.GetGlobalDebugger()
+    debugger = pydevd.GetGlobalDebugger()
 except ImportError:
     pass
 
@@ -51,7 +51,8 @@ if not debugger:
                                         exc_tb.tb_frame.f_code.co_name))
 
                                 exc_tb = exc_tb.tb_next
-                            self._stderr.write("%s: %s" % (exc_type, exc_value))
+                            self._stderr.write("%s: %s" %
+                                               (exc_type, exc_value))
                         finally:
                             del exc_type, exc_value, exc_tb
                 finally:
@@ -123,7 +124,8 @@ if not debugger:
                                         exc_tb.tb_frame.f_code.co_name))
 
                                 exc_tb = exc_tb.tb_next
-                            self._stderr.write("%s: %s" % (exc_type, exc_value))
+                            self._stderr.write("%s: %s" %
+                                               (exc_type, exc_value))
                         finally:
                             del exc_type, exc_value, exc_tb
                 finally:

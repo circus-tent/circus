@@ -5,7 +5,7 @@ import warnings
 
 from tornado.testing import gen_test
 
-from circus.tests.support import TestCircus, Process, poll_for
+from circus.tests.support import TestCircus, Process, async_poll_for
 from circus.tests.support import async_run_plugin, EasyTestSuite
 from circus.plugins.watchdog import WatchDog
 
@@ -44,7 +44,7 @@ class TestPluginWatchDog(TestCircus):
     @gen_test
     def test_watchdog_discovery_found(self):
         yield self.start_arbiter(fqn)
-        poll_for(self.test_file, 'START')
+        async_poll_for(self.test_file, 'START')
 
         config = {'loop_rate': 0.1, 'watchers_regex': "^test.*$"}
         with warnings.catch_warnings():
@@ -56,7 +56,7 @@ class TestPluginWatchDog(TestCircus):
     @gen_test
     def test_watchdog_discovery_not_found(self):
         yield self.start_arbiter(fqn)
-        poll_for(self.test_file, 'START')
+        async_poll_for(self.test_file, 'START')
 
         config = {'loop_rate': 0.1, 'watchers_regex': "^foo.*$"}
         with warnings.catch_warnings():
