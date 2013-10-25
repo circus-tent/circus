@@ -7,7 +7,7 @@ from tornado.testing import gen_test
 from tornado.gen import coroutine, Return
 
 from circus.circusctl import USAGE, VERSION, CircusCtl
-from circus.tests.support import TestCircus, poll_for, EasyTestSuite
+from circus.tests.support import TestCircus, async_poll_for, EasyTestSuite
 from zmq.utils.strtypes import b, u
 from circus.util import tornado_sleep
 
@@ -81,7 +81,7 @@ class CommandlineTest(TestCircus):
     @gen_test
     def test_add(self):
         yield self.start_arbiter()
-        poll_for(self.test_file, 'START')
+        async_poll_for(self.test_file, 'START')
 
         stdout, stderr = yield async_run_ctl('add test2 "sleep 1"')
         if stderr:
@@ -97,7 +97,7 @@ class CommandlineTest(TestCircus):
     @gen_test
     def test_add_start(self):
         yield self.start_arbiter()
-        poll_for(self.test_file, 'START')
+        async_poll_for(self.test_file, 'START')
 
         stdout, stderr = yield async_run_ctl('add --start test2 "sleep 1"')
         if stderr:
@@ -121,9 +121,9 @@ class CLITest(TestCircus):
         raise Return((stdout, stderr))
 
     @gen_test
-    def test_launch_cli(self):
+    def _test_launch_cli(self):
         yield self.start_arbiter()
-        poll_for(self.test_file, 'START')
+        async_poll_for(self.test_file, 'START')
 
         stdout, stderr = yield self.run_ctl()
         if stderr:
