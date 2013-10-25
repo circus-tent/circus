@@ -367,7 +367,7 @@ class Arbiter(object):
         # delete watchers
         for n in deleted_wn:
             w = self.get_watcher(n)
-            yield w.stop()
+            yield w._stop()
             del self._watchers_names[w.name.lower()]
             self.watchers.remove(w)
 
