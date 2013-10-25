@@ -3,7 +3,7 @@ import socket
 import sys
 import tornado
 from tempfile import mkstemp
-from time import time, sleep
+from time import time
 import zmq.utils.jsonapi as json
 try:
     from urllib.parse import urlparse

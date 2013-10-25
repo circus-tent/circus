@@ -27,7 +27,7 @@ class TestController(TestCase):
         loop = ioloop.IOLoop()
 
         controller = MockedController('endpoint', 'multicast_endpoint',
-                                      mock.sentinel.context, loop, arbiter, 
+                                      mock.sentinel.context, loop, arbiter,
                                       check_delay=-1.0)
 
         controller.dispatch((None, 'something'))
