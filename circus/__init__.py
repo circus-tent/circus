@@ -20,7 +20,7 @@ class ArbiterHandler(object):
                  env=None, name=None, context=None,
                  background=False, stream_backend="thread", httpd=False,
                  plugins=None, debug=False, proc_name="circusd",
-                 loop=None):
+                 loop=None, check_delay=1.0):
         """Creates a Arbiter and a single watcher in it.
 
         Options:
@@ -98,6 +98,8 @@ class ArbiterHandler(object):
           (default: False)
         - **proc_name** -- the arbiter process name (default: circusd)
         - **loop** -- the event loop (default: None)
+        - **check_delay** -- the delay between two controller points
+        (default: 1 s)
         """
         from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                                  DEFAULT_ENDPOINT_MULTICAST,
@@ -134,7 +136,7 @@ class ArbiterHandler(object):
                        statsd_close_outputs=statsd_close_outputs,
                        multicast_endpoint=multicast_endpoint,
                        context=context, plugins=plugins, debug=debug,
-                       proc_name=proc_name, loop=loop)
+                       proc_name=proc_name, loop=loop, check_delay=check_delay)
 
     def _get_arbiter_klass(self, background):
         if background:
