@@ -598,7 +598,7 @@ class Watcher(object):
         if process.stopping:
             raise gen.Return(False)
         logger.debug("%s: kill process %s", self.name, process.pid)
-        self.send_signal_process(process, self.stop_signal)
+        self.send_signal(process.pid, self.stop_signal)
         process.stopping = True
         waited = 0
         while waited < self.graceful_timeout:
