@@ -93,21 +93,11 @@ class Signal(Command):
 
         - <name>: the name of the watcher
         - <pid>: integer, the process id.
-        - <signum>: the signal number to send.
+        - <signum>: the signal number (or name) to send.
         - <childpid>: the pid of a child, if any
         - <children>: boolean, send the signal to all the children
         - <recursive>: boolean, send the signal to the process and its children
 
-        Allowed signals are:
-
-            - 3:    QUIT
-            - 15:   TERM
-            - 9:    KILL
-            - 1:    HUP
-            - 21:   TTIN
-            - 22:   TTOU
-            - 30:   USR1
-            - 31:   USR2
     """
 
     name = "signal"
