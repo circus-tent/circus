@@ -4,6 +4,7 @@ before_install:
     - sudo apt-get install -y libevent-dev
 python: 2.7
 env:
+  - TOX_ENV=py32
   - TOX_ENV=py33
   - TOX_ENV=py26-no-gevent
   - TOX_ENV=py27-no-gevent
