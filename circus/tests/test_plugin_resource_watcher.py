@@ -2,7 +2,7 @@ import warnings
 
 from tornado.testing import gen_test
 
-from circus.tests.support import TestCircus, poll_for, Process
+from circus.tests.support import TestCircus, async_poll_for, Process
 from circus.tests.support import async_run_plugin, EasyTestSuite
 from circus.plugins.resource_watcher import ResourceWatcher
 
@@ -61,7 +61,7 @@ class TestResourceWatcher(TestCircus):
     @gen_test
     def test_resource_watcher_max_mem(self):
         yield self.start_arbiter(fqn)
-        poll_for(self.test_file, 'START')
+        async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'max_mem': 0.05, 'watcher': 'test'}
 
         statsd_increments = yield async_run_plugin(ResourceWatcher,
@@ -75,7 +75,7 @@ class TestResourceWatcher(TestCircus):
     @gen_test
     def test_resource_watcher_min_mem(self):
         yield self.start_arbiter(fqn)
-        poll_for(self.test_file, 'START')
+        async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'min_mem': 100000.1, 'watcher': 'test'}
 
         statsd_increments = yield async_run_plugin(ResourceWatcher,
@@ -89,7 +89,7 @@ class TestResourceWatcher(TestCircus):
     @gen_test
     def test_resource_watcher_max_cpu(self):
         yield self.start_arbiter(fqn)
-        poll_for(self.test_file, 'START')
+        async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'max_cpu': 0.1, 'watcher': 'test'}
 
         statsd_increments = yield async_run_plugin(ResourceWatcher,
@@ -103,7 +103,7 @@ class TestResourceWatcher(TestCircus):
     @gen_test
     def test_resource_watcher_min_cpu(self):
         yield self.start_arbiter(fqn)
-        poll_for(self.test_file, 'START')
+        async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'min_cpu': 99.0, 'watcher': 'test'}
 
         statsd_increments = yield async_run_plugin(ResourceWatcher,

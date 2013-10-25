@@ -1,6 +1,6 @@
 from tornado.testing import gen_test
 
-from circus.tests.support import TestCircus, poll_for
+from circus.tests.support import TestCircus, async_poll_for
 from circus.tests.support import async_run_plugin, EasyTestSuite
 from circus.plugins.statsd import FullStats
 
@@ -15,7 +15,7 @@ class TestFullStats(TestCircus):
     def test_full_stats(self):
         dummy_process = 'circus.tests.support.run_process'
         yield self.start_arbiter(dummy_process)
-        poll_for(self.test_file, 'START')
+        async_poll_for(self.test_file, 'START')
 
         config = {'loop_rate': 0.2}
         gauges = yield async_run_plugin(

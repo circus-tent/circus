@@ -13,7 +13,7 @@ except ImportError:
 from circus.arbiter import Arbiter
 from circus.client import CircusClient
 from circus.plugins import CircusPlugin
-from circus.tests.support import TestCircus, poll_for, truncate_file
+from circus.tests.support import TestCircus, async_poll_for, truncate_file
 from circus.tests.support import EasyTestSuite, skipIf
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
                          DEFAULT_ENDPOINT_SUB)
@@ -281,7 +281,7 @@ class TestTrainer(TestCircus):
         truncate_file(self.test_file)  # clean slate
 
         yield self._call("reload")
-        self.assertTrue(poll_for(self.test_file, 'START'))  # restarted
+        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
 
         resp = yield self._call("list", name=name)
         processes2 = resp.get('pids')
@@ -298,7 +298,7 @@ class TestTrainer(TestCircus):
 
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload")
-        self.assertTrue(poll_for(self.test_file, 'START'))  # restarted
+        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
 
         resp = yield self._call("list", name="test")
         processes2 = resp.get('pids')
@@ -361,19 +361,19 @@ class TestTrainer(TestCircus):
             return cli.send_message('incr', name='test')
 
         # wait for the plugin to be started
-        self.assertTrue(poll_for(datafile, 'PLUGIN STARTED'))
+        self.assertTrue(async_poll_for(datafile, 'PLUGIN STARTED'))
 
         cli = CircusClient()
         self.assertEqual(nb_processes(), 1)
         incr_processes()
         self.assertEqual(nb_processes(), 2)
         # wait for the plugin to receive the signal
-        self.assertTrue(poll_for(datafile, 'test:spawn'))
+        self.assertTrue(async_poll_for(datafile, 'test:spawn'))
         truncate_file(datafile)
         incr_processes()
         self.assertEqual(nb_processes(), 3)
         # wait for the plugin to receive the signal
-        self.assertTrue(poll_for(datafile, 'test:spawn'))
+        self.assertTrue(async_poll_for(datafile, 'test:spawn'))
 
     # XXX TODO
     @tornado.testing.gen_test
