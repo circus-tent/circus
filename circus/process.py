@@ -293,6 +293,7 @@ class Process(object):
         info["age"] = self.age()
         info["started"] = self.started
         info["children"] = []
+        info['wid'] = self.wid
         for child in self._worker.get_children():
             info["children"].append(get_info(child))
 
