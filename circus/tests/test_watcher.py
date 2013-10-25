@@ -64,7 +64,7 @@ class TestWatcher(TestCircus):
 
     @tornado.testing.gen_test
     def test_signal(self):
-        yield self.start_arbiter()
+        yield self.start_arbiter(check_delay=1.0)
         resp = yield self.numprocesses('incr', name='test')
         self.assertEqual(resp, 2)
         # wait for both to have started
