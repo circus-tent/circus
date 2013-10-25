@@ -192,6 +192,10 @@ watcher:NAME - as many sections as you want
         `SIGTERM` and `3`.
         Defaults to SIGTERM.
 
+    **stop_children**
+        When sending the :ref:`stop_signal`, send it to the children as well.
+        Defaults to False.
+
     **max_retry**
         The number of times we attempt to start a process, before
         we abandon and stop the whole watcher. Defaults to 5.
@@ -545,3 +549,4 @@ Example::
     stdout_stream.class = FancyStdoutStream
     stdout_stream.color = green
     stdout_stream.time_format = %Y/%m/%d | %H:%M:%S
+

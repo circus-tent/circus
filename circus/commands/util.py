@@ -23,6 +23,8 @@ def convert_option(key, val):
         return util.to_bool(val)
     elif key == "stop_signal":
         return util.to_signum(val)
+    elif key == "stop_children":
+        return util.to_bool(val)
     elif key == "shell":
         return util.to_bool(val)
     elif key == "copy_env":

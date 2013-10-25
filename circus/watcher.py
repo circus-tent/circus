@@ -62,6 +62,9 @@ class Watcher(object):
     - **stop_signal**: the signal to send when stopping the process.
       Defaults to SIGTERM.
 
+    - **stop_children**: send the **stop_signal** to the children too.
+      Defaults to False.
+
     - **env**: a mapping containing the environment variables the command
       will run with. Optional.
 
@@ -174,14 +177,15 @@ class Watcher(object):
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, uid=None, max_retry=5,
                  gid=None, send_hup=False, stop_signal=signal.SIGTERM,
-                 env=None, graceful_timeout=30., prereload_fn=None,
-                 rlimits=None, executable=None, stdout_stream=None,
-                 stderr_stream=None, priority=0, loop=None,
-                 singleton=False, use_sockets=False, copy_env=False,
-                 copy_path=False, max_age=0, max_age_variance=30,
-                 hooks=None, respawn=True, autostart=True, on_demand=False,
-                 virtualenv=None, close_child_stdout=False,
-                 close_child_stderr=False, **options):
+                 stop_children=False, env=None, graceful_timeout=30.0,
+                 prereload_fn=None, rlimits=None, executable=None,
+                 stdout_stream=None, stderr_stream=None, priority=0,
+                 loop=None, singleton=False, use_sockets=False,
+                 copy_env=False, copy_path=False, max_age=0,
+                 max_age_variance=30, hooks=None, respawn=True,
+                 autostart=True, on_demand=False, virtualenv=None,
+                 close_child_stdout=False, close_child_stderr=False,
+                 **options):
         self.name = name
         self.use_sockets = use_sockets
         self.on_demand = on_demand
@@ -222,10 +226,10 @@ class Watcher(object):
                              " watcher" % self.numprocesses)
 
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
-                          "uid", "gid", "send_hup", "stop_signal", "shell",
-                          "env", "max_retry", "cmd", "args",
-                          "graceful_timeout", "executable", "use_sockets",
-                          "priority", "copy_env", "singleton",
+                          "uid", "gid", "send_hup", "stop_signal",
+                          "stop_children", "shell", "env", "max_retry", "cmd",
+                          "args", "graceful_timeout", "executable",
+                          "use_sockets", "priority", "copy_env", "singleton",
                           "stdout_stream_conf", "on_demand",
                           "stderr_stream_conf", "max_age", "max_age_variance",
                           "close_child_stdout", "close_child_stderr")
@@ -268,6 +272,7 @@ class Watcher(object):
         self.rlimits = rlimits
         self.send_hup = send_hup
         self.stop_signal = stop_signal
+        self.stop_children = stop_children
         self.sockets = self.evpub_socket = None
         self.arbiter = None
         self.hooks = {}
@@ -565,22 +570,25 @@ class Watcher(object):
     def send_signal_process(self, process, signum):
         """Send the signum signal to the process
 
-        The signal is sent to all the children then
-        to the process itself
+        The signal is sent to the process itself then to all the children
         """
         try:
-            # sending the same signal to all the children
-            for child_pid in process.children():
-                process.send_signal_child(child_pid, signum)
-                self.notify_event("kill", {"process_pid": child_pid,
-                                  "time": time.time()})
-            # now sending the signal to the process itself
+            # sending the signal to the process itself
             self.send_signal(process.pid, signum)
             self.notify_event("kill", {"process_pid": process.pid,
                                        "time": time.time()})
         except NoSuchProcess:
             # already dead !
-            return
+            pass
+        # now sending the same signal to all the children
+        for child_pid in process.children():
+            try:
+                process.send_signal_child(child_pid, signum)
+                self.notify_event("kill", {"process_pid": child_pid,
+                                  "time": time.time()})
+            except NoSuchProcess:
+                # already dead !
+                pass
 
     def _process_remove_redirections(self, process):
         """Remove process redirections
@@ -598,7 +606,12 @@ class Watcher(object):
         if process.stopping:
             raise gen.Return(False)
         logger.debug("%s: kill process %s", self.name, process.pid)
-        self.send_signal(process.pid, self.stop_signal)
+        if self.stop_children:
+            self.send_signal_process(process, self.stop_signal)
+        else:
+            self.send_signal(process.pid, self.stop_signal)
+            self.notify_event("kill", {"process_pid": process.pid,
+                                       "time": time.time()})
         process.stopping = True
         waited = 0
         while waited < self.graceful_timeout:
@@ -893,6 +906,8 @@ class Watcher(object):
             self.send_hup = val
         elif key == "stop_signal":
             self.stop_signal = util.to_signum(val)
+        elif key == "stop_children":
+            self.stop_children = util.to_bool(val)
         elif key == "shell":
             self.shell = val
             action = 1
