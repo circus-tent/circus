@@ -219,6 +219,7 @@ def to_signum(signum):
                 value = getattr(signal, name)
                 _all_signals[name[3:]] = value
                 _all_signals[name] = value
+                _all_signals[str(value)] = value
                 _all_signals[value] = value
 
     try:

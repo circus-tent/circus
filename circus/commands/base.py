@@ -1,9 +1,8 @@
-import signal
 import copy
 import textwrap
 import time
 
-from circus.exc import MessageError, ArgumentError
+from circus.exc import MessageError
 from circus.commands import errors
 
 
@@ -93,14 +92,6 @@ class Command(object):
             return arbiter.get_watcher(watcher_name.lower())
         except KeyError:
             raise MessageError("program %s not found" % watcher_name)
-
-    def _get_signal(self, sig):
-        if sig.lower() in ('quit', 'hup', 'kill', 'term', 'ttin', 'ttou',
-                           'usr1', 'usr2'):
-            return getattr(signal, "SIG%s" % sig.upper())
-        elif sig.isdigit():
-            return int(sig)
-        raise ArgumentError("signal %r not supported" % sig)
 
     def validate(self, props):
         if not self.properties:

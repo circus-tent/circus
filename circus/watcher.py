@@ -710,6 +710,11 @@ class Watcher(object):
         return [p for p in self.processes.values()
                 if p.status not in (DEAD_OR_ZOMBIE, UNEXISTING)]
 
+    def get_active_pids(self):
+        """return a list of pids of active processes (not already stopped)"""
+        return [p.pid for p in self.processes.values()
+                if p.status not in (DEAD_OR_ZOMBIE, UNEXISTING)]
+
     @property
     def pids(self):
         """Returns a list of PIDs"""

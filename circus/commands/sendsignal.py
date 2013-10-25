@@ -56,8 +56,8 @@ class Signal(Command):
                     "child_pid": <childpid>,
             }
 
-        It is also possible to send a signal to all the processes of the
-        watcher and its childs::
+        It is also possible to send a signal to all the children of the
+        watcher::
 
             {
                 "command": "signal",
@@ -67,7 +67,7 @@ class Signal(Command):
                     "children": True
             }
 
-        Last, you can send a signal to the process *and* its children, with
+        Lastly, you can send a signal to the process *and* its children, with
         the *recursive* option::
 
             {
@@ -85,8 +85,8 @@ class Signal(Command):
 
         ::
 
-            $ circusctl signal <name> [<process>] [<pid>] [--children]
-                    [recursive] <signum>
+            $ circusctl signal <name> [<pid>] [--children]
+                    [--recursive] <signum>
 
         Options:
         ++++++++
@@ -111,37 +111,35 @@ class Signal(Command):
     """
 
     name = "signal"
-    options = [('', 'children', True, "Only signal children of the process")]
+    options = [('', 'children', False, "Only signal children of the process"),
+               ('', 'recursive', False, "Signal parent and children")]
     properties = ['name', 'signum']
 
     def message(self, *args, **opts):
         largs = len(args)
-        if largs < 2 or largs > 4:
+        if largs < 2 or largs > 3:
             raise ArgumentError("Invalid number of arguments")
 
-        if len(args) == 4:
-            signum = self._get_signal(args[3])
-            return self.make_message(name=args[0], process=args[1],
-                                     pid=args[2], signum=signum)
-        elif len(args) == 3:
-            signum = self._get_signal(args[2])
-            children = opts.get("children", False)
-            return self.make_message(name=args[0], process=args[1],
-                                     signum=signum, children=children)
-        else:
-            signum = self._get_signal(args[1])
-            return self.make_message(name=args[0], signum=signum)
+        props = {
+            'name': args[0],
+            'children': opts.get("children", False),
+            'recursive': opts.get("recursive", False),
+            'signum': args[-1],
+        }
+        if len(args) == 3:
+            props['pid'] = args[1]
+        return self.make_message(**props)
 
     def execute(self, arbiter, props):
         name = props.get('name')
         watcher = self._get_watcher(arbiter, name)
         signum = props.get('signum')
-        pid = props.get('pid', None)
+        pids = [props['pid']] if 'pid' in props else watcher.get_active_pids()
         childpid = props.get('childpid', None)
         children = props.get('children', False)
         recursive = props.get('recursive', False)
 
-        if pid:
+        for pid in pids:
             if childpid:
                 watcher.send_signal_child(pid, childpid, signum)
             elif children:
@@ -153,20 +151,14 @@ class Signal(Command):
                 if recursive:
                     # also send to the children
                     watcher.send_signal_children(pid, signum)
-        else:
-            # send to all the pids for this watcher
-            watcher.send_signal_processes(signum)
 
     def validate(self, props):
         super(Signal, self).validate(props)
 
-        if 'statspid' in props and not 'pid' in props:
+        if 'childpid' in props and not 'pid' in props:
             raise ArgumentError('cannot specify childpid without pid')
-        if 'children' in props and not 'pid' in props:
-            raise ArgumentError('cannot specify children without pid')
 
-        if 'signum' in props:
-            try:
-                props['signum'] = to_signum(props['signum'])
-            except ValueError:
-                raise MessageError('signal invalid')
+        try:
+            props['signum'] = to_signum(props['signum'])
+        except ValueError:
+            raise MessageError('signal invalid')
