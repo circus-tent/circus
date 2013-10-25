@@ -10,7 +10,7 @@ try:
 except ImportError:
     from urlparse import urlparse  # NOQA
 
-from circus.arbiter import Arbiter, ThreadedArbiter
+from circus.arbiter import Arbiter
 from circus.client import CircusClient
 from circus.plugins import CircusPlugin
 from circus.tests.support import TestCircus, poll_for, truncate_file
@@ -473,27 +473,28 @@ class TestArbiter(TestCircus):
     @tornado.testing.gen_test
     def test_start_watcher(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1)
-        arbiter = Arbiter([], None, None)
+        arbiter = Arbiter([], None, None, check_delay=-1)
         yield arbiter.start_watcher(watcher)
         self.assertTrue(watcher.is_active())
 
     def test_start_watchers_with_autostart(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1,
                               autostart=False)
-        arbiter = Arbiter([], None, None)
+        arbiter = Arbiter([], None, None, check_delay=-1)
         arbiter.start_watcher(watcher)
         self.assertFalse(getattr(watcher, 'started', False))
 
+    @tornado.testing.gen_test
     def test_add_watcher(self):
-        arbiter = ThreadedArbiter([], DEFAULT_ENDPOINT_DEALER,
-                                  DEFAULT_ENDPOINT_SUB)
+        arbiter = Arbiter([], DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
+                          loop=tornado.ioloop.IOLoop.instance(),
+                          check_delay=-1)
         arbiter.add_watcher('foo', 'sleep 5')
         try:
-            arbiter.start()
-            sleep(.1)
+            yield arbiter.start()
             self.assertEqual(arbiter.watchers[0].status(), 'active')
         finally:
-            arbiter.stop()
+            yield arbiter.stop()
 
 
 @skipIf(not has_circusweb(), 'Tests for circus-web')

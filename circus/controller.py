@@ -28,6 +28,7 @@ class Controller(object):
     def __init__(self, endpoint, multicast_endpoint, context, loop, arbiter,
                  check_delay=1.0):
         self.arbiter = arbiter
+        self.caller = None
         self.endpoint = endpoint
         self.multicast_endpoint = multicast_endpoint
         self.context = context
@@ -83,14 +84,19 @@ class Controller(object):
 
     def start(self):
         self.initialize()
-        self.caller = ioloop.PeriodicCallback(self.manage_watchers,
-                                              self.check_delay, self.loop)
-        self.caller.start()
+        if self.check_delay > 0:
+            # The specific case (check_delay < 0)
+            # so with no period callback to manage_watchers
+            # is probably "unit tests only"
+            self.caller = ioloop.PeriodicCallback(self.manage_watchers,
+                                                  self.check_delay, self.loop)
+            self.caller.start()
         self.started = True
 
     def stop(self):
         if self.started:
-            self.caller.stop()
+            if self.caller is not None:
+                self.caller.stop()
             try:
                 self.stream.flush()
                 self.stream.close()
