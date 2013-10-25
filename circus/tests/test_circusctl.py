@@ -121,7 +121,7 @@ class CLITest(TestCircus):
         raise Return((stdout, stderr))
 
     @gen_test
-    def _test_launch_cli(self):
+    def test_launch_cli(self):
         yield self.start_arbiter()
         async_poll_for(self.test_file, 'START')
 
