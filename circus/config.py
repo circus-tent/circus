@@ -183,6 +183,7 @@ def get_config(config_file):
         if section.startswith("socket:"):
             sock = dict(cfg.items(section))
             sock['name'] = section.split("socket:")[-1].lower()
+            sock['so_reuseport'] = dget(section, "so_reuseport", False, bool)
             sockets.append(sock)
 
         if section.startswith("plugin:"):

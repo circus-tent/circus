@@ -36,7 +36,7 @@ class CircusSocket(socket.socket):
     def __init__(self, name='', host='localhost', port=8080,
                  family=socket.AF_INET, type=socket.SOCK_STREAM,
                  proto=0, backlog=2048, path=None, umask=None,
-                 interface=None):
+                 interface=None, so_reuseport=False):
         if path is not None:
             family = socket.AF_UNIX
 
@@ -56,6 +56,13 @@ class CircusSocket(socket.socket):
 
         self.interface = interface
         self.backlog = backlog
+        self.so_reuseport = so_reuseport
+
+        if self.so_reuseport and hasattr(socket, 'SO_REUSEPORT'):
+            self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        else:
+            self.so_reuseport = False
+
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     @property
@@ -123,6 +130,7 @@ class CircusSocket(socket.socket):
                   'family': _FAMILY[config.get('family', 'AF_INET').upper()],
                   'type': _TYPE[config.get('type', 'SOCK_STREAM').upper()],
                   'backlog': int(config.get('backlog', 2048)),
+                  'so_reuseport': config.get('so_reuseport', False),
                   'umask': int(config.get('umask', 8))}
         proto_name = config.get('proto')
         if proto_name is not None:
@@ -167,4 +175,6 @@ class CircusSockets(dict):
 
     def bind_and_listen_all(self):
         for sock in self.values():
-            sock.bind_and_listen()
+            # so_reuseport sockets should not be bound at this point
+            if not sock.so_reuseport:
+                sock.bind_and_listen()

@@ -73,9 +73,10 @@ class TestConfig(TestCase):
                               use_fds=watcher.use_sockets,
                               watcher=watcher)
 
-            fd = watcher._get_sockets_fds()['web']
-            formatted_args = process.format_args()
+            sockets_fds = watcher._get_sockets_fds()
+            formatted_args = process.format_args(sockets_fds=sockets_fds)
 
+            fd = sockets_fds['web']
             self.assertEqual(formatted_args,
                              ['foo', '--fd', str(fd)])
         finally:
