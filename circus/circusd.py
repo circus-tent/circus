@@ -5,10 +5,11 @@ import os
 import resource
 
 from circus import logger
-from circus.arbiter import Arbiter, ReloadArbiterException
+from circus.arbiter import Arbiter
 from circus.pidfile import Pidfile
 from circus import __version__
 from circus.util import MAXFD, REDIRECT_TO, configure_logger, LOG_LEVELS
+from circus.util import check_future_exception_and_log
 
 
 def get_maxfd():
@@ -23,7 +24,7 @@ try:
 except ImportError:
     def closerange(fd_low, fd_high):    # NOQA
         # Iterate through and close all file descriptors.
-        for fd in xrange(fd_low, fd_high):
+        for fd in range(fd_low, fd_high):
             try:
                 os.close(fd)
             except OSError:    # ERROR, fd wasn't open to begin with (ignored)
@@ -68,8 +69,8 @@ def main():
 
     # XXX we should be able to add all these options in the config file as well
     parser.add_argument('--log-level', dest='loglevel',
-                        choices=LOG_LEVELS.keys() + [key.upper() for key in
-                                                     LOG_LEVELS.keys()],
+                        choices=list(LOG_LEVELS.keys()) + [
+                            key.upper() for key in LOG_LEVELS.keys()],
                         help="log level")
     parser.add_argument('--log-output', dest='logoutput', help=(
         "The location where the logs will be written. The default behavior "
@@ -108,7 +109,7 @@ def main():
 
         try:
             pidfile.create(os.getpid())
-        except RuntimeError, e:
+        except RuntimeError as e:
             print(str(e))
             sys.exit(1)
 
@@ -117,24 +118,35 @@ def main():
     logoutput = args.logoutput or arbiter.logoutput or '-'
     configure_logger(logger, loglevel, logoutput)
 
-    try:
-        restart_after_stop = True
-        while restart_after_stop:
-            while True:
-                try:
-                    arbiter = Arbiter.load_from_config(args.config)
-                    restart_after_stop = arbiter.start()
-                except ReloadArbiterException:
-                    pass
-                else:
-                    break
-    except KeyboardInterrupt:
-        pass
-    finally:
-        arbiter.stop()
-        if pidfile is not None:
-            pidfile.unlink()
+    # configure the main loop
+    #ioloop.install()
+    #loop = ioloop.IOLoop.instance()
+    #cb = functools.partial(manage_restart, loop, arbiter)
+    #periodic = tornado.ioloop.PeriodicCallback(cb, 1000, loop)
+    #periodic.start()
 
+    # schedule the arbiter start
+    #arbiter = Arbiter.load_from_config(args.config, loop=loop)
+    #loop.add_future(arbiter.start(), _arbiter_start_cb)
+
+    # Main loop
+    restart = True
+    while restart:
+        try:
+            arbiter = Arbiter.load_from_config(args.config)
+            future = arbiter.start()
+            restart = False
+            if check_future_exception_and_log(future) is None:
+                restart = arbiter._restarting
+        except Exception as e:
+            # emergency stop
+            arbiter.loop.run_sync(arbiter._emergency_stop)
+            raise(e)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            if pidfile is not None:
+                pidfile.unlink()
     sys.exit(0)
 
 

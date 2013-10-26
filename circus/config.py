@@ -1,12 +1,13 @@
 import glob
 import os
+import signal
 import warnings
 from fnmatch import fnmatch
 
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
-                         StrictConfigParser, replace_gnu_args)
+                         StrictConfigParser, replace_gnu_args, to_signum)
 
 
 def watcher_defaults():
@@ -22,6 +23,8 @@ def watcher_defaults():
         'uid': None,
         'gid': None,
         'send_hup': False,
+        'stop_signal': signal.SIGTERM,
+        'stop_children': False,
         'max_retry': 5,
         'graceful_timeout': 30,
         'rlimits': dict(),
@@ -57,11 +60,6 @@ class DefaultConfigParser(StrictConfigParser):
     def set_env(self, env):
         self._env = dict(env)
 
-    def toboolean(self, value):
-        if value.lower() not in self._boolean_states:
-            raise ValueError('Not a boolean: %s' % value)
-        return self._boolean_states[value.lower()]
-
     def get(self, section, option):
         res = StrictConfigParser.get(self, section, option)
         return replace_gnu_args(res, env=self._env)
@@ -93,7 +91,10 @@ class DefaultConfigParser(StrictConfigParser):
 def read_config(config_path):
     cfg = DefaultConfigParser()
     with open(config_path) as f:
-        cfg.readfp(f)
+        if hasattr(cfg, 'read_file'):
+            cfg.read_file(f)
+        else:
+            cfg.readfp(f)
 
     current_dir = os.path.dirname(config_path)
 
@@ -219,6 +220,11 @@ def get_config(config_file):
                 elif opt == 'send_hup':
                     watcher['send_hup'] = dget(section, 'send_hup', False,
                                                bool)
+                elif opt == 'stop_signal':
+                    watcher['stop_signal'] = to_signum(val)
+                elif opt == 'stop_children':
+                    watcher['stop_children'] = dget(section, 'stop_children',
+                                                    False, bool)
                 elif opt == 'check_flapping':
                     watcher['check_flapping'] = dget(section, 'check_flapping',
                                                      True, bool)

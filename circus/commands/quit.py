@@ -15,14 +15,18 @@ class Quit(Command):
 
             {
                 "command": "quit",
-                "async": False
+                "waiting": False
             }
 
         The response return the status "ok".
 
-        If async is True, the graceful period for process termination
-        will be done in the background, and a response will be returned
-        immediatly. (defaults: False).
+        If ``waiting`` is False (default), the call will return immediately
+        after calling ``stop_signal`` on each process.
+
+        If ``waiting`` is True, the call will return only when the stop process
+        is completely ended. Because of the
+        :ref:`graceful_timeout option <graceful_timeout>`, it can take some
+        time.
 
 
         Command line
@@ -30,14 +34,14 @@ class Quit(Command):
 
         ::
 
-            $ circusctl quit --async
+            $ circusctl quit [--waiting]
 
     """
     name = "quit"
-    async = False
+    options = Command.waiting_options
 
     def message(self, *args, **opts):
         return self.make_message(**opts)
 
-    def execute(self, arbiter, opts):
-        arbiter.stop_watchers(stop_alive=True, async=False)
+    def execute(self, arbiter, props):
+        return arbiter.stop()

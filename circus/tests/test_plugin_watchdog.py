@@ -3,24 +3,11 @@ import time
 import os
 import warnings
 
-from circus.tests.support import TestCircus, Process, poll_for
-from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB)
+from tornado.testing import gen_test
+
+from circus.tests.support import TestCircus, Process, async_poll_for
+from circus.tests.support import async_run_plugin, EasyTestSuite
 from circus.plugins.watchdog import WatchDog
-
-
-def run_plugin(klass, config, duration=300):
-    endpoint = DEFAULT_ENDPOINT_DEALER
-    pubsub_endpoint = DEFAULT_ENDPOINT_SUB
-    check_delay = 1
-    ssh_server = None
-
-    plugin = klass(endpoint, pubsub_endpoint, check_delay, ssh_server,
-                   **config)
-
-    deadline = time.time() + (duration / 1000.)
-    plugin.loop.add_timeout(deadline, plugin.stop)
-    plugin.start()
-    return plugin
 
 
 class DummyWatchDogged(Process):
@@ -28,14 +15,15 @@ class DummyWatchDogged(Process):
         self._write('START')
         sock = socket.socket(socket.AF_INET,
                              socket.SOCK_DGRAM)  # UDP
-        my_pid = os.getpid()
-        for _ in range(5):
-            message = "{pid};{time}".format(pid=my_pid, time=time.time())
-            #print('sending:{0}'.format(message))
-            sock.sendto(message, ('127.0.0.1', 1664))
-            time.sleep(0.5)
-
-        self._write('STOP')
+        try:
+            my_pid = os.getpid()
+            for _ in range(5):
+                message = "{pid};{time}".format(pid=my_pid, time=time.time())
+                sock.sendto(message, ('127.0.0.1', 1664))
+                time.sleep(0.5)
+            self._write('STOP')
+        finally:
+            sock.close()
 
 
 def run_dummy_watchdogged(test_file):
@@ -44,24 +32,37 @@ def run_dummy_watchdogged(test_file):
     return 1
 
 
+def get_pid_status(queue, plugin):
+    queue.put(plugin.pid_status)
+
+
 fqn = 'circus.tests.test_plugin_watchdog.run_dummy_watchdogged'
 
 
 class TestPluginWatchDog(TestCircus):
-    def setUp(self):
-        super(TestPluginWatchDog, self).setUp()
-        self.test_file = self._run_circus(fqn)
-        poll_for(self.test_file, 'START')
 
+    @gen_test
     def test_watchdog_discovery_found(self):
+        yield self.start_arbiter(fqn)
+        async_poll_for(self.test_file, 'START')
+
         config = {'loop_rate': 0.1, 'watchers_regex': "^test.*$"}
         with warnings.catch_warnings():
-            watchdog = run_plugin(WatchDog, config)
-        time.sleep(.4)  # ensure at least one loop in plugin
-        self.assertEqual(len(watchdog.pid_status), 1, watchdog.pid_status)
+            pid_status = yield async_run_plugin(WatchDog, config,
+                                                get_pid_status)
+        self.assertEqual(len(pid_status), 1, pid_status)
+        yield self.stop_arbiter()
 
+    @gen_test
     def test_watchdog_discovery_not_found(self):
-        config = {'loop_rate': 0.3, 'watchers_regex': "^foo.*$"}
-        watchdog = run_plugin(WatchDog, config)
-        time.sleep(.4)  # ensure at least one loop in plugin
-        self.assertEqual(len(watchdog.pid_status), 0)
+        yield self.start_arbiter(fqn)
+        async_poll_for(self.test_file, 'START')
+
+        config = {'loop_rate': 0.1, 'watchers_regex': "^foo.*$"}
+        with warnings.catch_warnings():
+            pid_status = yield async_run_plugin(WatchDog, config,
+                                                get_pid_status)
+        self.assertEqual(len(pid_status), 0, pid_status)
+        yield self.stop_arbiter()
+
+test_suite = EasyTestSuite(__name__)

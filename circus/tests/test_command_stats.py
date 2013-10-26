@@ -1,4 +1,4 @@
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.commands.stats import Stats, MessageError
 
 
@@ -58,19 +58,19 @@ class StatsCommandTest(TestCircus):
         # info about a specific watcher
         props = {'name': 'one'}
         res = cmd.execute(arbiter, props)
-        res = res.items()
-        res.sort()
+        res = sorted(res.items())
         wanted = [('info', 'yeah'), ('name', 'one')]
         self.assertEqual(wanted, res)
 
         # info about a specific process
         props = {'process': '123', 'name': 'one'}
         res = cmd.execute(arbiter, props)
-        res = res.items()
-        res.sort()
+        res = sorted(res.items())
         wanted = [('info', 'yeah'), ('process', '123')]
         self.assertEqual(wanted, res)
 
         # info that breaks
         props = {'name': 'meh', 'process': 'meh'}
         self.assertRaises(MessageError, cmd.execute, arbiter, props)
+
+test_suite = EasyTestSuite(__name__)

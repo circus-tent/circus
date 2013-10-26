@@ -1,4 +1,4 @@
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.commands.list import List
 
 
@@ -18,3 +18,5 @@ class ListCommandTest(TestCircus):
     def test_list_error(self):
         cmd = List()
         self.assertTrue("error" in cmd.console_msg({'foo': 'bar'}))
+
+test_suite = EasyTestSuite(__name__)

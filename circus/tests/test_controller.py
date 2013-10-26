@@ -1,4 +1,4 @@
-from unittest import TestCase
+from circus.tests.support import TestCase, EasyTestSuite
 from circus.controller import Controller
 
 from zmq.eventloop import ioloop
@@ -27,10 +27,13 @@ class TestController(TestCase):
         loop = ioloop.IOLoop()
 
         controller = MockedController('endpoint', 'multicast_endpoint',
-                                      mock.sentinel.context, loop, arbiter)
+                                      mock.sentinel.context, loop, arbiter,
+                                      check_delay=-1.0)
 
-        controller.add_job(None, 'something')
+        controller.dispatch((None, 'something'))
         loop.add_timeout(loop.time() + 1, loop.stop)
         controller.start()
         loop.start()
         self.assertTrue(controller.called)
+
+test_suite = EasyTestSuite(__name__)

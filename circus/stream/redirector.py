@@ -26,10 +26,13 @@ class RedirectorHandler(object):
                            'name': self.name}
                 datamap.update(self.redirector.extra_info)
                 self.redirector.redirect(datamap)
-        except IOError, ex:
-            if ex[0] != errno.EAGAIN:
+        except IOError as ex:
+            if ex.args[0] != errno.EAGAIN:
                 raise
-            sys.exc_clear()
+            try:
+                sys.exc_clear()
+            except Exception:
+                pass
 
 
 class Redirector(object):
@@ -64,7 +67,7 @@ class Redirector(object):
             del self._active[fd]
 
     def stop(self):
-        for fd in self._active.keys():
+        for fd in list(self._active.keys()):
             self._stop_one(fd)
         self.running = False
 

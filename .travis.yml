@@ -1,12 +1,24 @@
 language: python
-python:
-    - "2.6"
-    - "2.7"
+before_install:
+    - sudo apt-get install -y libev-dev
+    - sudo apt-get install -y libevent-dev
+python: 2.7
+env:
+  - TOX_ENV=py32
+  - TOX_ENV=py33
+  - TOX_ENV=py26-no-gevent
+  - TOX_ENV=py27-no-gevent
+  - TOX_ENV=docs
+  - TOX_ENV=flake8
+  - TOX_ENV=circus-web
+  - TOX_ENV=py26
+  - TOX_ENV=py27
+script:
+    - tox -e $TOX_ENV
 install:
-    - pip install -r test-requirements.txt --use-mirrors
-    - pip install --use-mirrors unittest2
-    - python setup.py develop
-script: flake8 circus && nosetests -sv --with-coverage --cover-package=circus circus/tests
+    - pip install tox
+    - sudo rmdir /dev/shm # see https://github.com/travis-ci/travis-core/issues/187
+    - sudo ln -Tsf /{run,dev}/shm #
 notifications:
     email: tarek@mozilla.com
     irc: "irc.freenode.org#mozilla-circus"

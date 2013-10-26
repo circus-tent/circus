@@ -2,11 +2,15 @@ import sys
 import random
 
 from datetime import datetime
-from Queue import Queue
+try:
+    from queue import Queue, Empty
+except ImportError:
+    from Queue import Queue, Empty  # NOQA
 
 from circus.util import resolve_name
 from circus.stream.file_stream import FileStream
 from circus.stream.redirector import Redirector
+from zmq.utils.strtypes import u
 
 
 class QueueStream(Queue):
@@ -26,7 +30,7 @@ class StdoutStream(object):
         pass
 
     def __call__(self, data):
-        sys.stdout.write(data['data'])
+        sys.stdout.write(u(data['data']))
         sys.stdout.flush()
 
     def close(self):

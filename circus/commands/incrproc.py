@@ -1,5 +1,6 @@
 from circus.commands.base import Command
 from circus.exc import ArgumentError
+from circus.util import TransformableFuture
 
 
 class IncrProc(Command):
@@ -18,7 +19,8 @@ class IncrProc(Command):
                 "command": "incr",
                 "properties": {
                     "name": "<watchername>",
-                    "nb": <nbprocess>
+                    "nb": <nbprocess>,
+                    "waiting": False
                 }
             }
 
@@ -32,7 +34,7 @@ class IncrProc(Command):
 
         ::
 
-            $ circusctl incr <name> [<nb>]
+            $ circusctl incr <name> [<nb>] [--waiting]
 
         Options
         +++++++
@@ -44,6 +46,7 @@ class IncrProc(Command):
 
     name = "incr"
     properties = ['name']
+    options = Command.waiting_options
 
     def message(self, *args, **opts):
         if len(args) < 1:
@@ -51,6 +54,7 @@ class IncrProc(Command):
         options = {'name': args[0]}
         if len(args) > 1:
             options['nb'] = int(args[1])
+        options.update(opts)
         return self.make_message(**options)
 
     def execute(self, arbiter, props):
@@ -59,7 +63,10 @@ class IncrProc(Command):
             return {"numprocesses": watcher.numprocesses, "singleton": True}
         else:
             nb = props.get("nb", 1)
-            return {"numprocesses": watcher.incr(nb)}
+            resp = TransformableFuture()
+            resp.set_upstream_future(watcher.incr(nb))
+            resp.set_transform_function(lambda x: {"numprocesses": x})
+            return resp
 
     def console_msg(self, msg):
         if msg.get("status") == "ok":
@@ -67,5 +74,5 @@ class IncrProc(Command):
                 return ('This watcher is a Singleton - not changing the number'
                         ' of processes')
             else:
-                return str(msg.get("numprocesses"))
+                return str(msg.get("numprocesses", "ok"))
         return self.console_error(msg)

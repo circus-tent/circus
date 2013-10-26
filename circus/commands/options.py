@@ -108,4 +108,4 @@ class Options(Command):
             for k, v in msg.get('options', {}).items():
                 ret.append("%s: %s" % (k, convert_opt(k, v)))
             return "\n".join(ret)
-        return self.console_msg(self, msg)
+        return self.console_error(msg)

@@ -15,6 +15,7 @@ class ResourceWatcher(BaseObserver):
             if self.watcher is None:
                 self.watcher = self.service
         if self.watcher is None:
+            self.statsd.stop()
             raise NotImplementedError('watcher is mandatory for now.')
         self.max_cpu = float(config.get("max_cpu", 90))  # in %
         self.max_mem = float(config.get("max_mem", 90))  # in %
@@ -44,10 +45,12 @@ class ResourceWatcher(BaseObserver):
         mems = []
         mems_abs = []
 
-        for sub_info in stats.itervalues():
-            if isinstance(sub_info,  dict):
-                cpus.append(sub_info['cpu'])
-                mems.append(sub_info['mem'])
+        for sub_info in stats.values():
+            if isinstance(sub_info, dict):
+                cpus.append(100 if sub_info['cpu'] == 'N/A' else
+                            float(sub_info['cpu']))
+                mems.append(100 if sub_info['mem'] == 'N/A' else
+                            float(sub_info['mem']))
                 mems_abs.append(human2bytes(sub_info['mem_info1']))
 
         if cpus:
