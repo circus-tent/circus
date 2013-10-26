@@ -223,8 +223,8 @@ def get_config(config_file):
                 elif opt == 'stop_signal':
                     watcher['stop_signal'] = to_signum(val)
                 elif opt == 'stop_children':
-                    watcher['stop_children'] = dget(section, 'stop_children', False,
-                                               bool)
+                    watcher['stop_children'] = dget(section, 'stop_children',
+                                                    False, bool)
                 elif opt == 'check_flapping':
                     watcher['check_flapping'] = dget(section, 'check_flapping',
                                                      True, bool)
