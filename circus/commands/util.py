@@ -23,6 +23,8 @@ def convert_option(key, val):
         return util.to_bool(val)
     elif key == "stop_signal":
         return util.to_signum(val)
+    elif key == "stop_children":
+        return util.to_bool(val)
     elif key == "shell":
         return util.to_bool(val)
     elif key == "copy_env":
@@ -80,7 +82,8 @@ def convert_option(key, val):
 
 def validate_option(key, val):
     valid_keys = ('numprocesses', 'warmup_delay', 'working_dir', 'uid',
-                  'gid', 'send_hup', 'shell', 'env', 'cmd', 'copy_env',
+                  'gid', 'send_hup', 'stop_signal', 'stop_children',
+                  'shell', 'env', 'cmd', 'copy_env',
                   'flapping_attempts', 'flapping_window', 'retry_in',
                   'max_retry', 'graceful_timeout', 'stdout_stream',
                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
@@ -98,7 +101,7 @@ def validate_option(key, val):
         raise MessageError('unknown key %r' % key)
 
     if key in ('numprocesses', 'flapping_attempts', 'max_retry', 'max_age',
-               'max_age_variance'):
+               'max_age_variance', 'stop_signal'):
         if not isinstance(val, int):
             raise MessageError("%r isn't an integer" % key)
 
@@ -111,7 +114,7 @@ def validate_option(key, val):
         if not isinstance(val, int) and not isinstance(val, string_types):
             raise MessageError("%r isn't an integer or string" % key)
 
-    if key in ('send_hup', 'shell', 'copy_env', 'respawn'):
+    if key in ('send_hup', 'shell', 'copy_env', 'respawn', 'stop_children'):
         if not isinstance(val, bool):
             raise MessageError("%r isn't a valid boolean" % key)
 

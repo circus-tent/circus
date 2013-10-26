@@ -87,7 +87,7 @@ class Set(Command):
 
         options = props['options']
         if not isinstance(options, dict):
-            raise MessageError("'options' property shoudl be an object")
+            raise MessageError("'options' property should be an object")
 
         for key, val in options.items():
             validate_option(key, val)
