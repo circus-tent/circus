@@ -28,6 +28,9 @@ from circus.util import tornado_sleep
 from circus.client import AsyncCircusClient, make_message
 from circus.stream import QueueStream
 
+if 'ASYNC_TEST_TIMEOUT' not in os.environ:
+    os.environ['ASYNC_TEST_TIMEOUT'] = '10'
+
 
 class EasyTestSuite(TestSuite):
     def __init__(self, name):
