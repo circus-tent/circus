@@ -431,6 +431,17 @@ class Watcher(object):
         """Manage processes."""
         if self.is_stopped():
             return
+        
+        # removing strange zombie like process
+        for process in list(self.processes.itervalues()):
+            try:
+                get_info(process.pid)
+            except NoSuchProcess:
+                logger.debug('%s: zombie, respawning', self.name)
+                self.notify_event("zombie", {"process_pid": process.pid,
+                                              "time": time.time()})
+                self.processes.pop(process.pid)
+                self.kill_process(process)
 
         # remove dead or zombie processes first
         for process in list(self.processes.values()):

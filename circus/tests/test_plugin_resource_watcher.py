@@ -87,6 +87,75 @@ class TestResourceWatcher(TestCircus):
         yield self.stop_arbiter()
 
     @gen_test
+    def test_resource_watcher_max_mem_abs(self):
+        config = {'loop_rate': 0.1, 'max_mem_abs': '30M'}
+
+        self.assertRaises(NotImplementedError, run_plugin,
+                          ResourceWatcher, config)
+
+        # Test that service is deprecated
+        config['service'] = 'test'
+        found = False
+
+        with warnings.catch_warnings(record=True) as ws:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            _statsd = run_plugin(ResourceWatcher, config)
+            numws = len(ws)
+            for w in ws:
+                if not found:
+                    found = 'ResourceWatcher' in str(w.message)
+
+        if not found:
+            raise AssertionError('ResourceWatcher not found')
+
+        self._check_statsd(_statsd, '_resource_watcher.test.over_memory')
+
+        # Test that watcher is ok and not deprecated
+        config['watcher'] = config['service']
+        del config['service']
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            _statsd = run_plugin(ResourceWatcher, config)
+            assert len(w) == numws - 1
+
+    @gen_test
+    def test_resource_watcher_min_mem_abs(self):
+        config = {'loop_rate': 0.1, 'min_mem_abs': '100G'}
+
+        self.assertRaises(NotImplementedError, run_plugin,
+                          ResourceWatcher, config)
+
+        # Test that service is deprecated
+        config['service'] = 'test'
+        found = False
+
+        with warnings.catch_warnings(record=True) as ws:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            _statsd = run_plugin(ResourceWatcher, config)
+            numws = len(ws)
+            for w in ws:
+                if not found:
+                    found = 'ResourceWatcher' in str(w.message)
+
+        if not found:
+            raise AssertionError('ResourceWatcher not found')
+
+        self._check_statsd(_statsd, '_resource_watcher.test.under_memory')
+
+        # Test that watcher is ok and not deprecated
+        config['watcher'] = config['service']
+        del config['service']
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            _statsd = run_plugin(ResourceWatcher, config)
+            assert len(w) == numws - 1
+
     def test_resource_watcher_max_cpu(self):
         yield self.start_arbiter(fqn)
         async_poll_for(self.test_file, 'START')

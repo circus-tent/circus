@@ -1,6 +1,6 @@
 import warnings
 from circus.plugins.statsd import BaseObserver
-
+from circus.util import human2bytes
 
 class ResourceWatcher(BaseObserver):
 
@@ -25,6 +25,8 @@ class ResourceWatcher(BaseObserver):
         self.min_mem = config.get("min_mem")
         if self.min_mem is not None:
             self.min_mem = float(self.min_mem)  # in %
+        self.max_mem_abs = human2bytes(config.get("max_mem_abs")) if config.get("max_mem_abs") else None
+        self.min_mem_abs = human2bytes(config.get("min_mem_abs")) if config.get("min_mem_abs") else None
         self.health_threshold = float(config.get("health_threshold",
                                       75))  # in %
         self.max_count = int(config.get("max_count", 3))
@@ -41,6 +43,7 @@ class ResourceWatcher(BaseObserver):
         stats = info['info']
         cpus = []
         mems = []
+        mems_abs = []
 
         for sub_info in stats.values():
             if isinstance(sub_info, dict):
@@ -48,15 +51,18 @@ class ResourceWatcher(BaseObserver):
                             float(sub_info['cpu']))
                 mems.append(100 if sub_info['mem'] == 'N/A' else
                             float(sub_info['mem']))
+                mems_abs.append(human2bytes(sub_info['mem_info1']))
 
         if cpus:
             max_cpu = max(cpus)
             max_mem = max(mems)
+            max_mem_abs = max(mems_abs)
             min_cpu = min(cpus)
             min_mem = min(mems)
+            min_mem_abs = min(mems_abs)
         else:
             # we dont' have any process running. max = 0 then
-            max_cpu = max_mem = min_cpu = min_mem = 0
+            max_cpu = max_mem = max_mem_abs = 0
 
         if self.max_cpu and max_cpu > self.max_cpu:
             self.statsd.increment("_resource_watcher.%s.over_cpu" %
@@ -72,14 +78,14 @@ class ResourceWatcher(BaseObserver):
         else:
             self._count_under_cpu = 0
 
-        if self.max_mem and max_mem > self.max_mem:
+        if (self.max_mem and max_mem > self.max_mem) or (self.max_mem_abs and max_mem_abs > self.max_mem_abs):
             self.statsd.increment("_resource_watcher.%s.over_memory" %
                                   self.watcher)
             self._count_over_mem += 1
         else:
             self._count_over_mem = 0
 
-        if self.min_mem is not None and min_mem <= self.min_mem:
+        if (self.min_mem is not None and min_mem <= self.min_mem) or (self.min_mem_abs is not None and min_mem_abs <= self.min_mem_abs):
             self.statsd.increment("_resource_watcher.%s.under_memory" %
                                   self.watcher)
             self._count_under_mem += 1
