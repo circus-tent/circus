@@ -313,10 +313,12 @@ class Process(object):
     @debuglog
     def send_signal_child(self, pid, signum):
         """Send signal *signum* to child *pid*."""
-        children = dict([(child.pid, child)
-                         for child in self._worker.get_children()])
-
-        children[pid].send_signal(signum)
+        children = dict((child.pid, child)
+                        for child in self._worker.get_children())
+        try:
+            children[pid].send_signal(signum)
+        except KeyError:
+            raise NoSuchProcess(pid)
 
     @debuglog
     def send_signal_children(self, signum):
