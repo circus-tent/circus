@@ -5,6 +5,7 @@ import tempfile
 import tornado
 
 from datetime import datetime
+from zmq.eventloop import ioloop
 from circus.py3compat import StringIO
 
 from circus.client import make_message
@@ -32,6 +33,7 @@ class TestWatcher(TestCircus):
 
     @classmethod
     def setUpClass(cls):
+        ioloop.install()
         cls.dummy_process = 'circus.tests.test_stream.run_process'
         fd, cls.stdout = tempfile.mkstemp()
         os.close(fd)
