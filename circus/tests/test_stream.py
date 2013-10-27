@@ -5,7 +5,6 @@ import tempfile
 import tornado
 
 from datetime import datetime
-from zmq.eventloop import ioloop
 from circus.py3compat import StringIO
 
 from circus.client import make_message
@@ -30,19 +29,15 @@ def run_process(testfile, *args, **kw):
 
 
 class TestWatcher(TestCircus):
-
-    @classmethod
-    def setUpClass(cls):
-        ioloop.install()
-        cls.dummy_process = 'circus.tests.test_stream.run_process'
-        fd, cls.stdout = tempfile.mkstemp()
-        os.close(fd)
-        fd, cls.stderr = tempfile.mkstemp()
-        os.close(fd)
+    dummy_process = 'circus.tests.test_stream.run_process'
 
     @tornado.gen.coroutine
     def start_arbiter(self):
         cls = TestWatcher
+        fd, cls.stdout = tempfile.mkstemp()
+        os.close(fd)
+        fd, cls.stderr = tempfile.mkstemp()
+        os.close(fd)
         cls.stdout_stream = FileStream(cls.stdout)
         cls.stderr_stream = FileStream(cls.stderr)
         stdout = {'stream': cls.stdout_stream}
@@ -61,15 +56,14 @@ class TestWatcher(TestCircus):
         cls.stderr_stream.close()
         if os.path.exists(self.file):
             os.remove(self.file)
+        if os.path.exists(self.stdout):
+            os.remove(cls.stdout)
+        if os.path.exists(self.stderr):
+            os.remove(cls.stderr)
 
     @tornado.gen.coroutine
     def restart_arbiter(self):
         yield self.arbiter.restart()
-
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.stdout)
-        os.remove(cls.stderr)
 
     @tornado.gen.coroutine
     def call(self, _cmd, **props):

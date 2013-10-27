@@ -28,6 +28,7 @@ from circus.util import tornado_sleep
 from circus.client import AsyncCircusClient, make_message
 from circus.stream import QueueStream
 
+ioloop.install()
 if 'ASYNC_TEST_TIMEOUT' not in os.environ:
     os.environ['ASYNC_TEST_TIMEOUT'] = '10'
 
@@ -81,10 +82,6 @@ _CMD = sys.executable
 class TestCircus(AsyncTestCase):
 
     arbiter_factory = get_arbiter
-
-    @classmethod
-    def setUpClass(cls):
-        ioloop.install()
 
     def setUp(self):
         super(TestCircus, self).setUp()
