@@ -4,3 +4,4 @@ flake8==1.7.0
 mock==1.0.1
 python-coveralls==2.4.0
 nose-cov==1.6
+coverage==3.7
