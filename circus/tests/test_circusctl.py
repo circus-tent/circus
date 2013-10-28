@@ -131,8 +131,7 @@ class CLITest(TestCircus):
         output = stdout.splitlines()
         self.assertEqual(output[0], VERSION)
         # strip of term escape characters, if any
-        prompt = output[2][-len(CircusCtl.prompt):]
-        self.assertEqual(prompt, CircusCtl.prompt)
+        self.assertTrue(output[2].startswith(CircusCtl.prompt))
 
         yield self.stop_arbiter()
 
