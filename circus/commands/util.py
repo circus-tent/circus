@@ -33,10 +33,6 @@ def convert_option(key, val):
         return util.parse_env_dict(val)
     elif key == "cmd":
         return val
-    elif key == "flapping_attempts":
-        return int(val)
-    elif key == "flapping_window":
-        return float(val)
     elif key == "retry_in":
         return float(val)
     elif key == "max_retry":
@@ -83,8 +79,7 @@ def convert_option(key, val):
 def validate_option(key, val):
     valid_keys = ('numprocesses', 'warmup_delay', 'working_dir', 'uid',
                   'gid', 'send_hup', 'stop_signal', 'stop_children',
-                  'shell', 'env', 'cmd', 'copy_env',
-                  'flapping_attempts', 'flapping_window', 'retry_in',
+                  'shell', 'env', 'cmd', 'copy_env', 'retry_in',
                   'max_retry', 'graceful_timeout', 'stdout_stream',
                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
                   'hooks')
@@ -100,13 +95,12 @@ def validate_option(key, val):
     if key not in valid_keys and not _valid_prefix():
         raise MessageError('unknown key %r' % key)
 
-    if key in ('numprocesses', 'flapping_attempts', 'max_retry', 'max_age',
-               'max_age_variance', 'stop_signal'):
+    if key in ('numprocesses', 'max_retry', 'max_age', 'max_age_variance',
+               'stop_signal'):
         if not isinstance(val, int):
             raise MessageError("%r isn't an integer" % key)
 
-    if key in ('warmup_delay', 'flapping_window', 'retry_in',
-               'graceful_timeout',):
+    if key in ('warmup_delay', 'retry_in', 'graceful_timeout',):
         if not isinstance(val, (int, float)):
             raise MessageError("%r isn't a number" % key)
 

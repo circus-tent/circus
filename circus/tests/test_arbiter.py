@@ -232,7 +232,7 @@ class TestTrainer(TestCircus):
         name = 'test_add_watcher7'
         resp = yield self._call("add", name=name, cmd=cmd, args=args,
                                 start=True,
-                                options=self._get_options(flapping_window=100))
+                                options=self._get_options(send_hup=True))
         self.assertEqual(resp.get("status"), "ok")
 
         resp = yield self._call("status", name=name)
@@ -240,7 +240,7 @@ class TestTrainer(TestCircus):
 
         resp = yield self._call("options", name=name)
         options = resp.get('options', {})
-        self.assertEqual(options.get("flapping_window"), 100)
+        self.assertEqual(options.get("send_hup"), True)
         yield self.stop_arbiter()
 
     @tornado.testing.gen_test
