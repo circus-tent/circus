@@ -500,14 +500,17 @@ class TestArbiter(TestCircus):
 @skipIf(not has_circusweb(), 'Tests for circus-web')
 class TestCircusWeb(TestCircus):
 
-    # FIXME
     @tornado.testing.gen_test
-    def _test_circushttpd(self):
-        fact = self.arbiter_factory
-        arbiter = fact([], background=True, debug=True, httpd=True)
+    def test_circushttpd(self):
+        arbiter = Arbiter([], DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
+                          loop=tornado.ioloop.IOLoop.instance(),
+                          check_delay=-1, httpd=True, debug=True)
         self.arbiters.append(arbiter)
-        yield arbiter.start()
-        poll_for_callable(self.assertDictEqual,
-                          arbiter.statuses, {'circushttpd': 'active'})
+        try:
+            yield arbiter.start()
+            poll_for_callable(self.assertDictEqual,
+                              arbiter.statuses, {'circushttpd': 'active'})
+        finally:
+            yield arbiter.stop()
 
 test_suite = EasyTestSuite(__name__)
