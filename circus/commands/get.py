@@ -42,8 +42,6 @@ class Get(Command):
                 time': 1332202594.754644
             }
 
-        See Optios for for a description of options enabled?
-
 
         Command line
         ------------
