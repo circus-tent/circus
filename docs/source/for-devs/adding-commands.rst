@@ -1,7 +1,8 @@
-How to add new commands in circus
-#################################
+Adding new commands
+###################
 
-If you want to add a new command, we tried to make this as simple as possible.
+Regarding adding new commands, we tried to make this as simple as possible.
+
 You need to do three main things:
 
 1. create a "your_command.py" file under `circus/commands/`.

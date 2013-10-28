@@ -1,7 +1,7 @@
 .. _plugins:
 
-Plugins
-#######
+Using built-in plugins
+######################
 
 Circus comes with a few pre-shipped plugins you can use easily. The configuration of them is as follows:
 

@@ -4,7 +4,7 @@ Circus: A Process & Socket Manager
 .. image:: images/circus-medium.png
    :align: right
 
-Circus can be used to monitor and control processes and sockets.
+Circus is a python program which can be used to monitor and control processes and sockets.
 
 Circus can be driven via a command-line interface or programmatically through
 its python API. Circus is designed using `ZeroMQ <http://www.zeromq.org/>`_.
@@ -17,8 +17,8 @@ If you're coming from Supervisor, read :ref:`supervisor`.
 .. warning::
 
    By default, Circus doesn't secure its messages when sending information
-   through ZeroMQ. Before running Circus, make sure you read the
-   :ref:`Security` page.
+   through ZeroMQ. Before running Circus in a production environment, make sure
+   to read the :ref:`Security` page.
 
 
 To install it and try its features check out the :ref:`examples`.
@@ -150,39 +150,28 @@ More documentation
    :maxdepth: 2
 
    installation
-   configuration
-   plugins
-   hooks
-   cli
-   commands
-   adding_new_commands
-   circushttpd
+   tutorial/index
+   for-ops/index
+   for-devs/index
    sockets
-   library
-   deployment
-   develop_plugins
-   security
-   design
-   rationale
-   examples
-   supervisor
    usecases
-   troubleshooting
-   glossary
+   design/index
    contributing
-   changes
+   faq
+   changelog
+   glossary
    copyright
 
 
 Contributions and Feedback
 ==========================
 
-More on contribution: :ref:`contribs`.
+More on contributing: :ref:`contribs`.
 
 
 Useful Links:
 
-- There's a maling list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
-- The repository and issue tracker is at GitHub : https://github.com/mozilla-services/circus
+- There's a mailing-list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
+- The repository and issue tracker are on GitHub : https://github.com/mozilla-services/circus
 - Join us on the IRC : Freenode, channel **#mozilla-circus**
 

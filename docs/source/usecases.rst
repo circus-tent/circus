@@ -1,5 +1,5 @@
-Circus Use Cases
-################
+Use cases examples
+##################
 
 This chapter presents a few use cases, to give you an idea on how to use
 Circus in your environment.
