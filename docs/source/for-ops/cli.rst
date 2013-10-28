@@ -1,7 +1,7 @@
 .. _cli:
 
-Command-line tools
-##################
+CLI tools
+#########
 
 circus-top
 ==========

@@ -53,5 +53,3 @@ Why should I use Circus instead of X ?
 
   One of the use cases of Circus is to manage thousands of processes without
   adding overhead -- we're dedicated to focus on this.
-
-

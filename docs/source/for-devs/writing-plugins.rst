@@ -1,7 +1,7 @@
 .. _develop_plugins:
 
-The Plugin System
-#################
+Writing plugins
+###############
 
 Circus comes with a plugin system which lets you interact with **circusd**.
 

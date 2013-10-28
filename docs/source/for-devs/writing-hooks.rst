@@ -1,7 +1,7 @@
 .. _hooks:
 
-Hooks
-#####
+Writing hooks
+#############
 
 Circus provides four hooks that can be used to trigger actions when a watcher
 is starting or stopping.
