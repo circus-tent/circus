@@ -1,7 +1,7 @@
 .PHONY: docs build test coverage build_rpm clean
 
 ifndef VTENV_OPTS
-VTENV_OPTS = "--no-site-packages"
+VTENV_OPTS = -p python2.7 --no-site-packages
 endif
 
 bin/python:
@@ -13,7 +13,7 @@ test: bin/python
 	bin/tox
 
 docs: 
-	bin/pip install sphinx
+	bin/pip install sphinx mozilla-sphinx-theme
 	SPHINXBUILD=../bin/sphinx-build $(MAKE) -C docs html $^ 
 
 coverage: bin/coverage
