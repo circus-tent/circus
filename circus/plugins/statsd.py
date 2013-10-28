@@ -1,5 +1,6 @@
 import socket
 from zmq.eventloop import ioloop
+from zmq.utils.strtypes import u
 from circus.plugins import CircusPlugin
 
 
@@ -62,7 +63,7 @@ class StatsdEmitter(CircusPlugin):
 
     def handle_recv(self, data):
         topic, msg = data
-        topic_parts = topic.split(".")
+        topic_parts = u(topic).split(".")
         watcher = topic_parts[1]
         action = topic_parts[2]
         self.statsd.increment('%s.%s' % (watcher, action))
