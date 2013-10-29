@@ -13,9 +13,6 @@ class Flapping(CircusPlugin):
     """ Plugin that controls the flapping and stops the watcher in case
         it happens too often.
 
-    Plugin Options -- all of them can be overriden in the watcher options
-    with a *flapping.* prefix:
-
     - **attempts** -- number of times a process can restart before we
       start to detect the flapping (default: 2)
     - **window** -- the time window in seconds to test for flapping.
