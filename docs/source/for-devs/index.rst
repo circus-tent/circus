@@ -7,7 +7,6 @@ Circus for developpers
    :maxdepth: 1
 
    library
-   using-plugins
    writing-plugins
    writing-hooks
    adding-commands

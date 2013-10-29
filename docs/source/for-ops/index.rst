@@ -9,3 +9,4 @@ Circus for admins
    circusweb
    cli
    configuration
+   using-plugins
