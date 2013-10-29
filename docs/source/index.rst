@@ -4,9 +4,9 @@ Circus: A Process & Socket Manager
 .. image:: images/circus-medium.png
    :align: right
 
-Circus is a python program which can be used to monitor and control processes and sockets.
+Circus is a Python program which can be used to monitor and control processes and sockets.
 
-Circus can be driven via a command-line interface or programmatically through
+Circus can be driven via a command-line interface, a web interface or programmatically through
 its python API. Circus is designed using `ZeroMQ <http://www.zeromq.org/>`_.
 See :ref:`design` for more details.
 
@@ -34,7 +34,9 @@ running :term:`processes`.
 Circus' command-line tool is configurable using an ini-style
 configuration file.
 
-Here's a very minimal example::
+Here's a very minimal example:
+
+.. code-block:: ini
 
     [watcher:myprogram]
     cmd = python
@@ -55,7 +57,9 @@ Besides processes, Circus can also bind sockets. Since every process managed by
 Circus is a child of the main Circus daemon, that means any program that's
 controlled by Circus can use those sockets.
 
-Running a socket is as simple as adding a *socket* section in the config file::
+Running a socket is as simple as adding a *socket* section in the config file:
+
+.. code-block:: ini
 
     [socket:mysocket]
     host = localhost
@@ -84,7 +88,9 @@ Circus also offers a small web application that can connect to a
 running Circus daemon and let you monitor and interact with it.
 
 Running the web application is as simple as adding an **httpd**
-option in the ini file in the *circus* section::
+option in the ini file in the *circus* section:
+
+.. code-block:: ini
 
     [circus]
     httpd = True
