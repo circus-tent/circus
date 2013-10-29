@@ -220,6 +220,24 @@ Flapping
       define if the plugin is active or not (default: True).  If the global
       flag is set to False, the plugin is not started.
 
+Options can be overriden in the watcher section using a ``flapping.``
+prefix. For instance, here is how you would configure a specific ``max_retry`` value for nginx:
+
+.. code-block:: ini
+
+        [watcher:nginx]
+        cmd = /path/to/nginx
+        flapping.max_retry = 2
+
+        [watcher:myscript]
+        cmd = ./my_script.py
+
+        ; ... other watchers
+
+        [plugin:flapping]
+        use = circus.plugins.flapping.Flapping
+        max_retry = 5
+
 
 CommandReloader
 ===============
