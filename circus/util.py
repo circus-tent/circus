@@ -236,6 +236,11 @@ def to_uid(name):
 
     If the user name is unknown, raises a ValueError.
     """
+    try:
+        name = int(name)
+    except ValueError:
+        pass
+
     if isinstance(name, int):
         try:
             pwd.getpwuid(name)
@@ -259,6 +264,11 @@ def to_gid(name):
 
     If the group name is unknown, raises a ValueError.
     """
+    try:
+        name = int(name)
+    except ValueError:
+        pass
+
     if isinstance(name, int):
         try:
             grp.getgrgid(name)

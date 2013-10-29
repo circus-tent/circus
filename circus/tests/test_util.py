@@ -114,6 +114,18 @@ class TestUtil(TestCase):
         self.assertRaises(TypeError, to_uid, None)
         self.assertRaises(TypeError, to_gid, None)
 
+    def test_to_uid_str(self):
+        with mock.patch('pwd.getpwuid') as getpwuid:
+            uid = to_uid('1066')
+            self.assertEqual(1066, uid)
+            getpwuid.assert_called_with(1066)
+
+    def test_to_gid_str(self):
+        with mock.patch('grp.getgrgid') as getgrgid:
+            gid = to_gid('1042')
+            self.assertEqual(1042, gid)
+            getgrgid.assert_called_with(1042)
+
     def test_negative_uid_gid(self):
         # OSX allows negative uid/gid and throws KeyError on a miss. On
         # 32-bit and 64-bit Linux, all negative values throw KeyError as do
