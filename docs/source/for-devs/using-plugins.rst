@@ -129,21 +129,23 @@ ResourceWatcher
 
 
 
-    Example::
+Example:
 
-        [circus]
-        ...
+.. code-block:: ini
 
-        [watcher:program]
-        cmd = sleep 120
+    [circus]
+    ...
 
-    	[plugin:myplugin]
-    	use = circus.plugins.resource_watcher.ResourceWatcher
-    	watcher = program
-    	min_cpu = 10
-    	max_cpu = 70
-    	min_mem = 0
-    	max_mem = 20
+    [watcher:program]
+    cmd = sleep 120
+
+    [plugin:myplugin]
+    use = circus.plugins.resource_watcher.ResourceWatcher
+    watcher = program
+    min_cpu = 10
+    max_cpu = 70
+    min_mem = 0
+    max_mem = 20
 
 
 Watchdog

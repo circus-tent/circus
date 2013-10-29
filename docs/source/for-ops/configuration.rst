@@ -3,7 +3,9 @@ Configuration
 
 Circus can be configured using an ini-style configuration file.
 
-Example::
+Example:
+
+.. code-block:: ini
 
     [circus]
     check_delay = 5
@@ -315,7 +317,9 @@ command (`cmd` or `args`) of a watcher. Circus will replace it by the FD value. 
 have `use_sockets` set to `True` otherwise the socket will have been closed and
 you will get errors when the watcher tries to use it.
 
-Example::
+Example:
+
+.. code-block:: ini
 
     [watcher:webworker]
     cmd = chaussette --fd $(circus.sockets.webapp) chaussette.util.bench_app
@@ -349,7 +353,9 @@ env or env[:WATCHERS] - as many sections as you want
 
 Section responsible for delivering environment variable to run processes.
 
-Example::
+Example:
+
+.. code-block:: ini
 
     [watcher:worker1]
     cmd = ping 127.0.0.1
@@ -366,7 +372,9 @@ WATCHERS can be a comma separated list of watcher sections to apply this environ
 if multiple env sections match a watcher, they will be combine in the order they appear in the configuration file.
 later entries will take precedence.
 
-Example::
+Example:
+
+.. code-block:: ini
 
     [watcher:worker1]
     cmd = ping 127.0.0.1
@@ -388,7 +396,9 @@ Example::
 
 It's possible to use wildcards as well.
 
-Example::
+Example:
+
+.. code-block:: ini
 
     [watcher:worker1]
     cmd = ping 127.0.0.1
@@ -411,7 +421,9 @@ variables defined in the *env* section or in *os.environ* itself.
 
 You just have to use the *circus.env.* prefix.
 
-Example::
+Example:
+
+.. code-block:: ini
 
     [watcher:worker1]
     cmd = $(circus.env.shell)
@@ -512,7 +524,9 @@ FileStream
     exist, then they are renamed to "app.log.2", "app.log.3" etc.
     respectively.
 
-Example::
+Example:
+
+.. code-block:: ini
 
     [watcher:myprogram]
     cmd = python -m myapp.server
@@ -542,7 +556,9 @@ FancyStdoutStram
 
         Default to: %Y-%m-%d %H:%M:%S
 
-Example::
+Example:
+
+.. code-block:: ini
 
     [watcher:myprogram]
     cmd = python -m myapp.server

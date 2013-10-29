@@ -41,7 +41,9 @@ Usage
 
 You should be able to visit http://localhost:8080 and see *hello world*.
 
-Stop Chaussette and add a circus.ini file in the directory containing::
+Stop Chaussette and add a circus.ini file in the directory containing:
+
+.. code-block:: ini
 
     [circus]
     statsd = 1
