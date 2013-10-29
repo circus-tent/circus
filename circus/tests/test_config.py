@@ -36,6 +36,7 @@ _CONF = {
     'copy_env': os.path.join(CONFIG_DIR, 'copy_env.ini'),
     'issue567': os.path.join(CONFIG_DIR, 'issue567.ini'),
     'issue594': os.path.join(CONFIG_DIR, 'issue594.ini'),
+    'reuseport': os.path.join(CONFIG_DIR, 'reuseport.ini'),
 }
 
 
@@ -240,6 +241,16 @@ class TestConfig(TestCase):
         self.assertEqual(conf['watchers'][0]['stop_signal'], signal.SIGINT)
         watcher = Watcher.load_from_config(conf['watchers'][0])
         watcher.stop()
+
+    def test_socket_so_reuseport_yes(self):
+        conf = get_config(_CONF['reuseport'])
+        s1 = conf['sockets'][0]
+        self.assertEqual(s1['so_reuseport'], True)
+
+    def test_socket_so_reuseport_no(self):
+        conf = get_config(_CONF['reuseport'])
+        s1 = conf['sockets'][1]
+        self.assertEqual(s1['so_reuseport'], False)
 
 
 test_suite = EasyTestSuite(__name__)
