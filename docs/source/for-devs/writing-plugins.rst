@@ -1,7 +1,7 @@
 .. _develop_plugins:
 
-The Plugin System
-#################
+Writing plugins
+###############
 
 Circus comes with a plugin system which lets you interact with **circusd**.
 
@@ -24,12 +24,7 @@ A few examples of some plugins you could create with this system:
 - a tool that adds or removes processes depending on the load
 - etc.
 
-Circus itself provides a few plugins:
-
-- a statsd plugin, that sends to statsd all events emitted by circusd
-- the flapping feature which avoids re-launching processes infinitely when
-  they die too quickly.
-- many more to come !
+Circus itself comes with a few :ref:`built-in plugins <plugins>`.
 
 
 The CircusPlugin class
@@ -118,7 +113,9 @@ by specifying the plugin fully qualified name::
 
 Another way to run a plugin is to let Circus handle its initialization. This is done
 by adding a **[plugin:NAME]** section in the configuration file, where *NAME* is a unique
-name for your plugin::
+name for your plugin:
+
+.. code-block:: ini
 
     [plugin:logger]
     use = myproject.plugins.Logger

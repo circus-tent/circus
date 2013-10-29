@@ -13,11 +13,11 @@ We're going to supervise a WSGI application.
 Installation
 ------------
 
-Circus is tested under Mac OS X and Linux, on the latest Python 2.6 and 2.7.
-To run a full Circus, you will also need **libzmq**, **libevent** &
-**virtualenv**.
+Circus is tested on Mac OS X and Linux with the latest Python 2.6, 2.7,
+3.2 and 3.3.  To run a full Circus, you will also need **libzmq**,
+**libevent** & **virtualenv**.
 
-Under Debuntu::
+On Debian-based systems::
 
     $ sudo apt-get install libzmq-dev libevent-dev python-dev python-virtualenv
 
@@ -41,7 +41,9 @@ Usage
 
 You should be able to visit http://localhost:8080 and see *hello world*.
 
-Stop Chaussette and add a circus.ini file in the directory containing::
+Stop Chaussette and add a circus.ini file in the directory containing:
+
+.. code-block:: ini
 
     [circus]
     statsd = 1
@@ -139,4 +141,3 @@ world simply by pointing the application callable.
 Chaussette also comes with many backends like Gevent or Meinheld.
 
 Read https://chaussette.readthedocs.org/ for all options.
-

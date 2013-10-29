@@ -36,8 +36,8 @@ Example:
        arbiter.stop()
 
 
-The classes collection
-======================
+Classes
+=======
 
 Circus provides a series of classes you can use to implement your own process
 manager:

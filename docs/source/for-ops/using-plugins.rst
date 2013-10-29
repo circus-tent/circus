@@ -1,18 +1,18 @@
 .. _plugins:
 
-Plugins
-#######
+Using built-in plugins
+######################
 
-Circus comes with a few pre-shipped plugins you can use easily. The configuration of them is as follows:
+Circus comes with a few built-in plugins. This section presents these plugins and their configuration options.
 
 Statsd
 ======
 
     **use**
-         set to 'circus.plugins.statsd.StatsdEmitter'
+         set to ``circus.plugins.statsd.StatsdEmitter``
 
     **application_name**
-        the name used to identify the bucket prefix to emit the stats to (it will be prefixed with "circus." and suffixed with ".watcher")
+        the name used to identify the bucket prefix to emit the stats to (it will be prefixed with ``circus.`` and suffixed with ``.watcher``)
 
     **host**
         the host to post the statds data to
@@ -31,7 +31,7 @@ FullStats
     such it has the same configuration options as Statsd and the following.
 
     **use**
-        set to 'circus.plugins.statsd.FullStats'
+        set to ``circus.plugins.statsd.FullStats``
 
     **loop_rate**
         the frequency the plugin should ask for the stats in seconds. Default: 60.
@@ -47,7 +47,7 @@ RedisObserver
     It has the same configuration as statsd and adds the following:
 
     **use**
-        set to   'circus.plugins.redis_observer.RedisObserver'
+        set to   ``circus.plugins.redis_observer.RedisObserver``
 
     **loop_rate**
         the frequency the plugin should ask for the stats in seconds. Default: 60.
@@ -73,13 +73,13 @@ HttpObserver
     It has the same configuration as statsd and adds the following:
 
     **use**
-        set to 'circus.plugins.http_observer.HttpObserver'
+        set to ``circus.plugins.http_observer.HttpObserver``
 
     **loop_rate**
         the frequency the plugin should ask for the stats in seconds. Default: 60.
 
     **check_url**
-        the url to check for. Default: "http://localhost/"
+        the url to check for. Default: ``http://localhost/``
 
     **timeout**
         the timeout in seconds the request can take before it is considered down. Defaults to 10.
@@ -98,7 +98,7 @@ ResourceWatcher
     It has the same configuration as statsd and adds the following:
 
     **use**
-        set to 'circus.plugins.resource_watcher.ResourceWatcher'
+        set to ``circus.plugins.resource_watcher.ResourceWatcher``
 
     **loop_rate**
         the frequency the plugin should ask for the stats in seconds. Default: 60.
@@ -129,21 +129,23 @@ ResourceWatcher
 
 
 
-    Example::
+Example:
 
-        [circus]
-        ...
+.. code-block:: ini
 
-        [watcher:program]
-        cmd = sleep 120
+    [circus]
+    ; ...
 
-    	[plugin:myplugin]
-    	use = circus.plugins.resource_watcher.ResourceWatcher
-    	watcher = program
-    	min_cpu = 10
-    	max_cpu = 70
-    	min_mem = 0
-    	max_mem = 20
+    [watcher:program]
+    cmd = sleep 120
+
+    [plugin:myplugin]
+    use = circus.plugins.resource_watcher.ResourceWatcher
+    watcher = program
+    min_cpu = 10
+    max_cpu = 70
+    min_mem = 0
+    max_mem = 20
 
 
 Watchdog
@@ -167,18 +169,21 @@ Watchdog
 
     Configuration parameters:
 
+    **use**
+      set to ``circus.plugins.watchdog.WatchDog``
+
     **loop_rate**
         watchdog loop rate in seconds. At each loop, WatchDog
         will looks for "dead" processes.
 
     **watchers_regex**
         regex for matching watcher names that should be
-        monitored by the watchdog (default: ".*" all watchers are monitored)
+        monitored by the watchdog (default: ``.*`` all watchers are monitored)
 
     **msg_regex**
         regex for decoding the received heartbeat
-        message in udp (default: "^(?P<pid>.*);(?P<timestamp>.*)$")
-        the default format is a simple text message: "pid;timestamp"
+        message in udp (default: ``^(?P<pid>.*);(?P<timestamp>.*)$``)
+        the default format is a simple text message: ``pid;timestamp``
 
     **max_count**
         max number of passed loop without receiving
@@ -201,7 +206,7 @@ Flapping
     properly.
 
     **use**
-      set to 'circus.plugins.flapping.Flapping'
+      set to ``circus.plugins.flapping.Flapping``
     **attempts**
       the number of times a process can restart, within **window** seconds,
       before we consider it flapping (default: 2)
@@ -248,6 +253,6 @@ CommandReloader
     developing worker processes or even for hot code upgrade in production.
 
     **use** 
-      set to 'circus.plugins.command_reloader.CommandReloader'
+      set to ``circus.plugins.command_reloader.CommandReloader``
     **loop_rate**
       the frequency the plugin should check for modification in seconds. Default: 1.

@@ -1,19 +1,19 @@
 .. _glossary:
 
-Glossary
-########
+Glossary: Circus-specific terms
+###############################
 
 .. glossary::
     :sorted:
 
-    watchers
     watcher
+    watchers
         A *watcher* is the program you tell Circus to run.  A single Circus
         instance can run one or more watchers.
 
-    process
     worker
     workers
+    process
     processes
         A *process* is an independent OS process instance of your program.
         A single watcher can run one or more processes. We also call them

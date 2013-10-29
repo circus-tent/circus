@@ -4,9 +4,9 @@ Circus: A Process & Socket Manager
 .. image:: images/circus-medium.png
    :align: right
 
-Circus can be used to monitor and control processes and sockets.
+Circus is a Python program which can be used to monitor and control processes and sockets.
 
-Circus can be driven via a command-line interface or programmatically through
+Circus can be driven via a command-line interface, a web interface or programmatically through
 its python API. Circus is designed using `ZeroMQ <http://www.zeromq.org/>`_.
 See :ref:`design` for more details.
 
@@ -17,8 +17,8 @@ If you're coming from Supervisor, read :ref:`supervisor`.
 .. warning::
 
    By default, Circus doesn't secure its messages when sending information
-   through ZeroMQ. Before running Circus, make sure you read the
-   :ref:`Security` page.
+   through ZeroMQ. Before running Circus in a production environment, make sure
+   to read the :ref:`Security` page.
 
 
 To install it and try its features check out the :ref:`examples`.
@@ -34,7 +34,9 @@ running :term:`processes`.
 Circus' command-line tool is configurable using an ini-style
 configuration file.
 
-Here's a very minimal example::
+Here's a very minimal example:
+
+.. code-block:: ini
 
     [watcher:myprogram]
     cmd = python
@@ -55,7 +57,9 @@ Besides processes, Circus can also bind sockets. Since every process managed by
 Circus is a child of the main Circus daemon, that means any program that's
 controlled by Circus can use those sockets.
 
-Running a socket is as simple as adding a *socket* section in the config file::
+Running a socket is as simple as adding a *socket* section in the config file:
+
+.. code-block:: ini
 
     [socket:mysocket]
     host = localhost
@@ -84,7 +88,9 @@ Circus also offers a small web application that can connect to a
 running Circus daemon and let you monitor and interact with it.
 
 Running the web application is as simple as adding an **httpd**
-option in the ini file in the *circus* section::
+option in the ini file in the *circus* section:
+
+.. code-block:: ini
 
     [circus]
     httpd = True
@@ -150,39 +156,28 @@ More documentation
    :maxdepth: 2
 
    installation
-   configuration
-   plugins
-   hooks
-   cli
-   commands
-   adding_new_commands
-   circushttpd
+   tutorial/index
+   for-ops/index
+   for-devs/index
    sockets
-   library
-   deployment
-   develop_plugins
-   security
-   design
-   rationale
-   examples
-   supervisor
    usecases
-   troubleshooting
-   glossary
+   design/index
    contributing
-   changes
+   faq
+   changelog
+   glossary
    copyright
 
 
 Contributions and Feedback
 ==========================
 
-More on contribution: :ref:`contribs`.
+More on contributing: :ref:`contribs`.
 
 
 Useful Links:
 
-- There's a maling list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
-- The repository and issue tracker is at GitHub : https://github.com/mozilla-services/circus
+- There's a mailing-list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
+- The repository and issue tracker are on GitHub : https://github.com/mozilla-services/circus
 - Join us on the IRC : Freenode, channel **#mozilla-circus**
 

@@ -1,7 +1,7 @@
 .. _sockets:
 
-Circus Sockets
-##############
+Working with sockets
+####################
 
 Circus can bind network sockets and manage them as it does for processes.
 
@@ -122,64 +122,3 @@ socket and calling the **chaussette** command in a worker, like this:
 
 We did not publish benchmarks yet, but a Web cluster managed by Circus with a Gevent
 or Meinheld backend is as fast as any pre-fork WSGI server out there.
-
-
-.. _whycircussockets:
-
-
-Circus stack v.s. Classical stack
-=================================
-
-In a classical WSGI stack, you have a server like Gunicorn that serves on a port
-or an unix socket and is usually deployed behind a web server like Nginx:
-
-.. image:: images/classical-stack.png
-
-
-Clients call Nginx, which reverse proxies all the calls to Gunicorn.
-
-If you want to make sure the Gunicorn process stays up and running, you have to use
-a program like Supervisord or upstart.
-
-Gunicorn in turn watches for its processes ("workers").
-
-In other words you are using two levels of process managment. One that you manage
-and control (supervisord), and a second one that you have to manage in a different UI,
-with a different philosophy and less control over what's going on (the wsgi server's one)
-
-This is true for Gunicorn and most multi-processes WSGI servers out there
-I know about. uWsgi is a bit different as it offers plethoras of options.
-
-But if you want to add a Redis server in your stack, you *will* end up with
-managing your stack processes in two different places.
-
-
-Circus' approach on this is to manage processes *and* sockets.
-
-A Circus stack can look like this:
-
-.. image:: images/circus-stack.png
-
-
-So, like Gunicorn,
-Circus is able to bind a socket that will be proxied by Nginx. Circus don't
-deal with the requests but simply binds the socket. It's then up to a web worker
-process to accept connections on the socket and do the work.
-
-It provides equivalent features than Supervisord but will also let you
-manage all processes at the same level, wether they are web workers or Redis or
-whatever. Adding a new web worker is done exactly like adding a new Redis
-process.
-
-Benches
--------
-
-We did a few benches to compare Circus & Chaussette with Gunicorn. To
-summarize, Circus is not adding any overhead and you can pick up many
-different backends for your web workers.
-
-See:
-
-- http://blog.ziade.org/2012/06/28/wgsi-web-servers-bench
-- http://blog.ziade.org/2012/07/03/wsgi-web-servers-bench-part-2
-

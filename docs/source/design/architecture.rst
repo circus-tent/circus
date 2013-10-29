@@ -1,7 +1,7 @@
 .. _design:
 
-Design
-######
+Overall architecture
+####################
 
 .. image:: images/circus-architecture.png
    :align: center
