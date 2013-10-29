@@ -105,7 +105,7 @@ class FancyStdoutStream(StdoutStream):
         return color + prefix
 
     def __call__(self, data):
-        for line in data['data'].split('\n'):
+        for line in u(data['data']).split('\n'):
             if line:
                 self.out.write(self.prefix(data['pid']))
                 self.out.write(line)

@@ -20,6 +20,7 @@ from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
 from circus.watcher import Watcher
 from circus.tests.support import has_circusweb, poll_for_callable
 from circus import watcher as watcher_mod
+from zmq.utils.strtypes import u
 
 
 _GENERIC = os.path.join(os.path.dirname(__file__), 'generic.py')
@@ -35,7 +36,7 @@ class Plugin(CircusPlugin):
 
     def handle_recv(self, data):
         topic, msg = data
-        topic_parts = topic.split(".")
+        topic_parts = u(topic).split(".")
         watcher = topic_parts[1]
         action = topic_parts[2]
         with open(self.config['file'], 'a+') as f:
