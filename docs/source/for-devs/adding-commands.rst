@@ -1,45 +1,47 @@
 Adding new commands
 ###################
 
-Regarding adding new commands, we tried to make this as simple as possible.
+We tried to make adding new commands as simple as possible.
 
-You need to do three main things:
+You need to do three things:
 
-1. create a "your_command.py" file under `circus/commands/`.
+1. create a ``your_command.py`` file under ``circus/commands/``.
 2. Implement a single class in there, with predefined methods
-3. Add the new command in `circus/commands/__init__.py`.
+3. Add the new command in ``circus/commands/__init__.py``.
 
 Let's say we want to add a command which returns the number of watchers
-actually in use, we would do something like this (extensively commented to
-allow you to follow more easily)::
+currently in use, we would do something like this (extensively commented to
+allow you to follow more easily):
+
+.. code-block:: python
 
     class NumWatchers(Command):
         """It is a good practice to describe what the class does here.
 
-        Have a look at other commands to see how we are used to format this
-        text. It will be used to automatically appear in the documentation of
-        circus, so don't be affraid of being exhaustive, that's what it is made
+        Have a look at other commands to see how we are used to format
+        this text. It will be automatically included in the documentation,
+        so don't be affraid of being exhaustive, that's what it is made
         for.
         """
-        # all the commands need to inherit from `circus.commands.base.Command`
+        # all the commands inherit from `circus.commands.base.Command`
 
         # you need to specify a name so we find back the command somehow
         name = "numwatchers"
 
-        # set async to True or False to define your default behavior
-        # - an async command is run asynchronously on the server and the client
-        #   gets back an 'ok' response
-        # - a sync command is run synchronously, and the client may get
+        # Set waiting to True or False to define your default behavior
+        # - If waiting is True, the command is run synchronously, and the client may get
         #   back results.
+        # - If waiting is False, the command is run asynchronously on the server and the client immediately
+        #   gets back an 'ok' response
         #
-        #   By default, commands are set to async=False
-        async = True
+        #   By default, commands are set to waiting = False
+        waiting = True
 
         # options
         options = [('', 'optname', default_value, 'description')]
 
         properties = ['foo', 'bar']
-        # properties list the command argments that are mendatory. If they are
+        # properties list the command arguments that are mandatory. If they are
         # not provided, then an error will be thrown
 
         def execute(self, arbiter, props):
