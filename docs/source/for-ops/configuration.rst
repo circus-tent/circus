@@ -310,6 +310,10 @@ socket:NAME - as many sections as you want
         When provided, sets the umask that will be used to create an
         AF_UNIX socket. For example, `umask=000` will produce a socket with
         permission `777`.
+    **so_reuseport**
+        If set to True and SO_REUSEPORT is available on target platform, circus
+        will create and bind new SO_REUSEPORT socket(s) for every worker it starts
+        which is a user of this socket(s).
 
 
 Once a socket is created, the *${circus.sockets.NAME}* string can be used in the

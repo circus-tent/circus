@@ -126,4 +126,32 @@ class TestSockets(TestCase):
         finally:
             sock.close()
 
+    @skipIf(not hasattr(socket, 'SO_REUSEPORT'),
+            'socket.SO_REUSEPORT unsupported')
+    def test_reuseport_supported(self):
+        config = {'name': '', 'host': 'localhost', 'port': 0,
+                  'so_reuseport': True}
+
+        sock = CircusSocket.load_from_config(config)
+        sockopt = sock.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT)
+
+        self.assertEqual(sock.so_reuseport, True)
+        self.assertEqual(sockopt, 1)
+
+    def test_reuseport_unsupported(self):
+        config = {'name': '', 'host': 'localhost', 'port': 0,
+                  'so_reuseport': True}
+        saved = None
+
+        try:
+            if hasattr(socket, 'SO_REUSEPORT'):
+                saved = socket.SO_REUSEPORT
+                del socket.SO_REUSEPORT
+            sock = CircusSocket.load_from_config(config)
+            self.assertEqual(sock.so_reuseport, False)
+        finally:
+            if saved is not None:
+                socket.SO_REUSEPORT = saved
+
+
 test_suite = EasyTestSuite(__name__)

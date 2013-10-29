@@ -519,8 +519,7 @@ class Watcher(object):
         if not self.call_hook('before_spawn'):
             return False
 
-        cmd = util.replace_gnu_args(self.cmd, sockets=self._get_sockets_fds(),
-                                    env=self.env)
+        cmd = util.replace_gnu_args(self.cmd, env=self.env)
         nb_tries = 0
 
         while nb_tries < self.max_retry or self.max_retry == -1:
