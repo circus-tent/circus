@@ -12,9 +12,9 @@ test: bin/python
 	bin/pip install tox
 	bin/tox
 
-docs: 
-	bin/pip install sphinx mozilla-sphinx-theme
-	SPHINXBUILD=../bin/sphinx-build $(MAKE) -C docs html $^ 
+docs:
+	bin/pip install -r doc-requirements.txt --use-mirrors
+	SPHINXBUILD=../bin/sphinx-build $(MAKE) -C docs html $^
 
 coverage: bin/coverage
 	rm -f `pwd`/.coverage
