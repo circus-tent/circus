@@ -7,28 +7,18 @@ Circus: A Process & Socket Manager
 Circus is a Python program which can be used to monitor and control processes and sockets.
 
 Circus can be driven via a command-line interface, a web interface or programmatically through
-its python API. Circus is designed using `ZeroMQ <http://www.zeromq.org/>`_.
-See :ref:`design` for more details.
+its python API.
 
-If you are curious about what Circus brings compared to other projects, read :ref:`why`.
-
-
-.. warning::
-
-   By default, Circus doesn't secure its messages when sending information
-   through ZeroMQ. Before running Circus in a production environment, make sure
-   to read the :ref:`Security` page.
+To install it and try its features check out the :ref:`examples`, or read the rest of this page
+for a quick introduction.
 
 
-To install it and try its features check out the :ref:`examples`.
+Running a Circus Daemon
+-----------------------
 
-
-Running Circus
-==============
 
 Circus provides a command-line script call **circusd** that can be used
-to manage one or more :term:`watchers`. Each watcher can have one or more
-running :term:`processes`.
+to manage :term:`processes` organized in one or more :term:`watchers`.
 
 Circus' command-line tool is configurable using an ini-style
 configuration file.
@@ -37,9 +27,8 @@ Here's a very minimal example:
 
 .. code-block:: ini
 
-    [watcher:myprogram]
-    cmd = python
-    args = -u myprogram.py $WID
+    [watcher:program]
+    cmd = python myprogram.py
     numprocesses = 5
 
     [watcher:anotherprogram]
@@ -70,7 +59,7 @@ To understand why it's a killer feature, read :ref:`whycircussockets`.
 
 
 Controlling Circus
-==================
+------------------
 
 Circus provides two command-line tools to manage your running daemon:
 
@@ -82,90 +71,20 @@ Circus provides two command-line tools to manage your running daemon:
 
 To learn more about these, see :ref:`cli`
 
-
-Circus also offers a small web application that can connect to a
+Circus also offers a web dashboard that can connect to a
 running Circus daemon and let you monitor and interact with it.
-
-Running the web application is as simple as adding an **httpd**
-option in the ini file in the *circus* section:
-
-.. code-block:: ini
-
-    [circus]
-    httpd = True
-
-
-Or if you want, you can run it as a standalone process with::
-
-    $ circushttpd
-
-By default, **circushttpd** runs on the *8080* port.
 
 To learn more about this feature, see :ref:`circushttpd`
 
 
-Developing with Circus
-======================
+What now ?
+==========
 
-Circus provides high-level classes and functions that will let you manage
-processes in your own applications.
+If you are a developer and want to leverage Circus in your own project,
+write plugins or hooks, go to :ref:`fordevs`.
 
-For example, if you want to run four processes forever, you could write:
-
-.. code-block:: python
-
-    from circus import get_arbiter
-
-    myprogram = {"cmd": "python myprogram.py", "numprocesses": 4}
-
-    arbiter = get_arbiter([myprogram])
-    try:
-        arbiter.start()
-    finally:
-        arbiter.stop()
-
-This snippet will run four instances of *myprogram* and watch them for you,
-restarting them if they die unexpectedly.
-
-To learn more about this, see :ref:`library`
-
-
-Extending Circus
-================
-
-It's easy to extend Circus to create a more complex system, by listening to all
-the **circusd** events via its pub/sub channel, and driving it via commands.
-
-That's how the flapping feature works for instance: it listens to all the
-processes dying, measures how often it happens, and stops the incriminated
-watchers after too many restarts attempts.
-
-Circus comes with a plugin system to help you write such extensions, and
-a few built-in plugins you can reuse. See :ref:`plugins`.
-
-You can also have a more subtile startup and shutdown behavior by using the
-**hooks** system that will let you run arbitrary code before and after
-some processes are started or stopped. See :ref:`hooks`.
-
-
-More documentation
-==================
-
-.. toctree::
-   :maxdepth: 2
-
-   installation
-   tutorial/index
-   for-ops/index
-   for-devs/index
-   sockets
-   usecases
-   design/index
-   contributing
-   faq
-   changelog
-   glossary
-   copyright
+If you are an ops and want to manage your processes using Circus,
+go to :ref:`forops`.
 
 
 Contributions and Feedback
@@ -179,4 +98,24 @@ Useful Links:
 - There's a mailing-list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
 - The repository and issue tracker are on GitHub : https://github.com/mozilla-services/circus
 - Join us on the IRC : Freenode, channel **#mozilla-circus**
+
+
+Documentation index
+===================
+
+.. toctree::
+   :maxdepth: 2
+
+   installation
+   tutorial/index
+   for-ops/index
+   for-devs/index
+   usecases
+   design/index
+   contributing
+   faq
+   changelog
+   glossary
+   copyright
+
 

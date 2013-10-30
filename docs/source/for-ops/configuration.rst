@@ -1,3 +1,5 @@
+.. _configuration:
+
 Configuration
 #############
 
@@ -11,7 +13,7 @@ Example:
     check_delay = 5
     endpoint = tcp://127.0.0.1:5555
     pubsub_endpoint = tcp://127.0.0.1:5556
-    include = *.more.config.ini
+    include = \*.more.config.ini
 
     [watcher:myprogram]
     cmd = python

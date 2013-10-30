@@ -1,3 +1,5 @@
+.. _addingcmds:
+
 Adding new commands
 ###################
 

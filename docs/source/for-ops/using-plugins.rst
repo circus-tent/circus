@@ -246,13 +246,13 @@ prefix. For instance, here is how you would configure a specific ``max_retry`` v
 
 CommandReloader
 ===============
-    
+
     This plugin will restart watchers when their command file is modified. It
     works by checking the modification time and the path of the file pointed by
     the **cmd** option every **loop_rate** seconds. This may be useful while
     developing worker processes or even for hot code upgrade in production.
 
-    **use** 
+    **use**
       set to ``circus.plugins.command_reloader.CommandReloader``
     **loop_rate**
       the frequency the plugin should check for modification in seconds. Default: 1.
