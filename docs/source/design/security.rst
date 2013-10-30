@@ -121,5 +121,5 @@ Setting up a secured Circus server can be done by:
 - Running all ZMQ Circusd ports using IPC files instead of TCP ports, and
   tunneling all calls via SSH.
 
-.. image:: images/circus-security.png
+.. image:: ../images/circus-security.png
 

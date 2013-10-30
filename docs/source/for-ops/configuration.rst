@@ -195,7 +195,7 @@ watcher:NAME - as many sections as you want
         Defaults to SIGTERM.
 
     **stop_children**
-        When sending the :ref:`stop_signal`, send it to the children as well.
+        When sending the *stop_signal*, send it to the children as well.
         Defaults to False.
 
     **max_retry**
@@ -209,7 +209,7 @@ watcher:NAME - as many sections as you want
         The number of seconds to wait for a process to terminate gracefully
         before killing it.
 
-        When stopping a process, we first send it a :ref:`stop_signal`. A worker
+        When stopping a process, we first send it a *stop_signal*. A worker
         may catch this signal to perform clean up operations before exiting.
         If the worker is still active after graceful_timeout seconds, we send
         it a SIGKILL signal.  It is not possible to catch SIGKILL signals so

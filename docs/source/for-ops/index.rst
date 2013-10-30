@@ -6,7 +6,9 @@ Circus for admins
 .. toctree::
    :maxdepth: 1
 
+   commands
    circusweb
    cli
    configuration
    using-plugins
+   deployment
