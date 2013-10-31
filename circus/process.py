@@ -16,6 +16,7 @@ from subprocess import PIPE
 import time
 import shlex
 import warnings
+import pwd
 
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
@@ -101,7 +102,18 @@ class Process(object):
         self.args = args
         self.working_dir = working_dir or get_working_dir()
         self.shell = shell
-        self.uid = to_uid(uid) if uid else None
+        if uid:
+            self.uid = to_uid(uid)
+            if isinstance(uid, int):
+                try:
+                    self.username = pwd.getpwuid(uid)
+                except KeyError:
+                    raise ValueError("%r isn't a valid user id" % uid)
+            else:
+                self.username = uid
+        else:
+            self.username = None
+            self.uid = None
         self.gid = to_gid(gid) if gid else None
         self.env = env or {}
         self.rlimits = rlimits or {}
@@ -195,6 +207,7 @@ class Process(object):
                     # versions of python < 2.6.2 don't manage unsigned int for
                     # groups like on osx or fedora
                     os.setgid(-ctypes.c_int(-self.gid).value)
+                os.initgroups(self.username, self.gid)
 
             if self.uid:
                 os.setuid(self.uid)
