@@ -3,7 +3,7 @@
 Coming from Supervisor
 ======================
 
-If you are coming from `Supervisor <http://supervisord.org_>`_, this page
+If you are coming from `Supervisor <http://supervisord.org>`_, this page
 tries to give an overview of how the tools differ.
 
 
