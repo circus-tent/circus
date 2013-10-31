@@ -30,7 +30,7 @@ def generate_commands(app):
 
     commands = get_commands()
     items = commands.items()
-    items.sort()
+    items = sorted(items)
 
     with open(tocname, "w") as toc:
         toc.write(_HEADER)
