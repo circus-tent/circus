@@ -136,7 +136,7 @@ class TestSockets(TestCase):
         sockopt = sock.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT)
 
         self.assertEqual(sock.so_reuseport, True)
-        self.assertEqual(sockopt, socket.SO_REUSEPORT)
+        self.assertNotEqual(sockopt, 0)
 
     def test_reuseport_unsupported(self):
         config = {'name': '', 'host': 'localhost', 'port': 0,
