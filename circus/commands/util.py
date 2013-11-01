@@ -33,6 +33,8 @@ def convert_option(key, val):
         return util.parse_env_dict(val)
     elif key == "cmd":
         return val
+    elif key == "args":
+        return val
     elif key == "retry_in":
         return float(val)
     elif key == "max_retry":
@@ -79,7 +81,7 @@ def convert_option(key, val):
 def validate_option(key, val):
     valid_keys = ('numprocesses', 'warmup_delay', 'working_dir', 'uid',
                   'gid', 'send_hup', 'stop_signal', 'stop_children',
-                  'shell', 'env', 'cmd', 'copy_env', 'retry_in',
+                  'shell', 'env', 'cmd', 'args', 'copy_env', 'retry_in',
                   'max_retry', 'graceful_timeout', 'stdout_stream',
                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
                   'hooks')

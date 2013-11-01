@@ -916,6 +916,9 @@ class Watcher(object):
         elif key == "cmd":
             self.cmd = val
             action = 1
+        elif key == "args":
+            self.args = args
+            action = 1
         elif key == "graceful_timeout":
             self.graceful_timeout = float(val)
             action = -1
