@@ -46,7 +46,7 @@ else:
 
     BytesIO = StringIO
 
-    from py2raise import raise_with_tb  # NOQA
+    eval(compile('def raise_with_tb(E): raise E, None, sys.exc_info()[2]', 'py3compat.py', 'exec'))
 
     def is_callable(c):  # NOQA
         return callable(c)
