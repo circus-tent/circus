@@ -118,17 +118,6 @@ def main():
     logoutput = args.logoutput or arbiter.logoutput or '-'
     configure_logger(logger, loglevel, logoutput)
 
-    # configure the main loop
-    #ioloop.install()
-    #loop = ioloop.IOLoop.instance()
-    #cb = functools.partial(manage_restart, loop, arbiter)
-    #periodic = tornado.ioloop.PeriodicCallback(cb, 1000, loop)
-    #periodic.start()
-
-    # schedule the arbiter start
-    #arbiter = Arbiter.load_from_config(args.config, loop=loop)
-    #loop.add_future(arbiter.start(), _arbiter_start_cb)
-
     # Main loop
     restart = True
     while restart:
