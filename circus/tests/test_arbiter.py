@@ -308,6 +308,77 @@ class TestTrainer(TestCircus):
         yield self.stop_arbiter()
 
     @tornado.testing.gen_test
+    def test_reload_wid_1_worker(self):
+        yield self.start_arbiter(graceful_timeout=0)
+
+        resp = yield self._call("stats", name="test")
+        processes1 = list(resp['info'].keys())
+        self.assertEqual(len(processes1), 1)
+        wids1 = [resp['info'][process]['wid'] for process in processes1]
+        self.assertEqual(wids1, [1])
+
+        truncate_file(self.test_file)  # clean slate
+        yield self._call("reload")
+        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+
+        resp = yield self._call("stats", name="test")
+        processes2 = list(resp['info'].keys())
+        self.assertEqual(len(processes2), 1)
+        self.assertNotEqual(processes1, processes2)
+        wids2 = [resp['info'][process]['wid'] for process in processes2]
+        self.assertEqual(wids2, [2])
+
+        truncate_file(self.test_file)  # clean slate
+        yield self._call("reload")
+        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+
+        resp = yield self._call("stats", name="test")
+        processes3 = list(resp['info'].keys())
+        self.assertEqual(len(processes3), 1)
+        self.assertNotIn(processes3[0], (processes1[0], processes2[0]))
+        wids3 = [resp['info'][process]['wid'] for process in processes3]
+        self.assertEqual(wids3, [1])
+
+        yield self.stop_arbiter()
+
+    @tornado.testing.gen_test
+    def test_reload_wid_4_workers(self):
+        yield self.start_arbiter(graceful_timeout=0)
+        resp = yield self._call("incr", name="test", nb=3)
+        self.assertEqual(resp.get('numprocesses'), 4)
+
+        resp = yield self._call("stats", name="test")
+        processes1 = list(resp['info'].keys())
+        self.assertEqual(len(processes1), 4)
+        wids1 = set(resp['info'][process]['wid'] for process in processes1)
+        self.assertSetEqual(wids1, set([1, 2, 3, 4]))
+
+        truncate_file(self.test_file)  # clean slate
+        yield self._call("reload")
+        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+
+        resp = yield self._call("stats", name="test")
+        processes2 = list(resp['info'].keys())
+        self.assertEqual(len(processes2), 4)
+        self.assertEqual(len(set(processes1) & set(processes2)), 0)
+        wids2 = set(resp['info'][process]['wid'] for process in processes2)
+        self.assertSetEqual(wids2, set([5, 6, 7, 8]))
+
+        truncate_file(self.test_file)  # clean slate
+        yield self._call("reload")
+        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+
+        resp = yield self._call("stats", name="test")
+        processes3 = list(resp['info'].keys())
+        self.assertEqual(len(processes3), 4)
+        self.assertEqual(len(set(processes1) & set(processes3)), 0)
+        self.assertEqual(len(set(processes2) & set(processes3)), 0)
+        wids3 = set([resp['info'][process]['wid'] for process in processes3])
+        self.assertSetEqual(wids3, set([1, 2, 3, 4]))
+
+        yield self.stop_arbiter()
+
+    @tornado.testing.gen_test
     def test_stop_watchers(self):
         yield self.start_arbiter(graceful_timeout=0)
         yield self._call("stop")
