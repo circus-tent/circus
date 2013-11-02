@@ -734,14 +734,13 @@ class Watcher(object):
 
     @property
     def _nextwid(self):
-        used_wids = sorted([p.wid for p in self.processes.values()])
-        all_wids = range(1, self.numprocesses + 1)
-        for slot, wid in izip_longest(all_wids, used_wids, fillvalue=None):
-            if slot is None:
-                # should never happen
-                raise RuntimeError("Process count > numproceses")
-            elif wid is None:
-                return slot
+        used_wids = set([p.wid for p in self.processes.values()])
+        all_wids = set(range(1, self.numprocesses * 2 + 1))
+        available_wids = sorted(all_wids - used_wids)
+        try:
+            return available_wids[0]
+        except IndexError:
+            raise RuntimeError("Process count > numproceses*2")
 
     def call_hook(self, hook_name, **kwargs):
         """Call a hook function"""
