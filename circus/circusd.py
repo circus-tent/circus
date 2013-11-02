@@ -1,6 +1,5 @@
 import sys
 import argparse
-import logging
 import os
 import resource
 
@@ -95,9 +94,6 @@ def main():
 
     if args.daemonize:
         daemonize()
-
-    # basic logging configuration
-    logging.basicConfig()
 
     # From here it can also come from the arbiter configuration
     # load the arbiter from config
