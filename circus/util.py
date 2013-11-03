@@ -518,6 +518,7 @@ def configure_logger(logger, level='INFO', output="-"):
     fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
     h.setFormatter(fmt)
     logger.handlers = [h]
+    logger.propagate = False
 
 
 class StrictConfigParser(ConfigParser):

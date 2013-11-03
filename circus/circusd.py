@@ -123,9 +123,6 @@ def main():
     logoutput = args.logoutput or arbiter.logoutput or '-'
     configure_logger(logger, loglevel, logoutput)
 
-    # removing the basic config handler
-    logging.getLogger().handlers = []
-
     # Main loop
     restart = True
     while restart:
