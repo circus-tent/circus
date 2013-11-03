@@ -5,10 +5,11 @@ from circus.util import convert_opt
 
 class Get(Command):
     """\
-        Get the value of a watcher option
-        =================================
+        Get the value of specific watcher options
+        =========================================
 
-        This command return the watchers options values asked.
+        This command can be used to query the current value of one or
+        more watcher options.
 
         ZMQ Message
         -----------
@@ -23,26 +24,24 @@ class Get(Command):
                 }
             }
 
-        A response contains 2 properties:
+        A request message contains two properties:
 
         - keys: list, The option keys for which you want to get the values
         - name: name of watcher
 
-        The response return an object with a property "options"
-        containing the list of key/value returned by circus.
+        The response object has a property ``options`` which is a
+        dictionary of option names and values.
 
         eg::
 
             {
                 "status": "ok",
                 "options": {
-                    "flapping_window": 1,
-                    "times": 2
+                    "graceful_timeout": 300,
+                    "send_hup": True,
                 },
                 time': 1332202594.754644
             }
-
-        See Optios for for a description of options enabled?
 
 
         Command line
@@ -50,7 +49,7 @@ class Get(Command):
 
         ::
 
-            $ circusctl get <name> <key> <value> <key1> <value1>
+            $ circusctl get <name> <key1> <key2>
 
     """
 
@@ -83,4 +82,4 @@ class Get(Command):
             for k, v in msg.get('options', {}).items():
                 ret.append("%s: %s" % (k, convert_opt(k, v)))
             return "\n".join(ret)
-        return self.console_msg(self, msg)
+        return self.console_error(msg)

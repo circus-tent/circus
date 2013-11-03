@@ -5,10 +5,10 @@ from circus.util import convert_opt
 
 class Options(Command):
     """\
-        Get the value of a watcher option
-        =================================
+        Get the value of all options for a watcher
+        ==========================================
 
-        This command return the watchers options values asked.
+        This command returns all option values for a given watcher.
 
         ZMQ Message
         -----------
@@ -26,21 +26,20 @@ class Options(Command):
 
         - name: name of watcher
 
-        The response return an object with a property "options"
-        containing a dictionary of key/value returned by circus.
+        The response object has a property ``options`` which is a
+        dictionary of option names and values.
 
         eg::
 
             {
                 "status": "ok",
                 "options": {
-                    "flapping_window": 1,
-                    "flapping_attempts": 2,
+                    "graceful_timeout": 300,
+                    "send_hup": True,
                     ...
                 },
                 time': 1332202594.754644
             }
-
 
 
         Command line
@@ -70,11 +69,6 @@ class Options(Command):
         - cmd: string, The command line used to launch the process
         - env: object, define the environnement in which the process will be
           launch
-        - flapping_attempts: integer, number of times we try to relaunch a
-          process in the flapping_window time before we stop the watcher
-          during the retry_in time.
-        - flapping_window: integer or number, times in seconds in which we test
-          the number of process restart.
         - retry_in: integer or number, time in seconds we wait before we retry
           to launch the process if the maximum number of attempts
           has been reach.
@@ -108,4 +102,4 @@ class Options(Command):
             for k, v in msg.get('options', {}).items():
                 ret.append("%s: %s" % (k, convert_opt(k, v)))
             return "\n".join(ret)
-        return self.console_msg(self, msg)
+        return self.console_error(msg)

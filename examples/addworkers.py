@@ -10,7 +10,7 @@ name = 'dummy'
 
 
 for i in range(50):
-    print client.call("""
+    print(client.call("""
     {
         "command": "add",
         "properties": {
@@ -28,5 +28,5 @@ for i in range(50):
             "start": true
         }
     }
-    """ % (command, name + str(i)))
+    """ % (command, name + str(i))))
 

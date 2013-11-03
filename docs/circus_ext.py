@@ -21,16 +21,16 @@ input / output zmq messages.
 
 
 def generate_commands(app):
-    path = os.path.join(app.srcdir, "commands")
+    path = os.path.join(app.srcdir, "for-ops", "commands")
     ext = app.config['source_suffix']
     if not os.path.exists(path):
         os.makedirs(path)
 
-    tocname = os.path.join(app.srcdir, "commands%s" % ext)
+    tocname = os.path.join(app.srcdir, "for-ops", "commands%s" % ext)
 
     commands = get_commands()
     items = commands.items()
-    items.sort()
+    items = sorted(items)
 
     with open(tocname, "w") as toc:
         toc.write(_HEADER)

@@ -1,4 +1,3 @@
-from unittest2 import TestCase, skipIf
 import sys
 import os
 import tempfile
@@ -9,7 +8,7 @@ from circus import circusd
 from circus.arbiter import Arbiter
 from circus.util import REDIRECT_TO
 from circus import util
-from circus.tests.support import has_gevent
+from circus.tests.support import has_gevent, TestCase, skipIf, EasyTestSuite
 
 
 CIRCUS_INI = os.path.join(os.path.dirname(__file__), 'config', 'circus.ini')
@@ -80,7 +79,7 @@ class TestCircusd(TestCase):
             if module.startswith('gevent'):
                 del sys.modules[module]
 
-        from gevent.dns import resolve_ipv4     # NOQA
+        from gevent import socket   # NOQA
         self.assertRaises(ValueError, daemonize)
 
     def test_maxfd(self):
@@ -89,14 +88,6 @@ class TestCircusd(TestCase):
 
     @skipIf(has_gevent(), "Gevent is loaded")
     def test_daemonize(self):
-        def check_pid(pid):
-            try:
-                os.kill(pid, 0)
-            except OSError:
-                return False
-            else:
-                return True
-
         daemonize()
         self.assertEqual(self.forked, 2)
 
@@ -116,3 +107,5 @@ class TestCircusd(TestCase):
         sys.argv = ['circusd', CIRCUS_INI, '--pidfile', pid_file]
         main()
         self.assertFalse(os.path.exists(pid_file))
+
+test_suite = EasyTestSuite(__name__)

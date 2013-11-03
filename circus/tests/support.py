@@ -7,13 +7,39 @@ from collections import defaultdict
 import cProfile
 import pstats
 import shutil
+import functools
+import multiprocessing
 
-import unittest2 as unittest
+try:
+    from unittest import skip, skipIf, TestCase, TestSuite, findTestCases
+except ImportError:
+    from unittest2 import skip, skipIf, TestCase, TestSuite  # NOQA
+    from unittest2 import findTestCases  # NOQA
+
+from tornado.testing import AsyncTestCase
+from zmq.eventloop import ioloop
+import mock
+import tornado
 
 from circus import get_arbiter
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_STATS)
-from circus.client import CircusClient, make_message
+from circus.util import tornado_sleep
+from circus.client import AsyncCircusClient, make_message
+from circus.stream import QueueStream
+
+ioloop.install()
+if 'ASYNC_TEST_TIMEOUT' not in os.environ:
+    os.environ['ASYNC_TEST_TIMEOUT'] = '10'
+
+
+class EasyTestSuite(TestSuite):
+    def __init__(self, name):
+        try:
+            super(EasyTestSuite, self).__init__(
+                findTestCases(sys.modules[name]))
+        except KeyError:
+            pass
 
 
 def resolve_name(name):
@@ -53,27 +79,79 @@ def resolve_name(name):
 _CMD = sys.executable
 
 
-class TestCircus(unittest.TestCase):
+class TestCircus(AsyncTestCase):
 
     arbiter_factory = get_arbiter
 
     def setUp(self):
+        super(TestCircus, self).setUp()
         self.arbiters = []
         self.files = []
         self.dirs = []
         self.tmpfiles = []
-        self.cli = CircusClient()
+        self.cli = AsyncCircusClient()
+        self.plugins = []
+
+    def get_new_ioloop(self):
+        return tornado.ioloop.IOLoop.instance()
 
     def tearDown(self):
-        self._stop_runners()
         for file in self.files + self.tmpfiles:
             if os.path.exists(file):
                 os.remove(file)
-
         for dir in self.dirs:
             shutil.rmtree(dir)
-
         self.cli.stop()
+        for plugin in self.plugins:
+            plugin.stop()
+        super(TestCircus, self).tearDown()
+
+    def make_plugin(self, klass, endpoint=DEFAULT_ENDPOINT_DEALER,
+                    sub=DEFAULT_ENDPOINT_SUB, check_delay=1,
+                    **config):
+        config['active'] = True
+        plugin = klass(endpoint, sub, check_delay, None, **config)
+        self.plugins.append(plugin)
+        return plugin
+
+    @tornado.gen.coroutine
+    def start_arbiter(self, cmd='circus.tests.support.run_process',
+                      stdout_stream=None, **kw):
+        if stdout_stream is None:
+            self.stream = QueueStream()
+            stdout_stream = {'stream': self.stream}
+        testfile, arbiter = self._create_circus(
+            cmd, stdout_stream=stdout_stream,
+            debug=True, async=True, **kw)
+        self.test_file = testfile
+        self.arbiter = arbiter
+        yield self.arbiter.start()
+
+    @tornado.gen.coroutine
+    def stop_arbiter(self):
+        for watcher in self.arbiter.iter_watchers():
+            yield self.arbiter.rm_watcher(watcher.name)
+        yield self.arbiter.stop()
+
+    @tornado.gen.coroutine
+    def status(self, cmd, **props):
+        resp = yield self.call(cmd, **props)
+        raise tornado.gen.Return(resp.get('status'))
+
+    @tornado.gen.coroutine
+    def numwatchers(self, cmd, **props):
+        resp = yield self.call(cmd, waiting=True, **props)
+        raise tornado.gen.Return(resp.get('numprocesses'))
+
+    @tornado.gen.coroutine
+    def numprocesses(self, cmd, **props):
+        resp = yield self.call(cmd, waiting=True, **props)
+        raise tornado.gen.Return(resp.get('numprocesses'))
+
+    @tornado.gen.coroutine
+    def pids(self):
+        resp = yield self.call('list', name='test')
+        raise tornado.gen.Return(resp.get('pids'))
 
     def get_tmpdir(self):
         dir_ = mkdtemp()
@@ -90,45 +168,67 @@ class TestCircus(unittest.TestCase):
         return file
 
     @classmethod
-    def _create_circus(cls, callable, plugins=None, stats=False, **kw):
-        resolve_name(callable)   # used to check the callable
+    def _create_circus(cls, callable_path, plugins=None, stats=False,
+                       async=False, **kw):
+        resolve_name(callable_path)   # used to check the callable
         fd, testfile = mkstemp()
         os.close(fd)
         wdir = os.path.dirname(__file__)
-        args = ['generic.py', callable, testfile]
+        args = ['generic.py', callable_path, testfile]
         worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
                   'name': 'test', 'graceful_timeout': 2}
         worker.update(kw)
         debug = kw.get('debug', False)
+        # -1 => no periodic callback to manage_watchers by default
+        check_delay = kw.get('check_delay', -1)
 
         fact = cls.arbiter_factory
-        if stats:
-            arbiter = fact([worker], background=True, plugins=plugins,
-                           stats_endpoint=DEFAULT_ENDPOINT_STATS,
-                           statsd=True,
-                           debug=debug, statsd_close_outputs=not debug)
+        if async:
+            if stats:
+                arbiter = fact([worker], background=False, plugins=plugins,
+                               debug=debug, statsd=True,
+                               stats_endpoint=DEFAULT_ENDPOINT_STATS,
+                               loop=tornado.ioloop.IOLoop.instance(),
+                               check_delay=check_delay,
+                               statsd_close_outputs=not debug)
+            else:
+                arbiter = fact([worker], background=False, plugins=plugins,
+                               debug=debug,
+                               check_delay=check_delay,
+                               loop=tornado.ioloop.IOLoop.instance())
         else:
-            arbiter = fact([worker], background=True, plugins=plugins,
-                           debug=debug)
-        arbiter.start()
+            if stats:
+                arbiter = fact([worker], background=True, plugins=plugins,
+                               stats_endpoint=DEFAULT_ENDPOINT_STATS,
+                               statsd=True,
+                               check_delay=check_delay,
+                               debug=debug, statsd_close_outputs=not debug)
+            else:
+                arbiter = fact([worker], background=True, plugins=plugins,
+                               check_delay=check_delay,
+                               debug=debug)
+        #arbiter.start()
         return testfile, arbiter
 
-    def _run_circus(self, callable, plugins=None, stats=False, **kw):
+    def _run_circus(self, callable_path, plugins=None, stats=False, **kw):
 
-        testfile, arbiter = TestCircus._create_circus(callable, plugins, stats,
-                                                      **kw)
+        testfile, arbiter = TestCircus._create_circus(callable_path,
+                                                      plugins, stats, **kw)
         self.arbiters.append(arbiter)
         self.files.append(testfile)
         return testfile
 
+    @tornado.gen.coroutine
     def _stop_runners(self):
         for arbiter in self.arbiters:
-            arbiter.stop()
+            yield arbiter.stop()
         self.arbiters = []
 
-    def call(self, cmd, **props):
-        msg = make_message(cmd, **props)
-        return self.cli.call(msg)
+    @tornado.gen.coroutine
+    def call(self, _cmd, **props):
+        msg = make_message(_cmd, **props)
+        resp = yield self.cli.call(msg)
+        raise tornado.gen.Return(resp)
 
 
 def profile(func):
@@ -206,6 +306,7 @@ def poll_for_callable(func, *args, **kwargs):
         timeout = kwargs.pop('timeout')
 
     start = time()
+    last_exception = None
     while time() - start < timeout:
         try:
             func_args = []
@@ -216,10 +317,11 @@ def poll_for_callable(func, *args, **kwargs):
                     func_args.append(arg)
             func(*func_args)
         except AssertionError as e:
+            last_exception = e
             sleep(0.1)
         else:
             return True
-    raise e
+    raise last_exception or AssertionError('No exception triggered yet')
 
 
 def poll_for(filename, needles, timeout=5):
@@ -233,6 +335,7 @@ def poll_for(filename, needles, timeout=5):
         needles = [needles]
 
     start = time()
+    needle = content = None
     while time() - start < timeout:
         with open(filename) as f:
             content = f.read()
@@ -246,12 +349,32 @@ def poll_for(filename, needles, timeout=5):
         filename, needle, content))
 
 
+@tornado.gen.coroutine
+def async_poll_for(filename, needles, timeout=5):
+    """Async version of poll_for
+    """
+    if isinstance(needles, str):
+        needles = [needles]
+
+    start = time()
+    needle = content = None
+    while time() - start < timeout:
+        with open(filename) as f:
+            content = f.read()
+        for needle in needles:
+            if needle in content:
+                raise tornado.gen.Return(True)
+        yield tornado_sleep(0.1)
+    raise TimeoutException('Timeout polling "%s" for "%s". Content: %s' % (
+        filename, needle, content))
+
+
 def truncate_file(filename):
     """Truncate a file (empty it)."""
     open(filename, 'w').close()  # opening as 'w' overwrites the file
 
 
-def run_plugin(klass, config, duration=300):
+def run_plugin(klass, config, plugin_info_callback=None, duration=300):
     endpoint = DEFAULT_ENDPOINT_DEALER
     pubsub_endpoint = DEFAULT_ENDPOINT_SUB
     check_delay = 1
@@ -267,15 +390,41 @@ def run_plugin(klass, config, duration=300):
         def increment(self, name):
             self.increments[name] += 1
 
+        def stop(self):
+            pass
+
     _statsd = _Statsd()
     plugin = klass(endpoint, pubsub_endpoint, check_delay, ssh_server,
                    **config)
+
+    # make sure we close the existing statsd client
+    if hasattr(plugin, 'statsd'):
+        plugin.statsd.stop()
+
     plugin.statsd = _statsd
 
     deadline = time() + (duration / 1000.)
     plugin.loop.add_timeout(deadline, plugin.loop.stop)
     plugin.start()
+    if plugin_info_callback:
+        plugin_info_callback(plugin)
+
+    plugin.stop()
     return _statsd
+
+
+@tornado.gen.coroutine
+def async_run_plugin(klass, config, plugin_info_callback, duration=300):
+    queue = multiprocessing.Queue()
+    plugin_info_callback = functools.partial(plugin_info_callback, queue)
+    circusctl_process = multiprocessing.Process(
+        target=run_plugin,
+        args=(klass, config, plugin_info_callback, duration))
+    circusctl_process.start()
+    while queue.empty():
+        yield tornado_sleep(.1)
+    result = queue.get()
+    raise tornado.gen.Return(result)
 
 
 class FakeProcess(object):
@@ -285,3 +434,40 @@ class FakeProcess(object):
         self.pid = pid
         self.started = started
         self.age = age
+        self.stopping = False
+
+    def is_alive(self):
+        return True
+
+    def stop(self):
+        pass
+
+
+class MagicMockFuture(mock.MagicMock, tornado.concurrent.Future):
+
+    def cancel(self):
+        return False
+
+    def cancelled(self):
+        return False
+
+    def running(self):
+        return False
+
+    def done(self):
+        return True
+
+    def result(self, timeout=None):
+        return None
+
+    def exception(self, timeout=None):
+        return None
+
+    def add_done_callback(self, fn):
+        fn(self)
+
+    def set_result(self, result):
+        pass
+
+    def set_exception(self, exception):
+        pass

@@ -1,7 +1,9 @@
-import unittest
 import os
+import tornado
+import tornado.testing
 
-from circus.arbiter import Arbiter, ReloadArbiterException
+from circus.arbiter import Arbiter
+from circus.tests.support import EasyTestSuite
 
 
 HERE = os.path.join(os.path.dirname(__file__))
@@ -36,21 +38,28 @@ class FakeSocket(object):
     close = send_multipart
 
 
-class TestConfig(unittest.TestCase):
+class TestConfig(tornado.testing.AsyncTestCase):
 
     def setUp(self):
+        super(TestConfig, self).setUp()
         self.a = self._load_base_arbiter()
 
-    def tearDown(self):
-        self._tear_down_arbiter(self.a)
+    @tornado.gen.coroutine
+    def _tearDown(self):
+        yield self._tear_down_arbiter(self.a)
 
+    @tornado.gen.coroutine
     def _tear_down_arbiter(self, a):
         for watcher in a.iter_watchers():
-            watcher.stop()
+            yield watcher._stop()
         a.sockets.close_all()
 
+    def get_new_ioloop(self):
+        return tornado.ioloop.IOLoop.instance()
+
     def _load_base_arbiter(self, name='reload_base'):
-        a = Arbiter.load_from_config(_CONF[name])
+        loop = tornado.ioloop.IOLoop.instance()
+        a = Arbiter.load_from_config(_CONF[name], loop=loop)
         a.evpub_socket = FakeSocket()
         # initialize watchers
         for watcher in a.iter_watchers():
@@ -58,98 +67,106 @@ class TestConfig(unittest.TestCase):
         return a
 
     def test_watcher_names(self):
-        watcher_names = [i.name for i in self.a.watchers]
-        watcher_names.sort()
+        watcher_names = sorted(i.name for i in self.a.watchers)
         self.assertEqual(watcher_names, ['plugin:myplugin', 'test1', 'test2'])
 
+    @tornado.testing.gen_test
     def test_reload_numprocesses(self):
         w = self.a.get_watcher('test1')
         self.assertEqual(w.numprocesses, 1)
-        self.a.reload_from_config(_CONF['reload_numprocesses'])
+        yield self.a.reload_from_config(_CONF['reload_numprocesses'])
         self.assertEqual(w.numprocesses, 2)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_reload_addwatchers(self):
         self.assertEqual(len(self.a.watchers), 3)
-        self.a.reload_from_config(_CONF['reload_addwatchers'])
+        yield self.a.reload_from_config(_CONF['reload_addwatchers'])
         self.assertEqual(len(self.a.watchers), 4)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_reload_delwatchers(self):
         self.assertEqual(len(self.a.watchers), 3)
-
-        self.a.reload_from_config(_CONF['reload_delwatchers'])
+        yield self.a.reload_from_config(_CONF['reload_delwatchers'])
         self.assertEqual(len(self.a.watchers), 2)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_reload_changewatchers(self):
         self.assertEqual(len(self.a.watchers), 3)
         w0 = self.a.get_watcher('test1')
         w1 = self.a.get_watcher('test2')
-
-        self.a.reload_from_config(_CONF['reload_changewatchers'])
+        yield self.a.reload_from_config(_CONF['reload_changewatchers'])
         self.assertEqual(len(self.a.watchers), 3)
         self.assertEqual(self.a.get_watcher('test1'), w0)
         self.assertNotEqual(self.a.get_watcher('test2'), w1)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_reload_addplugins(self):
         self.assertEqual(len(self.a.watchers), 3)
-
-        self.a.reload_from_config(_CONF['reload_addplugins'])
+        yield self.a.reload_from_config(_CONF['reload_addplugins'])
         self.assertEqual(len(self.a.watchers), 4)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_reload_delplugins(self):
         self.assertEqual(len(self.a.watchers), 3)
-
-        self.a.reload_from_config(_CONF['reload_delplugins'])
+        yield self.a.reload_from_config(_CONF['reload_delplugins'])
         self.assertEqual(len(self.a.watchers), 2)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_reload_changeplugins(self):
         self.assertEqual(len(self.a.watchers), 3)
         p = self.a.get_watcher('plugin:myplugin')
-
-        self.a.reload_from_config(_CONF['reload_changeplugins'])
+        yield self.a.reload_from_config(_CONF['reload_changeplugins'])
         self.assertEqual(len(self.a.watchers), 3)
         self.assertNotEqual(self.a.get_watcher('plugin:myplugin'), p)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_reload_addsockets(self):
         self.assertEqual(len(self.a.sockets), 1)
-
-        self.a.reload_from_config(_CONF['reload_addsockets'])
+        yield self.a.reload_from_config(_CONF['reload_addsockets'])
         self.assertEqual(len(self.a.sockets), 2)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_reload_delsockets(self):
         self.assertEqual(len(self.a.sockets), 1)
-
-        self.a.reload_from_config(_CONF['reload_delsockets'])
+        yield self.a.reload_from_config(_CONF['reload_delsockets'])
         self.assertEqual(len(self.a.sockets), 0)
+        yield self._tearDown()
 
+    @tornado.testing.gen_test
     def test_reload_changesockets(self):
         self.assertEqual(len(self.a.sockets), 1)
         s = self.a.get_socket('mysocket')
-
-        self.a.reload_from_config(_CONF['reload_changesockets'])
+        yield self.a.reload_from_config(_CONF['reload_changesockets'])
         self.assertEqual(len(self.a.sockets), 1)
         self.assertNotEqual(self.a.get_socket('mysocket'), s)
+        yield self._tearDown()
 
-    def test_reload_changearbiter(self):
-        self.assertRaises(ReloadArbiterException,
-                          self.a.reload_from_config,
-                          _CONF['reload_changearbiter'])
-
+    @tornado.testing.gen_test
     def test_reload_envdictparsed(self):
         # environ var that needs a `circus.util.parse_env_dict` treatment
         os.environ['SHRUBBERY'] = ' NI '
+        a = self._load_base_arbiter()
         try:
-            a = self._load_base_arbiter()
             w = a.get_watcher('test1')
-            a.reload_from_config(_CONF['reload_base'])
+            yield a.reload_from_config(_CONF['reload_base'])
             self.assertEqual(a.get_watcher('test1'), w)
         finally:
             del os.environ['SHRUBBERY']
-            self._tear_down_arbiter(a)
+            yield self._tear_down_arbiter(a)
 
+    @tornado.testing.gen_test
     def test_reload_ignorearbiterwatchers(self):
         a = self._load_base_arbiter('reload_statsd')
         statsd = a.get_watcher('circusd-stats')
-
-        a.reload_from_config(_CONF['reload_statsd'])
-
+        yield a.reload_from_config(_CONF['reload_statsd'])
         self.assertEqual(statsd, a.get_watcher('circusd-stats'))
+
+test_suite = EasyTestSuite(__name__)

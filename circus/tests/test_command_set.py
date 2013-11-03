@@ -1,11 +1,12 @@
-from circus.tests.support import TestCircus
+from circus.tests.support import TestCircus, EasyTestSuite
 from circus.tests.test_command_incrproc import FakeArbiter as _FakeArbiter
 from circus.commands.set import Set
 
 
 class FakeWatcher(object):
-    actions = []
-    options = {}
+    def __init__(self):
+        self.actions = []
+        self.options = {}
 
     def set_opt(self, key, val):
         self.options[key] = val
@@ -52,3 +53,15 @@ class SetTest(TestCircus):
                          'some')
         self.assertEqual(watcher.options['hooks.after_start'],
                          'hook')
+
+    def test_set_args(self):
+        arbiter = FakeArbiter()
+        cmd = Set()
+
+        props = cmd.message('dummy2', 'args', '--arg1 1 --arg2 2')
+        props = props['properties']
+        cmd.execute(arbiter, props)
+        watcher = arbiter.watchers[0]
+        self.assertEqual(watcher.options['args'], '--arg1 1 --arg2 2')
+
+test_suite = EasyTestSuite(__name__)

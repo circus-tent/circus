@@ -20,6 +20,7 @@ import warnings
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
 from circus.py3compat import bytestring, string_types
+from circus.sockets import CircusSocket
 from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
                          ObjectDict, replace_gnu_args)
 from circus import logger
@@ -111,6 +112,9 @@ class Process(object):
         self.pipe_stderr = pipe_stderr
         self.close_child_stdout = close_child_stdout
         self.close_child_stderr = close_child_stderr
+        self.stopping = False
+        # sockets created before fork, should be let go after.
+        self._sockets = []
 
         if spawn:
             self.spawn()
@@ -131,8 +135,37 @@ class Process(object):
         finally:
             os.close(devnull)
 
+    def _get_sockets_fds(self):
+        """Returns sockets dict. If this worker's cmd indicates use of
+        a SO_REUSEPORT socket, a new socket is created and bound. This
+        new socket's FD replaces original socket's FD in returned dict.
+        This method populates `self._sockets` list. This list should be
+        let go after `fork()`.
+        """
+        sockets_fds = None
+
+        if self.watcher is not None and self.watcher.sockets is not None:
+            sockets_fds = self.watcher._get_sockets_fds()
+            reuseport_sockets = tuple((sn, s) for (sn, s)
+                                      in self.watcher.sockets.items()
+                                      if s.so_reuseport)
+
+            for sn, s in reuseport_sockets:
+                # watcher.cmd uses this reuseport socket
+                if 'circus.sockets.%s' % sn in self.watcher.cmd:
+                    sock = CircusSocket.load_from_config(s._cfg)
+                    sock.bind_and_listen()
+                    # replace original socket's fd
+                    sockets_fds[sn] = sock.fileno()
+                    # keep new socket until fork returns
+                    self._sockets.append(sock)
+
+        return sockets_fds
+
     def spawn(self):
-        args = self.format_args()
+        sockets_fds = self._get_sockets_fds()
+
+        args = self.format_args(sockets_fds=sockets_fds)
 
         def preexec_fn():
             streams = [sys.stdin]
@@ -178,9 +211,12 @@ class Process(object):
                              env=self.env, close_fds=not self.use_fds,
                              executable=self.executable, **extra)
 
+        # let go of sockets created only for self._worker to inherit
+        self._sockets = []
+
         self.started = time.time()
 
-    def format_args(self):
+    def format_args(self, sockets_fds=None):
         """ It's possible to use environment variables and some other variables
         that are available in this context, when spawning the processes.
         """
@@ -195,8 +231,10 @@ class Process(object):
             'uid': self.uid, 'gid': self.gid, 'rlimits': self.rlimits,
             'executable': self.executable, 'use_fds': self.use_fds}
 
+        if sockets_fds is not None:
+            format_kwargs['sockets'] = sockets_fds
+
         if self.watcher is not None:
-            format_kwargs['sockets'] = self.watcher._get_sockets_fds()
             for option in self.watcher.optnames:
                 if option not in format_kwargs\
                         and hasattr(self.watcher, option):
@@ -231,6 +269,10 @@ class Process(object):
         return self._worker.poll()
 
     @debuglog
+    def is_alive(self):
+        return self.poll() is None
+
+    @debuglog
     def send_signal(self, sig):
         """Sends a signal **sig** to the process."""
         logger.debug("sending signal %s to %s" % (sig, self.pid))
@@ -238,7 +280,17 @@ class Process(object):
 
     @debuglog
     def stop(self):
-        """Terminate the process."""
+        """Stop the process and close stdout/stderr
+
+        If the corresponding process is still here
+        (normally it's already killed by the watcher),
+        a SIGTERM is sent, then a SIGKILL after 1 second.
+
+        The shutdown process (SIGTERM then SIGKILL) is
+        normally taken by the watcher. So if the process
+        is still there here, it's a kind of bad behavior
+        because the graceful timeout won't be respected here.
+        """
         try:
             try:
                 if self._worker.poll() is None:
@@ -278,6 +330,7 @@ class Process(object):
         info["age"] = self.age()
         info["started"] = self.started
         info["children"] = []
+        info['wid'] = self.wid
         for child in self._worker.get_children():
             info["children"].append(get_info(child))
 
@@ -297,10 +350,12 @@ class Process(object):
     @debuglog
     def send_signal_child(self, pid, signum):
         """Send signal *signum* to child *pid*."""
-        children = dict([(child.pid, child)
-                         for child in self._worker.get_children()])
-
-        children[pid].send_signal(signum)
+        children = dict((child.pid, child)
+                        for child in self._worker.get_children())
+        try:
+            children[pid].send_signal(signum)
+        except KeyError:
+            raise NoSuchProcess(pid)
 
     @debuglog
     def send_signal_children(self, signum):

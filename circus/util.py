@@ -8,16 +8,35 @@ import shlex
 import socket
 import sys
 import time
-from ConfigParser import (
-    ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
-)
+import functools
+import traceback
+from tornado.ioloop import IOLoop
+from tornado import gen
+from tornado import concurrent
+from circus.py3compat import integer_types, bytestring, raise_with_tb
+try:
+    from configparser import (
+        ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
+    )
+    new_config_parser = True
+except ImportError:
+    from ConfigParser import (  # NOQA
+        ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
+    )
+    new_config_parser = False
+
 from datetime import timedelta
 from functools import wraps
+import signal
 
 from zmq import ssh
 
 
 from psutil import AccessDenied, NoSuchProcess, Process
+
+from circus.exc import ConflictError
+from circus import logger
+from circus.py3compat import string_types
 
 
 # default endpoints
@@ -53,6 +72,7 @@ LOG_LEVELS = {
 LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
 LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
 _SYMBOLS = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
+_all_signals = {}
 
 
 def get_working_dir():
@@ -72,7 +92,7 @@ def get_working_dir():
 def bytes2human(n):
     """Translates bytes into a human repr.
     """
-    if not isinstance(n, (int, long)):
+    if not isinstance(n, integer_types):
         raise TypeError(n)
 
     prefix = {}
@@ -208,12 +228,35 @@ def to_bool(s):
         raise ValueError("%r is not a boolean" % s)
 
 
+def to_signum(signum):
+    if not _all_signals:
+        for name in dir(signal):
+            if name.startswith('SIG'):
+                value = getattr(signal, name)
+                _all_signals[name[3:]] = value
+                _all_signals[name] = value
+                _all_signals[str(value)] = value
+                _all_signals[value] = value
+
+    try:
+        if isinstance(signum, string_types):
+            signum = signum.upper()
+        return _all_signals[signum]
+    except KeyError:
+        raise ValueError('signal invalid')
+
+
 def to_uid(name):
     """Return an uid, given a user name.
     If the name is an integer, make sure it's an existing uid.
 
     If the user name is unknown, raises a ValueError.
     """
+    try:
+        name = int(name)
+    except ValueError:
+        pass
+
     if isinstance(name, int):
         try:
             pwd.getpwuid(name)
@@ -237,6 +280,11 @@ def to_gid(name):
 
     If the group name is unknown, raises a ValueError.
     """
+    try:
+        name = int(name)
+    except ValueError:
+        pass
+
     if isinstance(name, int):
         try:
             grp.getgrgid(name)
@@ -267,7 +315,7 @@ def parse_env_str(env_str):
 
 def parse_env_dict(env):
     ret = dict()
-    for k, v in env.iteritems():
+    for k, v in env.items():
         v = re.sub(r'\$([A-Z]+[A-Z0-9_]*)', replace_env, v)
         ret[k.strip()] = v.strip()
     return ret
@@ -280,7 +328,8 @@ def replace_env(var):
 def env_to_str(env):
     if not env:
         return ""
-    return ",".join(["%s=%s" % (k, v) for k, v in env.items()])
+    return ",".join(["%s=%s" % (k, v) for k, v in
+                     sorted(env.items(), key=lambda i: i[0])])
 
 
 def close_on_exec(fd):
@@ -306,15 +355,17 @@ def debuglog(func):
         from circus import logger
         cls = self.__class__.__name__
         global INDENTATION_LEVEL
+        func_name = func.func_name if hasattr(func, 'func_name')\
+            else func.__name__
         logger.debug("    " * INDENTATION_LEVEL +
-                     "'%s.%s' starts" % (cls, func.func_name))
+                     "'%s.%s' starts" % (cls, func_name))
         INDENTATION_LEVEL += 1
         try:
             return func(self, *args, **kw)
         finally:
             INDENTATION_LEVEL -= 1
             logger.debug("    " * INDENTATION_LEVEL +
-                         "'%s.%s' ends" % (cls, func.func_name))
+                         "'%s.%s' ends" % (cls, func_name))
 
     return _log
 
@@ -391,8 +442,7 @@ def resolve_name(import_name, silent=False):
     :return: imported object
     """
     # force the import name to automatically convert to strings
-    if isinstance(import_name, unicode):
-        import_name = str(import_name)
+    import_name = bytestring(import_name)
     try:
         if ':' in import_name:
             module, obj = import_name.split(':', 1)
@@ -402,8 +452,6 @@ def resolve_name(import_name, silent=False):
             return __import__(import_name)
             # __import__ is not able to handle unicode strings in the fromlist
         # if the module is a package
-        if isinstance(obj, unicode):
-            obj = obj.encode('utf-8')
         try:
             return getattr(__import__(module, None, None, [obj]), obj)
         except (ImportError, AttributeError):
@@ -412,9 +460,9 @@ def resolve_name(import_name, silent=False):
             modname = module + '.' + obj
             __import__(modname)
             return sys.modules[modname]
-    except ImportError, e:
+    except ImportError as e:
         if not silent:
-            raise ImportStringError(import_name, e), None, sys.exc_info()[2]
+            raise_with_tb(ImportStringError(import_name, e))
 
 
 _SECTION_NAME = '\w\.\-'
@@ -486,9 +534,21 @@ def configure_logger(logger, level='INFO', output="-"):
     fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
     h.setFormatter(fmt)
     logger.handlers = [h]
+    logger.propagate = False
 
 
 class StrictConfigParser(ConfigParser):
+
+    if new_config_parser:
+        def toboolean(self, value):
+            if value.lower() not in self.BOOLEAN_STATES:
+                raise ValueError('Not a boolean: %s' % value)
+            return self.BOOLEAN_STATES[value.lower()]
+    else:
+        def toboolean(self, value):  # NOQA
+            if value.lower() not in self._boolean_states:
+                raise ValueError('Not a boolean: %s' % value)
+            return self._boolean_states[value.lower()]
 
     def _read(self, fp, fpname):
         cursect = None                        # None, or a dictionary
@@ -499,7 +559,7 @@ class StrictConfigParser(ConfigParser):
             line = fp.readline()
             if not line:
                 break
-            lineno = lineno + 1
+            lineno += 1
             # comment or blank line?
             if line.strip() == '' or line[0] in '#;':
                 continue
@@ -666,7 +726,7 @@ def create_udp_socket(mcast_addr, mcast_port):
     mcast_addr must be between 224.0.0.0 and 239.255.255.255
     """
     try:
-        ip_splitted = map(int, mcast_addr.split('.'))
+        ip_splitted = list(map(int, mcast_addr.split('.')))
         mcast_port = int(mcast_port)
     except ValueError:
         raise ValueError('Wrong UDP multicast_endpoint configuration. Should '
@@ -728,3 +788,95 @@ class DictDiffer(object):
 
 def dict_differ(dict1, dict2):
     return len(DictDiffer(dict1, dict2).changed()) > 0
+
+
+def _synchronized_cb(arbiter, future):
+    if arbiter is not None:
+        arbiter._exclusive_running_command = None
+
+
+def synchronized(name):
+    def real_decorator(f):
+        @wraps(f)
+        def wrapper(self, *args, **kwargs):
+            arbiter = None
+            if hasattr(self, "arbiter"):
+                arbiter = self.arbiter
+            elif hasattr(self, "_exclusive_running_command"):
+                arbiter = self
+            if arbiter is not None:
+                if arbiter._exclusive_running_command is not None:
+                    raise ConflictError("arbiter is already running %s command"
+                                        % arbiter._exclusive_running_command)
+                arbiter._exclusive_running_command = name
+            resp = None
+            try:
+                resp = f(self, *args, **kwargs)
+            finally:
+                if isinstance(resp, concurrent.Future):
+                    cb = functools.partial(_synchronized_cb, arbiter)
+                    resp.add_done_callback(cb)
+                else:
+                    if arbiter is not None:
+                        arbiter._exclusive_running_command = None
+            return resp
+        return wrapper
+    return real_decorator
+
+
+def tornado_sleep(duration):
+    """Sleep without blocking the tornado event loop
+
+    To use with a gen.coroutines decorated function
+    Thanks to http://stackoverflow.com/a/11135204/433050
+    """
+    return gen.Task(IOLoop.instance().add_timeout, time.time() + duration)
+
+
+class TransformableFuture(concurrent.Future):
+
+    _upstream_future = None
+    _upstream_callback = None
+    _transform_function = lambda x: x
+    _result = None
+    _exception = None
+
+    def set_transform_function(self, fn):
+        self._transform_function = fn
+
+    def set_upstream_future(self, upstream_future):
+        self._upstream_future = upstream_future
+
+    def result(self, timeout=None):
+        if self._upstream_future is None:
+            raise Exception("upstream_future is not set")
+        return self._transform_function(self._result)
+
+    def _internal_callback(self, future):
+        self._result = future.result()
+        self._exception = future.exception()
+        if self._upstream_callback is not None:
+            self._upstream_callback(self)
+
+    def add_done_callback(self, fn):
+        if self._upstream_future is None:
+            raise Exception("upstream_future is not set")
+        self._upstream_callback = fn
+        self._upstream_future.add_done_callback(self._internal_callback)
+
+    def exception(self, timeout=None):
+        if self._exception:
+            return self._exception
+        else:
+            return None
+
+
+def check_future_exception_and_log(future):
+    if isinstance(future, concurrent.Future):
+        exception = future.exception()
+        if exception is not None:
+            logger.error("exception %s caught" % exception)
+            if hasattr(future, "exc_info"):
+                exc_info = future.exc_info()
+                traceback.print_tb(exc_info[2])
+            return exception

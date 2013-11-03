@@ -1,15 +1,26 @@
 import os
 import socket
 import tempfile
-import IN
-
+try:
+    import IN
+except ImportError:
+    pass
 import mock
 
-from circus.tests.support import unittest
+from circus.tests.support import TestCase, skipIf, EasyTestSuite
 from circus.sockets import CircusSocket, CircusSockets
 
 
-class TestSockets(unittest.TestCase):
+def so_bindtodevice_supported():
+    try:
+        if hasattr(IN, 'SO_BINDTODEVICE'):
+            return True
+    except NameError:
+        pass
+    return False
+
+
+class TestSockets(TestCase):
 
     def test_socket(self):
         sock = CircusSocket('somename', 'localhost', 0)
@@ -37,6 +48,7 @@ class TestSockets(unittest.TestCase):
         config = {'name': ''}
         sock = CircusSocket.load_from_config(config)
         self.assertEqual(sock.proto, 0)
+        sock.close()
 
     def test_load_from_config_unknown_proto(self):
         """Unknown proto in the config raises an error."""
@@ -83,8 +95,8 @@ class TestSockets(unittest.TestCase):
             sockets.close_all()
             self.assertTrue(not os.path.exists(sockfile))
 
-    @unittest.skipIf(not hasattr(IN, 'SO_BINDTODEVICE'),
-                     'SO_BINDTODEVICE unsupported')
+    @skipIf(not so_bindtodevice_supported(),
+            'SO_BINDTODEVICE unsupported')
     def test_bind_to_interface(self):
         config = {'name': '', 'host': 'localhost', 'port': 0,
                   'interface': 'lo'}
@@ -113,3 +125,33 @@ class TestSockets(unittest.TestCase):
             self.assertNotEqual(sock.port, 0)
         finally:
             sock.close()
+
+    @skipIf(not hasattr(socket, 'SO_REUSEPORT'),
+            'socket.SO_REUSEPORT unsupported')
+    def test_reuseport_supported(self):
+        config = {'name': '', 'host': 'localhost', 'port': 0,
+                  'so_reuseport': True}
+
+        sock = CircusSocket.load_from_config(config)
+        sockopt = sock.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT)
+
+        self.assertEqual(sock.so_reuseport, True)
+        self.assertNotEqual(sockopt, 0)
+
+    def test_reuseport_unsupported(self):
+        config = {'name': '', 'host': 'localhost', 'port': 0,
+                  'so_reuseport': True}
+        saved = None
+
+        try:
+            if hasattr(socket, 'SO_REUSEPORT'):
+                saved = socket.SO_REUSEPORT
+                del socket.SO_REUSEPORT
+            sock = CircusSocket.load_from_config(config)
+            self.assertEqual(sock.so_reuseport, False)
+        finally:
+            if saved is not None:
+                socket.SO_REUSEPORT = saved
+
+
+test_suite = EasyTestSuite(__name__)

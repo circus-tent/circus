@@ -1,10 +1,11 @@
 import re
 import socket
 import time
-import json
 import signal
 
 from zmq.eventloop import ioloop
+import zmq.utils.jsonapi as json
+from zmq.utils.strtypes import u
 from circus.plugins import CircusPlugin
 from circus import logger
 
@@ -78,6 +79,7 @@ class WatchDog(CircusPlugin):
     def handle_stop(self):
         if self.period is not None:
             self.period.stop()
+        self.sock.close()
         self.sock = None
 
     def handle_recv(self, data):
@@ -88,7 +90,7 @@ class WatchDog(CircusPlugin):
         - reap: remove a killed child pid from monitoring
         """
         topic, msg = data
-        topic_parts = topic.split(".")
+        topic_parts = u(topic).split(".")
         logger.debug("received data from circusd: %s, %s", topic_parts, msg)
         # check if monitored watchers:
         if (topic_parts[0] == 'watcher' and
@@ -109,7 +111,9 @@ class WatchDog(CircusPlugin):
                     logger.info("added new monitored pid for %s:%s",
                                 topic_parts[1],
                                 pid)
-                elif topic_parts[2] == "reap":
+                # very questionable fix for Py3 here!
+                # had to add check for pid in self.pid_status
+                elif topic_parts[2] == "reap" and pid in self.pid_status:
                     old_pid = self.pid_status.pop(pid)
                     logger.info("removed monitored pid for %s:%s",
                                 old_pid['watcher'],
@@ -206,7 +210,7 @@ class WatchDog(CircusPlugin):
 
         max_timeout = self.loop_rate * self.max_count
         too_old_time = time.time() - max_timeout
-        for pid, detail in self.pid_status.iteritems():
+        for pid, detail in self.pid_status.items():
             if detail['last_activity'] < too_old_time:
                 logger.info("watcher:%s, pid:%s is not responding. Kill it !",
                             detail['watcher'],

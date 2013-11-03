@@ -12,7 +12,7 @@ def resolve_name(name):
         try:
             ret = __import__('.'.join(module_name))
             break
-        except ImportError, exc:
+        except ImportError as exc:
             last_exc = exc
             if cursor == 0:
                 raise
@@ -36,12 +36,12 @@ def resolve_name(name):
 
 
 if __name__ == '__main__':
-    callable = resolve_name(sys.argv[1])
+    callback = resolve_name(sys.argv[1])
     try:
         if len(sys.argv) > 2:
             test_file = sys.argv[2]
-            sys.exit(callable(test_file))
+            sys.exit(callback(test_file))
         else:
-            sys.exit(callable())
+            sys.exit(callback())
     except:
         sys.exit(1)

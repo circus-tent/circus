@@ -1,5 +1,6 @@
 import socket
 from zmq.eventloop import ioloop
+from zmq.utils.strtypes import u
 from circus.plugins import CircusPlugin
 
 
@@ -15,7 +16,7 @@ class StatsdClient(object):
     def send(self, bucket, value, sample_rate=None):
         sample_rate = sample_rate or self.sample_rate
         if sample_rate != 1:
-            value += b"|@" + sample_rate
+            value += "|@%s" % sample_rate
 
         if self.prefix:
             bucket = "%s.%s" % (self.prefix, bucket)
@@ -35,6 +36,9 @@ class StatsdClient(object):
 
     def timed(self, bucket, value):
         self.send(bucket, "%s|ms" % value)
+
+    def stop(self):
+        self.socket.close()
 
 
 class StatsdEmitter(CircusPlugin):
@@ -59,7 +63,7 @@ class StatsdEmitter(CircusPlugin):
 
     def handle_recv(self, data):
         topic, msg = data
-        topic_parts = topic.split(".")
+        topic_parts = u(topic).split(".")
         watcher = topic_parts[1]
         action = topic_parts[2]
         self.statsd.increment('%s.%s' % (watcher, action))
@@ -78,6 +82,7 @@ class BaseObserver(StatsdEmitter):
 
     def handle_stop(self):
         self.period.stop()
+        self.statsd.stop()
 
     def handle_recv(self, data):
         pass
@@ -96,7 +101,7 @@ class FullStats(BaseObserver):
             self.statsd.increment("_stats.error")
             return
 
-        for name, stats in info['infos'].iteritems():
+        for name, stats in info['infos'].items():
             if name.startswith("plugin:"):
                 # ignore plugins
                 continue
@@ -104,8 +109,8 @@ class FullStats(BaseObserver):
             cpus = []
             mems = []
 
-            for sub_name, sub_info in stats.iteritems():
-                if isinstance(sub_info,  dict):
+            for sub_name, sub_info in stats.items():
+                if isinstance(sub_info, dict):
                     cpus.append(sub_info['cpu'])
                     mems.append(sub_info['mem'])
                 elif sub_name == "spawn_count":

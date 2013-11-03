@@ -12,6 +12,7 @@
 # serve to show the default.
 
 import sys, os
+import mozilla_sphinx_theme
 
 class Mock(object):
     def __init__(self, *args, **kwargs):
@@ -124,13 +125,8 @@ exclude_patterns = []
 
 html_short_title = "Circus"
 
-THEMES = os.path.abspath('_themes')
-sys.path.append(THEMES)
-html_theme_path = ['_themes']
-
-MOZ = os.path.join(THEMES, 'mozilla')
-if os.path.exists(MOZ) and len(os.listdir(MOZ)) > 0:
-    html_theme = 'mozilla'
+html_theme_path = [os.path.dirname(mozilla_sphinx_theme.__file__)]
+html_theme = 'mozilla'
 
 #html_logo = "images/circus32.png"
 

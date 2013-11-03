@@ -1,12 +1,11 @@
-import unittest
-
+from circus.tests.support import TestCase, EasyTestSuite
 from mock import patch
 
 from circus.commands.util import validate_option
 from circus.exc import MessageError
 
 
-class TestValidateOption(unittest.TestCase):
+class TestValidateOption(TestCase):
 
     def test_uidgid(self):
         self.assertRaises(MessageError, validate_option, 'uid', {})
@@ -46,3 +45,5 @@ class TestValidateOption(unittest.TestCase):
         # make sure we control the hook names
         self.assertRaises(MessageError, validate_option, 'hooks',
                           {'IDONTEXIST': ['all', False]})
+
+test_suite = EasyTestSuite(__name__)

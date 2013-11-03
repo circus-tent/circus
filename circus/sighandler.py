@@ -3,15 +3,13 @@ import traceback
 import sys
 
 from circus import logger
-from client import make_json
+from circus.client import make_json
 
 
 class SysHandler(object):
 
-    SIGNALS = map(
-        lambda x: getattr(signal, "SIG%s" % x),
-        "HUP QUIT INT TERM WINCH".split()
-    )
+    SIGNALS = [getattr(signal, "SIG%s" % x) for x in
+               "HUP QUIT INT TERM WINCH".split()]
 
     SIG_NAMES = dict(
         (getattr(signal, name), name[3:].lower()) for name in dir(signal)
@@ -27,9 +25,9 @@ class SysHandler(object):
         self._register()
 
     def stop(self):
-        for sig, callable in self._old.items():
+        for sig, callback in self._old.items():
             try:
-                signal.signal(sig, callable)
+                signal.signal(sig, callback)
             except ValueError:
                 pass
 
@@ -60,17 +58,16 @@ class SysHandler(object):
                 sys.exit(1)
 
     def handle_int(self):
-        self.controller.add_job(None, make_json("quit"))
+        self.controller.dispatch((None, make_json("quit")))
 
     def handle_term(self):
-        self.controller.add_job(None, make_json("quit"))
+        self.controller.dispatch((None, make_json("quit")))
 
     def handle_quit(self):
-        self.controller.add_job(None, make_json("quit"))
+        self.controller.dispatch((None, make_json("quit")))
 
     def handle_winch(self):
         pass
 
     def handle_hup(self):
-        self.controller.add_job(None, make_json("reload", graceful=True,
-                                                async=True))
+        self.controller.dispatch((None, make_json("reload", graceful=True)))

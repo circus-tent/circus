@@ -1,9 +1,10 @@
-from threading import Timer
+from circus.fixed_threading import Timer
 import time
 
 from circus import logger
 from circus.plugins import CircusPlugin
 from circus.util import to_bool
+from zmq.utils.strtypes import u
 
 
 INFINITE_RETRY = -1
@@ -49,12 +50,12 @@ class Flapping(CircusPlugin):
         self.max_retry = int(config.get('max_retry', 5))
 
     def handle_stop(self):
-        for _, timer in self.timers.items():
+        for timer in list(self.timers.values()):
             timer.cancel()
 
     def handle_recv(self, data):
         topic, msg = data
-        topic_parts = topic.split(".")
+        topic_parts = u(topic).split(".")
         if topic_parts[2] == "reap":
             timeline = self.timelines.get(topic_parts[1], [])
             timeline.append(time.time())
@@ -83,7 +84,7 @@ class Flapping(CircusPlugin):
         return conf
 
     def reset(self, watcher_name):
-        self.timeline[watcher_name] = []
+        self.timelines[watcher_name] = []
         self.tries[watcher_name] = 0
         if watcher_name is self.timers:
             timer = self.timers.pop(watcher_name)
@@ -112,12 +113,14 @@ class Flapping(CircusPlugin):
             if duration <= self._get_conf(conf, 'window'):
                 max_retry = self._get_conf(conf, 'max_retry')
                 if tries < max_retry or max_retry == INFINITE_RETRY:
-                    logger.info("%s: flapping detected: retry in %2ds",
-                                watcher_name, self._get_conf(conf, 'retry_in'))
+                    next_tries = tries + 1
+                    logger.info("%s: flapping detected: retry in %2ds "
+                                "(attempt number %s)", watcher_name,
+                                self._get_conf(conf, 'retry_in'), next_tries)
 
                     self.cast("stop", name=watcher_name)
                     self.timelines[watcher_name] = []
-                    self.tries[watcher_name] = tries + 1
+                    self.tries[watcher_name] = next_tries
 
                     def _start():
                         self.cast("start", name=watcher_name)
@@ -126,8 +129,9 @@ class Flapping(CircusPlugin):
                     timer.start()
                     self.timers[watcher_name] = timer
                 else:
-                    logger.info("%s: flapping detected: max retry limit",
-                                watcher_name)
+                    logger.info(
+                        "%s: flapping detected: reached max retry limit",
+                        watcher_name)
                     self.timelines[watcher_name] = []
                     self.tries[watcher_name] = 0
                     self.cast("stop", name=watcher_name)

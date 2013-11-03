@@ -1,12 +1,13 @@
 import errno
 import logging
 import os
-from threading import Thread, RLock
-from thread import get_ident
+from circus.fixed_threading import Thread, get_ident
 import sys
 from time import sleep
 import select
 import socket
+from tornado import gen
+import time
 
 import zmq
 from zmq.eventloop import ioloop
@@ -15,14 +16,11 @@ from circus.controller import Controller
 from circus.exc import AlreadyExist
 from circus import logger
 from circus.watcher import Watcher
-from circus.util import debuglog, _setproctitle, parse_env_dict, DictDiffer
+from circus.util import debuglog, _setproctitle, parse_env_dict
+from circus.util import DictDiffer, synchronized, tornado_sleep
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
-
-
-class ReloadArbiterException(Exception):
-    pass
 
 
 _ENV_EXCEPTIONS = ('__CF_USER_TEXT_ENCODING', 'PS1', 'COMP_WORDBREAKS',
@@ -74,7 +72,7 @@ class Arbiter(object):
                          instance on the cluster.
     """
 
-    def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=.5,
+    def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.0,
                  prereload_fn=None, context=None, loop=None, statsd=False,
                  stats_endpoint=None, statsd_close_outputs=False,
                  multicast_endpoint=None, plugins=None,
@@ -83,6 +81,7 @@ class Arbiter(object):
                  httpd_close_outputs=False, debug=False,
                  ssh_server=None, proc_name='circusd', pidfile=None,
                  loglevel=None, logoutput=None, fqdn_prefix=None):
+
         self.watchers = watchers
         self.endpoint = endpoint
         self.check_delay = check_delay
@@ -96,7 +95,12 @@ class Arbiter(object):
         self.loglevel = loglevel
         self.logoutput = logoutput
 
-        socket_fqdn = socket.getfqdn()
+        try:
+            # getfqdn appears to fail in Python3.3 in the unittest
+            # framework so fall back to gethostname
+            socket_fqdn = socket.getfqdn()
+        except KeyError:
+            socket_fqdn = socket.gethostname()
         if fqdn_prefix is None:
             fqdn = socket_fqdn
         else:
@@ -104,15 +108,20 @@ class Arbiter(object):
         self.fqdn = fqdn
 
         self.ctrl = self.loop = None
+        self._provided_loop = False
         self.socket_event = False
+        if loop is not None:
+            self._provided_loop = True
+            self.loop = loop
 
         # initialize zmq context
         self._init_context(context)
         self.pid = os.getpid()
         self._watchers_names = {}
-        self.alive = True
-        self._lock = RLock()
+        self._stopping = False
+        self._restarting = False
         self.debug = debug
+        self._exclusive_running_command = None
         if self.debug:
             self.stdout_stream = self.stderr_stream = {'class': 'StdoutStream'}
         else:
@@ -197,7 +206,9 @@ class Arbiter(object):
 
     def _init_context(self, context):
         self.context = context or zmq.Context.instance()
-        self.loop = ioloop.IOLoop.instance()
+        if self.loop is None:
+            ioloop.install()
+            self.loop = ioloop.IOLoop.instance()
         self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
                                self.context, self.loop, self, self.check_delay)
 
@@ -240,11 +251,14 @@ class Arbiter(object):
 
         return cfg
 
-    def reload_from_config(self, config_file=None):
+    @synchronized("arbiter_reload_config")
+    @gen.coroutine
+    def reload_from_config(self, config_file=None, inside_circusd=False):
         new_cfg = get_config(config_file if config_file else self.config_file)
         # if arbiter is changed, reload everything
         if self.get_arbiter_config(new_cfg) != self._cfg:
-            raise ReloadArbiterException
+            yield self._restart(inside_circusd=inside_circusd)
+            return
 
         ignore_sn = set(['circushttpd'])
         ignore_wn = set(['circushttpd', 'circusd-stats'])
@@ -353,7 +367,7 @@ class Arbiter(object):
         # delete watchers
         for n in deleted_wn:
             w = self.get_watcher(n)
-            w.stop()
+            yield w._stop()
             del self._watchers_names[w.name.lower()]
             self.watchers.remove(w)
 
@@ -364,14 +378,12 @@ class Arbiter(object):
 
             w = Watcher.load_from_config(new_watcher_cfg)
             w.initialize(self.evpub_socket, self.sockets, self)
-            self.start_watcher(w)
+            yield self.start_watcher(w)
             self.watchers.append(w)
             self._watchers_names[w.name.lower()] = w
 
-        return False
-
     @classmethod
-    def load_from_config(cls, config_file):
+    def load_from_config(cls, config_file, loop=None):
         cfg = get_config(config_file)
         watchers = []
         for watcher in cfg.get('watchers', []):
@@ -401,6 +413,7 @@ class Arbiter(object):
                       plugins=cfg.get('plugins'), sockets=sockets,
                       warmup_delay=cfg.get('warmup_delay', 0),
                       httpd=httpd,
+                      loop=loop,
                       httpd_host=cfg.get('httpd_host', 'localhost'),
                       httpd_port=cfg.get('httpd_port', 8080),
                       debug=cfg.get('debug', False),
@@ -418,10 +431,7 @@ class Arbiter(object):
         return arbiter
 
     def iter_watchers(self, reverse=True):
-        watchers = [(watcher.priority, watcher) for watcher in self.watchers]
-        watchers.sort(reverse=reverse)
-        for __, watcher in watchers:
-            yield watcher
+        return sorted(self.watchers, key=lambda a: a.priority, reverse=reverse)
 
     @debuglog
     def initialize(self):
@@ -443,61 +453,106 @@ class Arbiter(object):
             self._watchers_names[watcher.name.lower()] = watcher
             watcher.initialize(self.evpub_socket, self.sockets, self)
 
+    @gen.coroutine
     def start_watcher(self, watcher):
         """Aska a specific watcher to start and wait for the specified
         warmup delay."""
         if watcher.autostart:
-            watcher.start()
-            sleep(self.warmup_delay)
+            yield watcher._start()
+            yield tornado_sleep(self.warmup_delay)
 
+    @gen.coroutine
     @debuglog
     def start(self):
         """Starts all the watchers.
 
-        The start command is an infinite loop that waits
-        for any command from a client and that watches all the
-        processes and restarts them if needed.
+        If the ioloop has been provided during __init__() call,
+        starts all watchers as a standard coroutine
+
+        If the ioloop hasn't been provided during __init__() call (default),
+        starts all watchers and the eventloop (and blocks here). In this mode
+        the method MUST NOT yield anything because it's called as a standard
+        method.
         """
         logger.info("Starting master on pid %s", self.pid)
         self.initialize()
 
         # start controller
         self.ctrl.start()
+        self._restarting = False
         try:
             # initialize processes
             logger.debug('Initializing watchers')
-            for watcher in self.iter_watchers():
-                self.start_watcher(watcher)
-
+            if self._provided_loop:
+                yield self.start_watchers()
+            else:
+                # start_watchers will be called just after the start_io_loop()
+                self.loop.add_future(self.start_watchers(), lambda x: None)
             logger.info('Arbiter now waiting for commands')
-
-            while True:
-                try:
-                    self.loop.start()
-                except zmq.ZMQError as e:
-                    if e.errno == errno.EINTR:
-                        continue
-                    else:
-                        raise
-                else:
-                    break
+            if not self._provided_loop:
+                # If an event loop is not provided, block at this line
+                self.start_io_loop()
         finally:
-            self.ctrl.stop()
-            self.evpub_socket.close()
-            if len(self.sockets) > 0:
-                self.sockets.close_all()
+            if not self._provided_loop:
+                # If an event loop is not provided, do some cleaning
+                self.stop_controller_and_close_sockets()
+        raise gen.Return(self._restarting)
 
+    def stop_controller_and_close_sockets(self):
+        self.ctrl.stop()
+        self.evpub_socket.close()
+        if len(self.sockets) > 0:
+            self.sockets.close_all()
+
+    def start_io_loop(self):
+        """Starts the ioloop and wait inside it
+        """
+        while True:
+            try:
+                self.loop.start()
+            except zmq.ZMQError as e:
+                if e.errno == errno.EINTR:
+                    continue
+                else:
+                    raise
+            else:
+                break
+
+    @synchronized("arbiter_stop")
+    @gen.coroutine
     def stop(self):
-        self.stop_watchers(stop_alive=True, async=False)
-        # this will stop the loop and the closing
-        # will finish in .start()
+        yield self._stop()
+
+    @gen.coroutine
+    def _emergency_stop(self):
+        """Emergency and fast stop, to use only in circusd
+        """
+        for watcher in self.iter_watchers():
+            watcher.graceful_timeout = 0
+        yield self._stop_watchers()
+        self.stop_controller_and_close_sockets()
+
+    @gen.coroutine
+    def _stop(self):
+        logger.info('Arbiter exiting')
+        self._stopping = True
+        yield self._stop_watchers()
+        if self._provided_loop:
+            cb = self.stop_controller_and_close_sockets
+            self.loop.add_callback(cb)
+        else:
+            self.loop.add_timeout(time.time() + 1, self._stop_cb)
+
+    def _stop_cb(self):
         self.loop.stop()
+        # stop_controller_and_close_sockets will be
+        # called in the end of start() method
 
     def reap_processes(self):
         # map watcher to pids
         watchers_pids = {}
         for watcher in self.iter_watchers():
-            if not watcher.stopped:
+            if not watcher.is_stopped():
                 for process in watcher.processes.values():
                     watchers_pids[process.pid] = watcher
 
@@ -522,27 +577,30 @@ class Arbiter(object):
                 else:
                     raise
 
+    @synchronized("manage_watchers")
+    @gen.coroutine
     def manage_watchers(self):
-        if not self.alive:
+        if self._stopping:
             return
 
-        with self._lock:
-            need_on_demand = False
-            # manage and reap processes
-            self.reap_processes()
-            for watcher in self.iter_watchers():
-                if watcher.on_demand and watcher.stopped:
-                    need_on_demand = True
-                watcher.manage_processes()
+        need_on_demand = False
+        # manage and reap processes
+        self.reap_processes()
+        for watcher in self.iter_watchers():
+            if watcher.on_demand and watcher.is_stopped():
+                need_on_demand = True
+            yield watcher.manage_processes()
 
-            if need_on_demand:
-                sockets = [x.fileno() for x in self.sockets.values()]
-                rlist, wlist, xlist = select.select(sockets, [], [], 0)
-                if rlist:
-                    self.socket_event = True
-                    self.start_watchers()
-                    self.socket_event = False
+        if need_on_demand:
+            sockets = [x.fileno() for x in self.sockets.values()]
+            rlist, wlist, xlist = select.select(sockets, [], [], 0)
+            if rlist:
+                self.socket_event = True
+                self._start_watchers()
+                self.socket_event = False
 
+    @synchronized("arbiter_reload")
+    @gen.coroutine
     @debuglog
     def reload(self, graceful=True):
         """Reloads everything.
@@ -550,6 +608,8 @@ class Arbiter(object):
         Run the :func:`prereload_fn` callable if any, then gracefuly
         reload all watchers.
         """
+        if self._stopping:
+            return
         if self.prereload_fn is not None:
             self.prereload_fn(self)
 
@@ -563,8 +623,8 @@ class Arbiter(object):
 
         # gracefully reload watchers
         for watcher in self.iter_watchers():
-            watcher.reload(graceful=graceful)
-            sleep(self.warmup_delay)
+            yield watcher._reload(graceful=graceful)
+            tornado_sleep(self.warmup_delay)
 
     def numprocesses(self):
         """Return the number of processes running across all watchers."""
@@ -582,6 +642,7 @@ class Arbiter(object):
         return dict([(watcher.name, watcher.status())
                      for watcher in self.watchers])
 
+    @synchronized("arbiter_add_watcher")
     def add_watcher(self, name, cmd, **kw):
         """Adds a watcher.
 
@@ -604,6 +665,8 @@ class Arbiter(object):
         self._watchers_names[watcher.name.lower()] = watcher
         return watcher
 
+    @synchronized("arbiter_rm_watcher")
+    @gen.coroutine
     def rm_watcher(self, name):
         """Deletes a watcher.
 
@@ -618,30 +681,45 @@ class Arbiter(object):
         del self.watchers[self.watchers.index(watcher)]
 
         # stop the watcher
-        watcher.stop()
+        yield watcher._stop()
 
+    @synchronized("arbiter_start_watchers")
+    @gen.coroutine
     def start_watchers(self):
+        yield self._start_watchers()
+
+    @gen.coroutine
+    def _start_watchers(self):
         for watcher in self.iter_watchers():
-            watcher.start()
-            sleep(self.warmup_delay)
+            yield watcher._start()
+            yield tornado_sleep(self.warmup_delay)
 
-    def stop_watchers(self, stop_alive=False, async=True):
-        if not self.alive:
-            return
+    @gen.coroutine
+    @debuglog
+    def _stop_watchers(self):
+        yield [w._stop() for w in self.iter_watchers(reverse=False)]
 
-        if stop_alive:
-            logger.info('Arbiter exiting')
-            self.alive = False
+    @synchronized("arbiter_stop_watchers")
+    @gen.coroutine
+    def stop_watchers(self):
+        yield self._stop_watchers()
 
-        for watcher in self.iter_watchers(reverse=False):
-            watcher.stop(async=async)
+    @gen.coroutine
+    def _restart(self, inside_circusd=False):
+        if inside_circusd:
+            self._restarting = True
+            yield self._stop()
+        else:
+            yield self._stop_watchers()
+            yield self._start_watchers()
 
-    def restart(self):
-        self.stop_watchers(async=False)
-        self.start_watchers()
+    @synchronized("arbiter_restart")
+    @gen.coroutine
+    def restart(self, inside_circusd=False):
+        yield self._restart(inside_circusd=inside_circusd)
 
 
-class ThreadedArbiter(Arbiter, Thread):
+class ThreadedArbiter(Thread, Arbiter):
 
     def __init__(self, *args, **kw):
         Thread.__init__(self)
