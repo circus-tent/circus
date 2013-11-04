@@ -1,6 +1,40 @@
 Changelog history
 =================
 
+0.10 - 2013-11-04
+-----------------
+
+Major changes:
+
+- Now Python 3.2 & 3.3 compatible - #586
+- Moved the core to a fully async model - #569
+- Improved documentation - #622
+
+More changes:
+
+- Added stop_signal & stop_children - #594
+- Make sure the watchdog plugin closes the sockets - #588
+- Switched to ZMQ JSON parser
+- IN not supported on all platforms - #573
+- Allow global environment substitutions in any config section - #560
+- Allow dashes in sections names - #546
+- Now variables are expanded everywhere in the config - #554
+- Added the CommandReloader plugin
+- Added before_signal & after_signal hooks
+- Allow flapping plugin to retry indefinitely
+- Don't respawn procs when the watcher is stopping - #529 - #536
+- Added a unique id for each client message - #517
+- worker ids are now "slots" -
+- Fixed the graceful shutdown behavior - #515
+- Make sure we can add watchers even if the arbiter is not started - #503
+- Make sure make sure we pop expired process - #510
+- Make sure the set command can set several hooks
+- Correctly support ipv6 sockets - #507
+- Allow custom options for stdout_stream and stderr_stream - #495
+- Added time_format for FileStream - #493
+- Added new socket config option to bind to a specific interface by name
+
+
 0.9.3 - 2013-09-04
 ------------------
 
