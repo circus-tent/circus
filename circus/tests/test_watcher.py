@@ -337,6 +337,14 @@ class TestWatcherHooks(TestCircus):
         yield self.call("stop", name="test", waiting=True)
 
     @tornado.gen.coroutine
+    def _stats(self):
+        yield self.call("stats", name="test")
+
+    @tornado.gen.coroutine
+    def _extended_stats(self):
+        yield self.call("stats", name="test", extended=True)
+
+    @tornado.gen.coroutine
     def get_status(self):
         resp = yield self.call("status", name="test")
         raise tornado.gen.Return(resp['status'])
@@ -358,6 +366,9 @@ class TestWatcherHooks(TestCircus):
             if hook_kwargs_test_function is not None:
                 hook_kwargs_test_function(kwargs)
 
+            if hook_name == 'extended_stats':
+                kwargs['stats']['tx'] = 1000
+                return
             if behavior == SUCCESS:
                 return True
             elif behavior == FAILURE:
@@ -382,6 +393,32 @@ class TestWatcherHooks(TestCircus):
 
         self.assertTrue(events['before_start_called'])
         self.assertEqual(events['arbiter_in_hook'], arbiter)
+
+    @tornado.gen.coroutine
+    def _test_extended_stats(self, extended=False):
+        events = {'extended_stats_called': False}
+
+        def hook(watcher, arbiter, hook_name, **kwargs):
+            events['extended_stats_called'] = True
+
+        old = logger.exception
+        logger.exception = lambda x: x
+
+        hooks = {'extended_stats': (hook, False)}
+        testfile, arbiter = self.run_with_hooks(hooks)
+        yield arbiter.start()
+        try:
+            if extended:
+                yield self._extended_stats()
+            else:
+                yield self._stats()
+            resp_status = yield self.get_status()
+            self.assertEqual(resp_status, 'active')
+        finally:
+            yield arbiter.stop()
+            logger.exception = old
+
+        self.assertEqual(events['extended_stats_called'], extended)
 
     @tornado.testing.gen_test
     def test_before_start(self):
@@ -481,6 +518,11 @@ class TestWatcherHooks(TestCircus):
     def test_before_spawn_false(self):
         yield self._test_hooks(behavior=FAILURE, status='stopped',
                                hook_name='before_spawn', call=self._stop)
+
+    @tornado.testing.gen_test
+    def test_extended_stats(self):
+        yield self._test_extended_stats()
+        yield self._test_extended_stats(extended=True)
 
 
 def oneshot_process(test_file):

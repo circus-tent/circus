@@ -153,8 +153,8 @@ class Watcher(object):
       or the callabled itself and a boolean flag indicating if an
       exception occuring in the hook should not be ignored.
       Possible values for the hook name: *before_start*, *after_start*,
-      *before_spawn*, *before_stop*, *after_stop*., *before_signal* or
-      *after_signal*.
+      *before_spawn*, *before_stop*, *after_stop*., *before_signal*,
+      *after_signal* or *extended_stats*.
 
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
@@ -213,7 +213,8 @@ class Watcher(object):
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
         self.ignore_hook_failure = ['before_stop', 'after_stop',
-                                    'before_signal', 'after_signal']
+                                    'before_signal', 'after_signal',
+                                    'extended_stats']
 
         self.respawn = respawn
         self.autostart = autostart
@@ -676,14 +677,25 @@ class Watcher(object):
         return self._status
 
     @util.debuglog
-    def process_info(self, pid):
+    def process_info(self, pid, extended=False):
         process = self.processes[int(pid)]
-        return process.info()
+        result = process.info()
+        if extended and 'extended_stats' in self.hooks:
+            self.hooks['extended_stats'](self, self.arbiter,
+                                         'extended_stats',
+                                         pid=pid, stats=result)
+        return result
 
     @util.debuglog
-    def info(self):
-        return dict([(proc.pid, proc.info())
-                     for proc in self.processes.values()])
+    def info(self, extended=False):
+        result = dict([(proc.pid, proc.info())
+                       for proc in self.processes.values()])
+        if extended and 'extended_stats' in self.hooks:
+            for pid, stats in result.items():
+                self.hooks['extended_stats'](self, self.arbiter,
+                                             'extended_stats',
+                                             pid=pid, stats=stats)
+        return result
 
     @util.synchronized("watcher_stop")
     @gen.coroutine

@@ -29,6 +29,9 @@ events.  Available hooks are:
 
 - **after_signal**: called after a signal is sent to a watcher's process. 
 
+- **extended_stats**: called when stats are requested with extended=True.
+  Used for adding process-specific stats to the regular stats output.
+
 Example
 =======
 
@@ -99,7 +102,7 @@ Where **watcher** is the **Watcher** class instance, **arbiter** the
 **Arbiter** one, **hook_name** the hook name and **kwargs** some additional
 optional parameters (depending on the hook type).
 
-For the moment, only **before_signal** and **after_signal** hooks offer some
+The **before_signal** and **after_signal** hooks offer some
 additional parameters in **kwargs**::
 
     def before_signal_hook(watcher, arbiter, hook_name, pid, signum, **kwargs):
@@ -116,6 +119,15 @@ data and methods can be useful in some hooks.
 
 Note that hooks are called with named arguments. So use the hook signature without
 changing argument names.
+
+The **extended_stats** hook has its own additional parameters in **kwargs**::
+
+    def extended_stats_hook(watcher, arbiter, hook_name, pid, stats, **kwargs):
+        ...
+
+Where **pid** is the PID of the corresponding process and **stats** the
+regular stats to be returned. Add your own stats into **stats**. An example
+is in examples/uwsgi_lossless_reload.py.
 
 As a last example, here is a super hook which can deal with all kind of signals::
 

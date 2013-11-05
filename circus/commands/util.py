@@ -5,7 +5,8 @@ import warnings
 
 
 _HOOKS = ('before_start', 'after_start', 'before_stop', 'after_stop',
-          'before_spawn', 'before_signal', 'after_signal')
+          'before_spawn', 'before_signal', 'after_signal',
+          'extended_stats')
 
 
 def convert_option(key, val):
