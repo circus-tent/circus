@@ -9,11 +9,7 @@ Statsd
 ======
 
     **use**
-<<<<<<< HEAD:docs/source/plugins.rst
         set to 'circus.plugins.statsd.StatsdEmitter'
-=======
-         set to ``circus.plugins.statsd.StatsdEmitter``
->>>>>>> upstream/master:docs/source/for-ops/using-plugins.rst
 
     **application_name**
         the name used to identify the bucket prefix to emit the stats to (it will be prefixed with ``circus.`` and suffixed with ``.watcher``)
@@ -148,16 +144,6 @@ Example:
     [circus]
     ; ...
 
-<<<<<<< HEAD:docs/source/plugins.rst
-        [plugin:myplugin]
-        use = circus.plugins.resource_watcher.ResourceWatcher
-        watcher = program
-        min_cpu = 10
-        max_cpu = 70
-        min_mem = 0
-        max_mem = 20
-        max_mem = 300M
-=======
     [watcher:program]
     cmd = sleep 120
 
@@ -168,8 +154,7 @@ Example:
     max_cpu = 70
     min_mem = 0
     max_mem = 20
->>>>>>> upstream/master:docs/source/for-ops/using-plugins.rst
-
+    max_mem = 300M
 
 Watchdog
 ========
