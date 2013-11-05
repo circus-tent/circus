@@ -568,6 +568,18 @@ class TestArbiter(TestCircus):
         finally:
             yield arbiter.stop()
 
+    @tornado.testing.gen_test
+    def test_start_arbiter_with_autostart(self):
+        arbiter = Arbiter([], DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
+                          loop=tornado.ioloop.IOLoop.instance(),
+                          check_delay=-1)
+        arbiter.add_watcher('foo', 'sleep 5', autostart=False)
+        try:
+            yield arbiter.start()
+            self.assertEqual(arbiter.watchers[0].status(), 'stopped')
+        finally:
+            yield arbiter.stop()
+
 
 @skipIf(not has_circusweb(), 'Tests for circus-web')
 class TestCircusWeb(TestCircus):
