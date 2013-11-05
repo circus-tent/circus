@@ -27,13 +27,13 @@ if PY3:
 
     MAXSIZE = sys.maxsize       # NOQA
 else:
-    string_types = basestring
+    string_types = basestring  # NOQA
     integer_types = (int, long)
-    text_type = unicode
+    text_type = unicode  # NOQA
     long = long
 
     def bytestring(s):  # NOQA
-        if isinstance(s, unicode):
+        if isinstance(s, unicode):  # NOQA
             return s.encode('utf-8')
         return s
 

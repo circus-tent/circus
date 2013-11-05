@@ -30,7 +30,7 @@ worker_states = {
 }
 
 
-def get_worker_status(name, wid):
+def get_uwsgi_stats(name, wid):
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
         sock = socket.create_connection(('127.0.0.1', 8090 + wid))
@@ -48,7 +48,11 @@ def get_worker_status(name, wid):
             "Error: No stats seem available for WID {0} of {1}"
             .format(wid, name))
         return
-    stats = loads(data.decode())
+    return loads(data.decode())
+
+
+def get_worker_states(name, wid):
+    stats = get_uwsgi_stats(name, wid)
     if 'workers' not in stats:
         log.error(
             "Error: No workers found for WID {0} of {1}"
@@ -62,10 +66,28 @@ def get_worker_status(name, wid):
 def wait_for_workers(name, wid, state, timeout_seconds=60):
     timeout = time() + timeout_seconds
     while not all(worker.lower() in worker_states[state]
-                  for worker in get_worker_status(name, wid)):
+                  for worker in get_worker_states(name, wid)):
         if timeout_seconds and time() > timeout:
             raise Exception('timeout')
         sleep(0.25)
+
+
+def extended_stats(watcher, arbiter, hook_name, pid, stats, **kwargs):
+    name = watcher.name
+    wid = watcher.processes[pid].wid
+    uwsgi_stats = get_uwsgi_stats(name, wid)
+    for k in ('load', 'version'):
+        if k in uwsgi_stats:
+            stats[k] = uwsgi_stats[k]
+    if 'children' in stats and 'workers' in uwsgi_stats:
+        workers = dict((worker['pid'], worker) for worker in uwsgi_stats['workers'])
+        for worker in stats['children']:
+            uwsgi_worker = workers.get(worker['pid'])
+            if uwsgi_worker:
+                for k in ('exceptions', 'harakiri_count', 'requests', 'respawn_count', 'status', 'tx'):
+                    if k in uwsgi_worker:
+                        worker[k] = uwsgi_worker[k]
+    return True
 
 
 def uwsgi_clean_stop(watcher, arbiter, hook_name, pid, signum, **kwargs):

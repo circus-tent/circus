@@ -34,12 +34,23 @@ class Stats(Command):
 
        To get stats for a process::
 
-
             {
                 "command": "stats",
                 "properties": {
                     "name": <name>,
                     "process": <processid>
+                }
+            }
+
+       Stats can be extended with the extended_stats hook but extended stats
+       need to be requested::
+
+            {
+                "command": "stats",
+                "properties": {
+                    "name": <name>,
+                    "process": <processid>,
+                    "extended": True
                 }
             }
 
@@ -69,22 +80,26 @@ class Stats(Command):
 
        ::
 
-            $ circusctl stats [<watchername>] [<processid>]
+            $ circusctl stats [--extended] [<watchername>] [<processid>]
 
         """
 
     name = "stats"
+    options = [('', 'extended', False,
+                "Include info from extended_stats hook")]
 
     def message(self, *args, **opts):
         if len(args) > 2:
             raise ArgumentError("message invalid")
 
+        extended = opts.get("extended", False)
         if len(args) == 2:
-            return self.make_message(name=args[0], process=int(args[1]))
+            return self.make_message(name=args[0], process=int(args[1]),
+                                     extended=extended)
         elif len(args) == 1:
-            return self.make_message(name=args[0])
+            return self.make_message(name=args[0], extended=extended)
         else:
-            return self.make_message()
+            return self.make_message(extended=extended)
 
     def execute(self, arbiter, props):
         if 'name' in props:
@@ -93,13 +108,15 @@ class Stats(Command):
                 try:
                     return {
                         "process": props['process'],
-                        "info": watcher.process_info(props['process'])
+                        "info": watcher.process_info(props['process'],
+                                                     props.get('extended')),
                     }
                 except KeyError:
                     raise MessageError("process %r not found in %r" % (
                         props['process'], props['name']))
             else:
-                return {"name": props['name'], "info": watcher.info()}
+                return {"name": props['name'],
+                        "info": watcher.info(props.get('extended'))}
         else:
             infos = {}
             for watcher in arbiter.watchers:

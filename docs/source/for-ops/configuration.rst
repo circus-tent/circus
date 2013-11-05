@@ -250,7 +250,8 @@ watcher:NAME - as many sections as you want
 
     **hooks.***
         Available hooks: **before_start**, **before_spawn**, **after_start**,
-        **before_stop**, **after_stop**, **before_signal**, **after_signal**
+        **before_stop**, **after_stop**, **before_signal**, **after_signal**,
+        **extended_stats**
 
         Define callback functions that hook into the watcher startup/shutdown process.
 
