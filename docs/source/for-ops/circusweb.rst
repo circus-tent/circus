@@ -53,8 +53,7 @@ Using the console
 Once the script is running, you can open a browser and visit *http://localhost:8080*.
 You should get this screen:
 
-.. image:: ../_images/web-login.png
-   :target: ../_images/web-login.png
+.. image:: web-login.png
    :align: center
    :height: 400px
 
@@ -67,8 +66,8 @@ Once you hit *Connect*, the web application will connect to the Circus system.
 With the Web Console logged in, you should get a list of watchers, and a real-time
 status of the two Circus processes (circusd and circusd-stats).
 
-.. image:: ../_images/web-index.png
-   :target: ../_images/web-index.png
+.. image:: web-index.png
+   :target: web-index.png
    :align: center
    :height: 400px
 
@@ -79,8 +78,8 @@ watchers.
 If you click on the watcher name, you will get a web page for that particular
 watcher, with its processes:
 
-.. image:: ../_images/web-watchers.png
-   :target: ../_images/web-watchers.png
+.. image:: web-watchers.png
+   :target: web-watchers.png
    :align: center
    :height: 400px
 
@@ -89,8 +88,8 @@ On this screen, you can add or remove processes, and kill existing ones.
 Last but not least, you can add a brand new watcher by clicking on the *Add Watcher* link
 in the left menu:
 
-.. image:: ../_images/web-add-watcher.png
-   :target: ../_images/web-add-watcher.png
+.. image:: web-add-watcher.png
+   :target: web-add-watcher.png
    :align: center
    :height: 400px
 

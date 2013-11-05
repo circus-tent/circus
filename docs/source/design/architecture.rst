@@ -3,7 +3,7 @@
 Overall architecture
 ####################
 
-.. image:: ../_images/circus-architecture.png
+.. image:: circus-architecture.png
    :align: center
 
 Circus is composed of a main process called **circusd** which takes

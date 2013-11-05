@@ -1,7 +1,7 @@
 Circus: A Process & Socket Manager
 ##################################
 
-.. image:: _images/circus-medium.png
+.. image:: circus-medium.png
    :align: right
 
 Circus is a Python program which can be used to monitor and control processes and sockets.

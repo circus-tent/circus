@@ -11,7 +11,7 @@ How does Circus stack compare to a classical stack?
 In a classical WSGI stack, you have a server like Gunicorn that serves on a port
 or an unix socket and is usually deployed behind a web server like Nginx:
 
-.. image:: _images/classical-stack.png
+.. image:: classical-stack.png
 
 
 Clients call Nginx, which reverse proxies all the calls to Gunicorn.
@@ -36,7 +36,7 @@ Circus' approach on this is to manage processes *and* sockets.
 
 A Circus stack can look like this:
 
-.. image:: _images/circus-stack.png
+.. image:: circus-stack.png
 
 
 So, like Gunicorn,
