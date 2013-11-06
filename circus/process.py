@@ -265,6 +265,10 @@ class Process(object):
         return args
 
     @debuglog
+    def returncode(self):
+        return self._worker.returncode
+
+    @debuglog
     def poll(self):
         return self._worker.poll()
 
