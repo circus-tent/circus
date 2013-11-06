@@ -374,7 +374,7 @@ class Watcher(object):
             return
         process = self.processes.pop(pid)
 
-        if not status:
+        if status is None:
             while True:
                 try:
                     _, status = os.waitpid(pid, os.WNOHANG)
@@ -386,7 +386,10 @@ class Watcher(object):
                         # nothing to do here, we do not have any child
                         # process running
                         # but we still need to send the "reap" signal.
-                        logger.debug('reaping already dead process %s [%s]',
+                        #
+                        # This can happen if poll() or wait() were called on
+                        # the underlying process.
+                        logger.error('reaping already dead process %s [%s]',
                                      pid, self.name)
                         self.notify_event(
                             "reap",
