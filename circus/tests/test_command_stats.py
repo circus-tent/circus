@@ -13,7 +13,7 @@ class FakeWatcher(object):
     name = 'one'
 
     def info(self, *args):
-        if len(args) == 1 and args[0] == 'meh':
+        if len(args) == 2 and args[0] == 'meh':
             raise KeyError('meh')
         return 'yeah'
 
