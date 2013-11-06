@@ -24,6 +24,4 @@ notifications:
     irc: "irc.freenode.org#mozilla-circus"
     on_success: change
 after_success:
-  # Report coverage results to coveralls.io
-  - pip install coveralls
-  - coveralls
+  - .coveralls.sh
