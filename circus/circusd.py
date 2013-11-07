@@ -64,6 +64,19 @@ def daemonize():
 
 
 def main():
+    import zmq
+    try:
+        zmq_version = [int(part) for part in zmq.__version__.split('.')]
+        if len(zmq_version) < 2:
+            raise ValueError()
+    except (AttributeError, ValueError):
+        print('Unknown PyZQM version - aborting...')
+        sys.exit(0)
+
+    if zmq_version[0] < 13 or (zmq_version[0] == 13 and zmq_version[1] < 1):
+        print('circusd needs PyZMQ >= 13.1.0 to run - aborting...')
+        sys.exit(0)
+
     parser = argparse.ArgumentParser(description='Run some watchers.')
     parser.add_argument('config', help='configuration file', nargs='?')
 
