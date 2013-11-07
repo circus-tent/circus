@@ -82,6 +82,8 @@ class DefaultConfigParser(StrictConfigParser):
             value = int(value)
         elif type is bool:
             value = self.toboolean(value)
+        elif type is float:
+            value = float(value)
         elif type is not str:
             raise NotImplementedError()
 
@@ -147,7 +149,7 @@ def get_config(config_file):
     cfg.set_env(global_env)
 
     # main circus options
-    config['check'] = dget('circus', 'check_delay', 5, int)
+    config['check_delay'] = dget('circus', 'check_delay', 5., float)
     config['endpoint'] = dget('circus', 'endpoint', DEFAULT_ENDPOINT_DEALER)
     config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
                                      DEFAULT_ENDPOINT_SUB)

@@ -37,6 +37,7 @@ _CONF = {
     'issue567': os.path.join(CONFIG_DIR, 'issue567.ini'),
     'issue594': os.path.join(CONFIG_DIR, 'issue594.ini'),
     'reuseport': os.path.join(CONFIG_DIR, 'reuseport.ini'),
+    'issue651': os.path.join(CONFIG_DIR, 'issue651.ini')
 }
 
 
@@ -175,7 +176,7 @@ class TestConfig(TestCase):
         else:
             watchers.sort()
         self.assertEqual(watchers[2]['env']['INI'], 'private.ini')
-        self.assertEqual(conf['check'], 555)
+        self.assertEqual(conf['check_delay'], 555)
 
     def test_config_unexistant(self):
         self.assertRaises(IOError, get_config, _CONF['unexistant'])
@@ -251,6 +252,10 @@ class TestConfig(TestCase):
         conf = get_config(_CONF['reuseport'])
         s1 = conf['sockets'][1]
         self.assertEqual(s1['so_reuseport'], False)
+
+    def test_check_delay(self):
+        conf = get_config(_CONF['issue651'])
+        self.assertEqual(conf['check_delay'], 10.5)
 
 
 test_suite = EasyTestSuite(__name__)
