@@ -149,7 +149,6 @@ Example:
     max_cpu = 70
     min_mem = 0
     max_mem = 20
-    max_mem = 300M
 
 Watchdog
 ========
