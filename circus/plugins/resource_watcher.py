@@ -83,7 +83,7 @@ class ResourceWatcher(BaseObserver):
         else:
             self._count_under_cpu = 0
 
-        if (self.max_mem and max_mem > self.max_mem) or \
+        if (self.max_mem and max_mem > self.max_mem) or
                 (self.max_mem_abs and max_mem_abs > self.max_mem_abs):
             self.statsd.increment("_resource_watcher.%s.over_memory" %
                                   self.watcher)
@@ -91,7 +91,7 @@ class ResourceWatcher(BaseObserver):
         else:
             self._count_over_mem = 0
 
-        if (self.min_mem is not None and min_mem <= self.min_mem) or \
+        if (self.min_mem is not None and min_mem <= self.min_mem) or
                 (self.min_mem_abs is not None and
                  min_mem_abs <= self.min_mem_abs):
             self.statsd.increment("_resource_watcher.%s.under_memory" %
@@ -100,7 +100,7 @@ class ResourceWatcher(BaseObserver):
         else:
             self._count_under_mem = 0
 
-        if self.health_threshold and \
+        if self.health_threshold and
                 (max_cpu + max_mem) / 2.0 > self.health_threshold:
             self.statsd.increment("_resource_watcher.%s.over_health" %
                                   self.watcher)
