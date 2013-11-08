@@ -18,20 +18,24 @@ class ResourceWatcher(BaseObserver):
         if self.watcher is None:
             self.statsd.stop()
             raise NotImplementedError('watcher is mandatory for now.')
-        self.max_cpu = float(config.get("max_cpu", 90))  # in %
-        self.max_mem = float(config.get("max_mem", 90))  # in %
+        self.max_cpu = float(config.get("max_cpu", 90))     # in %
+        self.max_mem = config.get("max_mem")
+        if self.max_mem is None:
+            self.max_mem = 90.
+        else:
+            try:
+                self.max_mem = float(self.max_mem)          # float -> %
+            except ValueError:
+                self.max_mem = human2bytes(self.max_mem)    # int -> absolute
         self.min_cpu = config.get("min_cpu")
         if self.min_cpu is not None:
-            self.min_cpu = float(self.min_cpu)  # in %
+            self.min_cpu = float(self.min_cpu)              # in %
         self.min_mem = config.get("min_mem")
         if self.min_mem is not None:
-            self.min_mem = float(self.min_mem)  # in %
-        self.max_mem_abs = config.get("max_mem_abs")
-        if self.max_mem_abs is not None:
-            self.max_mem_abs = human2bytes(self.max_mem_abs)
-        self.min_mem_abs = config.get("min_mem_abs")
-        if self.min_mem_abs is not None:
-            self.min_mem_abs = human2bytes(self.min_mem_abs)
+            try:
+                self.max_mem = float(self.min_mem)          # float -> %
+            except ValueError:
+                self.max_mem = human2bytes(self.min_mem)    # int -> absolute
         self.health_threshold = float(config.get("health_threshold",
                                       75))  # in %
         self.max_count = int(config.get("max_count", 3))
@@ -56,7 +60,8 @@ class ResourceWatcher(BaseObserver):
                             float(sub_info['cpu']))
                 mems.append(100 if sub_info['mem'] == 'N/A' else
                             float(sub_info['mem']))
-                mems_abs.append(human2bytes(sub_info['mem_info1']))
+                mems_abs.append(0 if sub_info['mem_info1'] == 'N/A' else
+                                human2bytes(sub_info['mem_info1']))
 
         if cpus:
             max_cpu = max(cpus)
@@ -67,7 +72,8 @@ class ResourceWatcher(BaseObserver):
             min_mem_abs = min(mems_abs)
         else:
             # we dont' have any process running. max = 0 then
-            max_cpu = max_mem = min_cpu = min_mem = max_mem_abs = 0
+            max_cpu = max_mem = min_cpu = min_mem = \
+                max_mem_abs = min_mem_abs = 0
 
         if self.max_cpu and max_cpu > self.max_cpu:
             self.statsd.increment("_resource_watcher.%s.over_cpu" %
@@ -83,24 +89,26 @@ class ResourceWatcher(BaseObserver):
         else:
             self._count_under_cpu = 0
 
-        if (self.max_mem and max_mem > self.max_mem) or
-                (self.max_mem_abs and max_mem_abs > self.max_mem_abs):
+        if (type(self.max_mem) == float and max_mem > self.max_mem) or \
+           (type(self.max_mem) == int and max_mem_abs > self.max_mem):
             self.statsd.increment("_resource_watcher.%s.over_memory" %
                                   self.watcher)
             self._count_over_mem += 1
         else:
             self._count_over_mem = 0
 
-        if (self.min_mem is not None and min_mem <= self.min_mem) or
-                (self.min_mem_abs is not None and
-                 min_mem_abs <= self.min_mem_abs):
-            self.statsd.increment("_resource_watcher.%s.under_memory" %
-                                  self.watcher)
-            self._count_under_mem += 1
+        if self.min_mem is not None:
+            if (type(self.min_mem) == float and min_mem < self.min_mem) or \
+               (type(self.min_mem) == int and min_mem_abs < self.min_mem):
+                self.statsd.increment("_resource_watcher.%s.under_memory" %
+                                      self.watcher)
+                self._count_under_mem += 1
+            else:
+                self._count_under_mem = 0
         else:
             self._count_under_mem = 0
 
-        if self.health_threshold and
+        if self.health_threshold and \
                 (max_cpu + max_mem) / 2.0 > self.health_threshold:
             self.statsd.increment("_resource_watcher.%s.over_health" %
                                   self.watcher)

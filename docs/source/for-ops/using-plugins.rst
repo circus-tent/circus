@@ -115,19 +115,14 @@ ResourceWatcher
         You can set the min_cpu to 0 (zero), in this case if one process consume exactly 0% cpu, it will trigger an exceeded limit.
 
     **max_mem**
-        The amount of memory one process of this watcher is allowed to consume (in %). Default: 90
-
-    **max_mem_abs**
-        The amount of memory one process of this watcher is allowed to consume (in bytes). Default: None (no maximum)
-        Supported units are K, M, G, T, P, E, Z, Y. Example value : 250M
+        The amount of memory one process of this watcher is allowed to consume. Default: 90.
+        If no unit is specified, the value is in %. Example: 50
+        If a unit is specified, the value is in bytes. Supported units are B, K, M, G, T, P, E, Z, Y. Example: 250M
 
     **min_mem**
-        The minimum memory one process should consume (in %). Default: None (no minimum)
-        You can set the min_mem to 0 (zero), in this case if one process consume exactly 0% memory, it will trigger an exceeded limit.
-
-    **min_mem_abs**
-        The minimum memory one process should consume (in bytes). Default: None (no minimum)
-        Supported units are K, M, G, T, P, E, Z, Y. Example value : 250M
+        The minimum memory one process of this watcher should consume. Default: None (no minimum).
+        If no unit is specified, the value is in %. Example: 50
+        If a unit is specified, the value is in bytes. Supported units are B, K, M, G, T, P, E, Z, Y. Example: 250M
 
     **health_threshold**
         The health is the average of cpu and memory (in %) the watchers processes are allowed to consume (in %). Default: 75

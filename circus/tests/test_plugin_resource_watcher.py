@@ -90,7 +90,7 @@ class TestResourceWatcher(TestCircus):
     def test_resource_watcher_max_mem_abs(self):
         yield self.start_arbiter(fqn)
         async_poll_for(self.test_file, 'START')
-        config = {'loop_rate': 0.1, 'max_mem_abs': '1M', 'watcher': 'test'}
+        config = {'loop_rate': 0.1, 'max_mem': '1M', 'watcher': 'test'}
 
         statsd_increments = yield async_run_plugin(ResourceWatcher,
                                                    config,
@@ -104,7 +104,7 @@ class TestResourceWatcher(TestCircus):
     def test_resource_watcher_min_mem_abs(self):
         yield self.start_arbiter(fqn)
         async_poll_for(self.test_file, 'START')
-        config = {'loop_rate': 0.1, 'min_mem_abs': '100M', 'watcher': 'test'}
+        config = {'loop_rate': 0.1, 'min_mem': '100M', 'watcher': 'test'}
 
         statsd_increments = yield async_run_plugin(ResourceWatcher,
                                                    config,

@@ -109,19 +109,17 @@ def bytes2human(n):
 def human2bytes(s):
     """Translates a human representation into bytes.
     """
-    if not isinstance(s, str) and not isinstance(s, unicode):
+    symbols = ['B'] + list(_SYMBOLS)
+
+    if not isinstance(s, basestring):
         raise TypeError(s)
-
-    if s[-1] == 'B':  # no symbol
-        return int(s[:-1])
-
+    if len(s) < 2:
+        raise ValueError(s)
     n, symbol = s[:-1], s[-1]
-    resp = 0
-    for i, sym in enumerate(_SYMBOLS):
-        if symbol == sym:
-            resp = 1 << (i+1)*10
-    resp *= int(n)
-    return resp
+    if symbol not in symbols or not n.isdigit():
+        raise ValueError(s)
+
+    return int(n) << symbols.index(symbol)*10
 
 # XXX weak dict ?
 _PROCS = {}
