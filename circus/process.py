@@ -264,7 +264,6 @@ class Process(object):
         logger.debug("process args: %s", args)
         return args
 
-    @debuglog
     def returncode(self):
         return self._worker.returncode
 
