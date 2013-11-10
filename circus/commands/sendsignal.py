@@ -152,3 +152,5 @@ class Signal(Command):
             props['signum'] = to_signum(props['signum'])
         except ValueError:
             raise MessageError('signal invalid')
+
+        props['pid'] = int(props['pid'])
