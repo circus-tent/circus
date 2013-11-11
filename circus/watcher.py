@@ -970,7 +970,7 @@ class Watcher(object):
         # trigger needed action
         if num == 0:
             yield self.manage_processes()
-        else:
+        elif not self.is_stopped():
             # graceful restart
             yield self._restart()
 
