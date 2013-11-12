@@ -4,7 +4,6 @@ import time
 from circus import logger
 from circus.plugins import CircusPlugin
 from circus.util import to_bool
-from zmq.utils.strtypes import u
 
 
 INFINITE_RETRY = -1
@@ -54,16 +53,15 @@ class Flapping(CircusPlugin):
             timer.cancel()
 
     def handle_recv(self, data):
-        topic, msg = data
-        topic_parts = u(topic).split(".")
-        if topic_parts[2] == "reap":
-            timeline = self.timelines.get(topic_parts[1], [])
+        watcher_name, action, msg = self.split_data(data)
+        if action == "reap":
+            timeline = self.timelines.get(watcher_name, [])
             timeline.append(time.time())
-            self.timelines[topic_parts[1]] = timeline
+            self.timelines[watcher_name] = timeline
 
-            self.check(topic_parts[1])
-        elif topic_parts[2] == "updated":
-            self.update_conf(topic_parts[1])
+            self.check(watcher_name)
+        elif action == "updated":
+            self.update_conf(watcher_name)
 
     def update_conf(self, watcher_name):
         msg = self.call("options", name=watcher_name)
