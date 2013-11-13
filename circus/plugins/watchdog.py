@@ -88,7 +88,8 @@ class WatchDog(CircusPlugin):
         - reap: remove a killed child pid from monitoring
         """
         watcher_name, action, msg = self.split_data(data)
-        logger.debug("received data from circusd: watcher.%s.%s, %s", watcher_name, action, msg)
+        logger.debug("received data from circusd: watcher.%s.%s, %s",
+                     watcher_name, action, msg)
         # check if monitored watchers:
         if self._match_watcher_name(watcher_name):
             try:
