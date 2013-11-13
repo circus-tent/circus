@@ -74,7 +74,7 @@ The plugin may look like this::
             self.file = None
 
         def handle_init(self):
-            self.file = open(self.filename, 'a+', buffering=0)
+            self.file = open(self.filename, 'a+', buffering=1)
 
         def handle_stop(self):
             self.file.close()
