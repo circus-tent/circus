@@ -4,8 +4,6 @@ import time
 import signal
 
 from zmq.eventloop import ioloop
-import zmq.utils.jsonapi as json
-from zmq.utils.strtypes import u
 from circus.plugins import CircusPlugin
 from circus import logger
 
@@ -89,14 +87,13 @@ class WatchDog(CircusPlugin):
         - spawn: add a new monitored child pid
         - reap: remove a killed child pid from monitoring
         """
-        topic, msg = data
-        topic_parts = u(topic).split(".")
-        logger.debug("received data from circusd: %s, %s", topic_parts, msg)
+        watcher_name, action, msg = self.split_data(data)
+        logger.debug("received data from circusd: watcher.%s.%s, %s",
+                     watcher_name, action, msg)
         # check if monitored watchers:
-        if (topic_parts[0] == 'watcher' and
-                self._match_watcher_name(topic_parts[1])):
+        if self._match_watcher_name(watcher_name):
             try:
-                message = json.loads(msg)
+                message = self.load_message(msg)
             except ValueError:
                 logger.error("Error while decoding json for message: %s",
                              msg)
@@ -105,15 +102,15 @@ class WatchDog(CircusPlugin):
                     logger.warning('no process_pid in message')
                     return
                 pid = str(message.get("process_pid"))
-                if topic_parts[2] == "spawn":
-                    self.pid_status[pid] = dict(watcher=topic_parts[1],
+                if action == "spawn":
+                    self.pid_status[pid] = dict(watcher=watcher_name,
                                                 last_activity=time.time())
                     logger.info("added new monitored pid for %s:%s",
-                                topic_parts[1],
+                                watcher_name,
                                 pid)
                 # very questionable fix for Py3 here!
                 # had to add check for pid in self.pid_status
-                elif topic_parts[2] == "reap" and pid in self.pid_status:
+                elif action == "reap" and pid in self.pid_status:
                     old_pid = self.pid_status.pop(pid)
                     logger.info("removed monitored pid for %s:%s",
                                 old_pid['watcher'],

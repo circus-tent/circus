@@ -74,14 +74,15 @@ The plugin may look like this::
             self.file = None
 
         def handle_init(self):
-            self.file = open(self.filename, 'a+', buffering=0)
+            self.file = open(self.filename, 'a+', buffering=1)
 
         def handle_stop(self):
             self.file.close()
 
         def handle_recv(self, data):
-            topic, msg = data
-            self.file.write('%s::%s\n' % (topic, msg))
+            watcher_name, action, msg = self.split_data(data)
+            msg_dict = self.load_message(msg)
+            self.file.write('%s %s::%r\n' % (action, watcher_name, msg_dict))
 
 
 That's it ! This class can be saved in any package/module, as long as it can be seen

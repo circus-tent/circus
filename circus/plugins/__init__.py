@@ -8,7 +8,7 @@ import argparse
 
 import zmq
 import zmq.utils.jsonapi as json
-from zmq.utils.strtypes import b
+from zmq.utils.strtypes import b, u
 from zmq.eventloop import ioloop, zmqstream
 
 from circus import logger, __version__
@@ -143,6 +143,16 @@ class CircusPlugin(object):
         """Called right before a plugin is started - in the thread context.
         """
         pass
+
+    @staticmethod
+    def split_data(data):
+        topic, msg = data
+        topic_parts = u(topic).split(".")
+        return topic_parts[1], topic_parts[2], msg
+
+    @staticmethod
+    def load_message(msg):
+        return json.loads(msg)
 
 
 def _cfg2str(cfg):
