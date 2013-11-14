@@ -65,7 +65,7 @@ here is a way to control that *Redis* is started and fully functional. A functio
         return r.get('foo') == 'bar'
 
 
-This function can be plugged into Circus as an ``after_start`` hook:
+This function can be plugged into Circus as an ``before_start`` hook:
 
 .. code-block:: ini
 
