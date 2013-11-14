@@ -72,8 +72,8 @@ class ResourceWatcher(BaseObserver):
             min_mem_abs = min(mems_abs)
         else:
             # we dont' have any process running. max = 0 then
-            max_cpu = max_mem = min_cpu = min_mem = \
-                max_mem_abs = min_mem_abs = 0
+            max_cpu = max_mem = min_cpu = min_mem = 0
+            max_mem_abs = min_mem_abs = 0
 
         if self.max_cpu and max_cpu > self.max_cpu:
             self.statsd.increment("_resource_watcher.%s.over_cpu" %
@@ -89,8 +89,8 @@ class ResourceWatcher(BaseObserver):
         else:
             self._count_under_cpu = 0
 
-        if (type(self.max_mem) == float and max_mem > self.max_mem or
-                type(self.max_mem) == int and max_mem_abs > self.max_mem):
+        if (isinstance(self.max_mem, float) and max_mem > self.max_mem or
+                isinstance(self.max_mem, int) and max_mem_abs > self.max_mem):
             self.statsd.increment("_resource_watcher.%s.over_memory" %
                                   self.watcher)
             self._count_over_mem += 1
@@ -98,8 +98,9 @@ class ResourceWatcher(BaseObserver):
             self._count_over_mem = 0
 
         if self.min_mem is not None:
-            if (type(self.min_mem) == float and min_mem < self.min_mem or
-                    type(self.min_mem) == int and min_mem_abs < self.min_mem):
+            if (isinstance(self.min_mem, float) and min_mem < self.min_mem or
+                    isinstance(self.min_mem, int) and
+                    min_mem_abs < self.min_mem):
                 self.statsd.increment("_resource_watcher.%s.under_memory" %
                                       self.watcher)
                 self._count_under_mem += 1
