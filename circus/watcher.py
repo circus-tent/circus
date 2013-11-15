@@ -389,7 +389,7 @@ class Watcher(object):
                         #
                         # This can happen if poll() or wait() were called on
                         # the underlying process.
-                        logger.error('reaping already dead process %s [%s]',
+                        logger.debug('reaping already dead process %s [%s]',
                                      pid, self.name)
                         self.notify_event(
                             "reap",
