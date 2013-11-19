@@ -81,20 +81,20 @@ def get_working_dir():
     Since os.getcwd() resolves symlinks, we want to use
     PWD first if present.
     """
-    pwd = os.environ.get('PWD')
+    pwd_ = os.environ.get('PWD')
     cwd = os.getcwd()
 
-    if pwd is None:
+    if pwd_ is None:
         return cwd
 
     # if pwd is the same physical file than the one
     # pointed by os.getcwd(), we use it.
     try:
-        pwd_stat = os.stat(pwd)
+        pwd_stat = os.stat(pwd_)
         cwd_stat = os.stat(cwd)
 
         if pwd_stat.ino == cwd_stat.ino and pwd_stat.dev == cwd_stat.dev:
-            return pwd
+            return pwd_
     except Exception:
         pass
 
