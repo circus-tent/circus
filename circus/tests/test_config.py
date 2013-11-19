@@ -97,6 +97,7 @@ class TestConfig(TestCase):
         Ensure args formatting when shell = True.
         '''
         conf = get_config(_CONF['issue665'])
+
         def load(watcher_conf):
             watcher = Watcher.load_from_config(watcher_conf.copy())
             process = Process(watcher._nextwid, watcher.cmd,
@@ -112,7 +113,6 @@ class TestConfig(TestCase):
 
         import circus.process
         is_win = circus.process.is_win
-
 
         try:
             # force nix
@@ -164,8 +164,6 @@ class TestConfig(TestCase):
                 self.assertTrue(mock_logger_warn.called)
         finally:
             circus.process.is_win = is_win
-
-
 
     def test_include_wildcards(self):
         conf = get_config(_CONF['include'])

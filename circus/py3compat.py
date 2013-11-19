@@ -72,6 +72,6 @@ else:
 
 try:
     # PY >= 3.3
-    from shlex import quote
+    from shlex import quote  # NOQA
 except ImportError:
-    from pipes import quote
+    from pipes import quote  # NOQA

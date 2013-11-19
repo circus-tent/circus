@@ -267,18 +267,18 @@ class Process(object):
             args = [' '.join(quote(arg) for arg in args)]
             shell_args = format_kwargs.get('shell_args', None)
             if shell_args and is_win():
-                logger.warn("shell_args won't apply for "\
-                               "windows platforms: %s", shell_args)
+                logger.warn("shell_args won't apply for "
+                            "windows platforms: %s", shell_args)
             elif isinstance(shell_args, string_types):
                 args += shlex.split(bytestring(replace_gnu_args(
                     shell_args, **format_kwargs)))
             elif shell_args:
                 args += [bytestring(replace_gnu_args(arg, **format_kwargs))
-                        for arg in shell_args]
+                         for arg in shell_args]
 
         elif 'shell_args' in format_kwargs:
-            logger.warn("shell_args is defined but won't be used "\
-                           "in this context: %s", format_kwargs['shell_args'])
+            logger.warn("shell_args is defined but won't be used "
+                        "in this context: %s", format_kwargs['shell_args'])
         logger.debug("process args: %s", args)
         return args
 
