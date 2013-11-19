@@ -30,7 +30,6 @@ NON_JSON_CHARACTERS = re.compile(r'[\x00-\x1f\x7f-\xff]')
 
 
 def get_uwsgi_stats(name, wid):
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
         sock = socket.create_connection(('127.0.0.1', 8090 + wid),
                                         timeout=1)
