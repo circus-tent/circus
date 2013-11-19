@@ -3,7 +3,7 @@
 Installing Circus
 #################
 
-Circus is a Python package which is published on PyPI - the Python Package Index. 
+Circus is a Python package which is published on PyPI - the Python Package Index.
 
 The simplest way to install it is to use pip, a tool for installing and managing Python packages::
 
@@ -37,10 +37,10 @@ More on Requirements
 Circus uses:
 
 - Python 2.6, 2.7, 3.2 or 3.3
-- zeromq >= 2.10 (you can use the 2.x or the 3.x series)
+- zeromq >= 2.1.10 (you can use the 2.x or the 3.x series)
 
 When you install circus, the latest
-versions of the Python dependencies will be pulled out for you.  
+versions of the Python dependencies will be pulled out for you.
 
 You can also install them manually using the pip-requirements.txt
 file we provide::
