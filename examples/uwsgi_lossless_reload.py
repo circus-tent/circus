@@ -4,16 +4,24 @@ __author__ = 'Code Cobblers, Inc.'
 # circus and uWSGI. You will, of course, need to specify the web app you
 # need for uWSGI to run.
 #
-# Here is the flow:
+# This example also solves another problem I have faced many times with uWSGI.
+# When you start an app with a defect in uWSGI, uWSGI will keep restarting
+# if forever. So this example includes an after_spawn hook that does flapping
+# detection on the uWSGI workers.
+#
+# Here is the flow for a reload:
 # 1. You issue a reload command to the watcher
 # 2. The watcher starts a new instance of uWSGI
-# 3. The watcher issues SIGQUIT to the old instance, which is intercepted by
+# 3. The after_spawn hook ensures that the workers are not flapping and halts
+#    the new process if it is, aborting the reload. This would leave the old
+#    process running so that you are not just SOL.
+# 4. The watcher issues SIGQUIT to the old instance, which is intercepted by
 #    the before_signal hook
-# 4. We send SIGTSTP to the old process to tell uWSGI to stop receiving new
+# 5. We send SIGTSTP to the old process to tell uWSGI to stop receiving new
 #    connections
-# 5. We query the stats from the old process in a loop waiting for the old
+# 6. We query the stats from the old process in a loop waiting for the old
 #    workers to go to the pause state
-# 6. We return True, allowing the SIGQUIT to be issued to the old process
+# 7. We return True, allowing the SIGQUIT to be issued to the old process
 
 from time import time, sleep
 import socket
