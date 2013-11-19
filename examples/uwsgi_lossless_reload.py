@@ -38,6 +38,7 @@ def get_uwsgi_stats(name, wid):
         logger.error(
             "Error: Connection refused for {0}} on 127.0.0.1:809{1} - {2}"
             .format(name, wid, e))
+        raise e
     received = sock.recv(100000)
     data = bytes()
     while received:
