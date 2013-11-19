@@ -864,3 +864,8 @@ def check_future_exception_and_log(future):
                 exc_info = future.exc_info()
                 traceback.print_tb(exc_info[2])
             return exception
+
+
+def is_win():
+    """checks if platform is Windows"""
+    return sys.platform == "win32"

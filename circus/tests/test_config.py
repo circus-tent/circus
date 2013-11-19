@@ -37,7 +37,8 @@ _CONF = {
     'issue567': os.path.join(CONFIG_DIR, 'issue567.ini'),
     'issue594': os.path.join(CONFIG_DIR, 'issue594.ini'),
     'reuseport': os.path.join(CONFIG_DIR, 'reuseport.ini'),
-    'issue651': os.path.join(CONFIG_DIR, 'issue651.ini')
+    'issue651': os.path.join(CONFIG_DIR, 'issue651.ini'),
+    'issue665': os.path.join(CONFIG_DIR, 'issue665.ini')
 }
 
 
@@ -88,6 +89,83 @@ class TestConfig(TestCase):
         conf = get_config(_CONF['issue137'])
         watcher = conf['watchers'][0]
         self.assertEqual(watcher['uid'], 'me')
+
+    def test_issues665(self):
+        '''
+        https://github.com/mozilla-services/circus/pull/665
+
+        Ensure args formatting when shell = True.
+        '''
+        conf = get_config(_CONF['issue665'])
+        def load(watcher_conf):
+            watcher = Watcher.load_from_config(watcher_conf.copy())
+            process = Process(watcher._nextwid, watcher.cmd,
+                              args=watcher.args,
+                              working_dir=watcher.working_dir,
+                              shell=watcher.shell, uid=watcher.uid,
+                              gid=watcher.gid, env=watcher.env,
+                              rlimits=watcher.rlimits, spawn=False,
+                              executable=watcher.executable,
+                              use_fds=watcher.use_sockets,
+                              watcher=watcher)
+            return process.format_args()
+
+        import circus.process
+        is_win = circus.process.is_win
+
+
+        try:
+            # force nix
+            circus.process.is_win = lambda: False
+
+            # without shell_args
+            with patch.object(logger, 'warn') as mock_logger_warn:
+                formatted_args = load(conf['watchers'][0])
+                self.assertEqual(formatted_args, ['foo --fd'])
+                self.assertFalse(mock_logger_warn.called)
+
+            # with shell_args
+
+            with patch.object(logger, 'warn') as mock_logger_warn:
+                formatted_args = load(conf['watchers'][1])
+                self.assertEqual(formatted_args,
+                                 ['foo --fd', 'bar', 'baz', 'qux'])
+                self.assertFalse(mock_logger_warn.called)
+
+            # with shell_args but not shell
+
+            with patch.object(logger, 'warn') as mock_logger_warn:
+                formatted_args = load(conf['watchers'][2])
+                self.assertEqual(formatted_args, ['foo', '--fd'])
+                self.assertTrue(mock_logger_warn.called)
+
+            # force win
+            circus.process.is_win = lambda: True
+
+            # without shell_args
+
+            with patch.object(logger, 'warn') as mock_logger_warn:
+                formatted_args = load(conf['watchers'][0])
+                self.assertEqual(formatted_args, ['foo --fd'])
+                self.assertFalse(mock_logger_warn.called)
+
+            # with shell_args
+
+            with patch.object(logger, 'warn') as mock_logger_warn:
+                formatted_args = load(conf['watchers'][1])
+                self.assertEqual(formatted_args, ['foo --fd'])
+                self.assertTrue(mock_logger_warn.called)
+
+            # with shell_args but not shell
+
+            with patch.object(logger, 'warn') as mock_logger_warn:
+                formatted_args = load(conf['watchers'][2])
+                self.assertEqual(formatted_args, ['foo', '--fd'])
+                self.assertTrue(mock_logger_warn.called)
+        finally:
+            circus.process.is_win = is_win
+
+
 
     def test_include_wildcards(self):
         conf = get_config(_CONF['include'])

@@ -68,3 +68,10 @@ else:
         # 64-bit
         MAXSIZE = int((1 << 63) - 1)        # NOQA
     del X
+
+
+try:
+    # PY >= 3.3
+    from shlex import quote
+except ImportError:
+    from pipes import quote

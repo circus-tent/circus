@@ -114,6 +114,9 @@ watcher:NAME - as many sections as you want
         :ref:`formatting_cmd` for more information on this.
     **shell**
         If True, the processes are run in the shell (default: False)
+    **shell_args**
+        Command-line arguments to pass to the shell command when **shell** is
+        True. Works only for *nix system (default: None)
     **working_dir**
         The working dir for the processes (default: None)
     **uid**

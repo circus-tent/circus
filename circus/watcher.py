@@ -175,12 +175,12 @@ class Watcher(object):
     """
 
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
-                 working_dir=None, shell=False, uid=None, max_retry=5,
-                 gid=None, send_hup=False, stop_signal=signal.SIGTERM,
-                 stop_children=False, env=None, graceful_timeout=30.0,
-                 prereload_fn=None, rlimits=None, executable=None,
-                 stdout_stream=None, stderr_stream=None, priority=0,
-                 loop=None, singleton=False, use_sockets=False,
+                 working_dir=None, shell=False, shell_args=None, uid=None,
+                 max_retry=5, gid=None, send_hup=False,
+                 stop_signal=signal.SIGTERM, stop_children=False, env=None,
+                 graceful_timeout=30.0, prereload_fn=None, rlimits=None,
+                 executable=None, stdout_stream=None, stderr_stream=None,
+                 priority=0, loop=None, singleton=False, use_sockets=False,
                  copy_env=False, copy_path=False, max_age=0,
                  max_age_variance=30, hooks=None, respawn=True,
                  autostart=True, on_demand=False, virtualenv=None,
@@ -228,9 +228,10 @@ class Watcher(object):
 
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
                           "uid", "gid", "send_hup", "stop_signal",
-                          "stop_children", "shell", "env", "max_retry", "cmd",
-                          "args", "graceful_timeout", "executable",
-                          "use_sockets", "priority", "copy_env", "singleton",
+                          "stop_children", "shell", "shell_args",
+                          "env", "max_retry", "cmd", "args",
+                          "graceful_timeout", "executable", "use_sockets",
+                          "priority", "copy_env", "singleton",
                           "stdout_stream_conf", "on_demand",
                           "stderr_stream_conf", "max_age", "max_age_variance",
                           "close_child_stdout", "close_child_stderr")
@@ -243,6 +244,7 @@ class Watcher(object):
         self.working_dir = working_dir
         self.processes = {}
         self.shell = shell
+        self.shell_args = shell_args
         self.uid = uid
         self.gid = gid
 
