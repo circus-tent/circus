@@ -19,23 +19,23 @@ from time import time, sleep
 import socket
 from json import loads
 import signal
-import logging
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+from circus import logger
+import re
 
 worker_states = {
     'running': "idle busy cheap".split(" "),
     'paused': "pause".split(" "),
 }
+NON_JSON_CHARACTERS = re.compile(r'[\x00-\x1f\x7f-\xff]')
 
 
 def get_uwsgi_stats(name, wid):
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
-        sock = socket.create_connection(('127.0.0.1', 8090 + wid))
+        sock = socket.create_connection(('127.0.0.1', 8090 + wid),
+                                        timeout=1)
     except Exception as e:
-        log.error(
+        logger.error(
             "Error: Connection refused for {0}} on 127.0.0.1:809{1} - {2}"
             .format(name, wid, e))
     received = sock.recv(100000)
@@ -44,61 +44,88 @@ def get_uwsgi_stats(name, wid):
         data += received
         received = sock.recv(100000)
     if not data:
-        log.error(
-            "Error: No stats seem available for WID {0} of {1}"
-            .format(wid, name))
+        logger.error(
+            "Error: No stats seem available for WID %d of %s", wid, name)
         return
-    return loads(data.decode())
+    # recent versions of uWSGI had some garbage in the JSON so strip it out
+    data = NON_JSON_CHARACTERS.sub('', data.decode())
+    return loads(data)
 
 
-def get_worker_states(name, wid):
+def get_worker_states(name, wid, minimum_age=0.0):
     stats = get_uwsgi_stats(name, wid)
     if 'workers' not in stats:
-        log.error(
-            "Error: No workers found for WID {0} of {1}"
-            .format(wid, name))
+        logger.error("Error: No workers found for WID %d of %d", wid, name)
+        return ['unknown']
     workers = stats['workers']
     return [
-        worker["status"] if 'status' in worker else None for worker in workers
+        worker["status"] if 'status' in worker and worker['last_spawn'] < time() - minimum_age else 'unknown'
+        for worker in workers
     ]
 
 
-def wait_for_workers(name, wid, state, timeout_seconds=60):
-    timeout = time() + timeout_seconds
-    while not all(worker.lower() in worker_states[state]
-                  for worker in get_worker_states(name, wid)):
-        if timeout_seconds and time() > timeout:
-            raise Exception('timeout')
+def wait_for_workers(name, wid, state, timeout_seconds=60, minimum_age=0):
+    started = time()
+    while True:
+        try:
+            if all(worker.lower() in worker_states[state]
+                   for worker in get_worker_states(name, wid, minimum_age)):
+                return
+        except Exception:
+            if time() > started + 3:
+                raise TimeoutError('timeout')
+        if timeout_seconds and time() > started + timeout_seconds:
+            raise TimeoutError('timeout')
         sleep(0.25)
 
 
 def extended_stats(watcher, arbiter, hook_name, pid, stats, **kwargs):
     name = watcher.name
     wid = watcher.processes[pid].wid
-    uwsgi_stats = get_uwsgi_stats(name, wid)
-    for k in ('load', 'version'):
-        if k in uwsgi_stats:
-            stats[k] = uwsgi_stats[k]
-    if 'children' in stats and 'workers' in uwsgi_stats:
-        workers = dict((worker['pid'], worker) for worker in uwsgi_stats['workers'])
-        for worker in stats['children']:
-            uwsgi_worker = workers.get(worker['pid'])
-            if uwsgi_worker:
-                for k in ('exceptions', 'harakiri_count', 'requests', 'respawn_count', 'status', 'tx'):
-                    if k in uwsgi_worker:
-                        worker[k] = uwsgi_worker[k]
+    try:
+        uwsgi_stats = get_uwsgi_stats(name, wid)
+        for k in ('load', 'version'):
+            if k in uwsgi_stats:
+                stats[k] = uwsgi_stats[k]
+        if 'children' in stats and 'workers' in uwsgi_stats:
+            workers = dict((worker['pid'], worker) for worker in uwsgi_stats['workers'])
+            for worker in stats['children']:
+                uwsgi_worker = workers.get(worker['pid'])
+                if uwsgi_worker:
+                    for k in ('exceptions', 'harakiri_count', 'requests', 'respawn_count', 'status', 'tx'):
+                        if k in uwsgi_worker:
+                            worker[k] = uwsgi_worker[k]
+    except Exception:
+        pass
     return True
 
 
-def uwsgi_clean_stop(watcher, arbiter, hook_name, pid, signum, **kwargs):
-    if len(watcher.processes) > 1 and signum == signal.SIGQUIT:
-        wid = watcher.processes[pid].wid
+def children_started(watcher, arbiter, hook_name, pid, **kwargs):
+    name = watcher.name
+    wid = watcher.processes[pid].wid
+    try:
+        wait_for_workers(name, wid, 'running', timeout_seconds=10,
+                         minimum_age=5)
+        return True
+    except TimeoutError:
+        logger.error('%s children are flapping on %d', name, pid)
+        return False
+
+
+def clean_stop(watcher, arbiter, hook_name, pid, signum, **kwargs):
+    if len(watcher.processes) > watcher.numprocesses and signum == signal.SIGQUIT:
         name = watcher.name
-        log.info('{0} pausing'.format(name))
+        started = watcher.processes[pid].started
+        newer_pids = [p for p, w in watcher.processes.items() if p != pid and w.started > started]
+        # if the one being stopped is actually the newer one, just do it
+        if len(newer_pids) < watcher.numprocesses:
+            return True
+        wid = watcher.processes[pid].wid
+        logger.info('%s pausing', name)
         watcher.send_signal(pid, signal.SIGTSTP)
         try:
             wait_for_workers(name, wid, 'paused')
-            log.info('{0} workers idle'.format(name))
+            logger.info('%s workers idle', name)
         except Exception as e:
-            log.error('trouble pausing {0}: {1}'.format(name, e))
+            logger.exception('trouble pausing %s: %s', name, e)
     return True
