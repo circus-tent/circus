@@ -153,8 +153,8 @@ class Watcher(object):
       or the callabled itself and a boolean flag indicating if an
       exception occuring in the hook should not be ignored.
       Possible values for the hook name: *before_start*, *after_start*,
-      *before_spawn*, *before_stop*, *after_stop*., *before_signal*,
-      *after_signal* or *extended_stats*.
+      *before_spawn*, *after_spawn*, *before_stop*, *after_stop*.,
+      *before_signal*, *after_signal* or *extended_stats*.
 
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
@@ -564,6 +564,10 @@ class Watcher(object):
                 self.processes[process.pid] = process
                 logger.debug('running %s process [pid %d]', self.name,
                              process.pid)
+                if not self.call_hook('after_spawn', pid=process.pid):
+                    self.kill_process(process)
+                    del self.processes[process.pid]
+                    return False
             except OSError as e:
                 logger.warning('error in %r: %s', self.name, str(e))
 
@@ -811,7 +815,9 @@ class Watcher(object):
         self.reap_processes()
         yield self.spawn_processes()
 
-        if not self.call_hook('after_start'):
+        # If not self.processes, the before_spawn or after_spawn hooks have
+        # probably prevented startup so give up
+        if not self.processes or not self.call_hook('after_start'):
             logger.debug('Aborting startup')
             yield self._stop()
             return

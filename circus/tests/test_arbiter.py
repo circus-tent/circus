@@ -536,6 +536,9 @@ class MockWatcher(Watcher):
     def start(self):
         self.started = True
 
+    def spawn_process(self):
+        self.processes[1] = 'dummy'
+
 
 class TestArbiter(TestCircus):
     """
