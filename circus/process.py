@@ -276,7 +276,7 @@ class Process(object):
                 args += [bytestring(replace_gnu_args(arg, **format_kwargs))
                          for arg in shell_args]
 
-        elif 'shell_args' in format_kwargs:
+        elif format_kwargs.get('shell_args', False):
             logger.warn("shell_args is defined but won't be used "
                         "in this context: %s", format_kwargs['shell_args'])
         logger.debug("process args: %s", args)
