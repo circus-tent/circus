@@ -18,6 +18,7 @@ from circus.commands import (   # NOQA
     rmwatcher,
     sendsignal,
     set,
+    spawn,
     start,
     stats,
     status,
