@@ -153,8 +153,8 @@ class Watcher(object):
       or the callabled itself and a boolean flag indicating if an
       exception occuring in the hook should not be ignored.
       Possible values for the hook name: *before_start*, *after_start*,
-      *before_spawn*, *before_stop*, *after_stop*., *before_signal*,
-      *after_signal* or *extended_stats*.
+      *before_spawn*, *after_spawn*, *before_stop*, *after_stop*.,
+      *before_signal*, *after_signal* or *extended_stats*.
 
     - **options** -- extra options for the worker. All options
       found in the configuration file for instance, are passed
@@ -175,12 +175,12 @@ class Watcher(object):
     """
 
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
-                 working_dir=None, shell=False, uid=None, max_retry=5,
-                 gid=None, send_hup=False, stop_signal=signal.SIGTERM,
-                 stop_children=False, env=None, graceful_timeout=30.0,
-                 prereload_fn=None, rlimits=None, executable=None,
-                 stdout_stream=None, stderr_stream=None, priority=0,
-                 loop=None, singleton=False, use_sockets=False,
+                 working_dir=None, shell=False, shell_args=None, uid=None,
+                 max_retry=5, gid=None, send_hup=False,
+                 stop_signal=signal.SIGTERM, stop_children=False, env=None,
+                 graceful_timeout=30.0, prereload_fn=None, rlimits=None,
+                 executable=None, stdout_stream=None, stderr_stream=None,
+                 priority=0, loop=None, singleton=False, use_sockets=False,
                  copy_env=False, copy_path=False, max_age=0,
                  max_age_variance=30, hooks=None, respawn=True,
                  autostart=True, on_demand=False, virtualenv=None,
@@ -228,9 +228,10 @@ class Watcher(object):
 
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
                           "uid", "gid", "send_hup", "stop_signal",
-                          "stop_children", "shell", "env", "max_retry", "cmd",
-                          "args", "graceful_timeout", "executable",
-                          "use_sockets", "priority", "copy_env", "singleton",
+                          "stop_children", "shell", "shell_args",
+                          "env", "max_retry", "cmd", "args",
+                          "graceful_timeout", "executable", "use_sockets",
+                          "priority", "copy_env", "singleton",
                           "stdout_stream_conf", "on_demand",
                           "stderr_stream_conf", "max_age", "max_age_variance",
                           "close_child_stdout", "close_child_stderr")
@@ -243,6 +244,7 @@ class Watcher(object):
         self.working_dir = working_dir
         self.processes = {}
         self.shell = shell
+        self.shell_args = shell_args
         self.uid = uid
         self.gid = gid
 
@@ -389,7 +391,7 @@ class Watcher(object):
                         #
                         # This can happen if poll() or wait() were called on
                         # the underlying process.
-                        logger.error('reaping already dead process %s [%s]',
+                        logger.debug('reaping already dead process %s [%s]',
                                      pid, self.name)
                         self.notify_event(
                             "reap",
@@ -562,6 +564,10 @@ class Watcher(object):
                 self.processes[process.pid] = process
                 logger.debug('running %s process [pid %d]', self.name,
                              process.pid)
+                if not self.call_hook('after_spawn', pid=process.pid):
+                    self.kill_process(process)
+                    del self.processes[process.pid]
+                    return False
             except OSError as e:
                 logger.warning('error in %r: %s', self.name, str(e))
 
@@ -809,7 +815,9 @@ class Watcher(object):
         self.reap_processes()
         yield self.spawn_processes()
 
-        if not self.call_hook('after_start'):
+        # If not self.processes, the before_spawn or after_spawn hooks have
+        # probably prevented startup so give up
+        if not self.processes or not self.call_hook('after_start'):
             logger.debug('Aborting startup')
             yield self._stop()
             return

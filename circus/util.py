@@ -76,17 +76,30 @@ _all_signals = {}
 
 
 def get_working_dir():
-    """Returns current path, try to use PWD env first"""
+    """Returns current path, try to use PWD env first.
+
+    Since os.getcwd() resolves symlinks, we want to use
+    PWD first if present.
+    """
+    pwd_ = os.environ.get('PWD')
+    cwd = os.getcwd()
+
+    if pwd_ is None:
+        return cwd
+
+    # if pwd is the same physical file than the one
+    # pointed by os.getcwd(), we use it.
     try:
-        a = os.stat(os.environ['PWD'])
-        b = os.stat(os.getcwd())
-        if a.ino == b.ino and a.dev == b.dev:
-            working_dir = os.environ['PWD']
-        else:
-            working_dir = os.getcwd()
-    except:
-        working_dir = os.getcwd()
-    return working_dir
+        pwd_stat = os.stat(pwd_)
+        cwd_stat = os.stat(cwd)
+
+        if pwd_stat.ino == cwd_stat.ino and pwd_stat.dev == cwd_stat.dev:
+            return pwd_
+    except Exception:
+        pass
+
+    # otherwise, just use os.getcwd()
+    return cwd
 
 
 def bytes2human(n):
@@ -864,3 +877,8 @@ def check_future_exception_and_log(future):
                 exc_info = future.exc_info()
                 traceback.print_tb(exc_info[2])
             return exception
+
+
+def is_win():
+    """checks if platform is Windows"""
+    return sys.platform == "win32"

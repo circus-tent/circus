@@ -10,11 +10,15 @@ events.  Available hooks are:
   returns **False** the startup is aborted.
 
 - **after_start**: called after the watcher is started. If the hook
-  returns **False** the watcher is immediatly stopped and the startup
+  returns **False** the watcher is immediately stopped and the startup
   is aborted.
 
 - **before_spawn**: called before the watcher spawns a new process.  If the
-  hook returns **False** the watcher is immediatly stopped and the startup is
+  hook returns **False** the watcher is immediately stopped and the startup is
+  aborted.
+
+- **after_spawn**: called after the watcher spawns a new process.  If the
+  hook returns **False** the watcher is immediately stopped and the startup is
   aborted.
 
 - **before_stop**: called before the watcher is stopped. The hook result
@@ -65,7 +69,7 @@ here is a way to control that *Redis* is started and fully functional. A functio
         return r.get('foo') == 'bar'
 
 
-This function can be plugged into Circus as an ``after_start`` hook:
+This function can be plugged into Circus as an ``before_start`` hook:
 
 .. code-block:: ini
 
@@ -102,8 +106,16 @@ Where **watcher** is the **Watcher** class instance, **arbiter** the
 **Arbiter** one, **hook_name** the hook name and **kwargs** some additional
 optional parameters (depending on the hook type).
 
-The **before_signal** and **after_signal** hooks offer some
-additional parameters in **kwargs**::
+The **after_spawn** hook adds the pid parameters::
+
+    def after_spawn(watcher, arbiter, hook_name, pid, **kwargs):
+        ...
+        # If you don't return True, circus will kill the process
+        return True
+
+Where **pid** is the PID of the corresponding process.
+
+Likewise, **before_signal** and **after_signal** hooks add pid and signum::
 
     def before_signal_hook(watcher, arbiter, hook_name, pid, signum, **kwargs):
         ...
@@ -111,14 +123,14 @@ additional parameters in **kwargs**::
         # (SIGKILL is always sent)
         return True
 
-Where **pid** is the PID of the corresponding process and **signum** the 
+Where **pid** is the PID of the corresponding process and **signum** is the
 corresponding signal.
         
 You can ignore those but being able to use the watcher and/or arbiter
 data and methods can be useful in some hooks.
 
-Note that hooks are called with named arguments. So use the hook signature without
-changing argument names.
+Note that hooks are called with named arguments. So use the hook signature
+without changing argument names.
 
 The **extended_stats** hook has its own additional parameters in **kwargs**::
 

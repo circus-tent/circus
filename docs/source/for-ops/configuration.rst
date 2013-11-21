@@ -117,6 +117,9 @@ watcher:NAME - as many sections as you want
         :ref:`formatting_cmd` for more information on this.
     **shell**
         If True, the processes are run in the shell (default: False)
+    **shell_args**
+        Command-line arguments to pass to the shell command when **shell** is
+        True. Works only for *nix system (default: None)
     **working_dir**
         The working dir for the processes (default: None)
     **uid**
@@ -252,15 +255,17 @@ watcher:NAME - as many sections as you want
         is needed, it will be only triggered at the next socket event.
 
     **hooks.***
-        Available hooks: **before_start**, **before_spawn**, **after_start**,
-        **before_stop**, **after_stop**, **before_signal**, **after_signal**,
+        Available hooks: **before_start**, **after_start**,
+        **before_spawn**, **after_spawn**,
+        **before_stop**, **after_stop**,
+        **before_signal**, **after_signal**,
         **extended_stats**
 
         Define callback functions that hook into the watcher startup/shutdown process.
 
         If the hook returns **False** and if the hook is one of
-        **before_start**, **before_spawn** or  **after_start**, the startup
-        will be aborted.
+        **before_start**, **before_spawn**, **after_start** or **after_spawn**,
+        the startup will be aborted.
 
         If the hook is **before_signal** and returns **False**, then the
         corresponding signal will not be sent (except SIGKILL which is always

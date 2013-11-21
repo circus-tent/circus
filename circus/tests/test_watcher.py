@@ -360,7 +360,7 @@ class TestWatcherHooks(TestCircus):
         events = {'before_start_called': False}
 
         def hook(watcher, arbiter, hook_name, **kwargs):
-            events['before_start_called'] = True
+            events['%s_called' % hook_name] = True
             events['arbiter_in_hook'] = arbiter
 
             if hook_kwargs_test_function is not None:
@@ -391,7 +391,7 @@ class TestWatcherHooks(TestCircus):
             yield arbiter.stop()
             logger.exception = old
 
-        self.assertTrue(events['before_start_called'])
+        self.assertTrue(events['%s_called' % hook_name])
         self.assertEqual(events['arbiter_in_hook'], arbiter)
 
     @tornado.gen.coroutine
@@ -518,6 +518,22 @@ class TestWatcherHooks(TestCircus):
     def test_before_spawn_false(self):
         yield self._test_hooks(behavior=FAILURE, status='stopped',
                                hook_name='before_spawn', call=self._stop)
+
+    @tornado.testing.gen_test
+    def test_after_spawn(self):
+        yield self._test_hooks(hook_name='after_spawn')
+
+    @tornado.testing.gen_test
+    def test_after_spawn_failure(self):
+        with captured_output('stdout'):
+            yield self._test_hooks(behavior=ERROR, status='stopped',
+                                   hook_name='after_spawn',
+                                   call=self._stop)
+
+    @tornado.testing.gen_test
+    def test_after_spawn_false(self):
+        yield self._test_hooks(behavior=FAILURE, status='stopped',
+                               hook_name='after_spawn', call=self._stop)
 
     @tornado.testing.gen_test
     def test_extended_stats(self):
