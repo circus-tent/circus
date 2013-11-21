@@ -180,9 +180,11 @@ class TestCircus(AsyncTestCase):
         worker.update(kw)
         if not arbiter_kw:
             arbiter_kw = {}
-        debug = arbiter_kw['debug'] = kw.get('debug', arbiter_kw.get('debug', False))
+        debug = arbiter_kw['debug'] = kw.get('debug',
+                                             arbiter_kw.get('debug', False))
         # -1 => no periodic callback to manage_watchers by default
-        arbiter_kw['check_delay'] = kw.get('check_delay', arbiter_kw.get('check_delay', -1))
+        arbiter_kw['check_delay'] = kw.get('check_delay',
+                                           arbiter_kw.get('check_delay', -1))
 
         if stats:
             arbiter_kw['statsd'] = True
