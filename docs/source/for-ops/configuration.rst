@@ -14,6 +14,7 @@ Example:
     endpoint = tcp://127.0.0.1:5555
     pubsub_endpoint = tcp://127.0.0.1:5556
     include = \*.more.config.ini
+    umask = 002
 
     [watcher:myprogram]
     cmd = python
@@ -94,6 +95,8 @@ circus - single section
         stdout/stderr (default: False)
     **pidfile**
         The file that must be used to keep the daemon pid.
+    **umask**
+        Value for umask. If not set, circusd will not attempt to modify umask.
     **loglevel**
         The loglevel that we want to see (default: INFO)
     **logoutput**
