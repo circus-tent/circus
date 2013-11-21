@@ -169,7 +169,7 @@ class TestCircus(AsyncTestCase):
 
     @classmethod
     def _create_circus(cls, callable_path, plugins=None, stats=False,
-                       async=False, **kw):
+                       async=False, arbiter_kw=None, **kw):
         resolve_name(callable_path)   # used to check the callable
         fd, testfile = mkstemp()
         os.close(fd)
@@ -178,35 +178,25 @@ class TestCircus(AsyncTestCase):
         worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
                   'name': 'test', 'graceful_timeout': 2}
         worker.update(kw)
-        debug = kw.get('debug', False)
+        if not arbiter_kw:
+            arbiter_kw = {}
+        debug = arbiter_kw['debug'] = kw.get('debug', arbiter_kw.get('debug', False))
         # -1 => no periodic callback to manage_watchers by default
-        check_delay = kw.get('check_delay', -1)
+        arbiter_kw['check_delay'] = kw.get('check_delay', arbiter_kw.get('check_delay', -1))
 
-        fact = cls.arbiter_factory
+        if stats:
+            arbiter_kw['statsd'] = True
+            arbiter_kw['stats_endpoint'] = DEFAULT_ENDPOINT_STATS
+            arbiter_kw['statsd_close_outputs'] = not debug
+
         if async:
-            if stats:
-                arbiter = fact([worker], background=False, plugins=plugins,
-                               debug=debug, statsd=True,
-                               stats_endpoint=DEFAULT_ENDPOINT_STATS,
-                               loop=tornado.ioloop.IOLoop.instance(),
-                               check_delay=check_delay,
-                               statsd_close_outputs=not debug)
-            else:
-                arbiter = fact([worker], background=False, plugins=plugins,
-                               debug=debug,
-                               check_delay=check_delay,
-                               loop=tornado.ioloop.IOLoop.instance())
+            arbiter_kw['background'] = False
+            arbiter_kw['loop'] = tornado.ioloop.IOLoop.instance()
         else:
-            if stats:
-                arbiter = fact([worker], background=True, plugins=plugins,
-                               stats_endpoint=DEFAULT_ENDPOINT_STATS,
-                               statsd=True,
-                               check_delay=check_delay,
-                               debug=debug, statsd_close_outputs=not debug)
-            else:
-                arbiter = fact([worker], background=True, plugins=plugins,
-                               check_delay=check_delay,
-                               debug=debug)
+            arbiter_kw['background'] = True
+
+        arbiter = cls.arbiter_factory([worker], plugins=plugins, **arbiter_kw)
+
         #arbiter.start()
         return testfile, arbiter
 

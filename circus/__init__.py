@@ -20,7 +20,7 @@ class ArbiterHandler(object):
                  env=None, name=None, context=None,
                  background=False, stream_backend="thread", httpd=False,
                  plugins=None, debug=False, proc_name="circusd",
-                 loop=None, check_delay=1.0):
+                 loop=None, check_delay=1.0, **kw):
         """Creates a Arbiter and a single watcher in it.
 
         Options:
@@ -72,8 +72,8 @@ class ArbiterHandler(object):
               callable or the callabled itself and a boolean flag indicating if
               an exception occuring in the hook should not be ignored.
               Possible values for the hook name: *before_start*, *after_start*,
-              *before_stop*, *after_stop*, *before_signal*, *after_signal*,
-              *extended_stats*
+              *before_spawn*, *after_spawn*, *before_stop*, *after_stop*,
+              *before_signal*, *after_signal*, *extended_stats*
 
         - **controller** -- the zmq entry point
           (default: 'tcp://127.0.0.1:5555')
@@ -137,7 +137,8 @@ class ArbiterHandler(object):
                        statsd_close_outputs=statsd_close_outputs,
                        multicast_endpoint=multicast_endpoint,
                        context=context, plugins=plugins, debug=debug,
-                       proc_name=proc_name, loop=loop, check_delay=check_delay)
+                       proc_name=proc_name, loop=loop, check_delay=check_delay,
+                       **kw)
 
     def _get_arbiter_klass(self, background):
         if background:
