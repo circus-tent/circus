@@ -77,7 +77,8 @@ class Reload(Command):
             watcher = self._get_watcher(arbiter, props['name'])
             if props.get('waiting'):
                 resp = TransformableFuture()
-                resp.set_upstream_future(watcher.reload(graceful=props.get('graceful', True)))
+                resp.set_upstream_future(watcher.reload(
+                    graceful=props.get('graceful', True)))
                 resp.set_transform_function(lambda x: {"info": x})
                 return resp
             return watcher.reload(graceful=props.get('graceful', True))
