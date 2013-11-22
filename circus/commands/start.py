@@ -1,5 +1,6 @@
 from circus.commands.base import Command
 from circus.exc import ArgumentError
+from circus.util import TransformableFuture
 
 
 class Start(Command):
@@ -63,6 +64,11 @@ class Start(Command):
     def execute(self, arbiter, props):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
+            if props.get('waiting'):
+                resp = TransformableFuture()
+                resp.set_upstream_future(watcher.start())
+                resp.set_transform_function(lambda x: {"info": x})
+                return resp
             return watcher.start()
         else:
             return arbiter.start_watchers()

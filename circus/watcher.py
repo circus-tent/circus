@@ -792,7 +792,11 @@ class Watcher(object):
     @util.synchronized("watcher_start")
     @gen.coroutine
     def start(self):
+        before_pids = set() if self.is_stopped() else set(self.processes)
         yield self._start()
+        after_pids = set(self.processes)
+        raise gen.Return({'started': sorted(after_pids - before_pids),
+                          'kept': sorted(after_pids & before_pids)})
 
     @gen.coroutine
     @util.debuglog
