@@ -119,9 +119,13 @@ def get_stream(conf, reload=False):
     # we can have 'stream' or 'class' or 'filename'
     if 'class' in conf:
         class_name = conf.pop('class')
-        if not "." in class_name:
-            class_name = "circus.stream.%s" % class_name
-        inst = resolve_name(class_name)(**conf)
+        if class_name == 'FileStream':
+            inst = FileStream(**conf)
+        else:
+            if not "." in class_name:
+                class_name = "circus.stream.%s" % class_name
+                reload = False  # no need to reload circus classes
+            inst = resolve_name(class_name, reload=reload())(**conf)
     elif 'stream' in conf:
         inst = conf['stream']
     elif 'filename' in conf:
