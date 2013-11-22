@@ -143,7 +143,7 @@ def main():
     restart = True
     while restart:
         try:
-            arbiter = Arbiter.load_from_config(args.config)
+            arbiter = arbiter or Arbiter.load_from_config(args.config)
             future = arbiter.start()
             restart = False
             if check_future_exception_and_log(future) is None:
@@ -155,6 +155,7 @@ def main():
         except KeyboardInterrupt:
             pass
         finally:
+            arbiter = None
             if pidfile is not None:
                 pidfile.unlink()
     sys.exit(0)
