@@ -114,7 +114,7 @@ class FancyStdoutStream(StdoutStream):
                 self.out.flush()
 
 
-def get_stream(conf):
+def get_stream(conf, reload=False):
     if not conf:
         return conf
 
@@ -127,7 +127,7 @@ def get_stream(conf):
         class_name = conf.pop('class')
         if not "." in class_name:
             class_name = "circus.stream.%s" % class_name
-        inst = resolve_name(class_name)(**conf)
+        inst = resolve_name(class_name, reload=reload)(**conf)
     else:
         raise ValueError("stream configuration invalid")
 

@@ -29,6 +29,12 @@ from datetime import timedelta
 from functools import wraps
 import signal
 
+try:
+    import importlib
+    reload_module = importlib.reload
+except (ImportError, AttributeError):
+    from imp import reload as reload_module
+
 from zmq import ssh
 
 
@@ -425,7 +431,7 @@ class ImportStringError(ImportError):
                                  self.exception)
 
 
-def resolve_name(import_name, silent=False):
+def resolve_name(import_name, silent=False, reload=False):
     """Imports an object based on a string.  This is useful if you want to
     use import paths as endpoints or something similar.  An import path can
     be specified either in dotted notation (``xml.sax.saxutils.escape``)
@@ -436,6 +442,8 @@ def resolve_name(import_name, silent=False):
     :param import_name: the dotted name for the object to import.
     :param silent: if set to `True` import errors are ignored and
                    `None` is returned instead.
+    :param reload: if set to `True` modules that are already loaded will be
+                   reloaded
     :return: imported object
     """
     # force the import name to automatically convert to strings
@@ -443,20 +451,42 @@ def resolve_name(import_name, silent=False):
     try:
         if ':' in import_name:
             module, obj = import_name.split(':', 1)
-        elif '.' in import_name:
+        elif '.' in import_name and import_name not in sys.modules:
             module, obj = import_name.rsplit('.', 1)
         else:
-            return __import__(import_name)
+            module, obj = import_name, None
             # __import__ is not able to handle unicode strings in the fromlist
+
+        mod = None
         # if the module is a package
+        if reload and module in sys.modules:
+            try:
+                importlib.invalidate_caches()
+            except Exception:
+                pass
+            try:
+                mod = reload_module(sys.modules[module])
+            except Exception:
+                pass
+        if not mod:
+            if not obj:
+                return __import__(module)
+            try:
+                mod = __import__(module, None, None, [obj])
+            except ImportError:
+                if ':' in import_name:
+                    raise
+                return __import__(import_name)
+        if not obj:
+            return mod
         try:
-            return getattr(__import__(module, None, None, [obj]), obj)
-        except (ImportError, AttributeError):
+            return getattr(mod, obj)
+        except AttributeError:
             # support importing modules not yet set up by the parent module
             # (or package for that matter)
-            modname = module + '.' + obj
-            __import__(modname)
-            return sys.modules[modname]
+            if ':' in import_name:
+                raise
+            return __import__(import_name)
     except ImportError as e:
         if not silent:
             raise_with_tb(ImportStringError(import_name, e))

@@ -283,17 +283,19 @@ class Watcher(object):
 
     def _reload_hook(self, key, hook, ignore_error):
         hook_name = key.split('.')[-1]
-        self._resolve_hook(hook_name, hook, ignore_error)
+        self._resolve_hook(hook_name, hook, ignore_error, reload_module=True)
 
     def _reload_stream(self, key, val):
         parts = key.split('.', 1)
 
         if parts[0] == 'stdout':
             self.stdout_stream_conf[parts[1]] = val
-            self.stdout_stream = get_stream(self.stdout_stream_conf)
+            self.stdout_stream = get_stream(self.stdout_stream_conf,
+                                            reload=True)
         else:
             self.stderr_stream_conf[parts[1]] = val
-            self.stderr_stream = get_stream(self.stderr_stream_conf)
+            self.stderr_stream = get_stream(self.stderr_stream_conf,
+                                            reload=True)
 
         self._create_redirectors()
         if self.stdout_redirector is not None:
@@ -301,8 +303,6 @@ class Watcher(object):
 
         if self.stderr_redirector is not None:
             self.stderr_redirector.start()
-
-        return 1
 
     def _create_redirectors(self):
         if self.stdout_stream:
@@ -321,12 +321,14 @@ class Watcher(object):
         else:
             self.stderr_redirector = None
 
-    def _resolve_hook(self, name, callable_or_name, ignore_failure):
+    def _resolve_hook(self, name, callable_or_name, ignore_failure,
+                      reload_module=False):
         if is_callable(callable_or_name):
             self.hooks[name] = callable_or_name
         else:
             # will raise ImportError on failure
-            self.hooks[name] = resolve_name(callable_or_name)
+            self.hooks[name] = resolve_name(callable_or_name,
+                                            reload=reload_module)
 
         if ignore_failure:
             self.ignore_hook_failure.append(name)
@@ -957,8 +959,8 @@ class Watcher(object):
             action = 1
         elif (key.startswith('stdout_stream') or
               key.startswith('stderr_stream')):
-            action = self._reload_stream(key, val)
-        elif key.startswith('hook'):
+            self._reload_stream(key, val)
+        elif key.startswith('hooks'):
             val = val.split(',')
             if len(val) == 2:
                 ignore_error = util.to_bool(val[1])
@@ -966,7 +968,7 @@ class Watcher(object):
                 ignore_error = False
             hook = val[0]
             self._reload_hook(key, hook, ignore_error)
-            action = 1
+            action = 0
 
         # send update event
         self.notify_event("updated", {"time": time.time()})
@@ -980,7 +982,7 @@ class Watcher(object):
             yield self.manage_processes()
         elif not self.is_stopped():
             # graceful restart
-            yield self._restart()
+            yield self._reload()
 
     @util.debuglog
     def options(self, *args):
