@@ -67,6 +67,25 @@ class TestSockets(TestCase):
         finally:
             sock.close()
 
+    def test_load_from_config_replace(self):
+        fd, sockfile = tempfile.mkstemp()
+        os.close(fd)
+
+        config = {'name': 'somename', 'path': sockfile, 'replace': False}
+        sock = CircusSocket.load_from_config(config)
+        try:
+            self.assertRaises(OSError, sock.bind_and_listen)
+        finally:
+            sock.close()
+
+        config = {'name': 'somename', 'path': sockfile, 'replace': True}
+        sock = CircusSocket.load_from_config(config)
+        sock.bind_and_listen()
+        try:
+            self.assertEqual(sock.replace, True)
+        finally:
+            sock.close()
+
     def test_unix_socket(self):
         fd, sockfile = tempfile.mkstemp()
         os.close(fd)
