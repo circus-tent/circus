@@ -1,5 +1,6 @@
 from circus.commands.base import Command
 from circus.exc import ArgumentError
+from circus.util import TransformableFuture
 
 
 class Restart(Command):
@@ -65,6 +66,11 @@ class Restart(Command):
     def execute(self, arbiter, props):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
+            if props.get('waiting'):
+                resp = TransformableFuture()
+                resp.set_upstream_future(watcher.restart())
+                resp.set_transform_function(lambda x: {"info": x})
+                return resp
             return watcher.restart()
         else:
             return arbiter.restart(inside_circusd=True)

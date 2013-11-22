@@ -835,7 +835,10 @@ class Watcher(object):
     @util.synchronized("watcher_restart")
     @gen.coroutine
     def restart(self):
-        yield self._restart()
+        before_pids = set() if self.is_stopped() else set(self.processes)
+        res = yield self._restart()
+        after_pids = set(self.processes)
+        raise gen.Return({'stopped': sorted(before_pids - after_pids), 'started': sorted(after_pids - before_pids), 'kept': sorted(after_pids & before_pids)})
 
     @gen.coroutine
     @util.debuglog
@@ -846,7 +849,10 @@ class Watcher(object):
     @util.synchronized("watcher_reload")
     @gen.coroutine
     def reload(self, graceful=True):
+        before_pids = set() if self.is_stopped() else set(self.processes)
         yield self._reload(graceful=graceful)
+        after_pids = set(self.processes)
+        raise gen.Return({'stopped': sorted(before_pids - after_pids), 'started': sorted(after_pids - before_pids), 'kept': sorted(after_pids & before_pids)})
 
     @gen.coroutine
     @util.debuglog

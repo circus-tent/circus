@@ -1,5 +1,6 @@
 from circus.commands.base import Command
 from circus.exc import ArgumentError
+from circus.util import TransformableFuture
 
 
 class Reload(Command):
@@ -74,6 +75,11 @@ class Reload(Command):
     def execute(self, arbiter, props):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
+            if props.get('waiting'):
+                resp = TransformableFuture()
+                resp.set_upstream_future(watcher.reload(graceful=props.get('graceful', True)))
+                resp.set_transform_function(lambda x: {"info": x})
+                return resp
             return watcher.reload(graceful=props.get('graceful', True))
         else:
             return arbiter.reload(graceful=props.get('graceful', True))
