@@ -80,7 +80,7 @@ class Arbiter(object):
                  httpd_host='localhost', httpd_port=8080,
                  httpd_close_outputs=False, debug=False,
                  ssh_server=None, proc_name='circusd', pidfile=None,
-                 loglevel=None, logoutput=None, fqdn_prefix=None):
+                 loglevel=None, logoutput=None, fqdn_prefix=None, umask=None):
 
         self.watchers = watchers
         self.endpoint = endpoint
@@ -94,6 +94,7 @@ class Arbiter(object):
         self.pidfile = pidfile
         self.loglevel = loglevel
         self.logoutput = logoutput
+        self.umask = umask
 
         try:
             # getfqdn appears to fail in Python3.3 in the unittest
@@ -421,7 +422,8 @@ class Arbiter(object):
                       pidfile=cfg.get('pidfile', None),
                       loglevel=cfg.get('loglevel', None),
                       logoutput=cfg.get('logoutput', None),
-                      fqdn_prefix=cfg.get('fqdn_prefix', None))
+                      fqdn_prefix=cfg.get('fqdn_prefix', None),
+                      umask=cfg['umask'])
 
         # store the cfg which will be used, so it can be used later
         # for checking if the cfg has been changed
@@ -437,6 +439,10 @@ class Arbiter(object):
     def initialize(self):
         # set process title
         _setproctitle(self.proc_name)
+
+        # set umask even though we may have already set it early in circusd.py
+        if self.umask is not None:
+            os.umask(self.umask)
 
         # event pub socket
         self.evpub_socket = self.context.socket(zmq.PUB)
