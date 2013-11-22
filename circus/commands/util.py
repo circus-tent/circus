@@ -87,7 +87,7 @@ def validate_option(key, val):
                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
                   'hooks')
 
-    valid_prefixes = ('stdout_stream', 'stderr_stream')
+    valid_prefixes = ('stdout_stream', 'stderr_stream', 'hooks')
 
     def _valid_prefix():
         for prefix in valid_prefixes:
