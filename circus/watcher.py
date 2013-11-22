@@ -860,7 +860,9 @@ class Watcher(object):
             yield self._restart()
             return
 
-        if self.send_hup:
+        if self.is_stopped():
+            yield self._start()
+        elif self.send_hup:
             for process in self.processes.values():
                 logger.info("SENDING HUP to %s" % process.pid)
                 process.send_signal(signal.SIGHUP)

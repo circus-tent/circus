@@ -7,16 +7,18 @@ class Reload(Command):
         Reload the arbiter or a watcher
         ===============================
 
-        This command reload all the process in a watcher or all watchers. If a
-        the option send_hup is set to true in a watcher then the HUP signal
-        will be sent to the process.A graceful reload follow the following
-        process:
+        This command reloads all the process in a watcher or all watchers. This
+        will happen in one of 3 ways:
 
+        * If graceful is false, a simple restart occurs.
+        * If `send_hup` is true for the watcher, a HUP signal is sent to each
+          process.
+        * Otherwise, the arbiter will attempt to spawn `numprocesses` new
+          processes. If the new processes are spawned successfully, the result
+          is that all of the old processes are stopped, since by
+          default the oldest processes are stopped when the actual number of
+          processes for a watcher is greater than `numprocesses`.
 
-        1. Send a SIGQUIT signal to a process
-        2. Wait until graceful timeout
-        3. Send a SIGKILL signal to the process to make sure it is finally
-           killed.
 
         ZMQ Message
         -----------
@@ -25,7 +27,7 @@ class Reload(Command):
 
             {
                 "command": "reload",
-                "propeties": {
+                "properties": {
                     "name": '<name>",
                     "graceful": true,
                     "waiting": False

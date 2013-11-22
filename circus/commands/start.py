@@ -19,6 +19,7 @@ class Start(Command):
                 "command": "start",
                 "properties": {
                     "name": '<name>",
+                    "waiting": False
                 }
             }
 
@@ -26,12 +27,20 @@ class Start(Command):
 
         If the property name is present, the watcher will be started.
 
+        If ``waiting`` is False (default), the call will return immediately
+        after calling `start` on each process.
+
+        If ``waiting`` is True, the call will return only when the start
+        process is completely ended. Because of the
+        :ref:`graceful_timeout option <graceful_timeout>`, it can take some
+        time.
+
         Command line
         ------------
 
         ::
 
-            $ circusctl start [<name>]
+            $ circusctl start [<name>] --waiting
 
         Options
         +++++++
@@ -40,15 +49,16 @@ class Start(Command):
 
     """
     name = "start"
+    options = Command.waiting_options
 
     def message(self, *args, **opts):
         if len(args) > 1:
-            raise ArgumentError("invalid number of arguments")
+            raise ArgumentError("Invalid number of arguments")
 
         if len(args) == 1:
-            return self.make_message(name=args[0])
-        else:
-            return self.make_message()
+            return self.make_message(name=args[0], **opts)
+
+        return self.make_message(**opts)
 
     def execute(self, arbiter, props):
         if 'name' in props:

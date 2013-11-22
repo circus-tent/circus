@@ -28,11 +28,11 @@ class Restart(Command):
         If the property name is present, then the reload will be applied
         to the watcher.
 
-        If ``waiting`` is False (default), the call will return immediatly
+        If ``waiting`` is False (default), the call will return immediately
         after calling `stop_signal` on each process.
 
         If ``waiting`` is True, the call will return only when the restart
-        process is completly ended. Because of the
+        process is completely ended. Because of the
         :ref:`graceful_timeout option <graceful_timeout>`, it can take some
         time.
 
