@@ -288,6 +288,7 @@ class Watcher(object):
     def _reload_stream(self, key, val):
         parts = key.split('.', 1)
 
+        action = 0
         if parts[0] == 'stdout_stream':
             old_stream = self.stdout_stream
             self.stdout_stream_conf[parts[1]] = val
@@ -295,6 +296,11 @@ class Watcher(object):
                                             reload=True)
             if self.stdout_redirector:
                 self.stdout_redirector.redirect = self.stdout_stream['stream']
+            else:
+                self.stdout_redirector = get_pipe_redirector(
+                    self.stdout_stream, loop=self.loop)
+                self.stdout_redirector.start()
+                action = 1
 
             if old_stream and hasattr(old_stream['stream'], 'close'):
                 old_stream['stream'].close()
@@ -305,9 +311,16 @@ class Watcher(object):
                                             reload=True)
             if self.stderr_redirector:
                 self.stderr_redirector.redirect = self.stderr_stream['stream']
+            else:
+                self.stderr_redirector = get_pipe_redirector(
+                    self.stderr_stream, loop=self.loop)
+                self.stderr_redirector.start()
+                action = 1
 
             if old_stream and hasattr(old_stream['stream'], 'close'):
                 old_stream['stream'].close()
+
+        return action
 
     def _create_redirectors(self):
         if self.stdout_stream:
@@ -969,7 +982,7 @@ class Watcher(object):
             action = 1
         elif (key.startswith('stdout_stream') or
               key.startswith('stderr_stream')):
-            self._reload_stream(key, val)
+            action = self._reload_stream(key, val)
         elif key.startswith('hooks'):
             val = val.split(',')
             if len(val) == 2:
