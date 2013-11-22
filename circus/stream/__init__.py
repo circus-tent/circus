@@ -123,7 +123,7 @@ def get_stream(conf, reload=False):
             cls = globals()[class_name]
             inst = cls(**conf)
         else:
-            inst = resolve_name(class_name, reload=reload())(**conf)
+            inst = resolve_name(class_name, reload=reload)(**conf)
     elif 'stream' in conf:
         inst = conf['stream']
     elif 'filename' in conf:
