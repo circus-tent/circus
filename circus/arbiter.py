@@ -698,7 +698,8 @@ class Arbiter(object):
     @gen.coroutine
     @debuglog
     def _stop_watchers(self, close_output_streams=False):
-        yield [w._stop(close_output_streams) for w in self.iter_watchers(reverse=False)]
+        yield [w._stop(close_output_streams)
+               for w in self.iter_watchers(reverse=False)]
 
     @synchronized("arbiter_stop_watchers")
     @gen.coroutine

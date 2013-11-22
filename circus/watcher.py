@@ -756,9 +756,11 @@ class Watcher(object):
             self.stderr_redirector.stop()
             self.stderr_redirector = None
         if close_output_streams:
-            if self.stdout_stream and hasattr(self.stdout_stream['stream'], 'close'):
+            if self.stdout_stream and hasattr(self.stdout_stream['stream'],
+                                              'close'):
                 self.stdout_stream['stream'].close()
-            if self.stderr_stream and hasattr(self.stderr_stream['stream'], 'close'):
+            if self.stderr_stream and hasattr(self.stderr_stream['stream'],
+                                              'close'):
                 self.stderr_stream['stream'].close()
         # notify about the stop
         if self.evpub_socket is not None:
