@@ -818,7 +818,11 @@ class Watcher(object):
     @util.synchronized("watcher_start")
     @gen.coroutine
     def start(self):
+        before_pids = set() if self.is_stopped() else set(self.processes)
         yield self._start()
+        after_pids = set(self.processes)
+        raise gen.Return({'started': sorted(after_pids - before_pids),
+                          'kept': sorted(after_pids & before_pids)})
 
     @gen.coroutine
     @util.debuglog
@@ -861,7 +865,12 @@ class Watcher(object):
     @util.synchronized("watcher_restart")
     @gen.coroutine
     def restart(self):
+        before_pids = set() if self.is_stopped() else set(self.processes)
         yield self._restart()
+        after_pids = set(self.processes)
+        raise gen.Return({'stopped': sorted(before_pids - after_pids),
+                          'started': sorted(after_pids - before_pids),
+                          'kept': sorted(after_pids & before_pids)})
 
     @gen.coroutine
     @util.debuglog
@@ -872,7 +881,12 @@ class Watcher(object):
     @util.synchronized("watcher_reload")
     @gen.coroutine
     def reload(self, graceful=True):
+        before_pids = set() if self.is_stopped() else set(self.processes)
         yield self._reload(graceful=graceful)
+        after_pids = set(self.processes)
+        raise gen.Return({'stopped': sorted(before_pids - after_pids),
+                          'started': sorted(after_pids - before_pids),
+                          'kept': sorted(after_pids & before_pids)})
 
     @gen.coroutine
     @util.debuglog
@@ -886,7 +900,9 @@ class Watcher(object):
             yield self._restart()
             return
 
-        if self.send_hup:
+        if self.is_stopped():
+            yield self._start()
+        elif self.send_hup:
             for process in self.processes.values():
                 logger.info("SENDING HUP to %s" % process.pid)
                 process.send_signal(signal.SIGHUP)

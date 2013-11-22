@@ -1,5 +1,6 @@
 from circus.commands.base import Command
 from circus.exc import ArgumentError
+from circus.util import TransformableFuture
 
 
 class Restart(Command):
@@ -28,11 +29,11 @@ class Restart(Command):
         If the property name is present, then the reload will be applied
         to the watcher.
 
-        If ``waiting`` is False (default), the call will return immediatly
+        If ``waiting`` is False (default), the call will return immediately
         after calling `stop_signal` on each process.
 
         If ``waiting`` is True, the call will return only when the restart
-        process is completly ended. Because of the
+        process is completely ended. Because of the
         :ref:`graceful_timeout option <graceful_timeout>`, it can take some
         time.
 
@@ -65,6 +66,11 @@ class Restart(Command):
     def execute(self, arbiter, props):
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
+            if props.get('waiting'):
+                resp = TransformableFuture()
+                resp.set_upstream_future(watcher.restart())
+                resp.set_transform_function(lambda x: {"info": x})
+                return resp
             return watcher.restart()
         else:
             return arbiter.restart(inside_circusd=True)
