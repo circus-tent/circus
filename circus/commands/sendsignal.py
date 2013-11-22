@@ -117,7 +117,7 @@ class Signal(Command):
             'signum': args[-1],
         }
         if len(args) == 3:
-            props['pid'] = args[1]
+            props['pid'] = int(args[1])
         return self.make_message(**props)
 
     def execute(self, arbiter, props):
