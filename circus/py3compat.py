@@ -21,7 +21,8 @@ if PY2:
         return str(s)
 
     def cast_unicode(s, encoding='utf8', errors='replace'):
-        """cast bytes or unicode to unicode.  errors options are strict, ignore or replace"""
+        """cast bytes or unicode to unicode.
+          errors options are strict, ignore or replace"""
         if isinstance(s, unicode):
             return s
         return str(s).decode(encoding)
@@ -71,14 +72,15 @@ else:
     def bytestring(s):  # NOQA
         return s
 
-    def cast_bytes(s, encoding='utf8'):
+    def cast_bytes(s, encoding='utf8'):  # NOQA
         """cast unicode or bytes to bytes"""
         if isinstance(s, bytes):
             return s
         return str(s).encode(encoding)
 
-    def cast_unicode(s, encoding='utf8', errors='replace'):
-        """cast bytes or unicode to unicode.  errors options are strict, ignore or replace"""
+    def cast_unicode(s, encoding='utf8', errors='replace'):  # NOQA
+        """cast bytes or unicode to unicode.
+          errors options are strict, ignore or replace"""
         if isinstance(s, bytes):
             return s.decode(encoding, errors=errors)
         return str(s)
@@ -92,10 +94,10 @@ else:
     def raise_with_tb(E):     # NOQA
         raise E.with_traceback(sys.exc_info()[2])
 
-    def is_callable(c):
+    def is_callable(c):  # NOQA
         return isinstance(c, collections.Callable)
 
-    def get_next(c):
+    def get_next(c):  # NOQA
         return c.__next__
 
     MAXSIZE = sys.maxsize       # NOQA
