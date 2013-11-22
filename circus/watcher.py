@@ -288,21 +288,26 @@ class Watcher(object):
     def _reload_stream(self, key, val):
         parts = key.split('.', 1)
 
-        if parts[0] == 'stdout':
+        if parts[0] == 'stdout_stream':
+            old_stream = self.stdout_stream
             self.stdout_stream_conf[parts[1]] = val
             self.stdout_stream = get_stream(self.stdout_stream_conf,
                                             reload=True)
+            if self.stdout_redirector:
+                self.stdout_redirector.redirect = self.stdout_stream['stream']
+
+            if old_stream and hasattr(old_stream['stream'], 'close'):
+                old_stream['stream'].close()
         else:
+            old_stream = self.stderr_stream
             self.stderr_stream_conf[parts[1]] = val
             self.stderr_stream = get_stream(self.stderr_stream_conf,
                                             reload=True)
+            if self.stderr_redirector:
+                self.stderr_redirector.redirect = self.stderr_stream['stream']
 
-        self._create_redirectors()
-        if self.stdout_redirector is not None:
-            self.stdout_redirector.start()
-
-        if self.stderr_redirector is not None:
-            self.stderr_redirector.start()
+            if old_stream and hasattr(old_stream['stream'], 'close'):
+                old_stream['stream'].close()
 
     def _create_redirectors(self):
         if self.stdout_stream:
@@ -720,7 +725,7 @@ class Watcher(object):
 
     @util.debuglog
     @gen.coroutine
-    def _stop(self):
+    def _stop(self, close_output_streams=False):
         if self.is_stopped():
             return
         self._status = "stopping"
@@ -737,6 +742,11 @@ class Watcher(object):
         if self.stderr_redirector is not None:
             self.stderr_redirector.stop()
             self.stderr_redirector = None
+        if close_output_streams:
+            if self.stdout_stream and hasattr(self.stdout_stream['stream'], 'close'):
+                self.stdout_stream['stream'].close()
+            if self.stderr_stream and hasattr(self.stderr_stream['stream'], 'close'):
+                self.stderr_stream['stream'].close()
         # notify about the stop
         if self.evpub_socket is not None:
             self.notify_event("stop", {"time": time.time()})
