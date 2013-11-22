@@ -283,26 +283,44 @@ class Watcher(object):
 
     def _reload_hook(self, key, hook, ignore_error):
         hook_name = key.split('.')[-1]
-        self._resolve_hook(hook_name, hook, ignore_error)
+        self._resolve_hook(hook_name, hook, ignore_error, reload_module=True)
 
     def _reload_stream(self, key, val):
         parts = key.split('.', 1)
 
-        if parts[0] == 'stdout':
+        action = 0
+        if parts[0] == 'stdout_stream':
+            old_stream = self.stdout_stream
             self.stdout_stream_conf[parts[1]] = val
-            self.stdout_stream = get_stream(self.stdout_stream_conf)
+            self.stdout_stream = get_stream(self.stdout_stream_conf,
+                                            reload=True)
+            if self.stdout_redirector:
+                self.stdout_redirector.redirect = self.stdout_stream['stream']
+            else:
+                self.stdout_redirector = get_pipe_redirector(
+                    self.stdout_stream, loop=self.loop)
+                self.stdout_redirector.start()
+                action = 1
+
+            if old_stream and hasattr(old_stream['stream'], 'close'):
+                old_stream['stream'].close()
         else:
+            old_stream = self.stderr_stream
             self.stderr_stream_conf[parts[1]] = val
-            self.stderr_stream = get_stream(self.stderr_stream_conf)
+            self.stderr_stream = get_stream(self.stderr_stream_conf,
+                                            reload=True)
+            if self.stderr_redirector:
+                self.stderr_redirector.redirect = self.stderr_stream['stream']
+            else:
+                self.stderr_redirector = get_pipe_redirector(
+                    self.stderr_stream, loop=self.loop)
+                self.stderr_redirector.start()
+                action = 1
 
-        self._create_redirectors()
-        if self.stdout_redirector is not None:
-            self.stdout_redirector.start()
+            if old_stream and hasattr(old_stream['stream'], 'close'):
+                old_stream['stream'].close()
 
-        if self.stderr_redirector is not None:
-            self.stderr_redirector.start()
-
-        return 1
+        return action
 
     def _create_redirectors(self):
         if self.stdout_stream:
@@ -321,12 +339,14 @@ class Watcher(object):
         else:
             self.stderr_redirector = None
 
-    def _resolve_hook(self, name, callable_or_name, ignore_failure):
+    def _resolve_hook(self, name, callable_or_name, ignore_failure,
+                      reload_module=False):
         if is_callable(callable_or_name):
             self.hooks[name] = callable_or_name
         else:
             # will raise ImportError on failure
-            self.hooks[name] = resolve_name(callable_or_name)
+            self.hooks[name] = resolve_name(callable_or_name,
+                                            reload=reload_module)
 
         if ignore_failure:
             self.ignore_hook_failure.append(name)
@@ -718,7 +738,7 @@ class Watcher(object):
 
     @util.debuglog
     @gen.coroutine
-    def _stop(self):
+    def _stop(self, close_output_streams=False):
         if self.is_stopped():
             return
         self._status = "stopping"
@@ -735,6 +755,13 @@ class Watcher(object):
         if self.stderr_redirector is not None:
             self.stderr_redirector.stop()
             self.stderr_redirector = None
+        if close_output_streams:
+            if self.stdout_stream and hasattr(self.stdout_stream['stream'],
+                                              'close'):
+                self.stdout_stream['stream'].close()
+            if self.stderr_stream and hasattr(self.stderr_stream['stream'],
+                                              'close'):
+                self.stderr_stream['stream'].close()
         # notify about the stop
         if self.evpub_socket is not None:
             self.notify_event("stop", {"time": time.time()})
@@ -958,7 +985,7 @@ class Watcher(object):
         elif (key.startswith('stdout_stream') or
               key.startswith('stderr_stream')):
             action = self._reload_stream(key, val)
-        elif key.startswith('hook'):
+        elif key.startswith('hooks'):
             val = val.split(',')
             if len(val) == 2:
                 ignore_error = util.to_bool(val[1])
@@ -966,7 +993,7 @@ class Watcher(object):
                 ignore_error = False
             hook = val[0]
             self._reload_hook(key, hook, ignore_error)
-            action = 1
+            action = 0
 
         # send update event
         self.notify_event("updated", {"time": time.time()})
@@ -980,7 +1007,7 @@ class Watcher(object):
             yield self.manage_processes()
         elif not self.is_stopped():
             # graceful restart
-            yield self._restart()
+            yield self._reload()
 
     @util.debuglog
     def options(self, *args):
