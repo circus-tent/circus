@@ -1,6 +1,6 @@
 import zmq
 import zmq.utils.jsonapi as json
-from zmq.utils.strtypes import b
+from circus.py3compat import b
 
 from circus import logger
 

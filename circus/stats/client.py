@@ -9,11 +9,11 @@ import logging
 
 import zmq
 import zmq.utils.jsonapi as json
-from zmq.utils.strtypes import u
 
 from circus.consumer import CircusConsumer
 from circus import __version__
 from circus.util import DEFAULT_ENDPOINT_STATS
+from circus.py3compat import s
 
 
 class StatsClient(CircusConsumer):
@@ -48,7 +48,7 @@ class StatsClient(CircusConsumer):
                             pass
                         continue
 
-                topic = u(topic).split('.')
+                topic = s(topic).split('.')
                 if len(topic) == 3:
                     __, watcher, subtopic = topic
                     yield watcher, subtopic, json.loads(stat)

@@ -5,12 +5,11 @@ import uuid
 
 import zmq
 import zmq.utils.jsonapi as json
-from zmq.utils.strtypes import b
 from zmq.eventloop.zmqstream import ZMQStream
 import tornado
 
 from circus.exc import CallError
-from circus.py3compat import string_types
+from circus.py3compat import string_types, b
 from circus.util import DEFAULT_ENDPOINT_DEALER, get_connection
 
 

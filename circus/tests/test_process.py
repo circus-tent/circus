@@ -5,7 +5,7 @@ import time
 from circus.process import Process, RUNNING
 from circus.tests.support import TestCircus, skipIf, EasyTestSuite
 import circus.py3compat
-from circus.py3compat import StringIO, PY3
+from circus.py3compat import StringIO, PY2
 
 
 RLIMIT = """\
@@ -31,10 +31,10 @@ for i in range(1000):
 
 
 def _nose_no_s():
-    if PY3:
-        return isinstance(sys.stdout, StringIO)
-    else:
+    if PY2:
         return not hasattr(sys.stdout, 'fileno')
+    else:
+        return isinstance(sys.stdout, StringIO)
 
 
 class TestProcess(TestCircus):
