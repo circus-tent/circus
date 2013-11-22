@@ -321,6 +321,10 @@ socket:NAME - as many sections as you want
         When provided, sets the umask that will be used to create an
         AF_UNIX socket. For example, `umask=000` will produce a socket with
         permission `777`.
+    **replace**
+        When creating Unix sockets ('AF_UNIX'), an existing file may indicate a
+        problem so the default is to fail. Specify `True` to simply remove the
+        old file if you are sure that the socket is managed only by Circus.
     **so_reuseport**
         If set to True and SO_REUSEPORT is available on target platform, circus
         will create and bind new SO_REUSEPORT socket(s) for every worker it starts
