@@ -471,9 +471,11 @@ class Watcher(object):
             yield self.remove_expired_processes()
 
         # adding fresh processes
-        if (self.respawn and len(self.processes) < self.numprocesses
-                and not self.is_stopping()):
-            yield self.spawn_processes()
+        if len(self.processes) < self.numprocesses and not self.is_stopping():
+            if self.respawn:
+                yield self.spawn_processes()
+            elif not len(self.processes) and not self.on_demand:
+                yield self._stop()
 
         # removing extra processes
         if len(self.processes) > self.numprocesses:
@@ -829,10 +831,13 @@ class Watcher(object):
     def _start(self):
         """Start.
         """
-        if not self.is_stopped():
+        if self.on_demand and not self.arbiter.socket_event:
             return
 
-        if self.on_demand and not self.arbiter.socket_event:
+        if not self.is_stopped():
+            if len(self.processes) < self.numprocesses:
+                self.reap_processes()
+                yield self.spawn_processes()
             return
 
         if not self.call_hook('before_start'):

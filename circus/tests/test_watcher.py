@@ -568,7 +568,7 @@ class RespawnTest(TestCircus):
 
             # If we explicitely ask the watcher to respawn its processes,
             # ensure it's doing so.
-            yield watcher.spawn_processes()
+            yield watcher.start()
             self.assertEqual(len(watcher.processes), 1)
         finally:
             yield arbiter.stop()
