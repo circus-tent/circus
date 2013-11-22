@@ -9,7 +9,7 @@ from circus.process import Process
 from circus.sockets import CircusSocket
 from circus.tests.support import TestCase, EasyTestSuite
 from circus.util import replace_gnu_args
-from circus.py3compat import PY3
+from circus.py3compat import PY2
 
 
 HERE = os.path.join(os.path.dirname(__file__))
@@ -247,10 +247,10 @@ class TestConfig(TestCase):
         watchers = conf['watchers']
         self.assertEqual(len(watchers), 3)
         watchers = conf['watchers']
-        if PY3:
-            watchers = sorted(watchers, key=lambda a: a['__name__'])
-        else:
+        if PY2:
             watchers.sort()
+        else:
+            watchers = sorted(watchers, key=lambda a: a['__name__'])
         self.assertEqual(watchers[2]['env']['INI'], 'private.ini')
         self.assertEqual(conf['check_delay'], 555)
 

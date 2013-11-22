@@ -8,8 +8,8 @@ from tornado.gen import coroutine, Return
 
 from circus.circusctl import USAGE, VERSION, CircusCtl
 from circus.tests.support import TestCircus, async_poll_for, EasyTestSuite
-from zmq.utils.strtypes import b, u
 from circus.util import tornado_sleep
+from circus.py3compat import b, s
 
 
 def run_ctl(args, queue=None, stdin=''):
@@ -19,8 +19,8 @@ def run_ctl(args, queue=None, stdin=''):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     stdout, stderr = proc.communicate(b(stdin) if stdin else None)
-    stdout = u(stdout)
-    stderr = u(stderr)
+    stdout = s(stdout)
+    stderr = s(stderr)
     if queue:
         queue.put(stderr)
         queue.put(stdout)

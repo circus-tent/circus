@@ -14,7 +14,6 @@ from tornado import gen
 
 from psutil import NoSuchProcess
 import zmq.utils.jsonapi as json
-from zmq.utils.strtypes import b
 from zmq.eventloop import ioloop
 
 from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
@@ -22,7 +21,7 @@ from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
 from circus.util import parse_env_dict, resolve_name, tornado_sleep
-from circus.py3compat import bytestring, is_callable
+from circus.py3compat import bytestring, is_callable, b
 
 
 class Watcher(object):

@@ -12,7 +12,6 @@ except ImportError:
 
 import tornado
 import mock
-from zmq.utils.strtypes import u
 
 from circus import logger
 from circus.process import RUNNING, UNEXISTING
@@ -23,6 +22,7 @@ from circus.tests.support import async_poll_for, EasyTestSuite
 from circus.tests.support import MagicMockFuture
 from circus.util import get_python_version, tornado_sleep
 from circus.watcher import Watcher
+from circus.py3compat import s
 
 warnings.filterwarnings('ignore',
                         module='threading', message='sys.exc_clear')
@@ -236,7 +236,7 @@ class TestWatcherInitialization(TestCircus):
                 messages.append(m)
             except Queue.Empty:
                 pass
-            data = ''.join(u(m['data']) for m in messages)
+            data = ''.join(s(m['data']) for m in messages)
             if 'XYZ' in data:
                 resp = True
                 break

@@ -8,7 +8,7 @@ from circus.tests.support import TestCircus, EasyTestSuite, TimeoutException
 from circus.client import AsyncCircusClient
 from circus.stream import QueueStream, Empty
 from circus.util import tornado_sleep
-from zmq.utils.strtypes import u
+from circus.py3compat import s
 
 
 exiting = False
@@ -58,7 +58,7 @@ def read_from_stream(stream, desired_channel, timeout=5):
     while not channels[desired_channel] and time.time() - start < timeout:
         try:
             data = stream.get_nowait()
-            data = u(data['data']).split('\n')
+            data = s(data['data']).split('\n')
             accumulator += data.pop(0)
             if data:
                 data.insert(0, accumulator)

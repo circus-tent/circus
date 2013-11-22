@@ -30,7 +30,7 @@ from circus.stream import QueueStream
 
 ioloop.install()
 if 'ASYNC_TEST_TIMEOUT' not in os.environ:
-    os.environ['ASYNC_TEST_TIMEOUT'] = '10'
+    os.environ['ASYNC_TEST_TIMEOUT'] = '30'
 
 
 class EasyTestSuite(TestSuite):

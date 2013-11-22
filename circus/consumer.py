@@ -1,8 +1,8 @@
 import errno
 import zmq
-from zmq.utils.strtypes import b
 
 from circus.util import DEFAULT_ENDPOINT_SUB, get_connection
+from circus.py3compat import b
 
 
 class CircusConsumer(object):
