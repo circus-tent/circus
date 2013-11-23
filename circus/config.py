@@ -195,6 +195,8 @@ def get_config(config_file):
         if section.startswith("plugin:"):
             plugin = dict(cfg.items(section))
             plugin['name'] = section
+            if 'priority' in plugin:
+                plugin['priority'] = int(plugin['priority'])
             plugins.append(plugin)
 
         if section.startswith("watcher:"):

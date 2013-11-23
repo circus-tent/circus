@@ -3,6 +3,7 @@ import signal
 from mock import patch
 
 from circus import logger
+from circus.arbiter import Arbiter
 from circus.config import get_config
 from circus.watcher import Watcher
 from circus.process import Process
@@ -38,7 +39,8 @@ _CONF = {
     'issue594': os.path.join(CONFIG_DIR, 'issue594.ini'),
     'reuseport': os.path.join(CONFIG_DIR, 'reuseport.ini'),
     'issue651': os.path.join(CONFIG_DIR, 'issue651.ini'),
-    'issue665': os.path.join(CONFIG_DIR, 'issue665.ini')
+    'issue665': os.path.join(CONFIG_DIR, 'issue665.ini'),
+    'issue680': os.path.join(CONFIG_DIR, 'issue680.ini'),
 }
 
 
@@ -188,6 +190,16 @@ class TestConfig(TestCase):
         conf = get_config(_CONF['issue210'])
         watcher = Watcher.load_from_config(conf['watchers'][0])
         watcher.stop()
+
+    def test_plugin_priority(self):
+        arbiter = Arbiter.load_from_config(_CONF['issue680'])
+        watchers = arbiter.iter_watchers()
+        self.assertEqual(watchers[0].priority, 30)
+        self.assertEqual(watchers[0].name, 'plugin:myplugin')
+        self.assertEqual(watchers[1].priority, 20)
+        self.assertEqual(watchers[1].cmd, 'sleep 20')
+        self.assertEqual(watchers[2].priority, 10)
+        self.assertEqual(watchers[2].cmd, 'sleep 10')
 
     def test_hooks(self):
         conf = get_config(_CONF['hooks'])
