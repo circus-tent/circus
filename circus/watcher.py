@@ -880,9 +880,9 @@ class Watcher(object):
 
     @util.synchronized("watcher_reload")
     @gen.coroutine
-    def reload(self, graceful=True):
+    def reload(self, graceful=True, sequential=False):
         before_pids = set() if self.is_stopped() else set(self.processes)
-        yield self._reload(graceful=graceful)
+        yield self._reload(graceful=graceful, sequential=sequential)
         after_pids = set(self.processes)
         raise gen.Return({'stopped': sorted(before_pids - after_pids),
                           'started': sorted(after_pids - before_pids),
@@ -890,9 +890,11 @@ class Watcher(object):
 
     @gen.coroutine
     @util.debuglog
-    def _reload(self, graceful=True):
+    def _reload(self, graceful=True, sequential=False):
         """ reload
         """
+        if not(graceful) and sequential:
+            logger.warn("with graceful=False, sequential=True is ignored")
         if self.prereload_fn is not None:
             self.prereload_fn(self)
 
@@ -907,9 +909,17 @@ class Watcher(object):
                 logger.info("SENDING HUP to %s" % process.pid)
                 process.send_signal(signal.SIGHUP)
         else:
-            for i in range(self.numprocesses):
-                self.spawn_process()
-            yield self.manage_processes()
+            if sequential:
+                active_processes = self.get_active_processes()
+                for process in active_processes:
+                    yield self.kill_process(process)
+                    self.reap_process(process.pid)
+                    self.spawn_process()
+                    yield tornado_sleep(self.warmup_delay)
+            else:
+                for i in range(self.numprocesses):
+                    self.spawn_process()
+                yield self.manage_processes()
         self.notify_event("reload", {"time": time.time()})
         logger.info('%s reloaded', self.name)
 
