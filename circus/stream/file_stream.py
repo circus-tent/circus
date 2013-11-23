@@ -2,7 +2,7 @@ import os
 import tempfile
 from datetime import datetime
 from circus import logger
-from circus.py3compat import s
+from circus.py3compat import s, PY2
 
 
 class FileStream(object):
@@ -69,7 +69,13 @@ class FileStream(object):
                 self._file.write('{time} [{pid}] | '.format(
                     time=self.now().strftime(self.time_format),
                     pid=data['pid']))
-            self._file.write(line)
+            try:
+                self._file.write(line)
+            except Exception:
+                # we can strip the string down on Py3 but not on Py2
+                if not PY2:
+                    self._file.write(line.encode('latin-1', errors='replace').
+                                     decode('latin-1'))
             self._file.write('\n')
         self._file.flush()
 
