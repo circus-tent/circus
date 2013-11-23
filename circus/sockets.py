@@ -35,7 +35,7 @@ class CircusSocket(socket.socket):
     """
     def __init__(self, name='', host='localhost', port=8080,
                  family=socket.AF_INET, type=socket.SOCK_STREAM,
-                 proto=0, backlog=2048, path=None, umask=None,
+                 proto=0, backlog=2048, path=None, umask=None, replace=False,
                  interface=None, so_reuseport=False):
         if path is not None:
             family = socket.AF_UNIX
@@ -46,6 +46,7 @@ class CircusSocket(socket.socket):
         self.socktype = type
         self.path = path
         self.umask = umask
+        self.replace = replace
 
         if family == socket.AF_UNIX:
             self.host = self.port = None
@@ -83,9 +84,12 @@ class CircusSocket(socket.socket):
         try:
             if self.is_unix:
                 if os.path.exists(self.path):
-                    raise OSError("%r already exists. You might want to "
-                                  "remove it. If it's a stalled socket "
-                                  "file, just restart Circus" % self.path)
+                    if self.replace:
+                        os.unlink(self.path)
+                    else:
+                        raise OSError("%r already exists. You might want to "
+                                      "remove it. If it's a stalled socket "
+                                      "file, just restart Circus" % self.path)
                 if self.umask is None:
                     self.bind(self.path)
                 else:
@@ -131,7 +135,8 @@ class CircusSocket(socket.socket):
                   'type': _TYPE[config.get('type', 'SOCK_STREAM').upper()],
                   'backlog': int(config.get('backlog', 2048)),
                   'so_reuseport': config.get('so_reuseport', False),
-                  'umask': int(config.get('umask', 8))}
+                  'umask': int(config.get('umask', 8)),
+                  'replace': config.get('replace')}
         proto_name = config.get('proto')
         if proto_name is not None:
             params['proto'] = socket.getprotobyname(proto_name)
