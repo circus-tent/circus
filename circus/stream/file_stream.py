@@ -72,9 +72,10 @@ class FileStream(object):
             try:
                 self._file.write(line)
             except Exception:
+                # we can strip the string down on Py3 but not on Py2
                 if not PY2:
-                    line = line.encode('latin-1', errors='replace').decode('latin-1')
-                    self._file.write(line)
+                    self._file.write(line.encode('latin-1', errors='replace').
+                                     decode('latin-1'))
             self._file.write('\n')
         self._file.flush()
 
