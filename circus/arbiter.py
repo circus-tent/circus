@@ -597,7 +597,8 @@ class Arbiter(object):
             if watcher.on_demand and watcher.is_stopped():
                 need_on_demand = True
             list_to_yield.append(watcher.manage_processes())
-        yield list_to_yield
+        if len(list_to_yield) > 0:
+            yield list_to_yield
 
         if need_on_demand:
             sockets = [x.fileno() for x in self.sockets.values()]
