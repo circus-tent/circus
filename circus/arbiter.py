@@ -592,10 +592,13 @@ class Arbiter(object):
         need_on_demand = False
         # manage and reap processes
         self.reap_processes()
+        list_to_yield = []
         for watcher in self.iter_watchers():
             if watcher.on_demand and watcher.is_stopped():
                 need_on_demand = True
-            yield watcher.manage_processes()
+            list_to_yield.append(watcher.manage_processes())
+        if len(list_to_yield) > 0:
+            yield list_to_yield
 
         if need_on_demand:
             sockets = [x.fileno() for x in self.sockets.values()]
