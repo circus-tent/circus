@@ -468,7 +468,7 @@ class Watcher(object):
 
         # remove dead or zombie processes first
         for process in list(self.processes.values()):
-            if process.status == DEAD_OR_ZOMBIE:
+            if process.status in (DEAD_OR_ZOMBIE, UNEXISTING):
                 self.processes.pop(process.pid)
 
         if self.max_age:
@@ -487,7 +487,7 @@ class Watcher(object):
             for process in sorted(self.processes.values(),
                                   key=lambda process: process.started,
                                   reverse=True)[self.numprocesses:]:
-                if process.status == DEAD_OR_ZOMBIE:
+                if process.status in (DEAD_OR_ZOMBIE, UNEXISTING):
                     self.processes.pop(process.pid)
                 else:
                     processes_to_kill.append(process)
