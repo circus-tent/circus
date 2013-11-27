@@ -358,6 +358,10 @@ class Watcher(object):
         for name, (callable_or_name, ignore_failure) in hooks.items():
             self._resolve_hook(name, callable_or_name, ignore_failure)
 
+    @property
+    def pending_socket_event(self):
+        return self.on_demand and not self.arbiter.socket_event
+
     @classmethod
     def load_from_config(cls, config):
         if 'env' in config:
@@ -521,7 +525,7 @@ class Watcher(object):
         """
         # when an on_demand process dies, do not restart it until
         # the next event
-        if self.on_demand and not self.arbiter.socket_event:
+        if self.pending_socket_event:
             self._status = "stopped"
             return
         for i in range(self.numprocesses - len(self.processes)):
@@ -831,7 +835,7 @@ class Watcher(object):
     def _start(self):
         """Start.
         """
-        if self.on_demand and not self.arbiter.socket_event:
+        if self.pending_socket_event:
             return
 
         if not self.is_stopped():
