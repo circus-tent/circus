@@ -289,7 +289,8 @@ watcher:NAME - as many sections as you want
 
     **respawn**
         If set to False, the processes handled by a watcher will not be
-        respawned automatically. (default: True)
+        respawned automatically. The processes can be manually respawned with
+        the `start` command. (default: True)
 
 
 
