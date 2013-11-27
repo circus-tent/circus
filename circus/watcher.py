@@ -358,6 +358,10 @@ class Watcher(object):
         for name, (callable_or_name, ignore_failure) in hooks.items():
             self._resolve_hook(name, callable_or_name, ignore_failure)
 
+    @property
+    def pending_socket_event(self):
+        return self.on_demand and not self.arbiter.socket_event
+
     @classmethod
     def load_from_config(cls, config):
         if 'env' in config:
@@ -464,16 +468,18 @@ class Watcher(object):
 
         # remove dead or zombie processes first
         for process in list(self.processes.values()):
-            if process.status == DEAD_OR_ZOMBIE:
+            if process.status in (DEAD_OR_ZOMBIE, UNEXISTING):
                 self.processes.pop(process.pid)
 
         if self.max_age:
             yield self.remove_expired_processes()
 
         # adding fresh processes
-        if (self.respawn and len(self.processes) < self.numprocesses
-                and not self.is_stopping()):
-            yield self.spawn_processes()
+        if len(self.processes) < self.numprocesses and not self.is_stopping():
+            if self.respawn:
+                yield self.spawn_processes()
+            elif not len(self.processes) and not self.on_demand:
+                yield self._stop()
 
         # removing extra processes
         if len(self.processes) > self.numprocesses:
@@ -481,7 +487,7 @@ class Watcher(object):
             for process in sorted(self.processes.values(),
                                   key=lambda process: process.started,
                                   reverse=True)[self.numprocesses:]:
-                if process.status == DEAD_OR_ZOMBIE:
+                if process.status in (DEAD_OR_ZOMBIE, UNEXISTING):
                     self.processes.pop(process.pid)
                 else:
                     processes_to_kill.append(process)
@@ -519,7 +525,7 @@ class Watcher(object):
         """
         # when an on_demand process dies, do not restart it until
         # the next event
-        if self.on_demand and not self.arbiter.socket_event:
+        if self.pending_socket_event:
             self._status = "stopped"
             return
         for i in range(self.numprocesses - len(self.processes)):
@@ -829,10 +835,13 @@ class Watcher(object):
     def _start(self):
         """Start.
         """
-        if not self.is_stopped():
+        if self.pending_socket_event:
             return
 
-        if self.on_demand and not self.arbiter.socket_event:
+        if not self.is_stopped():
+            if len(self.processes) < self.numprocesses:
+                self.reap_processes()
+                yield self.spawn_processes()
             return
 
         if not self.call_hook('before_start'):
