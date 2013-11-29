@@ -222,6 +222,8 @@ watcher:NAME - as many sections as you want
         If the worker is still active after graceful_timeout seconds, we send
         it a SIGKILL signal.  It is not possible to catch SIGKILL signals so
         the worker will stop.
+        
+        Defaults to 30s.
 
     **priority**
         Integer that defines a priority for the watcher. When the
