@@ -33,9 +33,9 @@ class ResourceWatcher(BaseObserver):
         self.min_mem = config.get("min_mem")
         if self.min_mem is not None:
             try:
-                self.max_mem = float(self.min_mem)          # float -> %
+                self.min_mem = float(self.min_mem)          # float -> %
             except ValueError:
-                self.max_mem = human2bytes(self.min_mem)    # int -> absolute
+                self.min_mem = human2bytes(self.min_mem)    # int -> absolute
         self.health_threshold = float(config.get("health_threshold",
                                       75))  # in %
         self.max_count = int(config.get("max_count", 3))
