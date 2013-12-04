@@ -1,5 +1,3 @@
-import sys
-
 from circus.client import CircusClient
 from circus.util import DEFAULT_ENDPOINT_DEALER
 
