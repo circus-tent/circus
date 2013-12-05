@@ -1,8 +1,5 @@
-import fcntl
-import grp
 import logging
 import os
-import pwd
 import re
 import shlex
 import socket
@@ -10,6 +7,14 @@ import sys
 import time
 import functools
 import traceback
+try:
+    import pwd
+    import grp
+    import fcntl
+except ImportError:
+    fcntl = None
+    grp = None
+    pwd = None
 from tornado.ioloop import IOLoop
 from tornado import gen
 from tornado import concurrent
@@ -249,63 +254,76 @@ def to_signum(signum):
         raise ValueError('signal invalid')
 
 
-def to_uid(name):
-    """Return an uid, given a user name.
-    If the name is an integer, make sure it's an existing uid.
+if pwd is None:
 
-    If the user name is unknown, raises a ValueError.
-    """
-    try:
-        name = int(name)
-    except ValueError:
-        pass
+    def to_uid(name):
+        raise RuntimeError("'to_uid' not available on this operating system")
 
-    if isinstance(name, int):
+else:
+
+    def to_uid(name):
+        """Return an uid, given a user name.
+        If the name is an integer, make sure it's an existing uid.
+
+        If the user name is unknown, raises a ValueError.
+        """
         try:
-            pwd.getpwuid(name)
-            return name
+            name = int(name)
+        except ValueError:
+            pass
+
+        if isinstance(name, int):
+            try:
+                pwd.getpwuid(name)
+                return name
+            except KeyError:
+                raise ValueError("%r isn't a valid user id" % name)
+
+        from circus.py3compat import string_types  # circular import fix
+
+        if not isinstance(name, string_types):
+            raise TypeError(name)
+
+        try:
+            return pwd.getpwnam(name).pw_uid
         except KeyError:
-            raise ValueError("%r isn't a valid user id" % name)
+            raise ValueError("%r isn't a valid user name" % name)
 
-    from circus.py3compat import string_types  # circular import fix
+if grp is None:
 
-    if not isinstance(name, string_types):
-        raise TypeError(name)
+    def to_gid(name):
+        raise RuntimeError("'to_gid' not available on this operating system")
 
-    try:
-        return pwd.getpwnam(name).pw_uid
-    except KeyError:
-        raise ValueError("%r isn't a valid user name" % name)
+else:
 
+    def to_gid(name):
+        """Return a gid, given a group name
 
-def to_gid(name):
-    """Return a gid, given a group name
-
-    If the group name is unknown, raises a ValueError.
-    """
-    try:
-        name = int(name)
-    except ValueError:
-        pass
-
-    if isinstance(name, int):
+        If the group name is unknown, raises a ValueError.
+        """
         try:
-            grp.getgrgid(name)
-            return name
-        # getgrid may raises overflow error on mac/os x, fixed in python2.7.5
-        # see http://bugs.python.org/issue17531
-        except (KeyError, OverflowError):
+            name = int(name)
+        except ValueError:
+            pass
+
+        if isinstance(name, int):
+            try:
+                grp.getgrgid(name)
+                return name
+            # getgrid may raises overflow error on mac/os x, fixed in python2.7.5
+            # see http://bugs.python.org/issue17531
+            except (KeyError, OverflowError):
+                raise ValueError("No such group: %r" % name)
+
+        from circus.py3compat import string_types  # circular import fix
+
+        if not isinstance(name, string_types):
+            raise TypeError(name)
+
+        try:
+            return grp.getgrnam(name).gr_gid
+        except KeyError:
             raise ValueError("No such group: %r" % name)
-
-    from circus.py3compat import string_types  # circular import fix
-
-    if not isinstance(name, string_types):
-        raise TypeError(name)
-
-    try:
-        return grp.getgrnam(name).gr_gid
-    except KeyError:
-        raise ValueError("No such group: %r" % name)
 
 
 def parse_env_str(env_str):
@@ -335,10 +353,17 @@ def env_to_str(env):
                      sorted(env.items(), key=lambda i: i[0])])
 
 
-def close_on_exec(fd):
-    flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-    flags |= fcntl.FD_CLOEXEC
-    fcntl.fcntl(fd, fcntl.F_SETFD, flags)
+if fcntl is None:
+
+    def close_on_exec(fd):
+        raise RuntimeError("'close_on_exec' not available on this operating system")
+
+else:
+
+    def close_on_exec(fd):
+        flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+        flags |= fcntl.FD_CLOEXEC
+        fcntl.fcntl(fd, fcntl.F_SETFD, flags)
 
 
 def get_python_version():
