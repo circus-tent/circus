@@ -5,9 +5,11 @@ import time
 import warnings
 try:
     import queue as Queue
-    from test.support import captured_output
 except ImportError:
     import Queue  # NOQA
+try:
+    from test.support import captured_output
+except ImportError:
     from test.test_support import captured_output  # NOQA
 
 import tornado
