@@ -261,7 +261,7 @@ if pwd is None:
 
 else:
 
-    def to_uid(name):
+    def to_uid(name):  # NOQA
         """Return an uid, given a user name.
         If the name is an integer, make sure it's an existing uid.
 
@@ -296,7 +296,7 @@ if grp is None:
 
 else:
 
-    def to_gid(name):
+    def to_gid(name):  # NOQA
         """Return a gid, given a group name
 
         If the group name is unknown, raises a ValueError.
@@ -310,7 +310,8 @@ else:
             try:
                 grp.getgrgid(name)
                 return name
-            # getgrid may raises overflow error on mac/os x, fixed in python2.7.5
+            # getgrid may raises overflow error on mac/os x,
+            # fixed in python2.7.5
             # see http://bugs.python.org/issue17531
             except (KeyError, OverflowError):
                 raise ValueError("No such group: %r" % name)
@@ -356,11 +357,12 @@ def env_to_str(env):
 if fcntl is None:
 
     def close_on_exec(fd):
-        raise RuntimeError("'close_on_exec' not available on this operating system")
+        raise RuntimeError(
+            "'close_on_exec' not available on this operating system")
 
 else:
 
-    def close_on_exec(fd):
+    def close_on_exec(fd):  # NOQA
         flags = fcntl.fcntl(fd, fcntl.F_GETFD)
         flags |= fcntl.FD_CLOEXEC
         fcntl.fcntl(fd, fcntl.F_SETFD, flags)
