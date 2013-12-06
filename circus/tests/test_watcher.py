@@ -5,10 +5,15 @@ import time
 import warnings
 try:
     import queue as Queue
-    from test.support import captured_output
 except ImportError:
     import Queue  # NOQA
-    from test.test_support import captured_output  # NOQA
+try:
+    from test.support import captured_output
+except ImportError:
+    try:
+        from test.test_support import captured_output  # NOQA
+    except ImportError:
+        captured_output = None  # NOQA
 
 import tornado
 import mock
@@ -439,9 +444,10 @@ class TestWatcherHooks(TestCircus):
 
     @tornado.testing.gen_test
     def test_after_start_fails(self):
-        with captured_output('stderr'):
-            yield self._test_hooks(behavior=ERROR, status='stopped',
-                                   hook_name='after_start')
+        if captured_output:
+            with captured_output('stderr'):
+                yield self._test_hooks(behavior=ERROR, status='stopped',
+                                       hook_name='after_start')
 
     @tornado.testing.gen_test
     def test_after_start_false(self):
@@ -476,10 +482,11 @@ class TestWatcherHooks(TestCircus):
 
     @tornado.testing.gen_test
     def test_before_stop_fails(self):
-        with captured_output('stdout'):
-            yield self._test_hooks(behavior=ERROR, status='stopped',
-                                   hook_name='before_stop',
-                                   call=self._stop)
+        if captured_output:
+            with captured_output('stdout'):
+                yield self._test_hooks(behavior=ERROR, status='stopped',
+                                       hook_name='before_stop',
+                                       call=self._stop)
 
     @tornado.testing.gen_test
     def test_before_stop_false(self):
@@ -493,10 +500,11 @@ class TestWatcherHooks(TestCircus):
 
     @tornado.testing.gen_test
     def test_after_stop_fails(self):
-        with captured_output('stdout'):
-            yield self._test_hooks(behavior=ERROR, status='stopped',
-                                   hook_name='after_stop',
-                                   call=self._stop)
+        if captured_output:
+            with captured_output('stdout'):
+                yield self._test_hooks(behavior=ERROR, status='stopped',
+                                       hook_name='after_stop',
+                                       call=self._stop)
 
     @tornado.testing.gen_test
     def test_after_stop_false(self):
@@ -509,10 +517,11 @@ class TestWatcherHooks(TestCircus):
 
     @tornado.testing.gen_test
     def test_before_spawn_failure(self):
-        with captured_output('stdout'):
-            yield self._test_hooks(behavior=ERROR, status='stopped',
-                                   hook_name='before_spawn',
-                                   call=self._stop)
+        if captured_output:
+            with captured_output('stdout'):
+                yield self._test_hooks(behavior=ERROR, status='stopped',
+                                       hook_name='before_spawn',
+                                       call=self._stop)
 
     @tornado.testing.gen_test
     def test_before_spawn_false(self):
@@ -525,10 +534,11 @@ class TestWatcherHooks(TestCircus):
 
     @tornado.testing.gen_test
     def test_after_spawn_failure(self):
-        with captured_output('stdout'):
-            yield self._test_hooks(behavior=ERROR, status='stopped',
-                                   hook_name='after_spawn',
-                                   call=self._stop)
+        if captured_output:
+            with captured_output('stdout'):
+                yield self._test_hooks(behavior=ERROR, status='stopped',
+                                       hook_name='after_spawn',
+                                       call=self._stop)
 
     @tornado.testing.gen_test
     def test_after_spawn_false(self):
