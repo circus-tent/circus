@@ -37,6 +37,10 @@ worker_states = {
 NON_JSON_CHARACTERS = re.compile(r'[\x00-\x1f\x7f-\xff]')
 
 
+class TimeoutError(Exception):
+    """The operation timed out."""
+
+
 def get_uwsgi_stats(name, wid):
     try:
         sock = socket.create_connection(('127.0.0.1', 8090 + wid),
