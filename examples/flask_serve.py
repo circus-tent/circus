@@ -1,4 +1,4 @@
-from flask import Flask, redirect, make_response
+from flask import Flask, make_response
 app = Flask(__name__)
 app.debug = True
 import requests
