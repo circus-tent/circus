@@ -23,12 +23,10 @@ try:
     from configparser import (
         ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
     )
-    new_config_parser = True
 except ImportError:
     from ConfigParser import (  # NOQA
         ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
     )
-    new_config_parser = False
 
 from datetime import timedelta
 from functools import wraps
@@ -224,13 +222,17 @@ def get_info(process=None, interval=0, with_childs=False):
     return info
 
 
+TRUTHY_STRINGS = ('yes', 'true', 'on', '1')
+FALSY_STRINGS  = ('no', 'false', 'off', '0')
+
+
 def to_bool(s):
     if isinstance(s, bool):
         return s
 
-    if s.lower().strip() in ("true", "1",):
+    if s.lower().strip() in TRUTHY_STRINGS:
         return True
-    elif s.lower().strip() in ("false", "0"):
+    elif s.lower().strip() in FALSY_STRINGS:
         return False
     else:
         raise ValueError("%r is not a boolean" % s)
@@ -592,17 +594,6 @@ def configure_logger(logger, level='INFO', output="-"):
 
 
 class StrictConfigParser(ConfigParser):
-
-    if new_config_parser:
-        def toboolean(self, value):
-            if value.lower() not in self.BOOLEAN_STATES:
-                raise ValueError('Not a boolean: %s' % value)
-            return self.BOOLEAN_STATES[value.lower()]
-    else:
-        def toboolean(self, value):  # NOQA
-            if value.lower() not in self._boolean_states:
-                raise ValueError('Not a boolean: %s' % value)
-            return self._boolean_states[value.lower()]
 
     def _read(self, fp, fpname):
         cursect = None                        # None, or a dictionary
