@@ -205,10 +205,8 @@ def get_config(config_file):
 
             # create watcher options
             for opt, val in cfg.items(section, noreplace=True):
-                if opt == 'cmd':
-                    watcher['cmd'] = val
-                elif opt == 'args':
-                    watcher['args'] = val
+                if opt in ['cmd', 'args', 'working_dir', 'uid', 'gid']:
+                    watcher[opt] = val
                 elif opt == 'numprocesses':
                     watcher['numprocesses'] = dget(section, 'numprocesses', 1,
                                                    int)
@@ -218,25 +216,14 @@ def get_config(config_file):
                 elif opt == 'executable':
                     watcher['executable'] = dget(section, 'executable', None,
                                                  str)
-                elif opt == 'working_dir':
-                    watcher['working_dir'] = val
-                elif opt == 'shell':
-                    watcher['shell'] = dget(section, 'shell', False, bool)
-                elif opt == 'uid':
-                    watcher['uid'] = val
-                elif opt == 'gid':
-                    watcher['gid'] = val
-                elif opt == 'send_hup':
-                    watcher['send_hup'] = dget(section, 'send_hup', False,
-                                               bool)
+                # default bool to False
+                elif opt in ['shell', 'send_hup', 'stop_children',
+                             'check_flapping', 'use_sockets', 'singleton',
+                             'copy_env', 'copy_path', 'close_child_stdout',
+                             'close_child_stderr']:
+                    watcher[opt] = dget(section, opt, False, bool)
                 elif opt == 'stop_signal':
                     watcher['stop_signal'] = to_signum(val)
-                elif opt == 'stop_children':
-                    watcher['stop_children'] = dget(section, 'stop_children',
-                                                    False, bool)
-                elif opt == 'check_flapping':
-                    watcher['check_flapping'] = dget(section, 'check_flapping',
-                                                     True, bool)
                 elif opt == 'max_retry':
                     watcher['max_retry'] = dget(section, "max_retry", 5, int)
                 elif opt == 'graceful_timeout':
@@ -251,18 +238,6 @@ def get_config(config_file):
                     watcher['rlimits'][limit] = int(val)
                 elif opt == 'priority':
                     watcher['priority'] = dget(section, "priority", 0, int)
-                elif opt == 'use_sockets':
-                    watcher['use_sockets'] = dget(section, "use_sockets",
-                                                  False, bool)
-                elif opt == 'singleton':
-                    watcher['singleton'] = dget(section, "singleton", False,
-                                                bool)
-                elif opt == 'copy_env':
-                    watcher['copy_env'] = dget(section, "copy_env", False,
-                                               bool)
-                elif opt == 'copy_path':
-                    watcher['copy_path'] = dget(section, "copy_path", False,
-                                                bool)
                 elif opt.startswith('hooks.'):
                     hook_name = opt[len('hooks.'):]
                     val = [elmt.strip() for elmt in val.split(',', 1)]
@@ -272,21 +247,9 @@ def get_config(config_file):
                         val[1] = to_boolean(val[1])
 
                     watcher['hooks'][hook_name] = val
-
-                elif opt == 'respawn':
-                    watcher['respawn'] = dget(section, "respawn", True, bool)
-
-                elif opt == 'autostart':
-                    watcher['autostart'] = dget(section, "autostart", True,
-                                                bool)
-                elif opt == 'close_child_stdout':
-                    watcher['close_child_stdout'] = dget(section,
-                                                         "close_child_stdout",
-                                                         False, bool)
-                elif opt == 'close_child_stderr':
-                    watcher['close_child_stderr'] = dget(section,
-                                                         "close_child_stderr",
-                                                         False, bool)
+                # default bool to True
+                elif opt in ['respawn', 'autostart']:
+                    watcher[opt] = dget(section, opt, True, bool)
                 else:
                     # freeform
                     watcher[opt] = val
