@@ -221,9 +221,8 @@ def get_info(process=None, interval=0, with_childs=False):
 
     return info
 
-
 TRUTHY_STRINGS = ('yes', 'true', 'on', '1')
-FALSY_STRINGS  = ('no', 'false', 'off', '0')
+FALSY_STRINGS = ('no', 'false', 'off', '0')
 
 
 def to_bool(s):
