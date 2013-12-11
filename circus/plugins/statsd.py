@@ -106,22 +106,22 @@ class FullStats(BaseObserver):
         while s and s[0:1].isdigit() or s[0:1] == '.':
             num += s[0]
             s = s[1:]
-            num = float(num)
-            letter = s.strip()
-            for name, sset in self.SYMBOLS.items():
-                if letter in sset:
-                    break
+        num = float(num)
+        letter = s.strip()
+        for name, sset in self.SYMBOLS.items():
+            if letter in sset:
+                break
+            else:
+                if letter == 'k':
+                    # treat 'k' as an alias for 'K' as per: http://goo.gl/kTQMs
+                    sset = self.SYMBOLS['customary']
+                    letter = letter.upper()
                 else:
-                    if letter == 'k':
-                        # treat 'k' as an alias for 'K' as per: http://goo.gl/kTQMs
-                        sset = self.SYMBOLS['customary']
-                        letter = letter.upper()
-                    else:
-                        raise ValueError("can't interpret %r" % init)
-                        prefix = {sset[0]:1}
-                        for i, s in enumerate(sset[1:]):
-                            prefix[s] = 1 << (i+1)*10
-                            return int(num * prefix[letter])
+                    raise ValueError("can't interpret %r" % init)
+            prefix = {sset[0]:1}
+            for i, s in enumerate(sset[1:]):
+                prefix[s] = 1 << (i+1)*10
+            return int(num * prefix[letter])
 
     def look_after(self):
         info = self.call("stats")
