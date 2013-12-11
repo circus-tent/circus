@@ -205,7 +205,7 @@ def get_config(config_file):
 
             # create watcher options
             for opt, val in cfg.items(section, noreplace=True):
-                if opt in ['cmd', 'args', 'working_dir', 'uid', 'gid']:
+                if opt in ('cmd', 'args', 'working_dir', 'uid', 'gid'):
                     watcher[opt] = val
                 elif opt == 'numprocesses':
                     watcher['numprocesses'] = dget(section, 'numprocesses', 1,
@@ -217,10 +217,10 @@ def get_config(config_file):
                     watcher['executable'] = dget(section, 'executable', None,
                                                  str)
                 # default bool to False
-                elif opt in ['shell', 'send_hup', 'stop_children',
+                elif opt in ('shell', 'send_hup', 'stop_children',
                              'check_flapping', 'use_sockets', 'singleton',
                              'copy_env', 'copy_path', 'close_child_stdout',
-                             'close_child_stderr']:
+                             'close_child_stderr'):
                     watcher[opt] = dget(section, opt, False, bool)
                 elif opt == 'stop_signal':
                     watcher['stop_signal'] = to_signum(val)
@@ -248,7 +248,7 @@ def get_config(config_file):
 
                     watcher['hooks'][hook_name] = val
                 # default bool to True
-                elif opt in ['respawn', 'autostart']:
+                elif opt in ('respawn', 'autostart'):
                     watcher[opt] = dget(section, opt, True, bool)
                 else:
                     # freeform
