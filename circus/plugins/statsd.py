@@ -158,7 +158,7 @@ class FullStats(BaseObserver):
                 continue
             self.statsd.gauge("_stats.%s.cpu_max" % name, max(cpus))
             self.statsd.gauge("_stats.%s.cpu_sum" % name, sum(cpus))
-            self.statsd.gauge("_stats.%s.mem_max" % name, max(mems))
-            self.statsd.gauge("_stats.%s.mem_sum" % name, sum(mems))
+            self.statsd.gauge("_stats.%s.mem_pct_max" % name, max(mems))
+            self.statsd.gauge("_stats.%s.mem_pct_sum" % name, sum(mems))
             self.statsd.gauge("_stats.%s.mem_max" % name, max(mem_infos))
             self.statsd.gauge("_stats.%s.mem_sum" % name, sum(mem_infos))
