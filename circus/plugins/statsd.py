@@ -140,7 +140,7 @@ class FullStats(BaseObserver):
             for sub_name, sub_info in stats.items():
                 if isinstance(sub_info, dict):
                     cpus.append(sub_info['cpu'])
-                    mems.append(self.human2bytes(sub_info['mem']))
+                    mems.append(self.human2bytes(sub_info['mem_info1']))
                 elif sub_name == "spawn_count":
                     # spawn_count info is in the same level as processes
                     # dict infos, so if spawn_count is given, take it and
