@@ -83,3 +83,4 @@ List of contributors:
 - Alex Marandon <contact@alexmarandon.com>
 - Fabien Marty <fabien.marty@gmail.com>
 - Scott Maxwell <scott@codecobblers.com>
+- Dong Weiming <ciici123@gmail.com>
