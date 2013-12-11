@@ -25,7 +25,7 @@ class StatsdClient(object):
     def decrement(self, bucket, delta=1):
         if delta > 0:
             delta = - delta
-            self.increment(bucket, delta)
+        self.increment(bucket, delta)
 
     def increment(self, bucket, delta=1):
         self.send(bucket, "%d|c" % delta)
