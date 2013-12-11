@@ -7,7 +7,8 @@ from fnmatch import fnmatch
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
-                         StrictConfigParser, replace_gnu_args, to_signum)
+                         StrictConfigParser, replace_gnu_args, to_signum,
+                         to_bool)
 
 
 def watcher_defaults():
@@ -40,17 +41,6 @@ def watcher_defaults():
         'autostart': True}
 
 
-_BOOL_STATES = {'1': True, 'yes': True, 'true': True, 'on': True,
-                '0': False, 'no': False, 'false': False, 'off': False}
-
-
-def to_boolean(value):
-    value = value.lower().strip()
-    if value not in _BOOL_STATES:
-        raise ValueError(value)
-    return _BOOL_STATES[value]
-
-
 class DefaultConfigParser(StrictConfigParser):
 
     def __init__(self, *args, **kw):
@@ -81,7 +71,7 @@ class DefaultConfigParser(StrictConfigParser):
         if type is int:
             value = int(value)
         elif type is bool:
-            value = self.toboolean(value)
+            value = to_bool(value)
         elif type is float:
             value = float(value)
         elif type is not str:
@@ -269,7 +259,7 @@ def get_config(config_file):
                     if len(val) == 1:
                         val.append(False)
                     else:
-                        val[1] = to_boolean(val[1])
+                        val[1] = to_bool(val[1])
 
                     watcher['hooks'][hook_name] = val
 
