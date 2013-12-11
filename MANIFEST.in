@@ -1,4 +1,4 @@
-include NOTICE
+include CONTRIBUTORS.txt
 include README.rst
 include LICENSE
 include pip-requirements.txt
