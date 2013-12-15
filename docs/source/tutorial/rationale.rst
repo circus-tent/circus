@@ -130,6 +130,6 @@ can create your own stream hook (as a Class) and do whatever you want with
 the incoming stream. Circus provides some built-in stream classes
 like **StdoutStream** or **FileStream**.
 
-XXX add more complex examples
+.. XXX add more complex examples
 
 
