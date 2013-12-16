@@ -218,9 +218,8 @@ def get_config(config_file):
                                                  str)
                 # default bool to False
                 elif opt in ('shell', 'send_hup', 'stop_children',
-                             'check_flapping', 'use_sockets', 'singleton',
-                             'copy_env', 'copy_path', 'close_child_stdout',
-                             'close_child_stderr'):
+                             'close_child_stderr', 'use_sockets', 'singleton',
+                             'copy_env', 'copy_path', 'close_child_stdout'):
                     watcher[opt] = dget(section, opt, False, bool)
                 elif opt == 'stop_signal':
                     watcher['stop_signal'] = to_signum(val)
@@ -248,7 +247,7 @@ def get_config(config_file):
 
                     watcher['hooks'][hook_name] = val
                 # default bool to True
-                elif opt in ('respawn', 'autostart'):
+                elif opt in ('check_flapping', 'respawn', 'autostart'):
                     watcher[opt] = dget(section, opt, True, bool)
                 else:
                     # freeform
