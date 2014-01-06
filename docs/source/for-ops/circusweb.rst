@@ -97,7 +97,7 @@ in the left menu:
 Running behind Nginx and Varnish
 ================================
 
-Nginx can act as a proxy in front of Circus. It an also deal with security.
+Nginx can act as a proxy in front of Circus. It can also deal with security.
 
 To hook Nginx, you define a *location* directive that proxies the calls
 to Circus.
