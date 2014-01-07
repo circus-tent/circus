@@ -250,8 +250,8 @@ def main():
                     subtopic = 'all'
 
                 # Clean pids that have not been updated recently
-                validPid = lambda p: p.isdigit() and p in watchers[watcher]
-                for pid in filter(validPid, watchers[watcher]):
+                valid_pid = lambda p: p.isdigit() and p in watchers[watcher]
+                for pid in filter(valid_pid, watchers[watcher]):
                     if (last_refresh_for_pid[pid] <
                             time.time() - int(args.process_timeout)):
                         del watchers[watcher][pid]
