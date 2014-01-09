@@ -1,24 +1,6 @@
 import os
 from circus.commands import get_commands
 
-_HEADER = """\
-
-.. _commands:
-
-Commands
-########
-
-At the epicenter of circus lives the command systems.  *circusctl* is just a
-zeromq client, and if needed you can drive programmaticaly the Circus system by
-writing your own zmq client.
-
-All messages are Json mappings.
-
-For each command below, we provide a usage example with circusctl but also the
-input / output zmq messages.
-
-"""
-
 
 def generate_commands(app):
     path = os.path.join(app.srcdir, "for-ops", "commands")
@@ -32,8 +14,7 @@ def generate_commands(app):
     items = commands.items()
     items = sorted(items)
 
-    with open(tocname, "w") as toc:
-        toc.write(_HEADER)
+    with open(tocname, "a") as toc:
         toc.write("circus-ctl commands\n")
         toc.write("-------------------\n\n")
 
