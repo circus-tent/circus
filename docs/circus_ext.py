@@ -14,7 +14,8 @@ def generate_commands(app):
     items = commands.items()
     items = sorted(items)
 
-    with open(tocname, "a") as toc:
+    with open(tocname, "w") as toc:
+        toc.write(".. include:: commands-intro%s\n\n" % ext)
         toc.write("circus-ctl commands\n")
         toc.write("-------------------\n\n")
 

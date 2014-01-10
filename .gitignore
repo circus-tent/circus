@@ -9,7 +9,8 @@ circus.egg-info
 .Python
 .coverage
 html
-docs/source/commands*
+docs/source/for-ops/commands/
+docs/source/for-ops/commands.rst
 docs/build
 local
 examples/test.log
