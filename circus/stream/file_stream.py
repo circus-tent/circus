@@ -61,22 +61,27 @@ class FileStream(object):
         if self._should_rollover(data['data']):
             self._do_rollover()
 
+        # data to write on file
+        file_data = s(data['data'])
+
         # If we want to prefix the stream with the current datetime
-        for line in s(data['data']).split('\n'):
-            if not line:
-                continue
-            if self.time_format is not None:
-                self._file.write('{time} [{pid}] | '.format(
-                    time=self.now().strftime(self.time_format),
-                    pid=data['pid']))
-            try:
-                self._file.write(line)
-            except Exception:
-                # we can strip the string down on Py3 but not on Py2
-                if not PY2:
-                    self._file.write(line.encode('latin-1', errors='replace').
-                                     decode('latin-1'))
-            self._file.write('\n')
+        if self.time_format is not None:
+            time = self.now().strftime(self.time_format)
+            prefix = '{time} [{pid}] | '.format(time=time, pid=data['pid'])
+            file_data = prefix + file_data.rstrip('\n')
+            file_data = file_data.replace('\n', '\n' + prefix)
+            file_data += '\n'
+
+        # writing into the file
+        try:
+            self._file.write(file_data)
+        except Exception:
+            # we can strip the string down on Py3 but not on Py2
+            if not PY2:
+                file_data = file_data.encode('latin-1', errors='replace')
+                file_data = file_data.decode('latin-1')
+                self._file.write(file_data)
+
         self._file.flush()
 
     def close(self):

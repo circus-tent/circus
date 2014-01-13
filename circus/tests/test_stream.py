@@ -245,7 +245,20 @@ class TestFileStream(TestCase):
         stream(data)
         output = stream._file.getvalue()
         stream._file.close()
-
         self.assertEqual(len(output.split('\n')), 4)
+
+    def test_data_with_no_EOL(self):
+        stream = self.get_stream()
+
+        # data with no newline and more than 1024 chars
+        data = {'data': '*' * 1100, 'pid': 333}
+
+        stream(data)
+        stream(data)
+        output = stream._file.getvalue()
+        stream._file.close()
+
+        self.assertEqual(output, '*' * 2200)
+
 
 test_suite = EasyTestSuite(__name__)
