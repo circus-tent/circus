@@ -33,7 +33,7 @@ class DecrProcess(IncrProc):
 
         ::
 
-            $ circusctl descr <name> [<nb>] [--waiting]
+            $ circusctl decr <name> [<nb>] [--waiting]
 
         Options
         +++++++
