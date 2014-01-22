@@ -1,6 +1,7 @@
 from circus.exc import ArgumentError, MessageError
 from circus.py3compat import string_types
 from circus import util
+import resource
 import warnings
 
 
@@ -75,6 +76,8 @@ def convert_option(key, val):
         if name not in _HOOKS:
             raise ArgumentError(name)
         return val
+    elif key.startswith('rlimit_'):
+        return int(val)
 
     raise ArgumentError("unknown key %r" % key)
 
@@ -87,11 +90,11 @@ def validate_option(key, val):
                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
                   'hooks')
 
-    valid_prefixes = ('stdout_stream', 'stderr_stream', 'hooks')
+    valid_prefixes = ('stdout_stream.', 'stderr_stream.', 'hooks.', 'rlimit_')
 
     def _valid_prefix():
         for prefix in valid_prefixes:
-            if key.startswith('%s.' % prefix):
+            if key.startswith('%s' % prefix):
                 return True
         return False
 
@@ -103,19 +106,19 @@ def validate_option(key, val):
         if not isinstance(val, int):
             raise MessageError("%r isn't an integer" % key)
 
-    if key in ('warmup_delay', 'retry_in', 'graceful_timeout',):
+    elif key in ('warmup_delay', 'retry_in', 'graceful_timeout',):
         if not isinstance(val, (int, float)):
             raise MessageError("%r isn't a number" % key)
 
-    if key in ('uid', 'gid',):
+    elif key in ('uid', 'gid',):
         if not isinstance(val, int) and not isinstance(val, string_types):
             raise MessageError("%r isn't an integer or string" % key)
 
-    if key in ('send_hup', 'shell', 'copy_env', 'respawn', 'stop_children'):
+    elif key in ('send_hup', 'shell', 'copy_env', 'respawn', 'stop_children'):
         if not isinstance(val, bool):
             raise MessageError("%r isn't a valid boolean" % key)
 
-    if key in ('env', ):
+    elif key in ('env', ):
         if not isinstance(val, dict):
             raise MessageError("%r isn't a valid object" % key)
 
@@ -123,7 +126,7 @@ def validate_option(key, val):
             if not isinstance(v, string_types):
                 raise MessageError("%r isn't a string" % k)
 
-    if key == 'hooks':
+    elif key == 'hooks':
         if not isinstance(val, dict):
             raise MessageError("%r isn't a valid hook dict" % val)
 
@@ -131,7 +134,7 @@ def validate_option(key, val):
             if key not in _HOOKS:
                 raise MessageError("Unknown hook %r" % val)
 
-    if key in ('stderr_stream', 'stdout_stream'):
+    elif key in ('stderr_stream', 'stdout_stream'):
         if not isinstance(val, dict):
             raise MessageError("%r isn't a valid object" % key)
         if not 'class' in val:
@@ -139,3 +142,11 @@ def validate_option(key, val):
         if 'refresh_time' in val:
             warnings.warn("'refresh_time' is deprecated and not useful "
                           "anymore for %r" % key)
+
+    elif key.startswith('rlimit_'):
+        rlimit_key = key[7:]
+        rlimit_int = getattr(resource, 'RLIMIT_' + rlimit_key.upper(), None)
+        if rlimit_int is None:
+            raise MessageError("%r isn't a valid rlimit setting" % key)
+        if not isinstance(val, int):
+            raise MessageError("%r rlimit value isn't a valid int" % val)
