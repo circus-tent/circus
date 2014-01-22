@@ -4,8 +4,10 @@ ifndef VTENV_OPTS
 VTENV_OPTS = -p python2.7 --no-site-packages
 endif
 
+VENV?=virtualenv
+
 bin/python:
-	virtualenv $(VTENV_OPTS) .
+	$(VENV) $(VTENV_OPTS) .
 	bin/python setup.py develop
 
 test: bin/python
