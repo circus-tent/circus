@@ -46,4 +46,14 @@ class TestValidateOption(TestCase):
         self.assertRaises(MessageError, validate_option, 'hooks',
                           {'IDONTEXIST': ['all', False]})
 
+    def test_rlimit(self):
+        validate_option('rlimit_core', 1)
+
+        # require int parameter
+        self.assertRaises(MessageError, validate_option, 'rlimit_core', '1')
+
+        # require valid rlimit settings
+        self.assertRaises(MessageError, validate_option, 'rlimit_foo', 1)
+
+
 test_suite = EasyTestSuite(__name__)
