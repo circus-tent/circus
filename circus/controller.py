@@ -1,3 +1,4 @@
+import os
 import sys
 import traceback
 import functools
@@ -16,6 +17,7 @@ from tornado.concurrent import Future
 
 from circus.util import create_udp_socket
 from circus.util import check_future_exception_and_log
+from circus.util import to_uid
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError, ConflictError
@@ -26,7 +28,7 @@ from circus.sighandler import SysHandler
 class Controller(object):
 
     def __init__(self, endpoint, multicast_endpoint, context, loop, arbiter,
-                 check_delay=1.0):
+                 check_delay=1.0, endpoint_owner=None):
         self.arbiter = arbiter
         self.caller = None
         self.endpoint = endpoint
@@ -34,6 +36,7 @@ class Controller(object):
         self.context = context
         self.loop = loop
         self.check_delay = check_delay * 1000
+        self.endpoint_owner = endpoint_owner
         self.started = False
         self._managing_watchers_future = None
 
@@ -50,6 +53,11 @@ class Controller(object):
         self.stream = zmqstream.ZMQStream(self.ctrl_socket, self.loop)
         self.stream.on_recv(self.handle_message)
 
+    @property
+    def endpoint_owner_mode(self):
+        return self.endpoint_owner is not None and \
+            self.endpoint.startswith('ipc://')
+
     def initialize(self):
         # initialize controller
 
@@ -57,6 +65,13 @@ class Controller(object):
         self.ctrl_socket = self.context.socket(zmq.ROUTER)
         self.ctrl_socket.bind(self.endpoint)
         self.ctrl_socket.linger = 0
+
+        # support chown'ing the zmq endpoint on unix platforms
+        if self.endpoint_owner_mode:
+            uid = to_uid(self.endpoint_owner)
+            sockpath = self.endpoint[6:]  # length of 'ipc://' prefix
+            os.chown(sockpath, uid, -1)
+
         self._init_stream()
 
         # Initialize UDP Socket

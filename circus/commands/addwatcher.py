@@ -65,6 +65,18 @@ class AddWatcher(Command):
 
     def execute(self, arbiter, props):
         options = props.get('options', {})
+
+        # check for endpoint_owner uid restriction mode
+        # it would be better to use some type of SO_PEERCRED lookup on the ipc
+        # socket to get the uid of the client process and restrict on that,
+        # but there's no good portable pythonic way of doing that right now
+        # inside pyzmq or here. So we'll assume that the administrator has
+        # set good rights on the ipc socket to help prevent privilege
+        # escalation
+        if arbiter.endpoint_owner_mode:
+            cmd_uid = options.get('uid', None)
+            if cmd_uid != arbiter.endpoint_owner:
+                raise MessageError("uid does not match endpoint_owner")
         watcher = arbiter.add_watcher(props['name'], props['cmd'],
                                       args=props.get('args'), **options)
         if props.get('start', False):
