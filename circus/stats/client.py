@@ -76,6 +76,8 @@ def _paint(stdscr, watchers=None, old_h=None, old_w=None):
 
             stdscr.addstr(x, y, text)
 
+    stdscr.erase()
+
     if watchers is None:
         stdscr.erase()
         addstr(1, 0, '*** Waiting for data ***')
@@ -218,6 +220,11 @@ def main():
 
     parser.add_argument('--ssh', default=None, help='SSH Server')
 
+    parser.add_argument('--process-timeout',
+                        default=3,
+                        help='After this delay of inactivity, a process will \
+                         be removed')
+
     args = parser.parse_args()
 
     if args.version:
@@ -227,6 +234,7 @@ def main():
     stdscr = curses.initscr()
     watchers = defaultdict(dict)
     h, w = _paint(stdscr)
+    last_refresh_for_pid = defaultdict(float)
     time.sleep(1.)
 
     painter = Painter(stdscr, watchers, h, w)
@@ -240,6 +248,14 @@ def main():
                 stat['watcher'] = watcher
                 if subtopic is None:
                     subtopic = 'all'
+
+                # Clean pids that have not been updated recently
+                valid_pid = lambda p: p.isdigit() and p in watchers[watcher]
+                for pid in filter(valid_pid, watchers[watcher]):
+                    if (last_refresh_for_pid[pid] <
+                            time.time() - int(args.process_timeout)):
+                        del watchers[watcher][pid]
+                last_refresh_for_pid[subtopic] = time.time()
 
                 # adding it to the structure
                 watchers[watcher][subtopic] = stat
