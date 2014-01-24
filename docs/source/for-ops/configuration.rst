@@ -55,6 +55,11 @@ circus - single section
     **endpoint**
         The ZMQ socket used to manage Circus via **circusctl**.
         (default: *tcp://127.0.0.1:5555*)
+    **endpoint_owner**
+        If set to a system username and the endpoint is an ipc socket like
+        *ipc://var/run/circusd.sock*, then ownership of the socket file will
+        be changed to that user at startup. For more details, see :ref:`security`.
+        (default: None)
     **pubsub_endpoint**
         The ZMQ PUB/SUB socket receiving publications of events.
         (default: *tcp://127.0.0.1:5556*)
@@ -222,7 +227,7 @@ watcher:NAME - as many sections as you want
         If the worker is still active after graceful_timeout seconds, we send
         it a SIGKILL signal.  It is not possible to catch SIGKILL signals so
         the worker will stop.
-        
+
         Defaults to 30s.
 
     **priority**
