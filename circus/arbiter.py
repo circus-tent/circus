@@ -611,7 +611,7 @@ class Arbiter(object):
     @synchronized("arbiter_reload")
     @gen.coroutine
     @debuglog
-    def reload(self, graceful=True):
+    def reload(self, graceful=True, sequential=False):
         """Reloads everything.
 
         Run the :func:`prereload_fn` callable if any, then gracefuly
@@ -632,7 +632,7 @@ class Arbiter(object):
 
         # gracefully reload watchers
         for watcher in self.iter_watchers():
-            yield watcher._reload(graceful=graceful)
+            yield watcher._reload(graceful=graceful, sequential=sequential)
             tornado_sleep(self.warmup_delay)
 
     def numprocesses(self):

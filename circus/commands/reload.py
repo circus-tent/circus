@@ -14,11 +14,16 @@ class Reload(Command):
         * If graceful is false, a simple restart occurs.
         * If `send_hup` is true for the watcher, a HUP signal is sent to each
           process.
-        * Otherwise, the arbiter will attempt to spawn `numprocesses` new
-          processes. If the new processes are spawned successfully, the result
-          is that all of the old processes are stopped, since by
-          default the oldest processes are stopped when the actual number of
-          processes for a watcher is greater than `numprocesses`.
+        * Otherwise:
+            * If sequential is false, the arbiter will attempt to spawn
+              `numprocesses` new processes. If the new processes are spawned
+              successfully, the result is that all of the old processes are
+              stopped, since by default the oldest processes are stopped when
+              the actual number of processes for a watcher is greater than
+              `numprocesses`.
+            * If sequential is true, the arbiter will restart each process
+              in a sequential way (with a `warmup_delay` pause between each
+              step)
 
 
         ZMQ Message
@@ -31,6 +36,7 @@ class Reload(Command):
                 "properties": {
                     "name": '<name>",
                     "graceful": true,
+                    "sequential": false,
                     "waiting": False
                 }
             }
@@ -48,6 +54,7 @@ class Reload(Command):
         ::
 
             $ circusctl reload [<name>] [--terminate] [--waiting]
+                                        [--sequential]
 
         Options
         +++++++
@@ -58,6 +65,7 @@ class Reload(Command):
     """
     name = "reload"
     options = (Command.options + Command.waiting_options +
+               [('', 'sequential', False, "sequential reload")] +
                [('', 'terminate', False, "stop immediately")])
 
     def message(self, *args, **opts):
@@ -66,21 +74,27 @@ class Reload(Command):
 
         graceful = not opts.get("terminate", False)
         waiting = opts.get("waiting", False)
+        sequential = opts.get("sequential", False)
         if len(args) == 1:
             return self.make_message(name=args[0], graceful=graceful,
-                                     waiting=waiting)
+                                     waiting=waiting, sequential=sequential)
         else:
-            return self.make_message(graceful=graceful, waiting=waiting)
+            return self.make_message(graceful=graceful, waiting=waiting,
+                                     sequential=sequential)
 
     def execute(self, arbiter, props):
+        graceful = props.get('graceful', True)
+        sequential = props.get('sequential', False)
         if 'name' in props:
             watcher = self._get_watcher(arbiter, props['name'])
             if props.get('waiting'):
                 resp = TransformableFuture()
                 resp.set_upstream_future(watcher.reload(
-                    graceful=props.get('graceful', True)))
+                    graceful=graceful,
+                    sequential=sequential))
                 resp.set_transform_function(lambda x: {"info": x})
                 return resp
-            return watcher.reload(graceful=props.get('graceful', True))
+            return watcher.reload(graceful=graceful,
+                                  sequential=sequential)
         else:
-            return arbiter.reload(graceful=props.get('graceful', True))
+            return arbiter.reload(graceful=graceful, sequential=sequential)
