@@ -141,6 +141,7 @@ def get_config(config_file):
     # main circus options
     config['check_delay'] = dget('circus', 'check_delay', 5., float)
     config['endpoint'] = dget('circus', 'endpoint', DEFAULT_ENDPOINT_DEALER)
+    config['endpoint_owner'] = dget('circus', 'endpoint_owner', None, str)
     config['pubsub_endpoint'] = dget('circus', 'pubsub_endpoint',
                                      DEFAULT_ENDPOINT_SUB)
     config['multicast_endpoint'] = dget('circus', 'multicast_endpoint',

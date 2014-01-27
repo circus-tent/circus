@@ -20,7 +20,7 @@ By default, Circus opens the following TCP ports on the local host:
 
 - **5555** -- the port used to control circus via **circusctl**
 - **5556** -- the port used for the Publisher/Subscriber channel.
-- **5557** -- the port used for the statitics channel -- if activated.
+- **5557** -- the port used for the statistics channel -- if activated.
 - **8080** -- the port used by the Web UI -- if activated.
 
 These ports allow client apps to interact with your Circus system, and
@@ -37,7 +37,17 @@ Here's an example of running Circus using only IPC entry points::
     stats_endpoint = ipc:///var/circus/stats
 
 When Configured using IPC, the commands must be run from the same
-box, but no one can access them from outside, unlike using TCP.
+box, but no one can access them from outside, unlike using TCP. The
+commands must also be run as a user that has write access to the
+ipc socket paths. You can modify the owner of the **endpoint** using
+the **endpoint_owner** config option. This allows you to run circusd
+as the root user, but allow non-root processes to send commands to
+**circusd**. Note that when using **endpoint_owner**, in order to
+prevent non-root processes from being able to start arbitrary
+processes that run with greater privileges, the add command will
+enforce that new Watchers must run as the **endpoint_owner** user.
+Watcher definitions in the local config files will not be restricted
+this way.
 
 Of course, if you activate the Web UI, the **8080** port will still
 be open.
@@ -65,7 +75,7 @@ on your system !
 **Do not make it publicly available**
 
 If you want to protect the access to the web panel, you can serve it
-behind Nginx or Apache or any proxy-capable web server, than can
+behind Nginx or Apache or any proxy-capable web server, that can
 take care of the security.
 
 
@@ -73,7 +83,7 @@ User and Group Permissions
 ==========================
 
 By default, all processes started with Circus will be running with the
-same user and group than **circusd**. Depending on the privileges the user
+same user and group as **circusd**. Depending on the privileges the user
 has on the system, you may not have access to all the features Circus
 provides.
 
@@ -88,7 +98,7 @@ values for each watcher to get all the features.
 But beware that running **circusd** as root exposes you to potential
 privilege escalation bugs. While we're doing our best to avoid any bugs,
 running as root and facing a bug that performs unwanted actions on your
-system may dangerous.
+system may be dangerous.
 
 The best way to prevent this is to make sure that the system running
 Circus is completely isolated (like a VM) **or** to run the whole system
