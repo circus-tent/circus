@@ -849,6 +849,8 @@ def synchronized(name):
             elif hasattr(self, "_exclusive_running_command"):
                 arbiter = self
             if arbiter is not None:
+                if arbiter._restarting:
+                    raise ConflictError("arbiter is restarting...")
                 if arbiter._exclusive_running_command is not None:
                     raise ConflictError("arbiter is already running %s command"
                                         % arbiter._exclusive_running_command)
