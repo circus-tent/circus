@@ -108,14 +108,6 @@ def main():
     if args.daemonize:
         daemonize()
 
-    # This config call is done to avoid any
-    #     "no handlers could be found for logger"
-    #
-    # error while loding the configuration and setting up the arbiter.
-    # The real logging configuration is done right after via
-    # a configure_logger() call
-    logging.basicConfig()
-
     # From here it can also come from the arbiter configuration
     # load the arbiter from config
     arbiter = Arbiter.load_from_config(args.config)
