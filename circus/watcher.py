@@ -80,10 +80,11 @@ class Watcher(object):
         `circus.stream.FileStream`
       - **filename**: the filename, if using a FileStream
       - **max_bytes**: maximum file size, after which a new output file is
-        opened. defaults to 0 which means no maximum size.
+        opened. defaults to 0 which means no maximum size (only applicable
+        with FileStream).
       - **backup_count**: how many backups to retain when rotating files
         according to the max_bytes parameter. defaults to 0 which means
-        no backups are made.
+        no backups are made (only applicable with FileStream)
 
       This mapping will be used to create a stream callable of the specified
       class.
@@ -101,10 +102,11 @@ class Watcher(object):
       - **class**: the stream class. Defaults to `circus.stream.FileStream`
       - **filename**: the filename, if using a FileStream
       - **max_bytes**: maximum file size, after which a new output file is
-        opened. defaults to 0 which means no maximum size.
+        opened. defaults to 0 which means no maximum size (only applicable
+        with FileStream)
       - **backup_count**: how many backups to retain when rotating files
         according to the max_bytes parameter. defaults to 0 which means
-        no backups are made.
+        no backups are made (only applicable with FileStream).
 
       This mapping will be used to create a stream callable of the specified
       class.

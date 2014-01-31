@@ -10,7 +10,7 @@ from circus.py3compat import StringIO
 from circus.client import make_message
 from circus.tests.support import TestCircus, async_poll_for, truncate_file
 from circus.tests.support import TestCase, EasyTestSuite
-from circus.stream import FileStream
+from circus.stream import FileStream, WatchedFileStream
 from circus.stream import FancyStdoutStream
 
 
@@ -77,6 +77,15 @@ class TestWatcher(TestCircus):
         stream = FileStream(self.stdout, max_bytes='12', backup_count='3')
         self.assertTrue(isinstance(stream._max_bytes, int))
         self.assertTrue(isinstance(stream._backup_count, int))
+        yield self.stop_arbiter()
+        stream.close()
+
+    @tornado.testing.gen_test
+    def test_watched_file_stream(self):
+        yield self.start_arbiter()
+        stream = WatchedFileStream(self.stdout,
+                                   time_format='%Y-%m-%d %H:%M:%S')
+        self.assertTrue(isinstance(stream._time_format, str))
         yield self.stop_arbiter()
         stream.close()
 
@@ -189,11 +198,12 @@ class TestFancyStdoutStream(TestCase):
 
 
 class TestFileStream(TestCase):
+    stream_class = FileStream
 
     def get_stream(self, *args, **kw):
         # need a constant timestamp
         now = datetime.now()
-        stream = FileStream(*args, **kw)
+        stream = self.stream_class(*args, **kw)
 
         # patch some details that will be used
         stream._file.close()
@@ -213,7 +223,7 @@ class TestFileStream(TestCase):
         output = stream._file.getvalue()
         stream._file.close()
 
-        expected = stream.now().strftime(stream.time_format) + " "
+        expected = stream.now().strftime(stream._time_format) + " "
         expected += "[333] | " + data['data'] + '\n'
         return output, expected
 
@@ -259,6 +269,41 @@ class TestFileStream(TestCase):
         stream._file.close()
 
         self.assertEqual(output, '*' * 2200)
+
+
+class TestWatchedFileStream(TestFileStream):
+    stream_class = WatchedFileStream
+
+    def get_real_stream(self, *args, **kw):
+        # need a constant timestamp
+        now = datetime.now()
+        stream = self.stream_class(*args, **kw)
+        stream.now = lambda: now
+        return stream
+
+    def test_move_file(self):
+        _test_fd, test_filename = tempfile.mkstemp()
+        stream = self.get_real_stream(filename=test_filename)
+
+        line1_contents = 'line 1'
+        line2_contents = 'line 2'
+        file1 = test_filename + '.1'
+
+        # write data, then move the file to simulate a log rotater that will
+        # rename the file underneath us, then write more data to ensure that
+        # logging continues to work after the rename
+        stream({'data': line1_contents})
+        os.rename(test_filename, file1)
+        stream({'data': line2_contents})
+        stream.close()
+
+        with open(test_filename) as line2:
+            self.assertEqual(line2.read().strip(), line2_contents)
+        with open(file1) as line1:
+            self.assertEqual(line1.read().strip(), line1_contents)
+
+        os.unlink(test_filename)
+        os.unlink(file1)
 
 
 test_suite = EasyTestSuite(__name__)

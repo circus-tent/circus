@@ -12,6 +12,7 @@ Stats architecture:
 import sys
 import argparse
 import logging
+import logging.handlers
 
 from circus.stats.streamer import StatsStreamer
 from circus import logger
@@ -71,7 +72,7 @@ def main():
     if args.logoutput == "-":
         h = logging.StreamHandler()
     else:
-        h = logging.FileHandler(args.logoutput)
+        h = logging.handlers.WatchedFileHandler(args.logoutput)
         util.close_on_exec(h.stream.fileno())
     fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
     h.setFormatter(fmt)

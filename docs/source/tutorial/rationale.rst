@@ -128,7 +128,7 @@ tool does not have a **tail** feature like in Supervisor, but will let
 you hook any piece of code to deal with the incoming stream. You
 can create your own stream hook (as a Class) and do whatever you want with
 the incoming stream. Circus provides some built-in stream classes
-like **StdoutStream** or **FileStream**.
+like **StdoutStream**, **FileStream**, or **WatchedFileStream**.
 
 .. XXX add more complex examples
 
