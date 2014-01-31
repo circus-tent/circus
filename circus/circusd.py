@@ -1,6 +1,5 @@
 import sys
 import argparse
-import logging
 import os
 import resource
 
