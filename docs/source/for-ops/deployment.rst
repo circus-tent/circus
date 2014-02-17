@@ -21,7 +21,35 @@ create this Upstart script in /etc/init/circus.conf.
 This assumes that circus.ini is located at /etc/circus.ini. After
 rebooting, you can control circusd with the service command::
 
-    $ service circus start/stop/restart
+    # service circus start/stop/restart
+
+If your system supports systemd, you can create this systemd unit file under
+/etc/systemd/system/circus.service.
+
+::
+
+   [Unit]
+   Description=Circus process manager
+   After=syslog.target network.target nss-lookup.target
+
+   [Service]
+   Type=simple
+   ExecReload=/usr/bin/circusctl reload
+   ExecStart=/usr/bin/circusd /etc/circus/circus.ini
+   Restart=always
+   RestartSec=5
+
+   [Install]
+   WantedBy=default.target
+
+A reboot isn't required if you run the daemon-reload command below::
+
+    # systemctl --system daemon-reload
+
+Then circus can be managed via::
+
+    # systemctl start/stop/status/reload circus
+
 
 Recipes
 =======
