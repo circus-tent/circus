@@ -6,7 +6,10 @@ import warnings
 version_info = (0, 11, 0)
 __version__ = ".".join(map(str, version_info))
 
-
+# This config call is done to avoid any
+#     "no handlers could be found for logger"
+# However, the real configuration has to be done later
+logging.basicConfig()
 logger = logging.getLogger('circus')
 
 
