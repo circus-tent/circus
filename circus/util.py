@@ -21,11 +21,11 @@ from tornado import concurrent
 from circus.py3compat import integer_types, bytestring, raise_with_tb
 try:
     from configparser import (
-        ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
+        SafeConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
     )
 except ImportError:
     from ConfigParser import (  # NOQA
-        ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
+        SafeConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
     )
 
 from datetime import timedelta
@@ -592,7 +592,7 @@ def configure_logger(logger, level='INFO', output="-"):
     logger.propagate = False
 
 
-class StrictConfigParser(ConfigParser):
+class StrictConfigParser(SafeConfigParser):
 
     def _read(self, fp, fpname):
         cursect = None                        # None, or a dictionary
