@@ -68,7 +68,8 @@ class Arbiter(object):
       to /dev/null. (default: False)
     - **debug** -- if True, adds a lot of debug info in the stdout (default:
       False)
-    - **debug_gc** -- if True, does gc.set_debug(gc.DEBUG_LEAK) (default: False)
+    - **debug_gc** -- if True, does gc.set_debug(gc.DEBUG_LEAK) (default:
+      False)
       to circusd to analyze problems (default: False)
     - **proc_name** -- the arbiter process name
     - **fqdn_prefix** -- a prefix for the unique identifier of the circus
