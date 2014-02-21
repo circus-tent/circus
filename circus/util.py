@@ -584,7 +584,7 @@ def configure_logger(logger, level='INFO', output="-"):
     if output == "-":
         h = logging.StreamHandler()
     else:
-        h = logging.FileHandler(output)
+        h = logging.handlers.WatchedFileHandler(output)
         close_on_exec(h.stream.fileno())
     fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
     h.setFormatter(fmt)

@@ -124,7 +124,7 @@ watcher:NAME - as many sections as you want
         If True, the processes are run in the shell (default: False)
     **shell_args**
         Command-line arguments to pass to the shell command when **shell** is
-        True. Works only for *nix system (default: None)
+        True. Works only for \*nix system (default: None)
     **working_dir**
         The working dir for the processes (default: None)
     **uid**
@@ -162,7 +162,8 @@ watcher:NAME - as many sections as you want
 
         Circus provides some stream classes you can use without prefix:
 
-        - :class:`FileStream`: writes in a file
+        - :class:`FileStream`: writes in a file and can do automatic log rotation
+        - :class:`WatchedFileStream`: writes in a file and relies on external log rotation
         - :class:`QueueStream`: write in a memory Queue
         - :class:`StdoutStream`: writes in the stdout
         - :class:`FancyStdoutStream`: writes colored output with time prefixes in the stdout
@@ -176,9 +177,10 @@ watcher:NAME - as many sections as you want
         will receive the **stdout** stream of all processes in its
         :func:`__call__` method.
 
-        Circus provides soem stream classes you can use without prefix:
+        Circus provides some stream classes you can use without prefix:
 
-        - :class:`FileStream`: writes in a file
+        - :class:`FileStream`: writes in a file and can do automatic log rotation
+        - :class:`WatchedFileStream`: writes in a file and relies on external log rotation
         - :class:`QueueStream`: write in a memory Queue
         - :class:`StdoutStream`: writes in the stdout
         - :class:`FancyStdoutStream`: writes colored output with time prefixes in the stdout
@@ -565,8 +567,39 @@ Example:
     stdout_stream.backup_count = 5
 
 
-FancyStdoutStram
-::::::::::::::::
+WatchedFileStream
+:::::::::::::::::
+
+    **filename**
+        The file path where log will be written.
+
+    **time_format**
+        The strftime format that will be used to prefix each time with a timestamp.
+        By default they will be not prefixed.
+
+        i.e: %Y-%m-%d %H:%M:%S
+
+.. note::
+
+    WatchedFileStream relies on an external log rotation tool to ensure that
+    log files don't become too big. The output file will be monitored and if
+    it is ever deleted or moved by the external log rotation tool, then the
+    output file handle will be automatically reloaded.
+
+Example:
+
+.. code-block:: ini
+
+    [watcher:myprogram]
+    cmd = python -m myapp.server
+
+    stdout_stream.class = WatchedFileStream
+    stdout_stream.filename = test.log
+    stdout_stream.time_format = %Y-%m-%d %H:%M:%S
+
+
+FancyStdoutStream
+:::::::::::::::::
 
     **color**
         The name of an ascii color:

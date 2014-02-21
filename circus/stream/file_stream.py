@@ -1,14 +1,58 @@
+import errno
 import os
 import tempfile
 from datetime import datetime
+from stat import ST_DEV, ST_INO
 from circus import logger
 from circus.py3compat import s, PY2
 
 
-class FileStream(object):
+class _FileStreamBase(object):
+    """Base class for all file writer handler classes"""
     # You may want to use another now method (not naive or a mock).
     now = datetime.now
 
+    def __init__(self, filename, time_format):
+        if filename is None:
+            fd, filename = tempfile.mkstemp()
+            os.close(fd)
+        self._filename = filename
+        self._file = self._open()
+        self._time_format = time_format
+        self._buffer = []  # XXX - is this really needed?
+
+    def _open(self):
+        return open(self._filename, 'a+')
+
+    def close(self):
+        self._file.close()
+
+    def write_data(self, data):
+        # data to write on file
+        file_data = s(data['data'])
+
+        # If we want to prefix the stream with the current datetime
+        if self._time_format is not None:
+            time = self.now().strftime(self._time_format)
+            prefix = '{time} [{pid}] | '.format(time=time, pid=data['pid'])
+            file_data = prefix + file_data.rstrip('\n')
+            file_data = file_data.replace('\n', '\n' + prefix)
+            file_data += '\n'
+
+        # writing into the file
+        try:
+            self._file.write(file_data)
+        except Exception:
+            # we can strip the string down on Py3 but not on Py2
+            if not PY2:
+                file_data = file_data.encode('latin-1', errors='replace')
+                file_data = file_data.decode('latin-1')
+                self._file.write(file_data)
+
+        self._file.flush()
+
+
+class FileStream(_FileStreamBase):
     def __init__(self, filename=None, max_bytes=0, backup_count=0,
                  time_format=None, **kwargs):
         '''
@@ -43,49 +87,15 @@ class FileStream(object):
           stdout_stream.filename = /var/log/circus/out.log
           stdout_stream.time_format = %Y-%m-%d %H:%M:%S
         '''
-        super(FileStream, self).__init__()
-        if filename is None:
-            fd, filename = tempfile.mkstemp()
-            os.close(fd)
-        self._filename = filename
+        super(FileStream, self).__init__(filename, time_format)
         self._max_bytes = int(max_bytes)
         self._backup_count = int(backup_count)
-        self._file = self._open()
-        self._buffer = []
-        self.time_format = time_format
-
-    def _open(self):
-        return open(self._filename, 'a+')
 
     def __call__(self, data):
         if self._should_rollover(data['data']):
             self._do_rollover()
 
-        # data to write on file
-        file_data = s(data['data'])
-
-        # If we want to prefix the stream with the current datetime
-        if self.time_format is not None:
-            time = self.now().strftime(self.time_format)
-            prefix = '{time} [{pid}] | '.format(time=time, pid=data['pid'])
-            file_data = prefix + file_data.rstrip('\n')
-            file_data = file_data.replace('\n', '\n' + prefix)
-            file_data += '\n'
-
-        # writing into the file
-        try:
-            self._file.write(file_data)
-        except Exception:
-            # we can strip the string down on Py3 but not on Py2
-            if not PY2:
-                file_data = file_data.encode('latin-1', errors='replace')
-                file_data = file_data.decode('latin-1')
-                self._file.write(file_data)
-
-        self._file.flush()
-
-    def close(self):
-        self._file.close()
+        self.write_data(data)
 
     def _do_rollover(self):
         """
@@ -124,3 +134,56 @@ class FileStream(object):
             if self._file.tell() + len(raw_data) >= self._max_bytes:
                 return 1
         return 0
+
+
+class WatchedFileStream(_FileStreamBase):
+    def __init__(self, filename=None, time_format=None, **kwargs):
+        '''
+        File writer handler which writes output to a file, allowing an external
+        log rotation process to handle rotation, like Python's
+        ``logging.handlers.WatchedFileHandler``.
+
+        By default, the file grows indefinitely, and you are responsible for
+        ensuring that log rotation happens with some external tool like
+        logrotate.
+
+        You may also configure the timestamp format as defined by
+        datetime.strftime.
+
+        Here is an example: ::
+
+          [watcher:foo]
+          cmd = python -m myapp.server
+          stdout_stream.class = WatchedFileStream
+          stdout_stream.filename = /var/log/circus/out.log
+          stdout_stream.time_format = %Y-%m-%d %H:%M:%S
+        '''
+        super(WatchedFileStream, self).__init__(filename, time_format)
+        self.dev, self.ino = -1, -1
+        self._statfile()
+
+    def _statfile(self):
+        stb = os.fstat(self._file.fileno())
+        self.dev, self.ino = stb[ST_DEV], stb[ST_INO]
+
+    def _statfilename(self):
+        try:
+            stb = os.stat(self._filename)
+            return stb[ST_DEV], stb[ST_INO]
+        except OSError as err:
+            if err.errno == errno.ENOENT:
+                return -1, -1
+            else:
+                raise
+
+    def __call__(self, data):
+        # stat the filename to see if the file we opened still exists. If the
+        # ino or dev doesn't match, we need to open a new file handle
+        dev, ino = self._statfilename()
+        if dev != self.dev or ino != self.ino:
+            self._file.flush()
+            self._file.close()
+            self._file = self._open()
+            self._statfile()
+
+        self.write_data(data)

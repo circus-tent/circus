@@ -80,10 +80,11 @@ class Watcher(object):
         `circus.stream.FileStream`
       - **filename**: the filename, if using a FileStream
       - **max_bytes**: maximum file size, after which a new output file is
-        opened. defaults to 0 which means no maximum size.
+        opened. defaults to 0 which means no maximum size (only applicable
+        with FileStream).
       - **backup_count**: how many backups to retain when rotating files
         according to the max_bytes parameter. defaults to 0 which means
-        no backups are made.
+        no backups are made (only applicable with FileStream)
 
       This mapping will be used to create a stream callable of the specified
       class.
@@ -101,10 +102,11 @@ class Watcher(object):
       - **class**: the stream class. Defaults to `circus.stream.FileStream`
       - **filename**: the filename, if using a FileStream
       - **max_bytes**: maximum file size, after which a new output file is
-        opened. defaults to 0 which means no maximum size.
+        opened. defaults to 0 which means no maximum size (only applicable
+        with FileStream)
       - **backup_count**: how many backups to retain when rotating files
         according to the max_bytes parameter. defaults to 0 which means
-        no backups are made.
+        no backups are made (only applicable with FileStream).
 
       This mapping will be used to create a stream callable of the specified
       class.
@@ -428,7 +430,14 @@ class Watcher(object):
 
         # get return code
         if os.WIFSIGNALED(status):
-            exit_code = os.WTERMSIG(status)
+            # The Python Popen object returns <-signal> in it's returncode
+            # property if the process exited on a signal, so emulate that
+            # behavior here so that pubsub clients watching for reap can
+            # distinguish between an exit with a non-zero exit code and
+            # a signal'd exit. This is also consistent with the notify_event
+            # reap message above that uses the returncode function (that ends
+            # up calling Popen.returncode)
+            exit_code = -os.WTERMSIG(status)
         # process exited using exit(2) system call; return the
         # integer exit(2) system call has been called with
         elif os.WIFEXITED(status):
