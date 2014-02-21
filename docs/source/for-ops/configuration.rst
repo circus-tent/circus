@@ -98,6 +98,10 @@ circus - single section
     **debug**
         If set to True, all Circus stout/stderr daemons are redirected to circusd
         stdout/stderr (default: False)
+    **debug_gc**
+        If set to True, circusd outputs additional log info from the garbage
+        collector. This can be useful in tracking down memory leaks.
+        (default: False)
     **pidfile**
         The file that must be used to keep the daemon pid.
     **umask**

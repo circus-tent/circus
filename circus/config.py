@@ -165,6 +165,7 @@ def get_config(config_file):
     config['httpd_host'] = dget('circus', 'httpd_host', 'localhost', str)
     config['httpd_port'] = dget('circus', 'httpd_port', 8080, int)
     config['debug'] = dget('circus', 'debug', False, bool)
+    config['debug_gc'] = dget('circus', 'debug_gc', False, bool)
     config['pidfile'] = dget('circus', 'pidfile')
     config['loglevel'] = dget('circus', 'loglevel')
     config['logoutput'] = dget('circus', 'logoutput')
