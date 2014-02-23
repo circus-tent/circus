@@ -65,15 +65,16 @@ class Command(object):
     waiting_options = [('waiting', 'waiting', False,
                         "Waiting the real end of the process")]
 
+    ##################################################
+    # These methods run within the circusctl process #
+    ##################################################
+
     def make_message(self, **props):
         name = props.pop("command", self.name)
         return {"command": name, "properties": props or {}}
 
     def message(self, *args, **opts):
         raise NotImplementedError("message function isn't implemented")
-
-    def execute(self, arbiter, props):
-        raise NotImplementedError("execute function is not implemented")
 
     def console_error(self, msg):
         return "error: %s" % msg.get("reason")
@@ -85,6 +86,13 @@ class Command(object):
 
     def copy(self):
         return copy.copy(self)
+
+    ################################################
+    # These methods run within the circusd process #
+    ################################################
+
+    def execute(self, arbiter, props):
+        raise NotImplementedError("execute function is not implemented")
 
     def _get_watcher(self, arbiter, watcher_name):
         """Get watcher from the arbiter if any."""
