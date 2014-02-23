@@ -1,6 +1,7 @@
 import errno
 import logging
 import os
+import gc
 from circus.fixed_threading import Thread, get_ident
 import sys
 from time import sleep
@@ -67,6 +68,9 @@ class Arbiter(object):
       to /dev/null. (default: False)
     - **debug** -- if True, adds a lot of debug info in the stdout (default:
       False)
+    - **debug_gc** -- if True, does gc.set_debug(gc.DEBUG_LEAK) (default:
+      False)
+      to circusd to analyze problems (default: False)
     - **proc_name** -- the arbiter process name
     - **fqdn_prefix** -- a prefix for the unique identifier of the circus
                          instance on the cluster.
@@ -79,7 +83,7 @@ class Arbiter(object):
                  multicast_endpoint=None, plugins=None,
                  sockets=None, warmup_delay=0, httpd=False,
                  httpd_host='localhost', httpd_port=8080,
-                 httpd_close_outputs=False, debug=False,
+                 httpd_close_outputs=False, debug=False, debug_gc=False,
                  ssh_server=None, proc_name='circusd', pidfile=None,
                  loglevel=None, logoutput=None, fqdn_prefix=None, umask=None,
                  endpoint_owner=None):
@@ -130,6 +134,10 @@ class Arbiter(object):
             self.stdout_stream = self.stderr_stream = {'class': 'StdoutStream'}
         else:
             self.stdout_stream = self.stderr_stream = None
+
+        self.debug_gc = debug_gc
+        if debug_gc:
+            gc.set_debug(gc.DEBUG_LEAK)
 
         # initializing circusd-stats as a watcher when configured
         self.statsd = statsd
@@ -422,6 +430,7 @@ class Arbiter(object):
                       httpd_host=cfg.get('httpd_host', 'localhost'),
                       httpd_port=cfg.get('httpd_port', 8080),
                       debug=cfg.get('debug', False),
+                      debug_gc=cfg.get('debug_gc', False),
                       ssh_server=cfg.get('ssh_server', None),
                       pidfile=cfg.get('pidfile', None),
                       loglevel=cfg.get('loglevel', None),
