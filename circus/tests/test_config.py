@@ -35,6 +35,7 @@ _CONF = {
     'issue546': os.path.join(CONFIG_DIR, 'issue546.ini'),
     'env_everywhere': os.path.join(CONFIG_DIR, 'env_everywhere.ini'),
     'copy_env': os.path.join(CONFIG_DIR, 'copy_env.ini'),
+    'env_sensecase': os.path.join(CONFIG_DIR, 'env_sensecase.ini'),
     'issue567': os.path.join(CONFIG_DIR, 'issue567.ini'),
     'issue594': os.path.join(CONFIG_DIR, 'issue594.ini'),
     'reuseport': os.path.join(CONFIG_DIR, 'reuseport.ini'),
@@ -316,6 +317,20 @@ class TestConfig(TestCase):
             else:
                 self.assertTrue('BAM' in watcher['env'])
             self.assertTrue('TEST1' in watcher['env'])
+
+    def test_env_casesense(self):
+        # #730 make sure respect case
+        conf = get_config(_CONF['env_sensecase'])
+        w = conf['watchers'][0]
+        self.assertEqual(w['name'], 'webapp')
+        self.assertTrue('http_proxy' in w['env'])
+        self.assertEqual(w['env']['http_proxy'], 'http://localhost:8080')
+
+        self.assertTrue('HTTPS_PROXY' in w['env'])
+        self.assertEqual(w['env']['HTTPS_PROXY'], 'http://localhost:8043')
+
+        self.assertTrue('FunKy_soUl' in w['env'])
+        self.assertEqual(w['env']['FunKy_soUl'], 'scorpio')
 
     def test_issue567(self):
         os.environ['GRAVITY'] = 'down'

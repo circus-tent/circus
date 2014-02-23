@@ -124,15 +124,12 @@ def get_config(config_file):
     config = {}
 
     # reading the global environ first
-    def _upper(items):
-        return [(key.upper(), value) for key, value in items]
-
-    global_env = dict(_upper(os.environ.items()))
+    global_env = dict(os.environ.items())
     local_env = dict()
 
     # update environments with [env] section
     if 'env' in cfg.sections():
-        local_env.update(dict(_upper(cfg.items('env'))))
+        local_env.update(dict(cfg.items('env')))
         global_env.update(local_env)
 
     # always set the cfg environment
@@ -281,7 +278,7 @@ def get_config(config_file):
         if section.startswith('env:'):
             section_elements = section.split("env:", 1)[1]
             watcher_patterns = [s.strip() for s in section_elements.split(',')]
-            env_items = dict(_upper(cfg.items(section, noreplace=True)))
+            env_items = dict(cfg.items(section, noreplace=True))
 
             for pattern in watcher_patterns:
                 match = [w for w in watchers if fnmatch(w['name'], pattern)]

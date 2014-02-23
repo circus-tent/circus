@@ -643,6 +643,7 @@ class StrictConfigParser(ConfigParser):
                         mo = self.OPTCRE.match(line)    # 2.6
                     if mo:
                         optname, vi, optval = mo.group('option', 'vi', 'value')
+                        self.optionxform = str
                         optname = self.optionxform(optname.rstrip())
                         # We don't want to override.
                         if optname in cursect:
