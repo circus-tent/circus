@@ -78,10 +78,16 @@ class Controller(object):
         if self.multicast_endpoint:
             multicast_addr, multicast_port = urlparse(self.multicast_endpoint)\
                 .netloc.split(':')
-            self.udp_socket = create_udp_socket(multicast_addr, multicast_port)
-            self.loop.add_handler(self.udp_socket.fileno(),
-                                  self.handle_autodiscover_message,
-                                  ioloop.IOLoop.READ)
+            try:
+                self.udp_socket = create_udp_socket(multicast_addr,
+                                                    multicast_port)
+                self.loop.add_handler(self.udp_socket.fileno(),
+                                      self.handle_autodiscover_message,
+                                      ioloop.IOLoop.READ)
+            except OSError:
+                message = "Multicast discovery is disabled, there was an error"
+                          "during udp socket creation."
+                logger.warning(message, exc_info=True)
 
     def manage_watchers(self):
         if self._managing_watchers_future is not None:
