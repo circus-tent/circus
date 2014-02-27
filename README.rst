@@ -12,9 +12,9 @@ Circus can be used as a library or through the command line.
    :alt: Coverage Status on master
    :target: https://coveralls.io/r/mozilla-services/circus?branch=master
 .. image:: https://pypip.in/v/circus/badge.png
-   :target: https://crate.io/packages/circus/
+   :target: https://python.org/pypi/circus/
 .. image:: https://pypip.in/d/circus/badge.png
-   :target: https://crate.io/packages/circus/
+   :target: https://python.org/pypi/circus/
 
 Links:
 
