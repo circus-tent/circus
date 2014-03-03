@@ -38,7 +38,7 @@ Circus works with:
 
 - Python 2.6, 2.7, 3.2 or 3.3
 - zeromq >= 2.1.10 
-    - The version of zeromq supported is ultimately determined by what version of `pyzmq <https://github.com/zeromq/pyzmq>` is installed by pip during circus installation.
+    - The version of zeromq supported is ultimately determined by what version of `pyzmq <https://github.com/zeromq/pyzmq>`_ is installed by pip during circus installation.
     - Their current releases supports 2.x (limited), 3.x, and 4.x ZeroMQ versions.
 
 When you install circus, the latest
