@@ -18,7 +18,9 @@ except ImportError:
 from tornado.ioloop import IOLoop
 from tornado import gen
 from tornado import concurrent
-from circus.py3compat import integer_types, bytestring, raise_with_tb
+from circus.py3compat import (
+    integer_types, bytestring, raise_with_tb, text_type
+)
 try:
     from configparser import (
         ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
@@ -643,7 +645,7 @@ class StrictConfigParser(ConfigParser):
                         mo = self.OPTCRE.match(line)    # 2.6
                     if mo:
                         optname, vi, optval = mo.group('option', 'vi', 'value')
-                        self.optionxform = str
+                        self.optionxform = text_type
                         optname = self.optionxform(optname.rstrip())
                         # We don't want to override.
                         if optname in cursect:
