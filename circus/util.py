@@ -200,7 +200,13 @@ def get_info(process=None, interval=0, with_childs=False):
         info['nice'] = 'Zombie'
 
     try:
-        cmdline = os.path.basename(shlex.split(process.cmdline[0])[0])
+        raw_cmdline = process.cmdline()
+    except TypeError:
+        # psutil <= 1.2.1
+        raw_cmdline = process.cmdline
+
+    try:
+        cmdline = os.path.basename(shlex.split(raw_cmdline[0])[0])
     except (AccessDenied, IndexError):
         cmdline = "N/A"
 
