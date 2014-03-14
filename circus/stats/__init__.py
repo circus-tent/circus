@@ -11,24 +11,12 @@ Stats architecture:
 """
 import sys
 import argparse
-import logging
-import logging.handlers
 
 from circus.stats.streamer import StatsStreamer
+from circus.util import configure_logger
 from circus import logger
 from circus import util
 from circus import __version__
-
-
-LOG_LEVELS = {
-    "critical": logging.CRITICAL,
-    "error": logging.ERROR,
-    "warning": logging.WARNING,
-    "info": logging.INFO,
-    "debug": logging.DEBUG}
-
-LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
-LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
 
 
 def main():
@@ -66,16 +54,7 @@ def main():
         sys.exit(0)
 
     # configure the logger
-    loglevel = LOG_LEVELS.get(args.loglevel.lower(), logging.INFO)
-    logger.setLevel(loglevel)
-    if args.logoutput == "-":
-        h = logging.StreamHandler()
-    else:
-        h = logging.handlers.WatchedFileHandler(args.logoutput)
-        util.close_on_exec(h.stream.fileno())
-    fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
-    h.setFormatter(fmt)
-    logger.addHandler(h)
+    configure_logger(logger, args.loglevel, args.logoutput)
 
     stats = StatsStreamer(args.endpoint, args.pubsub, args.statspoint,
                           args.ssh)

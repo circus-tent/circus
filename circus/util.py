@@ -1,3 +1,4 @@
+import functools
 import logging
 import os
 import re
@@ -5,7 +6,6 @@ import shlex
 import socket
 import sys
 import time
-import functools
 import traceback
 try:
     import pwd
@@ -29,6 +29,10 @@ except ImportError:
     from ConfigParser import (  # NOQA
         ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
     )
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse  # NOQA
 
 from datetime import timedelta
 from functools import wraps
@@ -80,8 +84,9 @@ LOG_LEVELS = {
     "info": logging.INFO,
     "debug": logging.DEBUG}
 
-LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
+LOG_FMT = r"%(asctime)s %(name)s[%(process)d] [%(levelname)s] %(message)s"
 LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
+LOG_DATE_SYSLOG_FMT = r"%b %d %H:%M:%S"
 _SYMBOLS = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 _all_signals = {}
 
@@ -586,18 +591,32 @@ class ObjectDict(dict):
         return self[item]
 
 
-def configure_logger(logger, level='INFO', output="-"):
+def configure_logger(logger, level='INFO', output="-", name=None):
+    root_logger = logging.getLogger()
     loglevel = LOG_LEVELS.get(level.lower(), logging.INFO)
-    logger.setLevel(loglevel)
-    if output == "-":
-        h = logging.StreamHandler()
+    root_logger.setLevel(loglevel)
+    datefmt = LOG_DATE_FMT
+    if output in ("-", "stdout"):
+        handler = logging.StreamHandler()
+    elif output.startswith('syslog://'):
+        # URLs are syslog://host[:port]?facility or syslog:///path?facility
+        info = urlparse(output)
+        facility = 'user'
+        if info.query in logging.handlers.SysLogHandler.facility_names:
+            facility = info.query
+        if info.netloc:
+            address = (info.netloc, info.port or 514)
+        else:
+            address = info.path
+        datefmt = LOG_DATE_SYSLOG_FMT
+        handler = logging.handlers.SysLogHandler(
+            address=address, facility=facility)
     else:
-        h = logging.handlers.WatchedFileHandler(output)
-        close_on_exec(h.stream.fileno())
-    fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
-    h.setFormatter(fmt)
-    logger.handlers = [h]
-    logger.propagate = False
+        handler = logging.handlers.WatchedFileHandler(output)
+        close_on_exec(handler.stream.fileno())
+    formatter = logging.Formatter(fmt=LOG_FMT, datefmt=datefmt)
+    handler.setFormatter(formatter)
+    root_logger.handlers = [handler]
 
 
 class StrictConfigParser(ConfigParser):
