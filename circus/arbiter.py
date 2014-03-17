@@ -153,6 +153,10 @@ class Arbiter(object):
                 cmd += ' --ssh %s' % ssh_server
             if debug:
                 cmd += ' --log-level DEBUG'
+            elif self.loglevel:
+                cmd += ' --log-level ' + self.loglevel
+            if self.logoutput:
+                cmd += ' --log-output ' + self.logoutput
             stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=self.stdout_stream,
@@ -199,7 +203,9 @@ class Arbiter(object):
                 fqn = plugin['use']
                 cmd = get_plugin_cmd(plugin, self.endpoint,
                                      self.pubsub_endpoint, self.check_delay,
-                                     ssh_server, debug=self.debug)
+                                     ssh_server, debug=self.debug,
+                                     loglevel=self.loglevel,
+                                     logoutput=self.logoutput)
                 plugin_cfg = dict(cmd=cmd, priority=1, singleton=True,
                                   stdout_stream=self.stdout_stream,
                                   stderr_stream=self.stderr_stream,
