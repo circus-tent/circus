@@ -16,6 +16,7 @@ class ResourceWatcher(BaseObserver):
                 self.watcher = self.service
         if self.watcher is None:
             self.statsd.stop()
+            self.loop.close()
             raise NotImplementedError('watcher is mandatory for now.')
         self.max_cpu = float(config.get("max_cpu", 90))  # in %
         self.max_mem = float(config.get("max_mem", 90))  # in %
@@ -102,3 +103,7 @@ class ResourceWatcher(BaseObserver):
             # todo: restart only process instead of the whole watcher
             self.cast("restart", name=self.watcher)
             self._count_mem = self._count_health = self._count_mem = 0
+
+    def stop(self):
+        self.statsd.stop()
+        super(ResourceWatcher, self).stop()

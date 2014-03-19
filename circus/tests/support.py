@@ -9,6 +9,7 @@ import pstats
 import shutil
 import functools
 import multiprocessing
+import sysconfig
 
 try:
     from unittest import skip, skipIf, TestCase, TestSuite, findTestCases
@@ -31,6 +32,9 @@ from circus.stream import QueueStream
 ioloop.install()
 if 'ASYNC_TEST_TIMEOUT' not in os.environ:
     os.environ['ASYNC_TEST_TIMEOUT'] = '30'
+
+
+DEBUG = sysconfig.get_config_var('Py_DEBUG') == 1
 
 
 class EasyTestSuite(TestSuite):
@@ -396,12 +400,14 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
     plugin.statsd = _statsd
 
     deadline = time() + (duration / 1000.)
-    plugin.loop.add_timeout(deadline, plugin.loop.stop)
+    plugin.loop.add_timeout(deadline, plugin.stop)
     plugin.start()
-    if plugin_info_callback:
-        plugin_info_callback(plugin)
+    try:
+        if plugin_info_callback:
+            plugin_info_callback(plugin)
+    finally:
+        plugin.stop()
 
-    plugin.stop()
     return _statsd
 
 
@@ -413,8 +419,10 @@ def async_run_plugin(klass, config, plugin_info_callback, duration=300):
         target=run_plugin,
         args=(klass, config, plugin_info_callback, duration))
     circusctl_process.start()
+
     while queue.empty():
         yield tornado_sleep(.1)
+
     result = queue.get()
     raise tornado.gen.Return(result)
 

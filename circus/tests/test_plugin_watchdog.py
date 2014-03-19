@@ -12,7 +12,7 @@ from circus.plugins.watchdog import WatchDog
 
 class DummyWatchDogged(Process):
     def run(self):
-        self._write('START')
+        self._write('STARTWD')
         sock = socket.socket(socket.AF_INET,
                              socket.SOCK_DGRAM)  # UDP
         try:
@@ -21,7 +21,7 @@ class DummyWatchDogged(Process):
                 message = "{pid};{time}".format(pid=my_pid, time=time.time())
                 sock.sendto(message, ('127.0.0.1', 1664))
                 time.sleep(0.5)
-            self._write('STOP')
+            self._write('STOPWD')
         finally:
             sock.close()
 
@@ -44,7 +44,7 @@ class TestPluginWatchDog(TestCircus):
     @gen_test
     def test_watchdog_discovery_found(self):
         yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'START')
+        async_poll_for(self.test_file, 'STARTWD')
 
         config = {'loop_rate': 0.1, 'watchers_regex': "^test.*$"}
         with warnings.catch_warnings():
@@ -52,6 +52,7 @@ class TestPluginWatchDog(TestCircus):
                                                 get_pid_status)
         self.assertEqual(len(pid_status), 1, pid_status)
         yield self.stop_arbiter()
+        async_poll_for(self.test_file, 'STOPWD')
 
     @gen_test
     def test_watchdog_discovery_not_found(self):

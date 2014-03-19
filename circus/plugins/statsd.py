@@ -64,6 +64,10 @@ class StatsdEmitter(CircusPlugin):
         watcher_name, action, msg = self.split_data(data)
         self.statsd.increment('%s.%s' % (watcher_name, action))
 
+    def stop(self):
+        self.statsd.stop()
+        super(StatsdEmitter, self).stop()
+
 
 class BaseObserver(StatsdEmitter):
 

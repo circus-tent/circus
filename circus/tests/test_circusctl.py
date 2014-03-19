@@ -7,7 +7,8 @@ from tornado.testing import gen_test
 from tornado.gen import coroutine, Return
 
 from circus.circusctl import USAGE, VERSION, CircusCtl
-from circus.tests.support import TestCircus, async_poll_for, EasyTestSuite
+from circus.tests.support import (TestCircus, async_poll_for, EasyTestSuite,
+                                  skipIf, DEBUG)
 from circus.util import tornado_sleep
 from circus.py3compat import b, s
 
@@ -53,6 +54,7 @@ def async_run_ctl(args, stdin=''):
 
 class CommandlineTest(TestCircus):
 
+    @skipIf(DEBUG, 'Py_DEBUG=1')
     def test_help_switch_no_command(self):
         stdout, stderr = run_ctl('--help')
         if stderr:
@@ -72,12 +74,14 @@ class CommandlineTest(TestCircus):
         self.assertEqual(err[1],
                          'circusctl.py: error: unrecognized arguments: foo')
 
+    @skipIf(DEBUG, 'Py_DEBUG=1')
     def test_help_for_add_command(self):
         stdout, stderr = run_ctl('--help add')
         if stderr:
             self.assertIn('UserWarning', stderr)
         self.assertEqual(stdout.splitlines()[0], 'Add a watcher')
 
+    @skipIf(DEBUG, 'Py_DEBUG=1')
     @gen_test
     def test_add(self):
         yield self.start_arbiter()
@@ -94,6 +98,7 @@ class CommandlineTest(TestCircus):
         self.assertEqual(stdout, 'stopped\n')
         yield self.stop_arbiter()
 
+    @skipIf(DEBUG, 'Py_DEBUG=1')
     @gen_test
     def test_add_start(self):
         yield self.start_arbiter()
@@ -120,6 +125,7 @@ class CLITest(TestCircus):
         stdout, stderr = yield async_run_ctl('', command + 'EOF\n')
         raise Return((stdout, stderr))
 
+    @skipIf(DEBUG, 'Py_DEBUG=1')
     @gen_test
     def test_launch_cli(self):
         yield self.start_arbiter()

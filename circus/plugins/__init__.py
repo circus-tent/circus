@@ -1,7 +1,6 @@
 """ Base class to create Circus subscribers plugins.
 """
 import sys
-import logging
 import errno
 import uuid
 import argparse
@@ -64,6 +63,7 @@ class CircusPlugin(object):
         self.handle_init()
         self.initialize()
         self.running = True
+
         while True:
             try:
                 self.loop.start()
@@ -80,8 +80,11 @@ class CircusPlugin(object):
                     raise
             else:
                 break
+
+        self.substream.close()
         self.client.close()
         self.sub_socket.close()
+        self.context.destroy()
 
     @debuglog
     def stop(self):

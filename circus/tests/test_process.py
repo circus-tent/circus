@@ -3,7 +3,7 @@ import sys
 import time
 
 from circus.process import Process, RUNNING
-from circus.tests.support import TestCircus, skipIf, EasyTestSuite
+from circus.tests.support import TestCircus, skipIf, EasyTestSuite, DEBUG
 import circus.py3compat
 from circus.py3compat import StringIO, PY2
 
@@ -52,6 +52,7 @@ class TestProcess(TestCircus):
         finally:
             process.stop()
 
+    @skipIf(DEBUG, 'Py_DEBUG=1')
     def test_rlimits(self):
         script_file = self.get_tmpfile(RLIMIT)
         output_file = self.get_tmpfile()
@@ -116,6 +117,7 @@ class TestProcess(TestCircus):
         self.assertEqual(['yeah', 'macchiato'], p3.format_args())
         os.environ.pop('coffee_type')
 
+    @skipIf(DEBUG, 'Py_DEBUG=1')
     @skipIf(_nose_no_s(), 'Nose runs without -s')
     def test_streams(self):
         script_file = self.get_tmpfile(VERBOSE)
