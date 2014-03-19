@@ -36,6 +36,70 @@ UNEXISTING = 2
 OTHER = 3
 
 
+# psutil < 2.x compat
+def get_children(proc, recursive=False):
+    try:
+        return proc.children(recursive)
+    except AttributeError:
+        return proc.get_children(recursive)
+
+
+def get_memory_info(proc):
+    try:
+        return proc.memory_info()
+    except AttributeError:
+        return proc.get_memory_info()
+
+
+def get_cpu_percent(proc, **kw):
+    try:
+        return proc.cpu_percent(**kw)
+    except AttributeError:
+        return proc.get_cpu_percent(**kw)
+
+
+def get_memory_percent(proc):
+    try:
+        return proc.memory_percent()
+    except AttributeError:
+        return proc.get_memory_percent()
+
+
+def get_cpu_times(proc):
+    try:
+        return proc.cpu_times()
+    except AttributeError:
+        return proc.get_cpu_times()
+
+
+def get_nice(proc):
+    try:
+        return proc.get_nice()
+    except AttributeError:
+        return proc.nice
+
+
+def get_cmdline(proc):
+    try:
+        return proc.cmdline()
+    except TypeError:
+        return proc.cmdline
+
+
+def get_create_time(proc):
+    try:
+        return proc.create_time()
+    except TypeError:
+        return proc.create_time
+
+
+def get_username(proc):
+    try:
+        return proc.username()
+    except TypeError:
+        return proc.username
+
+
 class Process(object):
     """Wraps a process.
 
@@ -352,18 +416,18 @@ class Process(object):
         info["started"] = self.started
         info["children"] = []
         info['wid'] = self.wid
-        for child in self._worker.get_children():
+        for child in get_children(self._worker):
             info["children"].append(get_info(child))
 
         return info
 
     def children(self):
         """Return a list of children pids."""
-        return [child.pid for child in self._worker.get_children()]
+        return [child.pid for child in get_children(self._worker)]
 
     def is_child(self, pid):
         """Return True is the given *pid* is a child of that process."""
-        pids = [child.pid for child in self._worker.get_children()]
+        pids = [child.pid for child in get_children(self._worker)]
         if pid in pids:
             return True
         return False
@@ -372,7 +436,7 @@ class Process(object):
     def send_signal_child(self, pid, signum):
         """Send signal *signum* to child *pid*."""
         children = dict((child.pid, child)
-                        for child in self._worker.get_children())
+                        for child in get_children(self._worker))
         try:
             children[pid].send_signal(signum)
         except KeyError:
@@ -381,7 +445,7 @@ class Process(object):
     @debuglog
     def send_signal_children(self, signum):
         """Send signal *signum* to all children."""
-        for child in self._worker.get_children():
+        for child in get_children(self._worker):
             try:
                 child.send_signal(signum)
             except OSError as e:
