@@ -1,9 +1,9 @@
 import os
 import sys
-import time
 
-from circus.process import Process, RUNNING
-from circus.tests.support import TestCircus, skipIf, EasyTestSuite, DEBUG
+from circus.process import Process
+from circus.tests.support import (TestCircus, skipIf, EasyTestSuite, DEBUG,
+                                  poll_for)
 import circus.py3compat
 from circus.py3compat import StringIO, PY2
 
@@ -11,21 +11,29 @@ from circus.py3compat import StringIO, PY2
 RLIMIT = """\
 import resource, sys
 
-with open(sys.argv[1], 'w') as f:
-    for limit in ('NOFILE', 'NPROC'):
-        res = getattr(resource, 'RLIMIT_%s' % limit)
-        f.write('%s=%s\\n' % (limit, resource.getrlimit(res)))
+try:
+    with open(sys.argv[1], 'w') as f:
+        for limit in ('NOFILE', 'NPROC'):
+            res = getattr(resource, 'RLIMIT_%s' % limit)
+            f.write('%s=%s\\n' % (limit, resource.getrlimit(res)))
+        f.write('END')
+finally:
+    sys.exit(0)
 """
 
 
 VERBOSE = """\
 import sys
 
-
-for i in range(1000):
-    for stream in (sys.stdout, sys.stderr):
-        stream.write(str(i))
-        stream.flush()
+try:
+    for i in range(1000):
+        for stream in (sys.stdout, sys.stderr):
+            stream.write(str(i))
+            stream.flush()
+    with open(sys.argv[1], 'w') as f:
+        f.write('END')
+finally:
+    sys.exit(0)
 
 """
 
@@ -63,17 +71,17 @@ class TestProcess(TestCircus):
                    'nproc': 20}
 
         process = Process('test', cmd, args=args, rlimits=rlimits)
-        try:
-            # wait for the process to finish
-            while process.status == RUNNING:
-                time.sleep(1)
-        finally:
-            process.stop()
+        poll_for(output_file, 'END')
+        process.stop()
 
         with open(output_file, 'r') as f:
             output = {}
             for line in f.readlines():
-                limit, value = line.rstrip().split('=', 1)
+                line = line.rstrip()
+                line = line.split('=', 1)
+                if len(line) != 2:
+                    continue
+                limit, value = line
                 output[limit] = value
 
         def srt2ints(val):
@@ -121,16 +129,16 @@ class TestProcess(TestCircus):
     @skipIf(_nose_no_s(), 'Nose runs without -s')
     def test_streams(self):
         script_file = self.get_tmpfile(VERBOSE)
+        output_file = self.get_tmpfile()
+
         cmd = sys.executable
-        args = [script_file]
+        args = [script_file, output_file]
 
         # 1. streams sent to /dev/null
         process = Process('test', cmd, args=args, close_child_stdout=True,
                           close_child_stderr=True)
         try:
-            # wait for the process to finish
-            while process.status == RUNNING:
-                time.sleep(1)
+            poll_for(output_file, 'END')
 
             # the pipes should be empty
             self.assertEqual(process.stdout.read(), b'')
@@ -139,15 +147,15 @@ class TestProcess(TestCircus):
             process.stop()
 
         # 2. streams sent to /dev/null, no PIPEs
+        output_file = self.get_tmpfile()
+        args[1] = output_file
+
         process = Process('test', cmd, args=args, close_child_stdout=True,
                           close_child_stderr=True, pipe_stdout=False,
                           pipe_stderr=False)
 
         try:
-            # wait for the process to finish
-            while process.status == RUNNING:
-                time.sleep(1)
-
+            poll_for(output_file, 'END')
             # the pipes should be unexistant
             self.assertTrue(process.stdout is None)
             self.assertTrue(process.stderr is None)
@@ -155,12 +163,12 @@ class TestProcess(TestCircus):
             process.stop()
 
         # 3. streams & pipes open
+        output_file = self.get_tmpfile()
+        args[1] = output_file
         process = Process('test', cmd, args=args)
 
         try:
-            # wait for the process to finish
-            while process.status == RUNNING:
-                time.sleep(1)
+            poll_for(output_file, 'END')
 
             # the pipes should be unexistant
             self.assertEqual(len(process.stdout.read()), 2890)
