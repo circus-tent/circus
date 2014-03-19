@@ -9,7 +9,13 @@ import pstats
 import shutil
 import functools
 import multiprocessing
-import sysconfig
+try:
+    import sysconfig
+    DEBUG = sysconfig.get_config_var('Py_DEBUG') == 1
+except ImportError:
+    # py2.6, we don't really care about that flage here
+    # since no one will run Python --with-pydebug in 2.6
+    DEBUG = 0
 
 try:
     from unittest import skip, skipIf, TestCase, TestSuite, findTestCases
@@ -32,9 +38,6 @@ from circus.stream import QueueStream
 ioloop.install()
 if 'ASYNC_TEST_TIMEOUT' not in os.environ:
     os.environ['ASYNC_TEST_TIMEOUT'] = '30'
-
-
-DEBUG = sysconfig.get_config_var('Py_DEBUG') == 1
 
 
 class EasyTestSuite(TestSuite):
