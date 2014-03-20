@@ -621,6 +621,9 @@ class Watcher(object):
         The signal is sent to the process itself then to all the children
         """
         try:
+            # getting the process children
+            children = process.children()
+
             # sending the signal to the process itself
             self.send_signal(process.pid, signum)
             self.notify_event("kill", {"process_pid": process.pid,
@@ -628,8 +631,9 @@ class Watcher(object):
         except NoSuchProcess:
             # already dead !
             pass
+
         # now sending the same signal to all the children
-        for child_pid in process.children():
+        for child_pid in children:
             try:
                 process.send_signal_child(child_pid, signum)
                 self.notify_event("kill", {"process_pid": child_pid,
