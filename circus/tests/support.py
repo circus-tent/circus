@@ -185,7 +185,7 @@ class TestCircus(AsyncTestCase):
     @classmethod
     def handle_callback_exception(cls, callback):
         exc_type, exc_value, tb = sys.exc_info()
-        traceback.print_traceback(tb)
+        traceback.print_tb(tb)
         raise exc_value
 
     @classmethod
