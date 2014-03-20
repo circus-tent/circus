@@ -100,6 +100,13 @@ def get_username(proc):
         return proc.username
 
 
+def get_status(proc):
+    try:
+        return proc.status()
+    except TypeError:
+        return proc.status
+
+
 class Process(object):
     """Wraps a process.
 
@@ -462,7 +469,7 @@ class Process(object):
         - OTHER
         """
         try:
-            if self._worker.status in (STATUS_ZOMBIE, STATUS_DEAD):
+            if get_status(self._worker) in (STATUS_ZOMBIE, STATUS_DEAD):
                 return DEAD_OR_ZOMBIE
         except NoSuchProcess:
             return UNEXISTING

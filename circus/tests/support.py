@@ -138,6 +138,7 @@ class TestCircus(AsyncTestCase):
             debug=True, async=True, **kw)
         self.test_file = testfile
         self.arbiter = arbiter
+        self.arbiters.append(arbiter)
         yield self.arbiter.start()
 
     @tornado.gen.coroutine
