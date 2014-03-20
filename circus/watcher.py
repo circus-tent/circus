@@ -653,13 +653,17 @@ class Watcher(object):
         """
         if process.stopping:
             raise gen.Return(False)
-        logger.debug("%s: kill process %s", self.name, process.pid)
-        if self.stop_children:
-            self.send_signal_process(process, self.stop_signal)
-        else:
-            self.send_signal(process.pid, self.stop_signal)
-            self.notify_event("kill", {"process_pid": process.pid,
-                                       "time": time.time()})
+        try:
+            logger.debug("%s: kill process %s", self.name, process.pid)
+            if self.stop_children:
+                self.send_signal_process(process, self.stop_signal)
+            else:
+                self.send_signal(process.pid, self.stop_signal)
+                self.notify_event("kill", {"process_pid": process.pid,
+                                           "time": time.time()})
+        except NoSuchProcess:
+            raise gen.Return(False)
+
         process.stopping = True
         waited = 0
         while waited < self.graceful_timeout:
