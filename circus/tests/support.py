@@ -182,6 +182,11 @@ class TestCircus(AsyncTestCase):
         return file
 
     @classmethod
+    def handle_callback_exception(cls, callback):
+        exc_type, exc_value, tb = sys.exc_info()
+        raise exc_value
+
+    @classmethod
     def _create_circus(cls, callable_path, plugins=None, stats=False,
                        async=False, arbiter_kw=None, **kw):
         resolve_name(callable_path)   # used to check the callable
@@ -213,6 +218,7 @@ class TestCircus(AsyncTestCase):
 
         arbiter = cls.arbiter_factory([worker], plugins=plugins, **arbiter_kw)
 
+        arbiter.loop.handle_callback_exception = cls.handle_callback_exception
         cls.arbiters.append(arbiter)
         #arbiter.start()
         return testfile, arbiter
