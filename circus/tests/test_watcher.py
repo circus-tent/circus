@@ -52,7 +52,6 @@ class FakeProcess(object):
         pass
 
 
-@skipIf('TRAVIS' in os.environ, 'Travis')
 class TestWatcher(TestCircus):
 
     runner = None
@@ -188,7 +187,6 @@ class TestWatcher(TestCircus):
         yield self.stop_arbiter()
 
 
-@skipIf('TRAVIS' in os.environ, 'Travis')
 class TestWatcherInitialization(TestCircus):
 
     @tornado.testing.gen_test
@@ -328,7 +326,6 @@ FAILURE = 2
 ERROR = 3
 
 
-@skipIf('TRAVIS' in os.environ, 'Travis')
 class TestWatcherHooks(TestCircus):
 
     def run_with_hooks(self, hooks):

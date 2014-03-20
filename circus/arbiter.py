@@ -527,8 +527,12 @@ class Arbiter(object):
     def stop_controller_and_close_sockets(self):
         self.ctrl.stop()
         self.evpub_socket.close()
+
         if len(self.sockets) > 0:
             self.sockets.close_all()
+
+        # XXX hackery
+        time.sleep(.1)
 
     def start_io_loop(self):
         """Starts the ioloop and wait inside it
