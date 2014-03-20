@@ -9,6 +9,7 @@ import pstats
 import shutil
 import functools
 import multiprocessing
+import traceback
 try:
     import sysconfig
     DEBUG = sysconfig.get_config_var('Py_DEBUG') == 1
@@ -184,6 +185,7 @@ class TestCircus(AsyncTestCase):
     @classmethod
     def handle_callback_exception(cls, callback):
         exc_type, exc_value, tb = sys.exc_info()
+        traceback.print_traceback(tb)
         raise exc_value
 
     @classmethod
