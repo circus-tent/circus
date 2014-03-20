@@ -102,7 +102,7 @@ class Arbiter(object):
         self.logoutput = logoutput
         self.umask = umask
         self.endpoint_owner = endpoint_owner
-
+        self._running = False
         try:
             # getfqdn appears to fail in Python3.3 in the unittest
             # framework so fall back to gethostname
@@ -221,6 +221,10 @@ class Arbiter(object):
 
         self.sockets = CircusSockets(sockets)
         self.warmup_delay = warmup_delay
+
+    @property
+    def running(self):
+        return self._running
 
     def _init_context(self, context):
         self.context = context or zmq.Context.instance()
@@ -515,6 +519,7 @@ class Arbiter(object):
                 # start_watchers will be called just after the start_io_loop()
                 self.loop.add_future(self.start_watchers(), lambda x: None)
             logger.info('Arbiter now waiting for commands')
+            self._running = True
             if not self._provided_loop:
                 # If an event loop is not provided, block at this line
                 self.start_io_loop()
@@ -531,8 +536,7 @@ class Arbiter(object):
         if len(self.sockets) > 0:
             self.sockets.close_all()
 
-        # XXX hackery
-        time.sleep(.1)
+        self._running = False
 
     def start_io_loop(self):
         """Starts the ioloop and wait inside it

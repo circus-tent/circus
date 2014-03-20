@@ -89,10 +89,10 @@ _CMD = sys.executable
 class TestCircus(AsyncTestCase):
 
     arbiter_factory = get_arbiter
+    arbiters = []
 
     def setUp(self):
         super(TestCircus, self).setUp()
-        self.arbiters = []
         self.files = []
         self.dirs = []
         self.tmpfiles = []
@@ -111,6 +111,12 @@ class TestCircus(AsyncTestCase):
         self.cli.stop()
         for plugin in self.plugins:
             plugin.stop()
+
+        for arbiter in self.arbiters:
+            if arbiter.running:
+                arbiter.stop()
+
+        self.arbiters = []
         super(TestCircus, self).tearDown()
 
     def make_plugin(self, klass, endpoint=DEFAULT_ENDPOINT_DEALER,
@@ -206,6 +212,7 @@ class TestCircus(AsyncTestCase):
 
         arbiter = cls.arbiter_factory([worker], plugins=plugins, **arbiter_kw)
 
+        cls.arbiters.append(arbiter)
         #arbiter.start()
         return testfile, arbiter
 
