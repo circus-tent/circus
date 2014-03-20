@@ -146,7 +146,7 @@ class TestCircus(AsyncTestCase):
     def stop_arbiter(self):
         for watcher in self.arbiter.iter_watchers():
             yield self.arbiter.rm_watcher(watcher.name)
-        yield self.arbiter.stop()
+        yield self.arbiter._emergency_stop()
 
     @tornado.gen.coroutine
     def status(self, cmd, **props):
