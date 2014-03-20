@@ -184,9 +184,10 @@ class TestCircus(AsyncTestCase):
 
     @classmethod
     def handle_callback_exception(cls, callback):
-        exc_type, exc_value, tb = sys.exc_info()
-        traceback.print_tb(tb)
-        raise exc_value
+        if os.environ.get('CATCH_ASYNC_ERRORS'):
+            exc_type, exc_value, tb = sys.exc_info()
+            traceback.print_tb(tb)
+            raise exc_value
 
     @classmethod
     def _create_circus(cls, callable_path, plugins=None, stats=False,
