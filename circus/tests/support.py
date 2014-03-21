@@ -98,58 +98,20 @@ def get_ioloop():
             self._fds = []
 
         def poll(self, timeout):
-            z_events = self._poller.poll(1000*timeout)
-            if len(z_events) > 0:
-                evts = [(self._fd(fd), (evt)) for fd, evt in z_events]
-                print("Polled events " + str(evts))
+            """
+            #737 - For some reason the poller issues events with unexistant FDs,
+            usually with big ints. We have not found yet the reason of this
+            behavior that happens only during the tests. But by filtering out
+            those events, everything works fine.
 
+            """
+            z_events = self._poller.poll(1000*timeout)
             return [(fd, self._remap_events(evt)) for fd, evt in z_events
                     if fd in self._fds]
-
-        def _fd(self, fd):
-            if hasattr(fd, 'FD'):
-                return '%s => %d' % (str(fd), fd.FD)
-            return 'plain fd: ' + str(fd)
-
-        def register(self, fd, events):
-            print("Registered for polling " + str(self._fd(fd)))
-            if fd not in self._fds:
-                self._fds.append(fd)
-            return self._poller.register(fd, self._map_events(events))
-
-        def modify(self, fd, events):
-            if fd not in self._fds:
-                self._fds.append(fd)
-            print("Modified for polling " + str(self._fd(fd)))
-            return self._poller.modify(fd, self._map_events(events))
-
-        def unregister(self, fd):
-            if fd in self._fds:
-                self._fds.remove(fd)
-            print("Unregister for polling " + str(self._fd(fd)))
-            return self._poller.unregister(fd)
-
 
     class DebugLoop(PollIOLoop):
         def initialize(self, **kwargs):
             PollIOLoop.initialize(self, impl=DebugPoller(), **kwargs)
-
-        def _fd(self, fd):
-            if hasattr(fd, 'FD'):
-                return fd.FD
-            return fd
-
-        def add_handler(self, fd, handler, events):
-            print('Add Handler ' + str(self._fd(fd)) + ' ' + str(handler))
-            super(DebugLoop, self).add_handler(fd, handler, events)
-
-        def update_handler(self, fd, events):
-            print('Update Handler ' + str(self._fd(fd)))
-            super(DebugLoop, self).update_handler(fd, events)
-
-        def remove_handler(self, fd):
-            print('Remove Handler ' + str(self._fd(fd)))
-            super(DebugLoop, self).remove_handler(fd)
 
         @staticmethod
         def instance():
