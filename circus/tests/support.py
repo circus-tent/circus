@@ -102,8 +102,8 @@ def get_ioloop():
 
         def _fd(self, fd):
             if hasattr(fd, 'FD'):
-                return fd.FD
-            return fd
+                return '%s => %d' % (str(fd), fd.FD)
+            return 'plain fd: ' + str(fd)
 
         def register(self, fd, events):
             print("Registered for polling " + str(self._fd(fd)))
