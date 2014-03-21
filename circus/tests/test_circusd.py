@@ -69,6 +69,7 @@ class TestCircusd(TestCase):
         self.forked += 1
         return 0
 
+    @skipIf('TRAVIS' in os.environ, 'Travis detected')
     @skipIf(not has_gevent(), "Only when Gevent is loaded")
     def test_daemon(self):
         # if gevent is loaded, we want to prevent
