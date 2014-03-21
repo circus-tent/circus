@@ -128,6 +128,10 @@ def get_ioloop():
         def initialize(self, **kwargs):
             PollIOLoop.initialize(self, impl=DebugPoller(), **kwargs)
 
+        def handle_callback_exception(self, callback):
+            exc_type, exc_value, tb = sys.exc_info()
+            raise exc_value
+
         @staticmethod
         def instance():
             PollIOLoop.configure(DebugLoop)
