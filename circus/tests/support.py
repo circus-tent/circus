@@ -9,7 +9,6 @@ import pstats
 import shutil
 import functools
 import multiprocessing
-import traceback
 try:
     import sysconfig
     DEBUG = sysconfig.get_config_var('Py_DEBUG') == 1
@@ -87,6 +86,68 @@ def resolve_name(name):
 _CMD = sys.executable
 
 
+def get_ioloop():
+    from zmq.eventloop.ioloop import ZMQPoller
+    from zmq.eventloop.ioloop import ZMQError, ETERM
+    from tornado.ioloop import PollIOLoop
+
+    class DebugPoller(ZMQPoller):
+        def __init__(self):
+            super(DebugPoller, self).__init__()
+            self._fds = []
+
+        def register(self, fd, events):
+            if fd not in self._fds:
+                self._fds.append(fd)
+            return self._poller.register(fd, self._map_events(events))
+
+        def modify(self, fd, events):
+            if fd not in self._fds:
+                self._fds.append(fd)
+            return self._poller.modify(fd, self._map_events(events))
+
+        def unregister(self, fd):
+            if fd in self._fds:
+                self._fds.remove(fd)
+            return self._poller.unregister(fd)
+
+        def poll(self, timeout):
+            """
+            #737 - For some reason the poller issues events with
+            unexistant FDs, usually with big ints. We have not found yet the
+            reason of this
+            behavior that happens only during the tests. But by filtering out
+            those events, everything works fine.
+
+            """
+            z_events = self._poller.poll(1000*timeout)
+            return [(fd, self._remap_events(evt)) for fd, evt in z_events
+                    if fd in self._fds]
+
+    class DebugLoop(PollIOLoop):
+        def initialize(self, **kwargs):
+            PollIOLoop.initialize(self, impl=DebugPoller(), **kwargs)
+
+        @staticmethod
+        def instance():
+            PollIOLoop.configure(DebugLoop)
+            return PollIOLoop.instance()
+
+        def start(self):
+            try:
+                super(DebugLoop, self).start()
+            except ZMQError as e:
+                if e.errno == ETERM:
+                    # quietly return on ETERM
+                    pass
+                else:
+                    raise e
+
+    from tornado import ioloop
+    ioloop.IOLoop.configure(DebugLoop)
+    return ioloop.IOLoop.instance()
+
+
 class TestCircus(AsyncTestCase):
 
     arbiter_factory = get_arbiter
@@ -101,7 +162,7 @@ class TestCircus(AsyncTestCase):
         self.plugins = []
 
     def get_new_ioloop(self):
-        return tornado.ioloop.IOLoop.instance()
+        return get_ioloop()
 
     def tearDown(self):
         for file in self.files + self.tmpfiles:
@@ -183,13 +244,6 @@ class TestCircus(AsyncTestCase):
         return file
 
     @classmethod
-    def handle_callback_exception(cls, callback):
-        if os.environ.get('CATCH_ASYNC_ERRORS'):
-            exc_type, exc_value, tb = sys.exc_info()
-            traceback.print_tb(tb)
-            raise exc_value
-
-    @classmethod
     def _create_circus(cls, callable_path, plugins=None, stats=False,
                        async=False, arbiter_kw=None, **kw):
         resolve_name(callable_path)   # used to check the callable
@@ -215,15 +269,12 @@ class TestCircus(AsyncTestCase):
 
         if async:
             arbiter_kw['background'] = False
-            arbiter_kw['loop'] = tornado.ioloop.IOLoop.instance()
+            arbiter_kw['loop'] = get_ioloop()
         else:
             arbiter_kw['background'] = True
 
         arbiter = cls.arbiter_factory([worker], plugins=plugins, **arbiter_kw)
-
-        arbiter.loop.handle_callback_exception = cls.handle_callback_exception
         cls.arbiters.append(arbiter)
-        #arbiter.start()
         return testfile, arbiter
 
     def _run_circus(self, callable_path, plugins=None, stats=False, **kw):

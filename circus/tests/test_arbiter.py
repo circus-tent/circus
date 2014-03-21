@@ -14,7 +14,7 @@ from circus.arbiter import Arbiter
 from circus.client import CircusClient
 from circus.plugins import CircusPlugin
 from circus.tests.support import TestCircus, async_poll_for, truncate_file
-from circus.tests.support import EasyTestSuite, skipIf
+from circus.tests.support import EasyTestSuite, skipIf, get_ioloop
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
                          DEFAULT_ENDPOINT_SUB)
 from circus.watcher import Watcher
@@ -530,7 +530,7 @@ class TestTrainer(TestCircus):
         @tornado.gen.coroutine
         def _sleep(duration):
             called.append(duration)
-            loop = tornado.ioloop.IOLoop.instance()
+            loop = get_ioloop()
             yield tornado.gen.Task(loop.add_timeout, time() + duration)
 
         watcher_mod.tornado_sleep = _sleep
@@ -579,7 +579,7 @@ class TestArbiter(TestCircus):
     @tornado.testing.gen_test
     def test_add_watcher(self):
         arbiter = Arbiter([], DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                          loop=tornado.ioloop.IOLoop.instance(),
+                          loop=get_ioloop(),
                           check_delay=-1)
         arbiter.add_watcher('foo', 'sleep 5')
         try:
@@ -591,7 +591,7 @@ class TestArbiter(TestCircus):
     @tornado.testing.gen_test
     def test_start_arbiter_with_autostart(self):
         arbiter = Arbiter([], DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                          loop=tornado.ioloop.IOLoop.instance(),
+                          loop=get_ioloop(),
                           check_delay=-1)
         arbiter.add_watcher('foo', 'sleep 5', autostart=False)
         try:
@@ -607,7 +607,7 @@ class TestCircusWeb(TestCircus):
     @tornado.testing.gen_test
     def test_circushttpd(self):
         arbiter = Arbiter([], DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                          loop=tornado.ioloop.IOLoop.instance(),
+                          loop=get_ioloop(),
                           check_delay=-1, httpd=True, debug=True)
         self.arbiters.append(arbiter)
         try:
