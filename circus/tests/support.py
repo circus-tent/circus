@@ -99,16 +99,21 @@ def get_ioloop():
         def initialize(self, **kwargs):
             PollIOLoop.initialize(self, impl=DebugPoller(), **kwargs)
 
+        def _fd(self, fd):
+            if hasattr(fd, 'FD'):
+                return fd.FD
+            return fd
+
         def add_handler(self, fd, handler, events):
-            print('Add Handler ' + str(fd) + ' ' + str(handler))
+            print('Add Handler ' + str(self._fd(fd)) + ' ' + str(handler))
             super(DebugLoop, self).add_handler(fd, handler, events)
 
         def update_handler(self, fd, events):
-            print('Update Handler ' + str(fd))
+            print('Update Handler ' + str(self._fd(fd)))
             super(DebugLoop, self).update_handler(fd, events)
 
         def remove_handler(self, fd):
-            print('Remove Handler ' + str(fd))
+            print('Remove Handler ' + str(self._fd(fd)))
             super(DebugLoop, self).remove_handler(fd)
 
         @staticmethod
