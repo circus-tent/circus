@@ -505,11 +505,12 @@ class Arbiter(object):
         method.
         """
         logger.info("Starting master on pid %s", self.pid)
-        self.initialize()
 
+        self.initialize()
         # start controller
         self.ctrl.start()
         self._restarting = False
+
         try:
             # initialize processes
             logger.debug('Initializing watchers')
