@@ -93,7 +93,30 @@ def get_ioloop():
     from tornado.ioloop import PollIOLoop
 
     class DebugPoller(ZMQPoller):
-        pass
+        def poll(self, timeout):
+            z_events = self._poller.poll(1000*timeout)
+            if len(z_events) > 0:
+                evts = [(self._fd(fd), (evt)) for fd, evt in z_events]
+                print("Polled events " + str(evts))
+            return [(fd, self._remap_events(evt)) for fd, evt in z_events]
+
+        def _fd(self, fd):
+            if hasattr(fd, 'FD'):
+                return fd.FD
+            return fd
+
+        def register(self, fd, events):
+            print("Registered for polling " + str(self._fd(fd)))
+            return self._poller.register(fd, self._map_events(events))
+
+        def modify(self, fd, events):
+            print("Modified for polling " + str(self._fd(fd)))
+            return self._poller.modify(fd, self._map_events(events))
+
+        def unregister(self, fd):
+            print("Unregister for polling " + str(self._fd(fd)))
+            return self._poller.unregister(fd)
+
 
     class DebugLoop(PollIOLoop):
         def initialize(self, **kwargs):
