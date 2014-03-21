@@ -93,12 +93,18 @@ def get_ioloop():
     from tornado.ioloop import PollIOLoop
 
     class DebugPoller(ZMQPoller):
+        def __init__(self):
+            super(DebugPoller, self).__init__()
+            self._fds = []
+
         def poll(self, timeout):
             z_events = self._poller.poll(1000*timeout)
             if len(z_events) > 0:
                 evts = [(self._fd(fd), (evt)) for fd, evt in z_events]
                 print("Polled events " + str(evts))
-            return [(fd, self._remap_events(evt)) for fd, evt in z_events]
+
+            return [(fd, self._remap_events(evt)) for fd, evt in z_events
+                    if fd in self._fds]
 
         def _fd(self, fd):
             if hasattr(fd, 'FD'):
@@ -107,13 +113,19 @@ def get_ioloop():
 
         def register(self, fd, events):
             print("Registered for polling " + str(self._fd(fd)))
+            if fd not in self._fds:
+                self._fds.append(fd)
             return self._poller.register(fd, self._map_events(events))
 
         def modify(self, fd, events):
+            if fd not in self._fds:
+                self._fds.append(fd)
             print("Modified for polling " + str(self._fd(fd)))
             return self._poller.modify(fd, self._map_events(events))
 
         def unregister(self, fd):
+            if fd in self._fds:
+                self._fds.remove(fd)
             print("Unregister for polling " + str(self._fd(fd)))
             return self._poller.unregister(fd)
 
