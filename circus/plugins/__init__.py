@@ -35,17 +35,17 @@ class CircusPlugin(object):
         self.daemon = True
         self.config = config
         self.active = to_bool(config.get('active', True))
-        self.context = zmq.Context()
         self.pubsub_endpoint = pubsub_endpoint
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.ssh_server = ssh_server
-        self.loop = ioloop.IOLoop()
         self._id = b(uuid.uuid4().hex)
         self.running = False
+        self.loop = ioloop.IOLoop()
 
     @debuglog
     def initialize(self):
+        self.context = zmq.Context()
         self.client = self.context.socket(zmq.DEALER)
         self.client.setsockopt(zmq.IDENTITY, self._id)
         get_connection(self.client, self.endpoint, self.ssh_server)
@@ -89,6 +89,7 @@ class CircusPlugin(object):
     @debuglog
     def stop(self):
         if not self.running:
+            self.loop.close()
             return
 
         try:

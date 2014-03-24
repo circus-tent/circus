@@ -31,7 +31,7 @@ import tornado
 from circus import get_arbiter
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_STATS)
-from circus.util import tornado_sleep
+from circus.util import tornado_sleep, ConflictError
 from circus.client import AsyncCircusClient, make_message
 from circus.stream import QueueStream
 
@@ -180,7 +180,10 @@ class TestCircus(AsyncTestCase):
 
         for arbiter in self.arbiters:
             if arbiter.running:
-                arbiter.stop()
+                try:
+                    arbiter.stop()
+                except ConflictError:
+                    pass
 
         self.arbiters = []
         super(TestCircus, self).tearDown()
@@ -476,6 +479,7 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
 
     deadline = time() + (duration / 1000.)
     plugin.loop.add_timeout(deadline, plugin.stop)
+
     plugin.start()
     try:
         if plugin_info_callback:

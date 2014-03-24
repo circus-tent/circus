@@ -770,6 +770,8 @@ class Watcher(object):
         # We ignore the hook result
         self.call_hook('before_stop')
         yield self.kill_processes()
+        self.reap_processes()
+
         # stop redirectors
         if self.stdout_redirector is not None:
             self.stdout_redirector.stop()

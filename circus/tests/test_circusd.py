@@ -80,7 +80,8 @@ class TestCircusd(TestCase):
             if module.startswith('gevent'):
                 del sys.modules[module]
 
-        from gevent import socket   # NOQA
+        import gevent
+        sys.modules['gevent'] = gevent
         self.assertRaises(ValueError, daemonize)
 
     def test_maxfd(self):

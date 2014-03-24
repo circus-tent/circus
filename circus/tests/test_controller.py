@@ -1,11 +1,8 @@
-from circus.tests.support import TestCase, EasyTestSuite
+from circus.tests.support import TestCase, EasyTestSuite, get_ioloop
 from circus.controller import Controller
 from circus.util import DEFAULT_ENDPOINT_MULTICAST
 from circus import logger
-
 import circus.controller
-
-from zmq.eventloop import ioloop
 
 import mock
 
@@ -28,14 +25,12 @@ class TestController(TestCase):
                 self.called = True
                 self.loop.stop()
 
-        loop = ioloop.IOLoop()
-
+        loop = get_ioloop()
         controller = MockedController('endpoint', 'multicast_endpoint',
                                       mock.sentinel.context, loop, arbiter,
                                       check_delay=-1.0)
 
         controller.dispatch((None, 'something'))
-        loop.add_timeout(loop.time() + 1, loop.stop)
         controller.start()
         loop.start()
         self.assertTrue(controller.called)

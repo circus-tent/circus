@@ -42,6 +42,9 @@ class FakeProcess(object):
         self.age = age
         self.stopping = False
 
+    def returncode(self):
+        return 0
+
     def children(self):
         return []
 
