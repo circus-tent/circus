@@ -74,9 +74,9 @@ def get_cpu_times(proc):
 
 def get_nice(proc):
     try:
-        return proc.get_nice()
+        return proc.nice()
     except AttributeError:
-        return proc.nice
+        return proc.get_nice()
 
 
 def get_cmdline(proc):
