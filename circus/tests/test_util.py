@@ -66,7 +66,7 @@ class TestUtil(TestCase):
         self.assertEqual(info['create_time'], 'N/A')
         self.assertEqual(info['age'], 'N/A')
 
-        worker.get_nice = mock.MagicMock(side_effect=util.NoSuchProcess(1234))
+        worker.nice = mock.MagicMock(side_effect=util.NoSuchProcess(1234))
         self.assertEqual(get_info(worker)['nice'], 'Zombie')
 
     def test_convert_opt(self):
