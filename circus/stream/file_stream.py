@@ -203,14 +203,16 @@ class TimedRotatingFileStream(FileStream):
         behaviour based on Python's
         ``logging.handlers.TimedRotatingFileHandler``.
 
-        The parameters are same as ``FileStream`` except max_bytes.
-        In addition you can specify parameters
-        what are utc, rotate_when, rotate_interval.
-        If the utc argument is true, times in UTC will be used,
-        otherwise local time is used.
-        rotate_when is used to specify the type of interval
-        and you can specify rollover interval as
-        rotate_interval (default is 1).
+        The parameters are the same as ``FileStream`` except max_bytes.
+
+        In addition you can specify extra parameters:
+
+        - utc: if True, times in UTC will be used. otherwise local time is
+          used. Default: False.
+        - rotate_when: the type of interval. Can be S, M, H, D,
+          'W0'-'W6' or 'midnight'. See Python's TimedRotatingFileHandler
+          for more information.
+        - rotate_interval: Rollover interval in seconds. Default: 1
 
         Here is an example: ::
 
@@ -222,6 +224,7 @@ class TimedRotatingFileStream(FileStream):
           stdout_stream.utc = True
           stdout_stream.rotate_when = H
           stdout_stream.rotate_interval = 1
+
         '''
         super(TimedRotatingFileStream,
               self).__init__(filename=filename, backup_count=backup_count,
