@@ -11,6 +11,7 @@ class TestStatsPublisher(TestCase):
 
     def test_publish(self):
         publisher = StatsPublisher()
+        publisher.socket.close()
         publisher.socket = mock.MagicMock()
         stat = {'subtopic': 1, 'foo': 'bar'}
         publisher.publish('foobar', stat)
