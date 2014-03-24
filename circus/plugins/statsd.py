@@ -1,6 +1,9 @@
 import socket
+
 from zmq.eventloop import ioloop
+
 from circus.plugins import CircusPlugin
+from circus.util import human2bytes
 
 
 class StatsdClient(object):
@@ -108,11 +111,13 @@ class FullStats(BaseObserver):
 
             cpus = []
             mems = []
+            mem_infos = []
 
             for sub_name, sub_info in stats.items():
                 if isinstance(sub_info, dict):
                     cpus.append(sub_info['cpu'])
                     mems.append(sub_info['mem'])
+                    mem_infos.append(human2bytes(sub_info['mem_info1']))
                 elif sub_name == "spawn_count":
                     # spawn_count info is in the same level as processes
                     # dict infos, so if spawn_count is given, take it and
@@ -126,7 +131,10 @@ class FullStats(BaseObserver):
                 # if there are only dead processes, we have an empty list
                 # and we can't measure it
                 continue
+
             self.statsd.gauge("_stats.%s.cpu_max" % name, max(cpus))
             self.statsd.gauge("_stats.%s.cpu_sum" % name, sum(cpus))
-            self.statsd.gauge("_stats.%s.mem_max" % name, max(mems))
-            self.statsd.gauge("_stats.%s.mem_sum" % name, sum(mems))
+            self.statsd.gauge("_stats.%s.mem_pct_max" % name, max(mems))
+            self.statsd.gauge("_stats.%s.mem_pct_sum" % name, sum(mems))
+            self.statsd.gauge("_stats.%s.mem_max" % name, max(mem_infos))
+            self.statsd.gauge("_stats.%s.mem_sum" % name, sum(mem_infos))

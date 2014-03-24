@@ -135,6 +135,48 @@ def bytes2human(n):
     return "%sB" % n
 
 
+_HSYMBOLS = {
+    'customary': ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
+    'customary_ext': ('byte', 'kilo', 'mega', 'giga', 'tera', 'peta', 'exa',
+                      'zetta', 'iotta'),
+    'iec': ('Bi', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi'),
+    'iec_ext': ('byte', 'kibi', 'mebi', 'gibi', 'tebi', 'pebi', 'exbi',
+                'zebi', 'yobi'),
+}
+
+
+_HSYMBOLS_VALUES = _HSYMBOLS.values()
+
+
+def human2bytes(s):
+    init = s
+    num = ""
+    while s and s[0:1].isdigit() or s[0:1] == '.':
+        num += s[0]
+        s = s[1:]
+
+    num = float(num)
+    letter = s.strip()
+
+    for sset in _HSYMBOLS_VALUES:
+        if letter in sset:
+            break
+
+    else:
+        if letter == 'k':
+            # treat 'k' as an alias for 'K' as per: http://goo.gl/kTQMs
+            sset = _HSYMBOLS['customary']
+            letter = letter.upper()
+        else:
+            raise ValueError("can't interpret %r" % init)
+
+    prefix = {sset[0]: 1}
+    for i, s in enumerate(sset[1:]):
+        prefix[s] = 1 << (i+1) * 10
+
+    return int(num * prefix[letter])
+
+
 # XXX weak dict ?
 _PROCS = {}
 
