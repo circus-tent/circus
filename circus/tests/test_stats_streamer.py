@@ -3,11 +3,10 @@ import tempfile
 import time
 
 import mock
-from zmq.eventloop import ioloop
 import zmq.utils.jsonapi as json
 
 from circus.stats.collector import SocketStatsCollector
-from circus.tests.support import TestCircus, EasyTestSuite
+from circus.tests.support import TestCircus, EasyTestSuite, get_ioloop
 from circus.stats.streamer import StatsStreamer
 from circus import util
 from circus import client
@@ -64,7 +63,7 @@ class TestStatsStreamer(TestCircus):
         pubsub = util.DEFAULT_ENDPOINT_SUB
         statspoint = util.DEFAULT_ENDPOINT_STATS
 
-        loop = ioloop.IOLoop()
+        loop = get_ioloop()
         streamer = _StatsStreamer(endpoint, pubsub, statspoint,
                                   loop=loop)
 
