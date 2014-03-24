@@ -249,6 +249,14 @@ def get_config(config_file):
 
             watchers.append(watcher)
 
+    # making sure we return consistent lists
+    def _by_field(w1, w2, field='name'):
+        return cmp(w1[field], w2[field])
+
+    watchers.sort(_by_field)
+    plugins.sort(_by_field)
+    sockets.sort(_by_field)
+
     # Second pass to make sure env sections apply to all watchers.
 
     def _extend(target, source):

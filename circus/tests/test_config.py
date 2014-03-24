@@ -128,7 +128,6 @@ class TestConfig(TestCase):
                 self.assertFalse(mock_logger_warn.called)
 
             # with shell_args
-
             with patch.object(logger, 'warn') as mock_logger_warn:
                 formatted_args = load(conf['watchers'][1])
                 self.assertEqual(formatted_args,
@@ -136,7 +135,6 @@ class TestConfig(TestCase):
                 self.assertFalse(mock_logger_warn.called)
 
             # with shell_args but not shell
-
             with patch.object(logger, 'warn') as mock_logger_warn:
                 formatted_args = load(conf['watchers'][2])
                 self.assertEqual(formatted_args, ['foo', '--fd'])
@@ -146,21 +144,18 @@ class TestConfig(TestCase):
             circus.process.is_win = lambda: True
 
             # without shell_args
-
             with patch.object(logger, 'warn') as mock_logger_warn:
                 formatted_args = load(conf['watchers'][0])
                 self.assertEqual(formatted_args, ['foo --fd'])
                 self.assertFalse(mock_logger_warn.called)
 
             # with shell_args
-
             with patch.object(logger, 'warn') as mock_logger_warn:
                 formatted_args = load(conf['watchers'][1])
                 self.assertEqual(formatted_args, ['foo --fd'])
                 self.assertTrue(mock_logger_warn.called)
 
             # with shell_args but not shell
-
             with patch.object(logger, 'warn') as mock_logger_warn:
                 formatted_args = load(conf['watchers'][2])
                 self.assertEqual(formatted_args, ['foo', '--fd'])
@@ -348,12 +343,12 @@ class TestConfig(TestCase):
 
     def test_socket_so_reuseport_yes(self):
         conf = get_config(_CONF['reuseport'])
-        s1 = conf['sockets'][0]
+        s1 = conf['sockets'][1]
         self.assertEqual(s1['so_reuseport'], True)
 
     def test_socket_so_reuseport_no(self):
         conf = get_config(_CONF['reuseport'])
-        s1 = conf['sockets'][1]
+        s1 = conf['sockets'][0]
         self.assertEqual(s1['so_reuseport'], False)
 
     def test_check_delay(self):
