@@ -10,6 +10,7 @@ except ImportError:
 from circus.util import resolve_name
 from circus.stream.file_stream import FileStream
 from circus.stream.file_stream import WatchedFileStream  # flake8: noqa
+from circus.stream.file_stream import TimedRotatingFileStream  # flake8: noqa
 from circus.stream.redirector import Redirector
 from circus.py3compat import s
 
