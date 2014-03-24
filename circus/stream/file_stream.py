@@ -2,7 +2,9 @@ import errno
 import os
 import tempfile
 from datetime import datetime
-from stat import ST_DEV, ST_INO
+import time as time_
+import re
+from stat import ST_DEV, ST_INO, ST_MTIME
 from circus import logger
 from circus.py3compat import s, PY2
 
@@ -187,3 +189,188 @@ class WatchedFileStream(_FileStreamBase):
             self._statfile()
 
         self.write_data(data)
+
+
+_MIDNIGHT = 24 * 60 * 60  # number of seconds in a day
+
+
+class TimedRotatingFileStream(FileStream):
+
+    def __init__(self, filename=None, backup_count=0, time_format=None,
+                 rotate_when=None, rotate_interval=1, utc=False, **kwargs):
+        '''
+        File writer handler which writes output to a file, allowing rotation
+        behaviour based on Python's
+        ``logging.handlers.TimedRotatingFileHandler``.
+
+        The parameters are same as ``FileStream`` except max_bytes.
+        In addition you can specify parameters
+        what are utc, rotate_when, rotate_interval.
+        If the utc argument is true, times in UTC will be used,
+        otherwise local time is used.
+        rotate_when is used to specify the type of interval
+        and you can specify rollover interval as
+        rotate_interval (default is 1).
+
+        Here is an example: ::
+
+          [watcher:foo]
+          cmd = python -m myapp.server
+          stdout_stream.class = TimedRotatingFileStream
+          stdout_stream.filename = /var/log/circus/out.log
+          stdout_stream.time_format = %Y-%m-%d %H:%M:%S
+          stdout_stream.utc = True
+          stdout_stream.rotate_when = H
+          stdout_stream.rotate_interval = 1
+        '''
+        super(TimedRotatingFileStream,
+              self).__init__(filename=filename, backup_count=backup_count,
+                             time_format=time_format, utc=False,
+                             **kwargs)
+
+        self._utc = bool(utc)
+        self._when = rotate_when
+
+        if self._when == "S":
+            self._interval = 1
+            self._suffix = "%Y%m%d%H%M%S"
+            self._ext_match = r"^\d{4}\d{2}\d{2}\d{2}\d{2}\d{2}$"
+        elif self._when == "M":
+            self._interval = 60
+            self._suffix = "%Y%m%d%H%M"
+            self._ext_match = r"^\d{4}\d{2}\d{2}\d{2}\d{2}$"
+        elif self._when == "H":
+            self._interval = 60 * 60
+            self._suffix = "%Y%m%d%H"
+            self._ext_match = r"^\d{4}\d{2}\d{2}\d{2}$"
+        elif self._when in ("D", "MIDNIGHT"):
+            self._interval = 60 * 60 * 24
+            self._suffix = "%Y%m%d"
+            self._ext_match = r"^\d{4}\d{2}\d{2}$"
+        elif self._when.startswith("W"):
+            self._interval = 60 * 60 * 24 * 7
+            if len(self._when) != 2:
+                raise ValueError("You must specify a day for weekly\
+rollover from 0 to 6 (0 is Monday): %s" % self._when)
+            if self._when[1] < "0" or self._when[1] > "6":
+                raise ValueError("Invalid day specified\
+for weekly rollover: %s" % self._when)
+            self._day_of_week = int(self._when[1])
+            self._suffix = "%Y%m%d"
+            self._ext_match = r"^\d{4}\d{2}\d{2}$"
+        else:
+            raise ValueError("Invalid rollover interval specified: %s" %
+                             self._when)
+
+        self._ext_match = re.compile(self._ext_match)
+        self._interval = self._interval * int(rotate_interval)
+
+        if os.path.exists(self._filename):
+            t = os.stat(self._filename)[ST_MTIME]
+        else:
+            t = int(time_.time())
+        self._rollover_at = self._compute_rollover(t)
+
+    def _do_rollover(self):
+        if self._file:
+            self._file.close()
+            self._file = None
+
+        current_time = int(time_.time())
+        dst_now = time_.localtime(current_time)[-1]
+        t = self._rollover_at - self._interval
+        if self._utc:
+            time_touple = time_.gmtime(t)
+        else:
+            time_touple = time_.localtime(t)
+            dst_then = time_touple[-1]
+            if dst_now != dst_then:
+                if dst_now:
+                    addend = 3600
+                else:
+                    addend = -3600
+                time_touple = time_.localtime(t + addend)
+
+        dfn = self._filename + "." + time_.strftime(self._suffix, time_touple)
+
+        if os.path.exists(dfn):
+            os.remove(dfn)
+
+        if os.path.exists(self._filename):
+            os.rename(self._filename, dfn)
+            logger.debug("Log rotating %s -> %s" % (self._filename, dfn))
+
+        if self._backup_count > 0:
+            for s in self._get_files_to_delete():
+                os.remove(s)
+
+        self._file = self._open()
+
+        new_rollover_at = self._compute_rollover(current_time)
+        while new_rollover_at <= current_time:
+            new_rollover_at = new_rollover_at + self._interval
+        self._rollover_at = new_rollover_at
+
+    def _compute_rollover(self, current_time):
+        result = current_time + self._interval
+
+        if self._when == "MIDNIGHT" or self._when.startswith("W"):
+            if self._utc:
+                t = time_.gmtime(current_time)
+            else:
+                t = time_.localtime(current_time)
+            current_hour = t[3]
+            current_minute = t[4]
+            current_second = t[5]
+
+            r = _MIDNIGHT - ((current_hour * 60 + current_minute) *
+                             60 + current_second)
+            result = current_time + r
+
+            if self._when.startswith("W"):
+                day = t[6]
+                if day != self._day_of_week:
+                    days_to_wait = self._day_of_week - day
+                else:
+                    days_to_wait = 6 - day + self._day_of_week + 1
+                new_rollover_at = result + (days_to_wait * (60 * 60 * 24))
+                if not self._utc:
+                    dst_now = t[-1]
+                    dst_at_rollover = time_.localtime(new_rollover_at)[-1]
+                    if dst_now != dst_at_rollover:
+                        if not dst_now:
+                            addend = -3600
+                        else:
+                            addend = 3600
+                        new_rollover_at += addend
+                result = new_rollover_at
+
+        return result
+
+    def _get_files_to_delete(self):
+        dirname, basename = os.path.split(self._filename)
+        prefix = basename + "."
+        plen = len(prefix)
+
+        result = []
+        for filename in os.listdir(dirname):
+            if filename[:plen] == prefix:
+                suffix = filename[plen:]
+                if self._ext_match.match(suffix):
+                    result.append(os.path.join(dirname, filename))
+        result.sort()
+        if len(result) < self._backup_count:
+            return []
+        return result[:len(result) - self._backup_count]
+
+    def _should_rollover(self, raw_data):
+        """
+        Determine if rollover should occur.
+
+        record is not used, as we are just comparing times, but it is needed so
+        the method signatures are the same
+        """
+        t = int(time_.time())
+        if t >= self._rollover_at:
+            return 1
+        return 0

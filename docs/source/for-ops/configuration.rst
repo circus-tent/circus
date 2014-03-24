@@ -174,6 +174,7 @@ watcher:NAME - as many sections as you want
 
         - :class:`FileStream`: writes in a file and can do automatic log rotation
         - :class:`WatchedFileStream`: writes in a file and relies on external log rotation
+        - :class:`TimedRotatingFileStream`: writes in a file and can do rotate at certain timed intervals.
         - :class:`QueueStream`: write in a memory Queue
         - :class:`StdoutStream`: writes in the stdout
         - :class:`FancyStdoutStream`: writes colored output with time prefixes in the stdout
@@ -191,6 +192,7 @@ watcher:NAME - as many sections as you want
 
         - :class:`FileStream`: writes in a file and can do automatic log rotation
         - :class:`WatchedFileStream`: writes in a file and relies on external log rotation
+        - :class:`TimedRotatingFileStream`: writes in a file and can do rotate at certain timed intervals.
         - :class:`QueueStream`: write in a memory Queue
         - :class:`StdoutStream`: writes in the stdout
         - :class:`FancyStdoutStream`: writes colored output with time prefixes in the stdout
@@ -606,6 +608,59 @@ Example:
     stdout_stream.class = WatchedFileStream
     stdout_stream.filename = test.log
     stdout_stream.time_format = %Y-%m-%d %H:%M:%S
+
+
+TimedRotatingFileStream
+::::::::::::::::::::::::
+
+    **filename**
+        The file path where log will be written.
+
+    **backup_count**
+        The number of log files that will be kept By default backup_count is null.
+
+    **time_format**
+        The strftime format that will be used to prefix each time with a timestamp.
+        By default they will be not prefixed.
+
+        i.e: %Y-%m-%d %H:%M:%S
+
+    **rotate_when**
+        The type of interval.
+        The list of possible values is below. Note that they are not case sensitive.
+
+        .. csv-table::
+            :header: Value, Type of interval
+            :widths: 5, 5
+
+            'S', Seconds
+            'M', Minutes
+            'H', Hours
+            'D', Days
+            'W0'-'W6', Weekday (0=Monday)
+            'midnight', Roll over at midnight
+
+    **rotate_interval**
+        The rollover interval.
+
+.. note::
+
+    TimedRotatingFileStream rotates logfiles at certain timed intervals.
+    Rollover interval is determined by a  combination of rotate_when and rotate_interval.
+
+Example:
+
+.. code-block:: ini
+
+    [watcher:myprogram]
+    cmd = python -m myapp.server
+
+    stdout_stream.class = TimedRotatingFileStream
+    stdout_stream.filename = test.log
+    stdout_stream.time_format = %Y-%m-%d %H:%M:%S
+    stdout_stream.utc = True
+    stdout_stream.rotate_when = H
+    stdout_stream.rotate_interval = 1
 
 
 FancyStdoutStream

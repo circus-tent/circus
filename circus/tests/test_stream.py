@@ -11,6 +11,7 @@ from circus.client import make_message
 from circus.tests.support import TestCircus, async_poll_for, truncate_file
 from circus.tests.support import TestCase, EasyTestSuite
 from circus.stream import FileStream, WatchedFileStream
+from circus.stream import TimedRotatingFileStream
 from circus.stream import FancyStdoutStream
 
 
@@ -86,6 +87,23 @@ class TestWatcher(TestCircus):
         stream = WatchedFileStream(self.stdout,
                                    time_format='%Y-%m-%d %H:%M:%S')
         self.assertTrue(isinstance(stream._time_format, str))
+        yield self.stop_arbiter()
+        stream.close()
+
+    @tornado.testing.gen_test
+    def test_timed_rotating_file_stream(self):
+        yield self.start_arbiter()
+        stream = TimedRotatingFileStream(self.stdout,
+                                         rotate_when='H',
+                                         rotate_interval='5',
+                                         backup_count='3',
+                                         utc='True')
+        self.assertTrue(isinstance(stream._interval, int))
+        self.assertTrue(isinstance(stream._backup_count, int))
+        self.assertTrue(isinstance(stream._utc, bool))
+        self.assertTrue(stream._suffix is not None)
+        self.assertTrue(stream._ext_match is not None)
+        self.assertTrue(stream._rollover_at > 0)
         yield self.stop_arbiter()
         stream.close()
 
