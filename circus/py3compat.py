@@ -61,6 +61,13 @@ if PY2:
         # 64-bit
         MAXSIZE = int((1 << 63) - 1)        # NOQA
     del X
+
+    def sort_by_field(obj, field='name'):
+        def _by_field(item1, item2):
+            return cmp(item1[field], item2[field])
+
+        obj.sort(_by_field)
+
 else:
     import collections
     string_types = str
@@ -68,6 +75,12 @@ else:
     text_type = str
     long = int
     unicode = str
+
+    def sort_by_field(obj, field='name'):
+        def _by_field(item):
+            return item[field]
+
+        obj.sort(key=_by_field)
 
     def bytestring(s):  # NOQA
         return s

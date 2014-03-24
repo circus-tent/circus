@@ -5,6 +5,7 @@ import warnings
 from fnmatch import fnmatch
 
 from circus import logger
+from circus.py3compat import sort_by_field
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
                          StrictConfigParser, replace_gnu_args, to_signum,
@@ -250,12 +251,9 @@ def get_config(config_file):
             watchers.append(watcher)
 
     # making sure we return consistent lists
-    def _by_field(w1, w2, field='name'):
-        return cmp(w1[field], w2[field])
-
-    watchers.sort(_by_field)
-    plugins.sort(_by_field)
-    sockets.sort(_by_field)
+    sort_by_field(watchers)
+    sort_by_field(plugins)
+    sort_by_field(sockets)
 
     # Second pass to make sure env sections apply to all watchers.
 
