@@ -95,6 +95,38 @@ class FullStats(BaseObserver):
 
     name = 'full_stats'
 
+    SYMBOLS = {
+        'customary'     : ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
+        'customary_ext' : ('byte', 'kilo', 'mega', 'giga', 'tera', 'peta', 'exa',
+                           'zetta', 'iotta'),
+        'iec'           : ('Bi', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi'),
+        'iec_ext'       : ('byte', 'kibi', 'mebi', 'gibi', 'tebi', 'pebi', 'exbi',
+                           'zebi', 'yobi'),
+    }
+
+    def human2bytes(self, s):
+        init = s
+        num = ""
+        while s and s[0:1].isdigit() or s[0:1] == '.':
+            num += s[0]
+            s = s[1:]
+        num = float(num)
+        letter = s.strip()
+        for name, sset in self.SYMBOLS.items():
+            if letter in sset:
+                break
+        else:
+            if letter == 'k':
+                # treat 'k' as an alias for 'K' as per: http://goo.gl/kTQMs
+                sset = self.SYMBOLS['customary']
+                letter = letter.upper()
+            else:
+                raise ValueError("can't interpret %r" % init)
+        prefix = {sset[0]:1}
+        for i, s in enumerate(sset[1:]):
+            prefix[s] = 1 << (i+1)*10
+        return int(num * prefix[letter])
+
     def look_after(self):
         info = self.call("stats")
         if info["status"] == "error":
@@ -108,11 +140,13 @@ class FullStats(BaseObserver):
 
             cpus = []
             mems = []
+            mem_infos = []
 
             for sub_name, sub_info in stats.items():
                 if isinstance(sub_info, dict):
                     cpus.append(sub_info['cpu'])
                     mems.append(sub_info['mem'])
+                    mem_infos.append(self.human2bytes(sub_info['mem_info1']))
                 elif sub_name == "spawn_count":
                     # spawn_count info is in the same level as processes
                     # dict infos, so if spawn_count is given, take it and
@@ -128,5 +162,7 @@ class FullStats(BaseObserver):
                 continue
             self.statsd.gauge("_stats.%s.cpu_max" % name, max(cpus))
             self.statsd.gauge("_stats.%s.cpu_sum" % name, sum(cpus))
-            self.statsd.gauge("_stats.%s.mem_max" % name, max(mems))
-            self.statsd.gauge("_stats.%s.mem_sum" % name, sum(mems))
+            self.statsd.gauge("_stats.%s.mem_pct_max" % name, max(mems))
+            self.statsd.gauge("_stats.%s.mem_pct_sum" % name, sum(mems))
+            self.statsd.gauge("_stats.%s.mem_max" % name, max(mem_infos))
+            self.statsd.gauge("_stats.%s.mem_sum" % name, sum(mem_infos))
