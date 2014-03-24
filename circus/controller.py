@@ -53,6 +53,20 @@ class Controller(object):
         self.stream = zmqstream.ZMQStream(self.ctrl_socket, self.loop)
         self.stream.on_recv(self.handle_message)
 
+    def _init_multicast_endpoint(self):
+        multicast_addr, multicast_port = urlparse(self.multicast_endpoint)\
+            .netloc.split(':')
+        try:
+            self.udp_socket = create_udp_socket(multicast_addr,
+                                                multicast_port)
+            self.loop.add_handler(self.udp_socket.fileno(),
+                                  self.handle_autodiscover_message,
+                                  ioloop.IOLoop.READ)
+        except (IOError, OSError, ValueError):
+            message = ("Multicast discovery is disabled, there was an"
+                       "error during udp socket creation.")
+            logger.warning(message, exc_info=True)
+
     @property
     def endpoint_owner_mode(self):
         return self.endpoint_owner is not None and \
@@ -76,12 +90,7 @@ class Controller(object):
 
         # Initialize UDP Socket
         if self.multicast_endpoint:
-            multicast_addr, multicast_port = urlparse(self.multicast_endpoint)\
-                .netloc.split(':')
-            self.udp_socket = create_udp_socket(multicast_addr, multicast_port)
-            self.loop.add_handler(self.udp_socket.fileno(),
-                                  self.handle_autodiscover_message,
-                                  ioloop.IOLoop.READ)
+            self._init_multicast_endpoint()
 
     def manage_watchers(self):
         if self._managing_watchers_future is not None:
