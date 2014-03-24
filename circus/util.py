@@ -742,11 +742,11 @@ def load_virtualenv(watcher):
 
     if not os.path.exists(sitedir):
         raise ValueError("%s does not exist" % sitedir)
-    
+
     bindir = os.path.join(watcher.virtualenv, 'bin')
-    
+
     if os.path.exists(bindir):
-        watcher.env['PATH'] = ':'.join([bindir,watcher.env.get('PATH','')])
+        watcher.env['PATH'] = ':'.join([bindir, watcher.env.get('PATH', '')])
 
     def process_pth(sitedir, name):
         packages = set()
