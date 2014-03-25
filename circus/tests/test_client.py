@@ -67,7 +67,7 @@ class TestClient(TestCircus):
 
         resp = yield self.call('globaloptions', name='test')
         self.assertEqual(resp['options']['pubsub_endpoint'],
-                         'tcp://127.0.0.1:5556')
+                         self.arbiter.pubsub_endpoint)
         yield self.stop_arbiter()
 
 
@@ -76,14 +76,6 @@ def long_hook(*args, **kw):
 
 
 class TestWithHook(TestCircus):
-
-    def setUp(self):
-        super(TestWithHook, self).setUp()
-        self.old = self.cli.timeout
-
-    def tearDown(self):
-        super(TestWithHook, self).tearDown()
-        self.cli.timeout = self.old
 
     def run_with_hooks(self, hooks):
         self.stream = QueueStream()

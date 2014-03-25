@@ -9,12 +9,15 @@ from tornado.gen import coroutine, Return
 from circus.circusctl import USAGE, VERSION, CircusCtl
 from circus.tests.support import (TestCircus, async_poll_for, EasyTestSuite,
                                   skipIf, DEBUG)
-from circus.util import tornado_sleep
+from circus.util import tornado_sleep, DEFAULT_ENDPOINT_DEALER
 from circus.py3compat import b, s
 
 
-def run_ctl(args, queue=None, stdin=''):
+def run_ctl(args, queue=None, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
     cmd = '%s -m circus.circusctl' % sys.executable
+    if '--endpoint' not in args:
+        args = '--endpoint %s ' % endpoint + args
+
     proc = subprocess.Popen(cmd.split() + shlex.split(args),
                             stdin=subprocess.PIPE if stdin else None,
                             stdout=subprocess.PIPE,
@@ -35,7 +38,7 @@ def run_ctl(args, queue=None, stdin=''):
 
 
 @coroutine
-def async_run_ctl(args, stdin=''):
+def async_run_ctl(args, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
     """
     Start a process that will start the actual circusctl process and poll its
     ouput, via a queue, without blocking the I/O loop. We do this to avoid
@@ -43,7 +46,9 @@ def async_run_ctl(args, stdin=''):
     arbiter will be able to respond to requests coming from circusctl.
     """
     queue = Queue()
-    circusctl_process = Process(target=run_ctl, args=(args, queue, stdin))
+    circusctl_process = Process(target=run_ctl,
+                                args=(args, queue, stdin,
+                                      endpoint))
     circusctl_process.start()
     while queue.empty():
         yield tornado_sleep(.1)
@@ -86,13 +91,16 @@ class CommandlineTest(TestCircus):
     def test_add(self):
         yield self.start_arbiter()
         async_poll_for(self.test_file, 'START')
+        ep = self.arbiter.endpoint
 
-        stdout, stderr = yield async_run_ctl('add test2 "sleep 1"')
+        stdout, stderr = yield async_run_ctl('add test2 "sleep 1"',
+                                             endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
         self.assertEqual(stdout, 'ok\n')
 
-        stdout, stderr = yield async_run_ctl('status test2')
+        stdout, stderr = yield async_run_ctl('status test2',
+                                             endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
         self.assertEqual(stdout, 'stopped\n')
@@ -103,12 +111,15 @@ class CommandlineTest(TestCircus):
     def test_add_start(self):
         yield self.start_arbiter()
         async_poll_for(self.test_file, 'START')
+        ep = self.arbiter.endpoint
 
-        stdout, stderr = yield async_run_ctl('add --start test2 "sleep 1"')
+        stdout, stderr = yield async_run_ctl('add --start test2 "sleep 1"',
+                                             endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
         self.assertEqual(stdout, 'ok\n')
-        stdout, stderr = yield async_run_ctl('status test2')
+        stdout, stderr = yield async_run_ctl('status test2',
+                                             endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
         self.assertEqual(stdout, 'active\n')
@@ -118,11 +129,12 @@ class CommandlineTest(TestCircus):
 class CLITest(TestCircus):
 
     @coroutine
-    def run_ctl(self, command=''):
+    def run_ctl(self, command='', endpoint=DEFAULT_ENDPOINT_DEALER):
         """Send the given command to the CLI, and ends with EOF."""
         if command:
             command += '\n'
-        stdout, stderr = yield async_run_ctl('', command + 'EOF\n')
+        stdout, stderr = yield async_run_ctl('', command + 'EOF\n',
+                                             endpoint=endpoint)
         raise Return((stdout, stderr))
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
@@ -131,7 +143,7 @@ class CLITest(TestCircus):
         yield self.start_arbiter()
         async_poll_for(self.test_file, 'START')
 
-        stdout, stderr = yield self.run_ctl()
+        stdout, stderr = yield self.run_ctl(endpoint=self.arbiter.endpoint)
         if stderr:
             self.assertIn('UserWarning', stderr)
         output = stdout.splitlines()

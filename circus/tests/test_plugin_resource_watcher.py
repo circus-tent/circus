@@ -63,10 +63,12 @@ class TestResourceWatcher(TestCircus):
         yield self.start_arbiter(fqn)
         async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'max_mem': 0.05, 'watcher': 'test'}
+        kw = {'endpoint': self.arbiter.endpoint,
+              'pubsub_endpoint': self.arbiter.pubsub_endpoint}
 
         statsd_increments = yield async_run_plugin(ResourceWatcher,
                                                    config,
-                                                   get_statsd_increments)
+                                                   get_statsd_increments, **kw)
 
         self._check_statsd(statsd_increments,
                            '_resource_watcher.test.over_memory')
@@ -77,10 +79,12 @@ class TestResourceWatcher(TestCircus):
         yield self.start_arbiter(fqn)
         async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'min_mem': 100000.1, 'watcher': 'test'}
+        kw = {'endpoint': self.arbiter.endpoint,
+              'pubsub_endpoint': self.arbiter.pubsub_endpoint}
 
         statsd_increments = yield async_run_plugin(ResourceWatcher,
                                                    config,
-                                                   get_statsd_increments)
+                                                   get_statsd_increments, **kw)
 
         self._check_statsd(statsd_increments,
                            '_resource_watcher.test.under_memory')
@@ -91,10 +95,12 @@ class TestResourceWatcher(TestCircus):
         yield self.start_arbiter(fqn)
         async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'max_cpu': 0.1, 'watcher': 'test'}
+        kw = {'endpoint': self.arbiter.endpoint,
+              'pubsub_endpoint': self.arbiter.pubsub_endpoint}
 
         statsd_increments = yield async_run_plugin(ResourceWatcher,
                                                    config,
-                                                   get_statsd_increments)
+                                                   get_statsd_increments, **kw)
 
         self._check_statsd(statsd_increments,
                            '_resource_watcher.test.over_cpu')
@@ -106,9 +112,13 @@ class TestResourceWatcher(TestCircus):
         async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'min_cpu': 99.0, 'watcher': 'test'}
 
+        kw = {'endpoint': self.arbiter.endpoint,
+              'pubsub_endpoint': self.arbiter.pubsub_endpoint}
+
         statsd_increments = yield async_run_plugin(ResourceWatcher,
                                                    config,
-                                                   get_statsd_increments)
+                                                   get_statsd_increments,
+                                                   **kw)
 
         self._check_statsd(statsd_increments,
                            '_resource_watcher.test.under_cpu')
