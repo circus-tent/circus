@@ -21,7 +21,9 @@ class TestFullStats(TestCircus):
         gauges = yield async_run_plugin(
             FullStats, config,
             plugin_info_callback=get_gauges,
-            duration=1000)
+            duration=1000,
+            endpoint=self.arbiter.endpoint,
+            pubsub_endpoint=self.arbiter.pubsub_endpoint)
 
         # we should have a bunch of stats events here
         self.assertTrue(len(gauges) >= 5)

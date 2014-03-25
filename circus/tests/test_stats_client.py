@@ -52,7 +52,9 @@ class TestStatsClient(TestCircus):
         stdout_stream = stream
         stderr_stream = stream
         yield self.start_arbiter(cmd=cmd, stdout_stream=stdout_stream,
-                                 stderr_stream=stderr_stream, stats=True)
+                                 stderr_stream=stderr_stream, stats=True,
+                                 debug=False)
+
         # waiting for data to appear in the file stream
         empty = True
         while empty:
@@ -61,8 +63,9 @@ class TestStatsClient(TestCircus):
             yield tornado_sleep(.1)
 
         # checking that our system is live and running
-        client = AsyncCircusClient()
+        client = AsyncCircusClient(endpoint=self.arbiter.endpoint)
         res = yield client.send_message('list')
+
         watchers = sorted(res['watchers'])
         self.assertEqual(['circusd-stats', 'test'], watchers)
 
@@ -75,7 +78,8 @@ class TestStatsClient(TestCircus):
 
         # playing around with the stats now: we should get some !
         from circus.stats.client import StatsClient
-        client = StatsClient()
+        client = StatsClient(endpoint=self.arbiter.stats_endpoint)
+
         next = get_next(client.iter_messages())
 
         for i in range(10):

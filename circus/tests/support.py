@@ -9,6 +9,7 @@ import pstats
 import shutil
 import functools
 import multiprocessing
+import socket
 try:
     import sysconfig
     DEBUG = sysconfig.get_config_var('Py_DEBUG') == 1
@@ -29,8 +30,7 @@ import mock
 import tornado
 
 from circus import get_arbiter
-from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                         DEFAULT_ENDPOINT_STATS)
+from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
 from circus.util import tornado_sleep, ConflictError
 from circus.client import AsyncCircusClient, make_message
 from circus.stream import QueueStream
@@ -152,6 +152,15 @@ def get_ioloop():
     return ioloop.IOLoop.instance()
 
 
+def get_available_port():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(("", 0))
+        return s.getsockname()[1]
+    finally:
+        s.close()
+
+
 class TestCircus(AsyncTestCase):
 
     arbiter_factory = get_arbiter
@@ -162,8 +171,27 @@ class TestCircus(AsyncTestCase):
         self.files = []
         self.dirs = []
         self.tmpfiles = []
-        self.cli = AsyncCircusClient()
+        self._clients = {}
         self.plugins = []
+
+    @property
+    def cli(self):
+        if self.arbiters == []:
+            # nothing is running
+            raise Exception("nothing is running")
+
+        endpoint = self.arbiters[-1].endpoint
+        if endpoint in self._clients:
+            return self._clients[endpoint]
+
+        cli = AsyncCircusClient(endpoint=endpoint)
+        self._clients[endpoint] = cli
+        return cli
+
+    def _stop_clients(self):
+        for client in self._clients.values():
+            client.stop()
+        self._clients.clear()
 
     def get_new_ioloop(self):
         return get_ioloop()
@@ -174,7 +202,9 @@ class TestCircus(AsyncTestCase):
                 os.remove(file)
         for dir in self.dirs:
             shutil.rmtree(dir)
-        self.cli.stop()
+
+        self._stop_clients()
+
         for plugin in self.plugins:
             plugin.stop()
 
@@ -198,13 +228,13 @@ class TestCircus(AsyncTestCase):
 
     @tornado.gen.coroutine
     def start_arbiter(self, cmd='circus.tests.support.run_process',
-                      stdout_stream=None, **kw):
+                      stdout_stream=None, debug=True, **kw):
         if stdout_stream is None:
             self.stream = QueueStream()
             stdout_stream = {'stream': self.stream}
         testfile, arbiter = self._create_circus(
             cmd, stdout_stream=stdout_stream,
-            debug=True, async=True, **kw)
+            debug=debug, async=True, **kw)
         self.test_file = testfile
         self.arbiter = arbiter
         self.arbiters.append(arbiter)
@@ -269,9 +299,14 @@ class TestCircus(AsyncTestCase):
         arbiter_kw['check_delay'] = kw.get('check_delay',
                                            arbiter_kw.get('check_delay', -1))
 
+        _gp = get_available_port
+        arbiter_kw['controller'] = "tcp://127.0.0.1:%d" % _gp()
+        arbiter_kw['pubsub_endpoint'] = "tcp://127.0.0.1:%d" % _gp()
+        arbiter_kw['multicast_endpoint'] = "udp://237.219.251.97:12027"
+
         if stats:
             arbiter_kw['statsd'] = True
-            arbiter_kw['stats_endpoint'] = DEFAULT_ENDPOINT_STATS
+            arbiter_kw['stats_endpoint'] = "tcp://127.0.0.1:%d" % _gp()
             arbiter_kw['statsd_close_outputs'] = not debug
 
         if async:
@@ -448,9 +483,9 @@ def truncate_file(filename):
     open(filename, 'w').close()  # opening as 'w' overwrites the file
 
 
-def run_plugin(klass, config, plugin_info_callback=None, duration=300):
-    endpoint = DEFAULT_ENDPOINT_DEALER
-    pubsub_endpoint = DEFAULT_ENDPOINT_SUB
+def run_plugin(klass, config, plugin_info_callback=None, duration=300,
+               endpoint=DEFAULT_ENDPOINT_DEALER,
+               pubsub_endpoint=DEFAULT_ENDPOINT_SUB):
     check_delay = 1
     ssh_server = None
 
@@ -491,12 +526,15 @@ def run_plugin(klass, config, plugin_info_callback=None, duration=300):
 
 
 @tornado.gen.coroutine
-def async_run_plugin(klass, config, plugin_info_callback, duration=300):
+def async_run_plugin(klass, config, plugin_info_callback, duration=300,
+                     endpoint=DEFAULT_ENDPOINT_DEALER,
+                     pubsub_endpoint=DEFAULT_ENDPOINT_SUB):
     queue = multiprocessing.Queue()
     plugin_info_callback = functools.partial(plugin_info_callback, queue)
     circusctl_process = multiprocessing.Process(
         target=run_plugin,
-        args=(klass, config, plugin_info_callback, duration))
+        args=(klass, config, plugin_info_callback, duration,
+              endpoint, pubsub_endpoint))
     circusctl_process.start()
 
     while queue.empty():

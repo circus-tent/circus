@@ -6,7 +6,7 @@ import warnings
 from tornado.testing import gen_test
 
 from circus.tests.support import TestCircus, Process, async_poll_for
-from circus.tests.support import async_run_plugin, EasyTestSuite
+from circus.tests.support import async_run_plugin as arp, EasyTestSuite
 from circus.plugins.watchdog import WatchDog
 
 
@@ -45,11 +45,14 @@ class TestPluginWatchDog(TestCircus):
     def test_watchdog_discovery_found(self):
         yield self.start_arbiter(fqn)
         async_poll_for(self.test_file, 'STARTWD')
+        pubsub = self.arbiter.pubsub_endpoint
 
         config = {'loop_rate': 0.1, 'watchers_regex': "^test.*$"}
         with warnings.catch_warnings():
-            pid_status = yield async_run_plugin(WatchDog, config,
-                                                get_pid_status)
+            pid_status = yield arp(WatchDog, config,
+                                   get_pid_status,
+                                   endpoint=self.arbiter.endpoint,
+                                   pubsub_endpoint=pubsub)
         self.assertEqual(len(pid_status), 1, pid_status)
         yield self.stop_arbiter()
         async_poll_for(self.test_file, 'STOPWD')
@@ -58,11 +61,14 @@ class TestPluginWatchDog(TestCircus):
     def test_watchdog_discovery_not_found(self):
         yield self.start_arbiter(fqn)
         async_poll_for(self.test_file, 'START')
+        pubsub = self.arbiter.pubsub_endpoint
 
         config = {'loop_rate': 0.1, 'watchers_regex': "^foo.*$"}
         with warnings.catch_warnings():
-            pid_status = yield async_run_plugin(WatchDog, config,
-                                                get_pid_status)
+            pid_status = yield arp(WatchDog, config,
+                                   get_pid_status,
+                                   endpoint=self.arbiter.endpoint,
+                                   pubsub_endpoint=pubsub)
         self.assertEqual(len(pid_status), 0, pid_status)
         yield self.stop_arbiter()
 

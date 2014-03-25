@@ -75,7 +75,7 @@ def get_cpu_times(proc):
 def get_nice(proc):
     try:
         return proc.nice()
-    except AttributeError:
+    except (AttributeError, TypeError):
         return proc.get_nice()
 
 

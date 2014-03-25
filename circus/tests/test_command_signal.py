@@ -84,7 +84,9 @@ class SignalCommandTest(TestCircus):
         stderr_stream = {'stream': stream}
         yield self.start_arbiter(cmd=cmd, stdout_stream=stdout_stream,
                                  stderr_stream=stderr_stream, stats=True,
-                                 stop_signal=signal.SIGINT)
+                                 stop_signal=signal.SIGINT,
+                                 debug=False)
+
         # waiting for data to appear in the queue
         data = yield read_from_stream(stream, 0)
         self.assertEqual('STARTED', data)
@@ -98,7 +100,7 @@ class SignalCommandTest(TestCircus):
         self.assertEqual('STARTED', data)
 
         # checking that our system is live and running
-        client = AsyncCircusClient()
+        client = AsyncCircusClient(endpoint=self.arbiter.endpoint)
         res = yield client.send_message('list')
         watchers = sorted(res['watchers'])
         self.assertEqual(['circusd-stats', 'test'], watchers)

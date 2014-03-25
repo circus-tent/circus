@@ -62,7 +62,7 @@ if PY2:
         MAXSIZE = int((1 << 63) - 1)        # NOQA
     del X
 
-    def sort_by_field(obj, field='name'):
+    def sort_by_field(obj, field='name'):   # NOQA
         def _by_field(item1, item2):
             return cmp(item1[field], item2[field])
 
@@ -76,7 +76,7 @@ else:
     long = int
     unicode = str
 
-    def sort_by_field(obj, field='name'):
+    def sort_by_field(obj, field='name'):       # NOQA
         def _by_field(item):
             return item[field]
 

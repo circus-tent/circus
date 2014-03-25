@@ -18,7 +18,8 @@ from circus.tests.support import EasyTestSuite, skipIf, get_ioloop
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
                          DEFAULT_ENDPOINT_SUB)
 from circus.watcher import Watcher
-from circus.tests.support import has_circusweb, poll_for_callable
+from circus.tests.support import (has_circusweb, poll_for_callable,
+                                  get_available_port)
 from circus import watcher as watcher_mod
 from circus.py3compat import s
 
@@ -578,8 +579,9 @@ class TestArbiter(TestCircus):
 
     @tornado.testing.gen_test
     def test_add_watcher(self):
-        arbiter = Arbiter([], DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                          loop=get_ioloop(),
+        controller = "tcp://127.0.0.1:%d" % get_available_port()
+        sub = "tcp://127.0.0.1:%d" % get_available_port()
+        arbiter = Arbiter([], controller, sub, loop=get_ioloop(),
                           check_delay=-1)
         arbiter.add_watcher('foo', 'sleep 5')
         try:
@@ -606,8 +608,10 @@ class TestCircusWeb(TestCircus):
 
     @tornado.testing.gen_test
     def test_circushttpd(self):
-        arbiter = Arbiter([], DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                          loop=get_ioloop(),
+        controller = "tcp://127.0.0.1:%d" % get_available_port()
+        sub = "tcp://127.0.0.1:%d" % get_available_port()
+
+        arbiter = Arbiter([], controller, sub, loop=get_ioloop(),
                           check_delay=-1, httpd=True, debug=True)
         self.arbiters.append(arbiter)
         try:
