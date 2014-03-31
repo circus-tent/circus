@@ -86,3 +86,4 @@ List of contributors:
 - Dong Weiming <ciici123@gmail.com>
 - Wynn Wilkes <wynnwilkes@gmail.com>
 - Sylvain Viollon <sviollon@minddistrict.com>
+- James Ascroft-Leigh <jwal@jwal.me.uk>

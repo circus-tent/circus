@@ -85,8 +85,8 @@ class Arbiter(object):
                  httpd_host='localhost', httpd_port=8080,
                  httpd_close_outputs=False, debug=False, debug_gc=False,
                  ssh_server=None, proc_name='circusd', pidfile=None,
-                 loglevel=None, logoutput=None, fqdn_prefix=None, umask=None,
-                 endpoint_owner=None):
+                 loglevel=None, logoutput=None, loggerconfig=None,
+                 fqdn_prefix=None, umask=None, endpoint_owner=None):
 
         self.watchers = watchers
         self.endpoint = endpoint
@@ -100,6 +100,7 @@ class Arbiter(object):
         self.pidfile = pidfile
         self.loglevel = loglevel
         self.logoutput = logoutput
+        self.loggerconfig = loggerconfig
         self.umask = umask
         self.endpoint_owner = endpoint_owner
         self._running = False
@@ -445,6 +446,7 @@ class Arbiter(object):
                       pidfile=cfg.get('pidfile', None),
                       loglevel=cfg.get('loglevel', None),
                       logoutput=cfg.get('logoutput', None),
+                      loggerconfig=cfg.get('loggerconfig', None),
                       fqdn_prefix=cfg.get('fqdn_prefix', None),
                       umask=cfg['umask'],
                       endpoint_owner=cfg.get('endpoint_owner', None))

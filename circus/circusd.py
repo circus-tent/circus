@@ -87,6 +87,10 @@ def main():
         "The location where the logs will be written. The default behavior "
         "is to write to stdout (you can force it by passing '-' to "
         "this option). Takes a filename otherwise."))
+    parser.add_argument("--logger-config", dest="loggerconfig", help=(
+        "The location where a standard Python logger configuration INI, "
+        "JSON or YAML file can be found.  This can be used to override "
+        "the default logging configuration for the arbiter."))
 
     parser.add_argument('--daemon', dest='daemonize', action='store_true',
                         help="Start circusd in the background")
@@ -128,7 +132,8 @@ def main():
     # configure the logger
     loglevel = args.loglevel or arbiter.loglevel or 'info'
     logoutput = args.logoutput or arbiter.logoutput or '-'
-    configure_logger(logger, loglevel, logoutput)
+    loggerconfig = args.loggerconfig or arbiter.loggerconfig or None
+    configure_logger(logger, loglevel, logoutput, loggerconfig)
 
     # Main loop
     restart = True

@@ -1,5 +1,6 @@
 import functools
 import logging
+import logging.config
 import os
 import re
 import shlex
@@ -7,6 +8,11 @@ import socket
 import sys
 import time
 import traceback
+import json
+try:
+    import yaml
+except ImportError:
+    yaml = None  # NOQA
 try:
     import pwd
     import grp
@@ -37,6 +43,7 @@ except ImportError:
 from datetime import timedelta
 from functools import wraps
 import signal
+from pipes import quote as shell_escape_arg
 
 try:
     import importlib
@@ -634,32 +641,67 @@ class ObjectDict(dict):
         return self[item]
 
 
-def configure_logger(logger, level='INFO', output="-", name=None):
-    root_logger = logging.getLogger()
-    loglevel = LOG_LEVELS.get(level.lower(), logging.INFO)
-    root_logger.setLevel(loglevel)
-    datefmt = LOG_DATE_FMT
-    if output in ("-", "stdout"):
-        handler = logging.StreamHandler()
-    elif output.startswith('syslog://'):
-        # URLs are syslog://host[:port]?facility or syslog:///path?facility
-        info = urlparse(output)
-        facility = 'user'
-        if info.query in logging.handlers.SysLogHandler.facility_names:
-            facility = info.query
-        if info.netloc:
-            address = (info.netloc, info.port or 514)
+def configure_logger(logger, level='INFO', output="-", loggerconfig=None,
+                     name=None):
+    if loggerconfig is None or loggerconfig.lower().strip() == "default":
+        root_logger = logging.getLogger()
+        loglevel = LOG_LEVELS.get(level.lower(), logging.INFO)
+        root_logger.setLevel(loglevel)
+        datefmt = LOG_DATE_FMT
+        if output in ("-", "stdout"):
+            handler = logging.StreamHandler()
+        elif output.startswith('syslog://'):
+            # URLs are syslog://host[:port]?facility or syslog:///path?facility
+            info = urlparse(output)
+            facility = 'user'
+            if info.query in logging.handlers.SysLogHandler.facility_names:
+                facility = info.query
+            if info.netloc:
+                address = (info.netloc, info.port or 514)
+            else:
+                address = info.path
+            datefmt = LOG_DATE_SYSLOG_FMT
+            handler = logging.handlers.SysLogHandler(
+                address=address, facility=facility)
         else:
-            address = info.path
-        datefmt = LOG_DATE_SYSLOG_FMT
-        handler = logging.handlers.SysLogHandler(
-            address=address, facility=facility)
+            handler = logging.handlers.WatchedFileHandler(output)
+            close_on_exec(handler.stream.fileno())
+        formatter = logging.Formatter(fmt=LOG_FMT, datefmt=datefmt)
+        handler.setFormatter(formatter)
+        root_logger.handlers = [handler]
     else:
-        handler = logging.handlers.WatchedFileHandler(output)
-        close_on_exec(handler.stream.fileno())
-    formatter = logging.Formatter(fmt=LOG_FMT, datefmt=datefmt)
-    handler.setFormatter(formatter)
-    root_logger.handlers = [handler]
+        loggerconfig = os.path.abspath(loggerconfig)
+        if loggerconfig.lower().endswith(".ini"):
+            logging.config.fileConfig(loggerconfig,
+                                      disable_existing_loggers=True)
+        elif loggerconfig.lower().endswith(".json"):
+            if not hasattr(logging.config, "dictConfig"):
+                raise Exception("Logger configuration file %s appears to be "
+                                "a JSON file but this version of Python "
+                                "does not support the "
+                                "logging.config.dictConfig function. Try "
+                                "Python 2.7.")
+            with open(loggerconfig, "r") as fh:
+                logging.config.dictConfig(json.loads(fh.read()))
+        elif loggerconfig.lower().endswith(".yaml"):
+            if not hasattr(logging.config, "dictConfig"):
+                raise Exception("Logger configuration file %s appears to be "
+                                "a YAML file but this version of Python "
+                                "does not support the "
+                                "logging.config.dictConfig function. Try "
+                                "Python 2.7.")
+            if yaml is None:
+                raise Exception("Logger configuration file %s appears to be "
+                                "a YAML file but PyYAML is not available. "
+                                "Try: pip install PyYAML"
+                                % (shell_escape_arg(loggerconfig),))
+            with open(loggerconfig, "r") as fh:
+                logging.config.dictConfig(yaml.load(fh.read()))
+        else:
+            raise Exception("Logger configuration file %s is not in one "
+                            "of the recognized formats.  The file name "
+                            "should be: *.ini, *.json or *.yaml."
+                            % (shell_escape_arg(loggerconfig),))
 
 
 class StrictConfigParser(ConfigParser):
