@@ -620,6 +620,7 @@ class Watcher(object):
 
         The signal is sent to the process itself then to all the children
         """
+        children = None
         try:
             # getting the process children
             children = process.children()
@@ -630,7 +631,8 @@ class Watcher(object):
                                        "time": time.time()})
         except NoSuchProcess:
             # already dead !
-            pass
+            if children is None:
+                return
 
         # now sending the same signal to all the children
         for child_pid in children:
