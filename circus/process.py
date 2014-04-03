@@ -277,8 +277,6 @@ class Process(object):
         if self.pipe_stderr:
             extra['stderr'] = PIPE
 
-        with open('/tmp/dump.txt', 'a+') as f:
-            f.write('running '+str(args))
         self._worker = Popen(args, cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
                              env=self.env, close_fds=not self.use_fds,
