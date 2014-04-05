@@ -172,7 +172,7 @@ class TestCollector(TestCase):
         for i in range(10):
             for client in self.clients:
                 client.send(b'ok')
-                #client.recv(2)
+                # client.recv(2)
 
         # stopping
         collector.stop()

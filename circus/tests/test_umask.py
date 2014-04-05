@@ -33,7 +33,7 @@ class Process(object):
         sys.stdout.write('Done')
         sys.stdout.flush()
 
-    #noinspection PyUnusedLocal
+    # noinspection PyUnusedLocal
     def handle_quit(self, *args):
         self.alive = False
 
