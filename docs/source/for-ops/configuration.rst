@@ -116,6 +116,11 @@ circus - single section
         syslog facility to use. If you wish to log to a local syslog
         you can use ``syslog:///path/to/syslog/socket?facility``
         instead.
+    **loggerconfig**
+        A path to an INI, JSON or YAML file to configure standard Python
+        logging for the Arbiter.  The special value "default" uses the builtin
+	logging configuration based on the optional loglevel and logoutput
+	options.
 
 
 watcher:NAME - as many sections as you want
