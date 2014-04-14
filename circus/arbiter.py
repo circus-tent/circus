@@ -413,8 +413,8 @@ class Arbiter(object):
             watchers.append(Watcher.load_from_config(watcher))
 
         sockets = []
-        for socket in cfg.get('sockets', []):
-            sockets.append(CircusSocket.load_from_config(socket))
+        for socket_ in cfg.get('sockets', []):
+            sockets.append(CircusSocket.load_from_config(socket_))
 
         httpd = cfg.get('httpd', False)
         if httpd:

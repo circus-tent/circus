@@ -137,7 +137,7 @@ def validate_option(key, val):
     elif key in ('stderr_stream', 'stdout_stream'):
         if not isinstance(val, dict):
             raise MessageError("%r isn't a valid object" % key)
-        if not 'class' in val:
+        if 'class' not in val:
             raise MessageError("%r must have a 'class' key" % key)
         if 'refresh_time' in val:
             warnings.warn("'refresh_time' is deprecated and not useful "

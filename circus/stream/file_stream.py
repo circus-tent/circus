@@ -304,8 +304,8 @@ for weekly rollover: %s" % self._when)
             logger.debug("Log rotating %s -> %s" % (self._filename, dfn))
 
         if self._backup_count > 0:
-            for s in self._get_files_to_delete():
-                os.remove(s)
+            for f in self._get_files_to_delete():
+                os.remove(f)
 
         self._file = self._open()
 

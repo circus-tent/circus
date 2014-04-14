@@ -145,7 +145,7 @@ class Signal(Command):
     def validate(self, props):
         super(Signal, self).validate(props)
 
-        if 'childpid' in props and not 'pid' in props:
+        if 'childpid' in props and 'pid' not in props:
             raise ArgumentError('cannot specify childpid without pid')
 
         try:

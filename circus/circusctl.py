@@ -73,8 +73,8 @@ class _Help(argparse.HelpFormatter):
         max_len = max([len(name) for name, help in commands])
 
         output = []
-        for name, cmd in commands:
-            output.append('\t%-*s\t%s' % (max_len, name, cmd.short))
+        for name, command in commands:
+            output.append('\t%-*s\t%s' % (max_len, name, command.short))
 
         def format(tuple_size):
             res = '\n'.join(output)
@@ -131,44 +131,44 @@ class ControllerApp(object):
 
     def dispatch(self, args):
         opts = {}
-        cmd = self.commands[args.command]
-        for option in cmd.options:
+        command = self.commands[args.command]
+        for option in command.options:
             name = option[1]
             if name in args:
                 opts[name] = getattr(args, name)
 
         if args.help:
-            print(textwrap.dedent(cmd.__doc__))
+            print(textwrap.dedent(command.__doc__))
             return 0
         else:
             if hasattr(args, 'start'):
                 opts['start'] = args.start
 
-            if args.endpoint is None and cmd.msg_type != 'dealer':
-                if cmd.msg_type == 'sub':
+            if args.endpoint is None and command.msg_type != 'dealer':
+                if command.msg_type == 'sub':
                     args.endpoint = DEFAULT_ENDPOINT_SUB
                 else:
                     args.endpoint = DEFAULT_ENDPOINT_DEALER
 
-            msg = cmd.message(*args.args, **opts)
-            handler = getattr(self, "handle_%s" % cmd.msg_type)
-            return handler(cmd, self.globalopts, msg, args.endpoint,
+            msg = command.message(*args.args, **opts)
+            handler = getattr(self, "handle_%s" % command.msg_type)
+            return handler(command, self.globalopts, msg, args.endpoint,
                            int(args.timeout), args.ssh, args.ssh_keyfile)
 
-    def handle_sub(self, cmd, opts, topics, endpoint, timeout, ssh_server,
+    def handle_sub(self, command, opts, topics, endpoint, timeout, ssh_server,
                    ssh_keyfile):
         consumer = CircusConsumer(topics, endpoint=endpoint)
         for topic, msg in consumer:
             print("%s: %s" % (topic, msg))
         return 0
 
-    def _console(self, client, cmd, opts, msg):
+    def _console(self, client, command, opts, msg):
         if opts['json']:
             return prettify(client.call(msg), prettify=opts['prettify'])
         else:
-            return cmd.console_msg(client.call(msg))
+            return command.console_msg(client.call(msg))
 
-    def handle_dealer(self, cmd, opts, msg, endpoint, timeout, ssh_server,
+    def handle_dealer(self, command, opts, msg, endpoint, timeout, ssh_server,
                       ssh_keyfile):
         if endpoint is not None:
             client = CircusClient(endpoint=endpoint, timeout=timeout,
@@ -179,12 +179,12 @@ class ControllerApp(object):
 
         try:
             if isinstance(msg, list):
-                for i, command in enumerate(msg):
-                    clm = self._console(client, command['cmd'], opts,
-                                        command['msg'])
+                for i, c in enumerate(msg):
+                    clm = self._console(client, c['cmd'], opts,
+                                        c['msg'])
                     print("%s: %s" % (i, clm))
             else:
-                print(self._console(client, cmd, opts, msg))
+                print(self._console(client, command, opts, msg))
         except CallError as e:
             msg = str(e)
             if 'timed out' in str(e).lower():
@@ -207,30 +207,30 @@ class CircusCtl(cmd.Cmd, object):
         cls.commands = commands
         cls.controller = ControllerApp(commands, client)
         cls.client = client
-        for name, cmd in commands.items():
-            cls._add_do_cmd(name, cmd)
-            cls._add_complete_cmd(name, cmd)
+        for name, command in commands.items():
+            cls._add_do_cmd(name, command)
+            cls._add_complete_cmd(name, command)
         return super(CircusCtl, cls).__new__(cls, *args, **kw)
 
     def __init__(self, client, *args, **kwargs):
         super(CircusCtl, self).__init__()
 
     @classmethod
-    def _add_do_cmd(cls, cmd_name, cmd):
+    def _add_do_cmd(cls, cmd_name, command):
         def inner_do_cmd(cls, line):
             arguments = parse_arguments([cmd_name] + shlex.split(line),
                                         cls.commands)
             cls.controller.run(arguments['args'])
-        inner_do_cmd.__doc__ = textwrap.dedent(cmd.__doc__)
+        inner_do_cmd.__doc__ = textwrap.dedent(command.__doc__)
         inner_do_cmd.__name__ = "do_%s" % cmd_name
         setattr(cls, inner_do_cmd.__name__, inner_do_cmd)
 
     @classmethod
-    def _add_complete_cmd(cls, cmd_name, cmd):
+    def _add_complete_cmd(cls, cmd_name, command):
         def inner_complete_cmd(cls, *args, **kwargs):
-            if hasattr(cmd, 'autocomplete'):
+            if hasattr(command, 'autocomplete'):
                 try:
-                    return cmd.autocomplete(cls.client, *args, **kwargs)
+                    return command.autocomplete(cls.client, *args, **kwargs)
                 except Exception as e:
                     sys.stderr.write(str(e) + "\n")
                     traceback.print_exc(file=sys.stderr)

@@ -45,9 +45,9 @@ class TestStatsStreamer(TestCircus):
         elif what == 'listsockets':
             return {'status': 'ok',
                     'sockets': [{'path': self._unix,
-                                'fd': 5,
-                                'name': 'XXXX',
-                                'backlog': 2048}],
+                                 'fd': 5,
+                                 'name': 'XXXX',
+                                 'backlog': 2048}],
                     'time': 1369647058.967524}
 
         raise NotImplementedError(cmd)
