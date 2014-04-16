@@ -10,15 +10,12 @@ create this Upstart script in /etc/init/circus.conf.
 ::
 
     start on filesystem and net-device-up IFACE=lo
-
-    stop on shutdown
+    stop on runlevel [016]
 
     respawn
-    exec /usr/local/bin/circusd --log-output /var/log/circus.log \
-                                --pidfile /var/run/circusd.pid \
-                                /etc/circus.ini
+    exec /usr/local/bin/circusd /etc/circus/circusd.ini
 
-This assumes that circus.ini is located at /etc/circus.ini. After
+This assumes that circusd.ini is located at /etc/circus/circusd.ini. After
 rebooting, you can control circusd with the service command::
 
     # service circus start/stop/restart
