@@ -15,7 +15,7 @@ create this Upstart script in /etc/init/circus.conf.
     respawn
     exec /usr/local/bin/circusd /etc/circus/circus.ini
 
-This assumes that circus.ini is located at /etc/circus.ini. After
+This assumes that circus.ini is located at /etc/circus/circus.ini. After
 rebooting, you can control circusd with the service command::
 
     # service circus start/stop/restart
