@@ -391,6 +391,20 @@ else:
             raise ValueError("No such group: %r" % name)
 
 
+def get_username_from_uid(uid):
+    """Return the username of a given uid."""
+    if isinstance(uid, int):
+        return pwd.getpwuid(uid).pw_name
+    return uid
+
+
+def get_default_gid(uid):
+    """Return the default group of a specific user."""
+    if isinstance(uid, int):
+        return pwd.getpwuid(uid).pw_gid
+    return pwd.getpwnam(uid).pw_gid
+
+
 def parse_env_str(env_str):
     env = dict()
     for kvs in env_str.split(','):

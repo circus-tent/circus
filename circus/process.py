@@ -16,14 +16,14 @@ from subprocess import PIPE
 import time
 import shlex
 import warnings
-import pwd
 
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
 from circus.py3compat import bytestring, string_types, quote
 from circus.sockets import CircusSocket
 from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
-                         ObjectDict, replace_gnu_args, is_win)
+                         ObjectDict, replace_gnu_args, is_win, get_default_gid,
+                         get_username_from_uid)
 from circus import logger
 
 
@@ -175,13 +175,7 @@ class Process(object):
         self.shell = shell
         if uid:
             self.uid = to_uid(uid)
-            if isinstance(uid, int):
-                try:
-                    self.username = pwd.getpwuid(uid)
-                except KeyError:
-                    raise ValueError("%r isn't a valid user id" % uid)
-            else:
-                self.username = uid
+            self.username = get_username_from_uid(self.uid)
         else:
             self.username = None
             self.uid = None
@@ -198,6 +192,9 @@ class Process(object):
         self.stopping = False
         # sockets created before fork, should be let go after.
         self._sockets = []
+
+        if self.uid is not None and self.gid is None:
+            self.gid = get_default_gid(self.uid)
 
         if spawn:
             self.spawn()
