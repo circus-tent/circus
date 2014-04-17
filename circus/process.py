@@ -22,7 +22,8 @@ from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from circus.py3compat import bytestring, string_types, quote
 from circus.sockets import CircusSocket
 from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
-                         ObjectDict, replace_gnu_args, is_win)
+                         ObjectDict, replace_gnu_args, is_win, get_default_gid,
+                         get_username_from_uid)
 from circus import logger
 
 
@@ -172,7 +173,12 @@ class Process(object):
         self.args = args
         self.working_dir = working_dir or get_working_dir()
         self.shell = shell
-        self.uid = to_uid(uid) if uid else None
+        if uid:
+            self.uid = to_uid(uid)
+            self.username = get_username_from_uid(self.uid)
+        else:
+            self.username = None
+            self.uid = None
         self.gid = to_gid(gid) if gid else None
         self.env = env or {}
         self.rlimits = rlimits or {}
@@ -186,6 +192,9 @@ class Process(object):
         self.stopping = False
         # sockets created before fork, should be let go after.
         self._sockets = []
+
+        if self.uid is not None and self.gid is None:
+            self.gid = get_default_gid(self.uid)
 
         if spawn:
             self.spawn()
@@ -266,6 +275,7 @@ class Process(object):
                     # versions of python < 2.6.2 don't manage unsigned int for
                     # groups like on osx or fedora
                     os.setgid(-ctypes.c_int(-self.gid).value)
+                os.initgroups(self.username, self.gid)
 
             if self.uid:
                 os.setuid(self.uid)
