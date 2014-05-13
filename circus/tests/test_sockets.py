@@ -152,7 +152,11 @@ class TestSockets(TestCase):
                   'so_reuseport': True}
 
         sock = CircusSocket.load_from_config(config)
-        sockopt = sock.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT)
+        try:
+            sockopt = sock.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT)
+        except socket.error:
+            # see #699
+            return
 
         self.assertEqual(sock.so_reuseport, True)
         self.assertNotEqual(sockopt, 0)

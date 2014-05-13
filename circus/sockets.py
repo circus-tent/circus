@@ -60,7 +60,11 @@ class CircusSocket(socket.socket):
         self.so_reuseport = so_reuseport
 
         if self.so_reuseport and hasattr(socket, 'SO_REUSEPORT'):
-            self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            try:
+                self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            except socket.error:
+                # see 699
+                pass
         else:
             self.so_reuseport = False
 

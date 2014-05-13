@@ -918,7 +918,11 @@ def create_udp_socket(mcast_addr, mcast_port):
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     # Some platform exposes SO_REUSEPORT
     if hasattr(socket, 'SO_REUSEPORT'):
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        try:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        except socket.error:
+            # see #699
+            pass
     # Put packet ttl to max
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
     # Register socket to multicast group
