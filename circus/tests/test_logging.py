@@ -31,8 +31,9 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
     options = list(options)
     additional_files = dict(additional_files)
     config_ini_update = {
-        "watcher:touch.cmd": ("bash -c 'touch workerstart.txt; "
-                              "while true; do sleep 0.1; done'"),
+        "watcher:touch.cmd": sys.executable,
+        "watcher:touch.args": "-c \"open('workerstart.txt', 'w+').close()\"",
+        "watcher:touch.respawn": 'False'
     }
     config_ini_update.update(dict(config))
     config_ini = ConfigParser()
@@ -52,20 +53,25 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
             path = os.path.join(temp_dir, relpath)
             with open(path, "w") as fh:
                 fh.write(additional_files[relpath])
-        # argv2 = ["cat", "circus.ini"]
-        # subprocess.check_call(argv2, cwd=temp_dir)
+        env = os.environ.copy()
+        # We're going to run circus from a process with a different
+        # cwd, so we need to make sure that Python will import the
+        # current version of circus
+        pythonpath = env.get('PYTHONPATH', '')
+        pythonpath += ':%s' % os.path.abspath(
+            os.path.join(HERE, os.pardir, os.pardir))
+        env['PYTHONPATH'] = pythonpath
         argv = ["circus.circusd"] + options + [circus_ini_path]
         if sys.gettrace() is None:
-            argv = ["python", "-m"] + argv
+            argv = [sys.executable, "-m"] + argv
         else:
             argv = ["coverage", "run", "-p", "-m"] + argv
-        # print "+", " ".join(shell_escape_arg(a) for a in argv)
         child = subprocess.Popen(argv, cwd=temp_dir, stdin=subprocess.PIPE,
                                  stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT)
+                                 stderr=subprocess.STDOUT,
+                                 env=env)
         try:
             touch_path = os.path.join(temp_dir, "workerstart.txt")
-            # subprocess.call(["bash"], cwd=temp_dir)
             while True:
                 child.poll()
                 if os.path.exists(touch_path):
@@ -74,13 +80,9 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
                     break
                 time.sleep(0.01)
         finally:
-            argv2 = ["python", "-m", "circus.circusctl", "quit"]
-            subprocess.call(argv2, cwd=temp_dir, stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
+            child.terminate()
             child.wait()
         log_file_path = os.path.join(temp_dir, log_capture_path)
-        # raise Exception(child.stdout.read())
         if os.path.exists(log_file_path):
             with open(log_file_path, "r") as fh:
                 return fh.read()
