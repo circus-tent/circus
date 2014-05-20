@@ -706,7 +706,7 @@ class Arbiter(object):
 
     @synchronized("arbiter_rm_watcher")
     @gen.coroutine
-    def rm_watcher(self, name):
+    def rm_watcher(self, name, nostop=False):
         """Deletes a watcher.
 
         Options:
@@ -719,8 +719,9 @@ class Arbiter(object):
         watcher = self._watchers_names.pop(name)
         del self.watchers[self.watchers.index(watcher)]
 
-        # stop the watcher
-        yield watcher._stop()
+        if not nostop:
+            # stop the watcher
+            yield watcher._stop()
 
     @synchronized("arbiter_start_watchers")
     @gen.coroutine

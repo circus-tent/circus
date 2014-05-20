@@ -1,4 +1,5 @@
 import os
+import signal
 import socket
 import sys
 import tornado
@@ -256,6 +257,28 @@ class TestTrainer(TestCircus):
         yield self._call("rm", name=name)
         resp = yield self._call("numwatchers")
         self.assertEqual(resp.get("numwatchers"), before - 1)
+        yield self.stop_arbiter()
+
+    @tornado.testing.gen_test
+    def test_rm_watcher_nostop(self):
+        # start watcher, save off the pids for the watcher processes we
+        # started, stop the watcher without stopping processes, and validate
+        # the processes are still running, then kill the processes
+        yield self.start_arbiter(graceful_timeout=0)
+        name = 'test_rm_watcher_nostop'
+        yield self._call("add", name=name, cmd=self._get_cmd(), start=True,
+                         options=self._get_options())
+        resp = yield self._call("list", name=name)
+        pids = resp.get('pids')
+        self.assertEqual(len(pids), 1)
+        yield self._call("rm", name=name, nostop=True)
+        try:
+            pid = pids[0]
+            os.kill(pid, 0)
+            os.kill(pid, signal.SIGTERM)
+            os.waitpid(pid, 0)
+        except OSError:
+            self.assertFalse(True, "process was incorrectly killed")
         yield self.stop_arbiter()
 
     @tornado.testing.gen_test
