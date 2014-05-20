@@ -9,7 +9,7 @@ Statsd
 ======
 
     **use**
-         set to ``circus.plugins.statsd.StatsdEmitter``
+        set to 'circus.plugins.statsd.StatsdEmitter'
 
     **application_name**
         the name used to identify the bucket prefix to emit the stats to (it will be prefixed with ``circus.`` and suffixed with ``.watcher``)
@@ -111,15 +111,18 @@ ResourceWatcher
         The maximum cpu one process is allowed to consume (in %). Default: 90
 
     **min_cpu**
-	   The minimum cpu one process should consume (in %). Default: None (no minimum)
-	   You can set the min_cpu to 0 (zero), in this case if one process consume exactly 0% cpu, it will trigger an exceeded limit.
+        The minimum cpu one process should consume (in %). Default: None (no minimum)
+        You can set the min_cpu to 0 (zero), in this case if one process consume exactly 0% cpu, it will trigger an exceeded limit.
 
     **max_mem**
-        The amount of memory one process of this watcher is allowed to consume (in %). Default: 90
+        The amount of memory one process of this watcher is allowed to consume. Default: 90.
+        If no unit is specified, the value is in %. Example: 50
+        If a unit is specified, the value is in bytes. Supported units are B, K, M, G, T, P, E, Z, Y. Example: 250M
 
     **min_mem**
-	   The minimum memory one process should consume (in %). Default: None (no minimum)
-	   You can set the min_mem to 0 (zero), in this case if one process consume exactly 0% memory, it will trigger an exceeded limit.
+        The minimum memory one process of this watcher should consume. Default: None (no minimum).
+        If no unit is specified, the value is in %. Example: 50
+        If a unit is specified, the value is in bytes. Supported units are B, K, M, G, T, P, E, Z, Y. Example: 250M
 
     **health_threshold**
         The health is the average of cpu and memory (in %) the watchers processes are allowed to consume (in %). Default: 75
@@ -146,7 +149,6 @@ Example:
     max_cpu = 70
     min_mem = 0
     max_mem = 20
-
 
 Watchdog
 ========

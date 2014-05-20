@@ -13,7 +13,7 @@ from circus.tests.support import TestCase, EasyTestSuite
 
 from circus import util
 from circus.util import (
-    get_info, bytes2human, to_bool, parse_env_str, env_to_str,
+    get_info, bytes2human, human2bytes, to_bool, parse_env_str, env_to_str,
     to_uid, to_gid, replace_gnu_args, get_python_version, load_virtualenv,
     get_working_dir
 )
@@ -79,6 +79,19 @@ class TestUtil(TestCase):
         self.assertEqual(bytes2human(10000), '9K')
         self.assertEqual(bytes2human(100001221), '95M')
         self.assertRaises(TypeError, bytes2human, '1')
+
+    def test_human2bytes(self):
+        self.assertEqual(human2bytes('1B'), 1)
+        self.assertEqual(human2bytes('9K'), 9216)
+        self.assertEqual(human2bytes('1129M'), 1183842304)
+        self.assertEqual(human2bytes('67T'), 73667279060992)
+        self.assertEqual(human2bytes('13P'), 14636698788954112)
+        self.assertRaises(ValueError, human2bytes, '')
+        self.assertRaises(ValueError, human2bytes, 'faoej')
+        self.assertRaises(ValueError, human2bytes, '123KB')
+        self.assertRaises(ValueError, human2bytes, '48')
+        self.assertRaises(ValueError, human2bytes, '23V')
+        self.assertRaises(TypeError, human2bytes, 234)
 
     def test_tobool(self):
         for value in ('True ', '1', 'true'):
