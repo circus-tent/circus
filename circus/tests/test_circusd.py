@@ -1,6 +1,7 @@
 import sys
 import os
 import tempfile
+import six
 from copy import copy
 
 from circus.circusd import get_maxfd, daemonize, main
@@ -86,7 +87,7 @@ class TestCircusd(TestCase):
 
     def test_maxfd(self):
         max = get_maxfd()
-        self.assertTrue(isinstance(max, int))
+        self.assertTrue(isinstance(max, six.integer_types))
 
     @skipIf(has_gevent(), "Gevent is loaded")
     def test_daemonize(self):
