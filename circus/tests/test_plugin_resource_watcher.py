@@ -91,6 +91,34 @@ class TestResourceWatcher(TestCircus):
         yield self.stop_arbiter()
 
     @gen_test
+    def test_resource_watcher_max_mem_abs(self):
+        yield self.start_arbiter(fqn)
+        async_poll_for(self.test_file, 'START')
+        config = {'loop_rate': 0.1, 'max_mem': '1M', 'watcher': 'test'}
+
+        statsd_increments = yield async_run_plugin(ResourceWatcher,
+                                                   config,
+                                                   get_statsd_increments)
+
+        self._check_statsd(statsd_increments,
+                           '_resource_watcher.test.over_memory')
+        yield self.stop_arbiter()
+
+    @gen_test
+    def test_resource_watcher_min_mem_abs(self):
+        yield self.start_arbiter(fqn)
+        async_poll_for(self.test_file, 'START')
+        config = {'loop_rate': 0.1, 'min_mem': '100M', 'watcher': 'test'}
+
+        statsd_increments = yield async_run_plugin(ResourceWatcher,
+                                                   config,
+                                                   get_statsd_increments)
+
+        self._check_statsd(statsd_increments,
+                           '_resource_watcher.test.under_memory')
+        yield self.stop_arbiter()
+
+    @gen_test
     def test_resource_watcher_max_cpu(self):
         yield self.start_arbiter(fqn)
         async_poll_for(self.test_file, 'START')

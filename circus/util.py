@@ -142,6 +142,7 @@ def bytes2human(n):
     return "%sB" % n
 
 
+<<<<<<< HEAD
 _HSYMBOLS = {
     'customary': ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
     'customary_ext': ('byte', 'kilo', 'mega', 'giga', 'tera', 'peta', 'exa',
@@ -183,6 +184,22 @@ def human2bytes(s):
 
     return int(num * prefix[letter])
 
+=======
+def human2bytes(s):
+    """Translates a human representation into bytes.
+    """
+    symbols = ['B'] + list(_SYMBOLS)
+
+    if not isinstance(s, basestring):
+        raise TypeError(s)
+    if len(s) < 2:
+        raise ValueError(s)
+    n, symbol = s[:-1], s[-1]
+    if symbol not in symbols or not n.isdigit():
+        raise ValueError(s)
+
+    return int(n) << symbols.index(symbol)*10
+>>>>>>> f6003b1040b5060d4e91464696c4e1304596b97a
 
 # XXX weak dict ?
 _PROCS = {}
