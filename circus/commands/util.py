@@ -49,6 +49,8 @@ def convert_option(key, val):
         return int(val)
     elif key == 'respawn':
         return util.to_bool(val)
+    elif key == "singleton":
+        return util.to_bool(val)
     elif key.startswith('stderr_stream.') or key.startswith('stdout_stream.'):
         subkey = key.split('.', 1)[-1]
         if subkey in ('max_bytes', 'backup_count'):
@@ -88,7 +90,7 @@ def validate_option(key, val):
                   'shell', 'env', 'cmd', 'args', 'copy_env', 'retry_in',
                   'max_retry', 'graceful_timeout', 'stdout_stream',
                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
-                  'hooks')
+                  'singleton', 'hooks')
 
     valid_prefixes = ('stdout_stream.', 'stderr_stream.', 'hooks.', 'rlimit_')
 
