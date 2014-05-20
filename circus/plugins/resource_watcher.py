@@ -21,15 +21,21 @@ class ResourceWatcher(BaseObserver):
             self.statsd.stop()
             self.loop.close()
             raise NotImplementedError('watcher is mandatory for now.')
+
         self.max_cpu = float(config.get("max_cpu", 90))     # in %
         self.max_mem = config.get("max_mem")
+
         if self.max_mem is None:
             self.max_mem = 90.
+            self._max_percent = True
         else:
             try:
                 self.max_mem = float(self.max_mem)          # float -> %
+                self._max_percent = True
             except ValueError:
                 self.max_mem = human2bytes(self.max_mem)    # int -> absolute
+                self._max_percent = False
+
         self.min_cpu = config.get("min_cpu")
         if self.min_cpu is not None:
             self.min_cpu = float(self.min_cpu)              # in %
@@ -37,8 +43,10 @@ class ResourceWatcher(BaseObserver):
         if self.min_mem is not None:
             try:
                 self.min_mem = float(self.min_mem)          # float -> %
+                self._min_percent = True
             except ValueError:
                 self.min_mem = human2bytes(self.min_mem)    # int -> absolute
+                self._min_percent = True
         self.health_threshold = float(config.get("health_threshold",
                                       75))  # in %
         self.max_count = int(config.get("max_count", 3))
@@ -54,32 +62,25 @@ class ResourceWatcher(BaseObserver):
 
     def look_after(self):
         info = self.call("stats", name=self.watcher)
+
         if info["status"] == "error":
             self.statsd.increment("_resource_watcher.%s.error" % self.watcher)
             return
 
         stats = info['info']
 
-        max_cpu, max_mem, min_cpu, min_mem = self._collect_data(stats)
-        self._process_index('parent', max_cpu, max_mem, min_cpu, min_mem)
+        self._process_index('parent', self._collect_data(stats))
         if not self.process_children:
             return
 
         for sub_info in stats.values():
             if isinstance(sub_info, dict):
                 for child_info in sub_info['children']:
-                    max_cpu, max_mem, min_cpu, min_mem = self._collect_data({
-                        child_info['pid']: child_info
-                    })
-                    self._process_index(
-                        child_info['pid'],
-                        max_cpu,
-                        max_mem,
-                        min_cpu,
-                        min_mem
-                    )
+                    data = self._collect_data({child_info['pid']: child_info})
+                    self._process_index(child_info['pid'], data)
 
     def _collect_data(self, stats):
+        data = {}
         cpus = []
         mems = []
         mems_abs = []
@@ -94,63 +95,78 @@ class ResourceWatcher(BaseObserver):
                                 human2bytes(sub_info['mem_info1']))
 
         if cpus:
-            max_cpu = max(cpus)
-            max_mem = max(mems)
-            max_mem_abs = max(mems_abs)
-            min_cpu = min(cpus)
-            min_mem = min(mems)
-            min_mem_abs = min(mems_abs)
+            data['max_cpu'] = max(cpus)
+            data['max_mem'] = max(mems)
+            data['max_mem_abs'] = max(mems_abs)
+            data['min_cpu'] = min(cpus)
+            data['min_mem'] = min(mems)
+            data['min_mem_abs'] = min(mems_abs)
         else:
             # we dont' have any process running. max = 0 then
-            max_cpu = max_mem = min_cpu = min_mem = 0
-            max_mem_abs = min_mem_abs = 0
+            data['max_cpu'] = 0
+            data['max_mem'] = 0
+            data['min_cpu'] = 0
+            data['min_mem'] = 0
+            data['max_mem_abs'] = 0
+            data['min_mem_abs'] = 0
 
-        return max_cpu, max_mem, min_cpu, min_mem
+        return data
 
-    def _process_index(self, index, max_cpu, max_mem, min_cpu, min_mem):
-        if index not in self._count_over_cpu or \
-                index not in self._count_over_mem or \
-                index not in self._count_under_cpu or \
-                index not in self._count_under_mem or \
-                index not in self._count_health:
+    def _process_index(self, index, stats):
+
+        if (index not in self._count_over_cpu or
+                index not in self._count_over_mem or
+                index not in self._count_under_cpu or
+                index not in self._count_under_mem or
+                index not in self._count_health):
             self._reset_index(index)
 
-        if self.max_cpu and max_cpu > self.max_cpu:
+        if self.max_cpu and stats['max_cpu'] > self.max_cpu:
             self.statsd.increment("_resource_watcher.%s.over_cpu" %
                                   self.watcher)
             self._count_over_cpu[index] += 1
         else:
             self._count_over_cpu[index] = 0
 
-        if self.min_cpu is not None and min_cpu <= self.min_cpu:
+        if self.min_cpu is not None and stats['min_cpu'] <= self.min_cpu:
             self.statsd.increment("_resource_watcher.%s.under_cpu" %
                                   self.watcher)
             self._count_under_cpu[index] += 1
         else:
             self._count_under_cpu[index] = 0
 
-        if (isinstance(self.max_mem, float) and max_mem > self.max_mem or
-                isinstance(self.max_mem, int) and max_mem_abs > self.max_mem):
-            self.statsd.increment("_resource_watcher.%s.over_memory" %
-                                  self.watcher)
-            self._count_over_mem[index] += 1
+        if self.max_mem is not None:
+            over_percent = (self._max_percent and
+                            stats['max_mem'] > self.max_mem)
+            over_value = (not self._max_percent and
+                          stats['max_mem_abs'] > self.max_mem)
+
+            if over_percent or over_value:
+                self.statsd.increment("_resource_watcher.%s.over_memory" %
+                                      self.watcher)
+                self._count_over_mem[index] += 1
+            else:
+                self._count_over_mem[index] = 0
         else:
             self._count_over_mem[index] = 0
 
         if self.min_mem is not None:
-            not_abs = isinstance(self.min_mem, float) and
-                      min_mem < self.min_mem
-            abs = isinstance(self.min_mem, int) and
-                  min_mem_abs < self.min_mem
+            under_percent = (self._min_percent and
+                             stats['min_mem'] < self.min_mem)
+            under_value = (not self._min_percent
+                           and stats['min_mem_abs'] < self.min_mem)
 
-            if not_abs or abs:
+            if under_percent or under_value:
                 self.statsd.increment("_resource_watcher.%s.under_memory" %
                                       self.watcher)
-                self._count_under_mem += 1
+                self._count_under_mem[index] += 1
             else:
-                self._count_under_mem = 0
+                self._count_under_mem[index] = 0
         else:
             self._count_under_mem[index] = 0
+
+        max_cpu = stats['max_cpu']
+        max_mem = stats['max_mem']
 
         if (self.health_threshold and
                 (max_cpu + max_mem) / 2.0 > self.health_threshold):
