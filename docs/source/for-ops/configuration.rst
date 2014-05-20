@@ -208,11 +208,11 @@ watcher:NAME - as many sections as you want
         class defined in **stdout_stream.class**.
 
     **close_child_stdout**
-        If set to True, the sdout stream of each process will be sent to
+        If set to True, the stdout stream of each process will be sent to
         /dev/null after the fork. Defaults to False.
 
     **close_child_stderr**
-        If set to True, the sderr stream of each process will be sent to
+        If set to True, the stderr stream of each process will be sent to
         /dev/null after the fork. Defaults to False.
 
     **send_hup**
