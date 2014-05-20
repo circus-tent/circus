@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Roman Imankulov <roman.imankulov@gmail.com>
 DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7),
-               libzmq-dev (>= 2.1.9),
+               libzmq3-dev (>= 3.2.0),
                python | python-all | python-dev | python-all-dev (>=2.6.3),
                python-setuptools,
                python-zmq (>= 2.1.9),
