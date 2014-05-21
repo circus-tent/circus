@@ -45,7 +45,9 @@ class AsyncCircusClient(object):
 
     def stop(self):
         self.stream.stop_on_recv()
-        self.socket.disconnect(self.endpoint)
+        # only supported by libzmq >= 3
+        if hasattr(self.socket, 'disconnect'):
+            self.socket.disconnect(self.endpoint)
         self.socket.close()
 
     def send_message(self, command, **props):
@@ -103,7 +105,9 @@ class CircusClient(object):
         self.poller.register(self.socket, zmq.POLLIN)
 
     def stop(self):
-        self.socket.disconnect(self.endpoint)
+        # only supported by libzmq >= 3
+        if hasattr(self.socket, 'disconnect'):
+            self.socket.disconnect(self.endpoint)
         self.socket.close()
 
     def send_message(self, command, **props):
