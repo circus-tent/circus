@@ -11,5 +11,4 @@ def hello():
 
 if __name__ == "__main__":
     #sys.stderr = sys.stdout = StringIO.StringIO()
-    app.run(port=8000)
-
+    app.run(port=8888)
