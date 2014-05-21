@@ -32,6 +32,7 @@ More changes:
 - Added more metrics to the statsd provider - #698
 - Fixed multicast discovery - #731
 - Make start, restart and reload more uniform - #673
+- Correctly initialize all use groups - #635
 - improved tests stability
 - many, many more things....
 
