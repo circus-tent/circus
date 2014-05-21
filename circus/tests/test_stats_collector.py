@@ -19,6 +19,13 @@ class TestCollector(TestCase):
         self.fds = []
         self.pids = {}
 
+    def tearDown(self):
+        for sock, _, _ in self.socks:
+            sock.close()
+
+        for sock in self.clients:
+            sock.close()
+
     def _get_streamer(self):
         for i in range(10):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -73,6 +80,7 @@ class TestCollector(TestCase):
 
             def stop(self):
                 self.loop.stop()
+                self.loop.close()
 
         return Collector(self.streamer)
 

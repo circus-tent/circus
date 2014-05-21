@@ -22,6 +22,30 @@ def so_bindtodevice_supported():
 
 class TestSockets(TestCase):
 
+    def setUp(self):
+        super(TestSockets, self).setUp()
+        self.files = []
+
+    def tearDown(self):
+        for file_ in self.files:
+            if os.path.exists(file_):
+                os.remove(file_)
+
+        super(TestSockets, self).tearDown()
+
+    def _get_file(self):
+        fd, _file = tempfile.mkstemp()
+        os.close(fd)
+        self.files.append(_file)
+        return _file
+
+    def _get_tmp_filename(self):
+        # XXX horrible way to get a filename
+        fd, _file = tempfile.mkstemp()
+        os.close(fd)
+        os.remove(_file)
+        return _file
+
     def test_socket(self):
         sock = CircusSocket('somename', 'localhost', 0)
         try:
@@ -56,10 +80,7 @@ class TestSockets(TestCase):
         self.assertRaises(socket.error, CircusSocket.load_from_config, config)
 
     def test_load_from_config_umask(self):
-        fd, sockfile = tempfile.mkstemp()
-        os.close(fd)
-        os.remove(sockfile)
-
+        sockfile = self._get_tmp_filename()
         config = {'name': 'somename', 'path': sockfile, 'umask': 0}
         sock = CircusSocket.load_from_config(config)
         try:
@@ -68,8 +89,7 @@ class TestSockets(TestCase):
             sock.close()
 
     def test_load_from_config_replace(self):
-        fd, sockfile = tempfile.mkstemp()
-        os.close(fd)
+        sockfile = self._get_file()
 
         config = {'name': 'somename', 'path': sockfile, 'replace': False}
         sock = CircusSocket.load_from_config(config)
@@ -87,10 +107,7 @@ class TestSockets(TestCase):
             sock.close()
 
     def test_unix_socket(self):
-        fd, sockfile = tempfile.mkstemp()
-        os.close(fd)
-        os.remove(sockfile)
-
+        sockfile = self._get_tmp_filename()
         sock = CircusSocket('somename', path=sockfile, umask=0)
         try:
             sock.bind_and_listen()
@@ -102,10 +119,7 @@ class TestSockets(TestCase):
 
     def test_unix_cleanup(self):
         sockets = CircusSockets()
-        fd, sockfile = tempfile.mkstemp()
-        os.close(fd)
-        os.remove(sockfile)
-
+        sockfile = self._get_tmp_filename()
         try:
             sockets.add('unix', path=sockfile)
             sockets.bind_and_listen_all()
@@ -157,6 +171,8 @@ class TestSockets(TestCase):
         except socket.error:
             # see #699
             return
+        finally:
+            sock.close()
 
         self.assertEqual(sock.so_reuseport, True)
         self.assertNotEqual(sockopt, 0)
@@ -175,6 +191,7 @@ class TestSockets(TestCase):
         finally:
             if saved is not None:
                 socket.SO_REUSEPORT = saved
+            sock.close()
 
 
 test_suite = EasyTestSuite(__name__)

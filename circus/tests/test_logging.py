@@ -65,7 +65,12 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
         if sys.gettrace() is None:
             argv = [sys.executable, "-m"] + argv
         else:
-            argv = ["coverage", "run", "-p", "-m"] + argv
+            exe_dir = os.path.dirname(sys.executable)
+            coverage = os.path.join(exe_dir, "coverage")
+            if not os.path.isfile(coverage):
+                coverage = "coverage"
+            argv = [coverage, "run", "-p", "-m"] + argv
+
         child = subprocess.Popen(argv, cwd=temp_dir, stdin=subprocess.PIPE,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT,
@@ -82,13 +87,24 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
         finally:
             child.terminate()
             child.wait()
+
         log_file_path = os.path.join(temp_dir, log_capture_path)
-        if os.path.exists(log_file_path):
-            with open(log_file_path, "r") as fh:
-                return fh.read()
-        else:
+
+        try:
+            if os.path.exists(log_file_path):
+                with open(log_file_path, "r") as fh:
+                    return fh.read()
+            else:
+                if child.stdout is not None:
+                    raise Exception(child.stdout.read().decode("ascii"))
+        finally:
             if child.stdout is not None:
-                raise Exception(child.stdout.read().decode("ascii"))
+                child.stdout.close()
+            if child.stderr is not None:
+                child.stderr.close()
+            if child.stdin is not None:
+                child.stdin.close()
+
         assert child.returncode == 0, \
             " ".join(shell_escape_arg(a) for a in argv)
     finally:
