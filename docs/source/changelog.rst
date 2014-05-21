@@ -1,6 +1,41 @@
 Changelog history
 =================
 
+0.11 - 2014-06-21
+-----------------
+
+This release is not introducing a lot of features, and
+focused on making Circus more robust & stable.
+
+Major changes/fixes:
+
+- Make sure we cannot execute two conflictings commands on the arbiter
+  simultanously.
+- we have 2 new streams class: TimedRotatingFileStream, WatchedFileStream
+- we have one new hook: after_spawn hook
+- CircusPlugin is easier to use
+- fix autostart=False watchers during start (regression)
+
+More changes:
+
+- circus messages can be routed to syslog now - #748
+- endpoint_owner option added so we can define which user owns ipc socket
+  files created by circus.
+- Started Windows support (just circusctl for now)
+- fixed a lot of leaks in the tests
+- Allow case sensitive environment variables
+- The resource plugin now accepts absolute memory values - #609
+- Add support to the add command for the 'singleton' option - #767
+- Allow sending arbitrary signals to child procs via resource watcher - #756
+- Allow INI/JSON/YAML configuration for logging
+- Make sure we're compatible with psutil 2.x *and* 3.x
+- Added more metrics to the statsd provider - #698
+- Fixed multicast discovery - #731
+- Make start, restart and reload more uniform - #673
+- improved tests stability
+- many, many more things....
+
+
 0.10 - 2013-11-04
 -----------------
 
