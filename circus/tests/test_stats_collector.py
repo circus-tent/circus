@@ -67,20 +67,20 @@ class TestCollector(TestCase):
 
             def __init__(this, streamer):
                 Thread.__init__(this)
-                this.streamer = self.streamer
+                this.streamer = streamer
                 this.loop = ioloop.IOLoop()
                 this.daemon = True
 
-            def run(this):
+            def run(self):
                 collector = collector_class(
                     self.streamer, 'sockets', callback_time=0.1,
-                    io_loop=this.loop)
+                    io_loop=self.loop)
                 collector.start()
-                this.loop.start()
+                self.loop.start()
 
             def stop(self):
-                self.loop.stop()
-                self.loop.close()
+                self.loop.add_callback(self.loop.stop)
+                self.loop.add_callback(self.loop.close)
 
         return Collector(self.streamer)
 
