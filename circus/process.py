@@ -275,7 +275,13 @@ class Process(object):
                     # versions of python < 2.6.2 don't manage unsigned int for
                     # groups like on osx or fedora
                     os.setgid(-ctypes.c_int(-self.gid).value)
-                os.initgroups(self.username, self.gid)
+
+                if self.username is not None:
+                    try:
+                        os.initgroups(self.username, self.gid)
+                    except (OSError, AttributeError):
+                        # not support on Mac or 2.6
+                        pass
 
             if self.uid:
                 os.setuid(self.uid)

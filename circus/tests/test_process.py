@@ -176,4 +176,13 @@ class TestProcess(TestCircus):
         finally:
             process.stop()
 
+    def test_initgroups(self):
+        cmd = sys.executable
+        args = ['import time; time.sleep(2)']
+        gid = os.getgid()
+        uid = os.getuid()
+        p1 = Process('1', cmd, args=args, gid=gid, uid=uid)
+        p1.stop()
+
+
 test_suite = EasyTestSuite(__name__)
