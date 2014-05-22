@@ -5,7 +5,7 @@ Changelog history
 ----------------
 
 
-0.11 - 2014-05-21
+0.11 - 2014-06-21
 -----------------
 
 This release is not introducing a lot of features, and
