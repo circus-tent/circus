@@ -1,8 +1,10 @@
 Changelog history
 =================
 
-0.12 - undefined
+0.12 - 2014-05-22
 ----------------
+
+- Fixed a regression that broke Circus on 2.6 - #782
 
 
 0.11 - 2014-05-21
