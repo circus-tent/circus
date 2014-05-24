@@ -673,10 +673,10 @@ class Watcher(object):
         process.stopping = True
         waited = 0
         while waited < self.graceful_timeout:
-            yield tornado_sleep(1)
-            waited += 1
             if not process.is_alive():
                 break
+            yield tornado_sleep(0.1)
+            waited += 0.1
         if waited >= self.graceful_timeout:
             # We are not smart anymore
             self.send_signal_process(process, signal.SIGKILL)
