@@ -20,7 +20,7 @@ from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
-from circus.util import parse_env_dict, resolve_name, tornado_sleep
+from circus.util import parse_env_dict, resolve_name, tornado_sleep, IS_WINDOWS
 from circus.py3compat import bytestring, is_callable, b
 
 
@@ -94,6 +94,8 @@ class Watcher(object):
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
 
+      This is not supported on Windows.
+
     - **stderr_stream**: a mapping that defines the stream for
       the process stderr. Defaults to None.
 
@@ -116,6 +118,8 @@ class Watcher(object):
       - **pid** - the process pid
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
+
+      This is not supported on Windows.
 
     - **priority** -- integer that defines a priority for the watcher. When
       the Arbiter do some operations on all watchers, it will sort them
@@ -226,6 +230,11 @@ class Watcher(object):
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
+
+        if IS_WINDOWS:
+            if self.stdout_stream or self.stderr_stream:
+                raise NotImplementedError("Streams are not supported"
+                                          " on Windows.")
 
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
                           "uid", "gid", "send_hup", "stop_signal",
