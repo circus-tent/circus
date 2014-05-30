@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 from circus.process import Process
 from circus.tests.support import (TestCircus, skipIf, EasyTestSuite, DEBUG,
@@ -37,6 +38,10 @@ finally:
 
 """
 
+# On Windows we can't close the fds if we are
+# redirecting stdout or stderr
+USE_FDS = IS_WINDOWS
+
 
 def _nose_no_s():
     if PY2:
@@ -55,6 +60,9 @@ class TestProcess(TestCircus):
         try:
             info = process.info()
             self.assertEqual(process.pid, info['pid'])
+            # Make sure the process lived a measurable amount of time
+            # (precision error on Windows)
+            time.sleep(0.01)
             age = process.age()
             self.assertTrue(age > 0.)
             self.assertFalse(process.is_child(0))
@@ -97,8 +105,11 @@ class TestProcess(TestCircus):
     def test_comparison(self):
         cmd = PYTHON
         args = ['import time; time.sleep(2)', ]
-        p1 = Process('1', cmd, args=args)
-        p2 = Process('2', cmd, args=args)
+        p1 = Process('1', cmd, args=args, use_fds=USE_FDS)
+        # Make sure the two processes are launched with a measurable
+        # difference. (precsion error on Windows)
+        time.sleep(0.01)
+        p2 = Process('2', cmd, args=args, use_fds=USE_FDS)
 
         self.assertTrue(p1 < p2)
         self.assertFalse(p1 == p2)
@@ -113,17 +124,18 @@ class TestProcess(TestCircus):
 
         p1 = Process('1', 'make-me-a-coffee',
                      '$(circus.wid) --type $(circus.env.type)',
-                     shell=False, spawn=False, env={'type': 'macchiato'})
+                     shell=False, spawn=False, env={'type': 'macchiato'},
+                     use_fds=USE_FDS)
 
         self.assertEqual(['make-me-a-coffee', '1', '--type', 'macchiato'],
                          p1.format_args())
 
-        p2 = Process('1', 'yeah $(CIRCUS.WID)', spawn=False)
+        p2 = Process('1', 'yeah $(CIRCUS.WID)', spawn=False, use_fds=USE_FDS)
         self.assertEqual(['yeah', '1'], p2.format_args())
 
         os.environ['coffee_type'] = 'american'
         p3 = Process('1', 'yeah $(circus.env.type)', shell=False, spawn=False,
-                     env={'type': 'macchiato'})
+                     env={'type': 'macchiato'}, use_fds=USE_FDS)
         self.assertEqual(['yeah', 'macchiato'], p3.format_args())
         os.environ.pop('coffee_type')
 

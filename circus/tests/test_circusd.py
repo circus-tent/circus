@@ -26,17 +26,20 @@ class TestCircusd(TestCase):
         self.exit = sys.exit
         sys.exit = lambda x: None
         self._files = []
-        self.fork = os.fork
-        os.fork = self._forking
-        self.setsid = os.setsid
-        os.setsid = lambda: None
+
+        if not IS_WINDOWS:
+            self.fork = os.fork
+            os.fork = self._forking
+            self.setsid = os.setsid
+            os.setsid = lambda: None
+            self.dup2 = os.dup2
+            os.dup2 = lambda x, y: None
+
         self.forked = 0
         self.closerange = circusd.closerange
         circusd.closerange = lambda x, y: None
         self.open = os.open
         os.open = self._open
-        self.dup2 = os.dup2
-        os.dup2 = lambda x, y: None
         self.stop = Arbiter.stop
         Arbiter.stop = lambda x: None
         self.config = util.configure_logger
@@ -54,14 +57,17 @@ class TestCircusd(TestCase):
         circusd.configure_logger = util.configure_logger = self.config
         Arbiter.stop = self.stop
         sys.argv = self.argv
-        os.dup2 = self.dup2
         os.open = self.open
         circusd.closerange = self.closerange
-        os.setsid = self.setsid
         sys.modules = self.saved
         Arbiter.start = self.starter
         sys.exit = self.exit
-        os.fork = self.fork
+
+        if not IS_WINDOWS:
+            os.fork = self.fork
+            os.dup2 = self.dup2
+            os.setsid = self.setsid
+
         for file in self._files:
             if os.path.exists(file):
                 os.remove(file)

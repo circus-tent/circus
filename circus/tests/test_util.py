@@ -1,11 +1,17 @@
 from __future__ import unicode_literals
 import tempfile
-import grp
-import pwd
 import shutil
 import os
 import sys
 
+try:
+    import grp
+    import pwd
+except ImportError:
+    grp = None
+    pwd = None
+
+import psutil
 from psutil import Popen
 import mock
 
@@ -38,7 +44,11 @@ class TestUtil(TestCase):
             worker.terminate()
 
         self.assertTrue(isinstance(info['pid'], int))
-        self.assertEqual(info['nice'], 0)
+
+        if IS_WINDOWS:
+            self.assertEqual(info['nice'], psutil.NORMAL_PRIORITY_CLASS)
+        else:
+            self.assertEqual(info['nice'], 0)
 
     def test_get_info_still_works_when_denied_access(self):
         def access_denied():

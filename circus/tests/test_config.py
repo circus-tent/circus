@@ -8,7 +8,7 @@ from circus.config import get_config
 from circus.watcher import Watcher
 from circus.process import Process
 from circus.sockets import CircusSocket
-from circus.tests.support import TestCase, EasyTestSuite
+from circus.tests.support import TestCase, EasyTestSuite, IS_WINDOWS
 from circus.util import replace_gnu_args
 from circus.py3compat import PY2
 
@@ -69,6 +69,12 @@ class TestConfig(TestCase):
         socket = CircusSocket.load_from_config(conf['sockets'][0])
         try:
             watcher.initialize(None, {'web': socket}, None)
+
+            if IS_WINDOWS:
+                # We can't close the sockets on Windows as we
+                # are redirecting stdout
+                watcher.use_sockets = True
+
             process = Process(watcher._nextwid, watcher.cmd,
                               args=watcher.args,
                               working_dir=watcher.working_dir,
@@ -103,6 +109,12 @@ class TestConfig(TestCase):
 
         def load(watcher_conf):
             watcher = Watcher.load_from_config(watcher_conf.copy())
+
+            if IS_WINDOWS:
+                # We can't close the sockets on Windows as we
+                # are redirecting stdout
+                watcher.use_sockets = True
+
             process = Process(watcher._nextwid, watcher.cmd,
                               args=watcher.args,
                               working_dir=watcher.working_dir,
@@ -115,11 +127,10 @@ class TestConfig(TestCase):
             return process.format_args()
 
         import circus.process
-        is_win = circus.process.is_win
 
         try:
             # force nix
-            circus.process.is_win = lambda: False
+            circus.process.IS_WINDOWS = False
 
             # without shell_args
             with patch.object(logger, 'warn') as mock_logger_warn:
@@ -141,7 +152,7 @@ class TestConfig(TestCase):
                 self.assertTrue(mock_logger_warn.called)
 
             # force win
-            circus.process.is_win = lambda: True
+            circus.process.IS_WINDOWS = True
 
             # without shell_args
             with patch.object(logger, 'warn') as mock_logger_warn:
@@ -161,7 +172,7 @@ class TestConfig(TestCase):
                 self.assertEqual(formatted_args, ['foo', '--fd'])
                 self.assertTrue(mock_logger_warn.called)
         finally:
-            circus.process.is_win = is_win
+            circus.process.is_win = IS_WINDOWS
 
     def test_include_wildcards(self):
         conf = get_config(_CONF['include'])

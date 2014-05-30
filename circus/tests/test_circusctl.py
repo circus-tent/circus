@@ -60,7 +60,7 @@ class CommandlineTest(TestCircus):
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
     def test_help_switch_no_command(self):
-        stdout, stderr = run_ctl('--help')
+        stdout, stderr = yield async_run_ctl('--help')
         if stderr:
             self.assertIn('UserWarning', stderr)
         output = stdout.splitlines()
@@ -69,7 +69,7 @@ class CommandlineTest(TestCircus):
         self.assertEqual(output[4], 'Commands:')
 
     def test_help_invalid_command(self):
-        stdout, stderr = run_ctl('foo')
+        stdout, stderr = yield async_run_ctl('foo')
         self.assertEqual(stdout, '')
         err = stderr.splitlines()
         while err and 'import' in err[0]:
@@ -80,7 +80,7 @@ class CommandlineTest(TestCircus):
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
     def test_help_for_add_command(self):
-        stdout, stderr = run_ctl('--help add')
+        stdout, stderr = yield async_run_ctl('--help add')
         if stderr:
             self.assertIn('UserWarning', stderr)
         self.assertEqual(stdout.splitlines()[0], 'Add a watcher')
@@ -96,13 +96,13 @@ class CommandlineTest(TestCircus):
                                              endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
-        self.assertEqual(stdout, 'ok\n')
+        self.assertEqual(stdout.strip(), 'ok')
 
         stdout, stderr = yield async_run_ctl('status test2',
                                              endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
-        self.assertEqual(stdout, 'stopped\n')
+        self.assertEqual(stdout.strip(), 'stopped')
         yield self.stop_arbiter()
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
@@ -117,12 +117,12 @@ class CommandlineTest(TestCircus):
                                              endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
-        self.assertEqual(stdout, 'ok\n')
+        self.assertEqual(stdout.strip(), 'ok')
         stdout, stderr = yield async_run_ctl('status test2',
                                              endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
-        self.assertEqual(stdout, 'active\n')
+        self.assertEqual(stdout.strip(), 'active')
         yield self.stop_arbiter()
 
 

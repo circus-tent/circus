@@ -54,18 +54,19 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
             with open(path, "w") as fh:
                 fh.write(additional_files[relpath])
         env = os.environ.copy()
+        sep = ';' if IS_WINDOWS else ':'
         # We're going to run circus from a process with a different
         # cwd, so we need to make sure that Python will import the
         # current version of circus
         pythonpath = env.get('PYTHONPATH', '')
-        pythonpath += ':%s' % os.path.abspath(
-            os.path.join(HERE, os.pardir, os.pardir))
+        pythonpath += '%s%s' % (sep, os.path.abspath(
+            os.path.join(HERE, os.pardir, os.pardir)))
         env['PYTHONPATH'] = pythonpath
         argv = ["circus.circusd"] + options + [circus_ini_path]
         if sys.gettrace() is None:
-            argv = [sys.executable, "-m"] + argv
+            argv = [PYTHON, "-m"] + argv
         else:
-            exe_dir = os.path.dirname(sys.executable)
+            exe_dir = os.path.dirname(PYTHON)
             coverage = os.path.join(exe_dir, "coverage")
             if not os.path.isfile(coverage):
                 coverage = "coverage"
@@ -113,7 +114,14 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
                 source = os.path.join(temp_dir, basename)
                 target = os.path.abspath(basename)
                 shutil.copy(source, target)
-        shutil.rmtree(temp_dir)
+
+        try:
+            shutil.rmtree(temp_dir)
+        except OSError:
+            # Sometimes on Windows we can't delete the
+            # logging file because it says it's still in
+            # use (lock).
+            pass
 
 EXAMPLE_YAML = """\
 version: 1

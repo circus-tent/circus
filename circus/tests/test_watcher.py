@@ -30,6 +30,11 @@ from circus.util import get_python_version, tornado_sleep
 from circus.watcher import Watcher
 from circus.py3compat import s
 
+if hasattr(signal, 'SIGKILL'):
+    SIGKILL = signal.SIGKILL
+else:
+    SIGKILL = signal.SIGTERM
+
 warnings.filterwarnings('ignore',
                         module='threading', message='sys.exc_clear')
 
@@ -53,6 +58,9 @@ class FakeProcess(object):
         return True
 
     def stop(self):
+        pass
+
+    def wait(self, *args, **kwargs):
         pass
 
 
@@ -85,7 +93,7 @@ class TestWatcher(TestCircus):
         self.assertEqual(len(pids), 2)
         to_kill = pids[0]
         status = yield self.status('signal', name='test', pid=to_kill,
-                                   signum=signal.SIGKILL)
+                                   signum=SIGKILL)
         self.assertEqual(status, 'ok')
 
         # make sure the process is restarted
@@ -113,20 +121,11 @@ class TestWatcher(TestCircus):
         for process in list(watcher.processes.values()):
             to_kill.append(process.pid)
             # the process is killed in an unsual way
-            try:
-                # use SIGKILL instead of SIGSEGV so we don't get
-                # 'app crashed' dialogs on OS X
-                os.kill(process.pid, signal.SIGKILL)
-            except OSError:
-                pass
-
+            process.stop()
             # and wait for it to die
-            try:
-                os.waitpid(process.pid, 0)
-            except OSError:
-                pass
+            process.wait(3)
 
-            # ansure the old process is considered "unexisting"
+            # ensure the old process is considered "unexisting"
             self.assertEqual(process.status, UNEXISTING)
 
         # this should clean up and create a new process
@@ -486,7 +485,7 @@ class TestWatcherHooks(TestCircus):
     def _hook_signal_kwargs_test_function(self, kwargs):
         self.assertTrue("pid" not in kwargs)
         self.assertTrue("signum" not in kwargs)
-        self.assertTrue(kwargs["pid"] in (signal.SIGTERM, signal.SIGKILL))
+        self.assertTrue(kwargs["pid"] in (signal.SIGTERM, SIGKILL))
         self.assertTrue(int(kwargs["signum"]) > 1)
 
     @tornado.testing.gen_test
