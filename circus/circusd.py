@@ -45,7 +45,10 @@ def daemonize():
         if module.startswith('gevent'):
             raise ValueError('Cannot daemonize if gevent is loaded')
 
-    child_pid = os.fork()
+    if hasattr(os, 'fork'):
+        child_pid = os.fork()
+    else:
+        raise ValueError("Daemonizing is not available on this platform.")
 
     if child_pid != 0:
         # we're in the parent
@@ -99,7 +102,8 @@ def main():
         "the default logging configuration for the arbiter."))
 
     parser.add_argument('--daemon', dest='daemonize', action='store_true',
-                        help="Start circusd in the background")
+                        help="Start circusd in the background. Not supported "
+                             "on Windows")
     parser.add_argument('--pidfile', dest='pidfile')
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays Circus version and exits.')
