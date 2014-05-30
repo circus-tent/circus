@@ -48,9 +48,10 @@ def _nose_no_s():
 class TestProcess(TestCircus):
 
     def test_base(self):
-        cmd = sys.executable
-        args = "-c 'import time; time.sleep(2)'"
-        process = Process('test', cmd, args=args, shell=False)
+        cmd = PYTHON
+        args = "-c 'import time; time.sleep(10)'"
+        process = Process('test', cmd, args=args, shell=False,
+                          use_fds=USE_FDS)
         try:
             info = process.info()
             self.assertEqual(process.pid, info['pid'])
@@ -65,7 +66,7 @@ class TestProcess(TestCircus):
         script_file = self.get_tmpfile(RLIMIT)
         output_file = self.get_tmpfile()
 
-        cmd = sys.executable
+        cmd = PYTHON
         args = [script_file, output_file]
         rlimits = {'nofile': 20,
                    'nproc': 20}
@@ -93,7 +94,7 @@ class TestProcess(TestCircus):
         self.assertEqual(srt2ints(output['NPROC']), wanted)
 
     def test_comparison(self):
-        cmd = sys.executable
+        cmd = PYTHON
         args = ['import time; time.sleep(2)', ]
         p1 = Process('1', cmd, args=args)
         p2 = Process('2', cmd, args=args)
@@ -132,7 +133,7 @@ class TestProcess(TestCircus):
         script_file = self.get_tmpfile(VERBOSE)
         output_file = self.get_tmpfile()
 
-        cmd = sys.executable
+        cmd = PYTHON
         args = [script_file, output_file]
 
         # 1. streams sent to /dev/null
@@ -179,7 +180,7 @@ class TestProcess(TestCircus):
 
     def test_initgroups(self):
         cmd = sys.executable
-        args = ['import time; time.sleep(2)']
+        args = [SLEEP % 2]
         gid = os.getgid()
         uid = os.getuid()
         p1 = Process('1', cmd, args=args, gid=gid, uid=uid)

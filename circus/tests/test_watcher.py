@@ -25,6 +25,7 @@ from circus.stream import QueueStream
 from circus.tests.support import TestCircus, truncate_file
 from circus.tests.support import async_poll_for, EasyTestSuite
 from circus.tests.support import MagicMockFuture, skipIf, IS_WINDOWS
+from circus.tests.support import PYTHON
 from circus.util import get_python_version, tornado_sleep
 from circus.watcher import Watcher
 from circus.py3compat import s
@@ -155,7 +156,7 @@ class TestWatcher(TestCircus):
         watchers = resp.get('infos')['test']
 
         self.assertEqual(watchers[list(watchers.keys())[0]]['cmdline'].lower(),
-                         sys.executable.split(os.sep)[-1].lower())
+                         PYTHON.split(os.sep)[-1].lower())
         yield self.stop_arbiter()
 
     @tornado.testing.gen_test
@@ -316,7 +317,7 @@ class SomeWatcher(object):
             os.environ = {'COCONUTS': 'MIGRATE'}
             cmd = ('%s -c "import sys; '
                    'sys.stdout.write(\':\'.join(sys.path)); '
-                   ' sys.stdout.flush()"') % sys.executable
+                   ' sys.stdout.flush()"') % PYTHON
 
             self.watcher = Watcher('xx', cmd, copy_env=True, copy_path=True,
                                    stdout_stream=qstream, loop=self.loop,

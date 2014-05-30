@@ -9,7 +9,7 @@ except ImportError:
     from ConfigParser import ConfigParser  # NOQA
 from circus.tests.support import TestCase
 from circus.tests.support import EasyTestSuite
-from circus.tests.support import skipIf
+from circus.tests.support import skipIf, PYTHON, IS_WINDOWS
 import os
 import shutil
 import tempfile
@@ -31,7 +31,7 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
     options = list(options)
     additional_files = dict(additional_files)
     config_ini_update = {
-        "watcher:touch.cmd": sys.executable,
+        "watcher:touch.cmd": PYTHON,
         "watcher:touch.args": "-c \"open('workerstart.txt', 'w+').close()\"",
         "watcher:touch.respawn": 'False'
     }

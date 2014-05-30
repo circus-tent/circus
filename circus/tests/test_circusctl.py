@@ -1,5 +1,4 @@
 import subprocess
-import sys
 import shlex
 from multiprocessing import Process, Queue
 
@@ -8,13 +7,13 @@ from tornado.gen import coroutine, Return
 
 from circus.circusctl import USAGE, VERSION, CircusCtl
 from circus.tests.support import (TestCircus, async_poll_for, EasyTestSuite,
-                                  skipIf, DEBUG)
+                                  skipIf, DEBUG, PYTHON, SLEEP)
 from circus.util import tornado_sleep, DEFAULT_ENDPOINT_DEALER
 from circus.py3compat import b, s
 
 
 def run_ctl(args, queue=None, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
-    cmd = '%s -m circus.circusctl' % sys.executable
+    cmd = '%s -m circus.circusctl' % PYTHON
     if '--endpoint' not in args:
         args = '--endpoint %s ' % endpoint + args
 
@@ -93,7 +92,7 @@ class CommandlineTest(TestCircus):
         async_poll_for(self.test_file, 'START')
         ep = self.arbiter.endpoint
 
-        stdout, stderr = yield async_run_ctl('add test2 "sleep 1"',
+        stdout, stderr = yield async_run_ctl('add test2 "%s"' % SLEEP % 1,
                                              endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
@@ -113,7 +112,8 @@ class CommandlineTest(TestCircus):
         async_poll_for(self.test_file, 'START')
         ep = self.arbiter.endpoint
 
-        stdout, stderr = yield async_run_ctl('add --start test2 "sleep 1"',
+        stdout, stderr = yield async_run_ctl('add --start test2 "%s"'
+                                             % SLEEP % 1,
                                              endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
