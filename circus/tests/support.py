@@ -85,6 +85,11 @@ def resolve_name(name):
 
 PYTHON = sys.executable
 
+# Script used to sleep for a specified amount of seconds.
+# Should be used instead of the 'sleep' command for
+# compatibility
+SLEEP = PYTHON + " -c 'import time;time.sleep(%d)'"
+
 
 def get_ioloop():
     from zmq.eventloop.ioloop import ZMQPoller
