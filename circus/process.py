@@ -435,6 +435,15 @@ class Process(object):
         except NoSuchProcess:
             pass
 
+    def wait(self, timeout=None):
+        """
+        Wait for the process to terminate, in the fashion
+        of waitpid.
+
+        Accepts a timeout in seconds.
+        """
+        self._worker.wait(timeout)
+
     def age(self):
         """Return the age of the process in seconds."""
         return time.time() - self.started

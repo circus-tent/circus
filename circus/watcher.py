@@ -12,7 +12,7 @@ except ImportError:
 import site
 from tornado import gen
 
-from psutil import NoSuchProcess
+from psutil import NoSuchProcess, TimeoutExpired
 import zmq.utils.jsonapi as json
 from zmq.eventloop import ioloop
 
@@ -419,50 +419,68 @@ class Watcher(object):
             return
         process = self.processes.pop(pid)
 
-        if status is None:
-            while True:
+        timeout = 0.001
+
+        while status is None:
+            if IS_WINDOWS:
+                try:
+                    # On Windows we can't use waitpid as it's blocking,
+                    # so we use psutils' wait
+                    status = process.wait(timeout=timeout)
+                except TimeoutExpired:
+                    continue
+            else:
                 try:
                     _, status = os.waitpid(pid, os.WNOHANG)
                 except OSError as e:
                     if e.errno == errno.EAGAIN:
-                        time.sleep(0.001)
+                        time.sleep(timeout)
                         continue
                     elif e.errno == errno.ECHILD:
-                        # nothing to do here, we do not have any child
-                        # process running
-                        # but we still need to send the "reap" signal.
-                        #
-                        # This can happen if poll() or wait() were called on
-                        # the underlying process.
-                        logger.debug('reaping already dead process %s [%s]',
-                                     pid, self.name)
-                        self.notify_event(
-                            "reap",
-                            {"process_pid": pid,
-                             "time": time.time(),
-                             "exit_code": process.returncode()})
-                        process.stop()
-                        return
+                        status = None
                     else:
                         raise
 
+            if status is None:
+                # nothing to do here, we do not have any child
+                # process running
+                # but we still need to send the "reap" signal.
+                #
+                # This can happen if poll() or wait() were called on
+                # the underlying process.
+                logger.debug('reaping already dead process %s [%s]',
+                             pid, self.name)
+                self.notify_event(
+                    "reap",
+                    {"process_pid": pid,
+                     "time": time.time(),
+                     "exit_code": process.returncode()})
+                process.stop()
+                return
+
         # get return code
-        if os.WIFSIGNALED(status):
-            # The Python Popen object returns <-signal> in it's returncode
-            # property if the process exited on a signal, so emulate that
-            # behavior here so that pubsub clients watching for reap can
-            # distinguish between an exit with a non-zero exit code and
-            # a signal'd exit. This is also consistent with the notify_event
-            # reap message above that uses the returncode function (that ends
-            # up calling Popen.returncode)
-            exit_code = -os.WTERMSIG(status)
-        # process exited using exit(2) system call; return the
-        # integer exit(2) system call has been called with
-        elif os.WIFEXITED(status):
-            exit_code = os.WEXITSTATUS(status)
+        if hasattr(os, 'WIFSIGNALED'):
+            exit_code = 0
+
+            if os.WIFSIGNALED(status):
+                # The Python Popen object returns <-signal> in it's returncode
+                # property if the process exited on a signal, so emulate that
+                # behavior here so that pubsub clients watching for reap can
+                # distinguish between an exit with a non-zero exit code and
+                # a signal'd exit. This is also consistent with the notify
+                # event reap message above that uses the returncode function
+                # (that ends up calling Popen.returncode)
+                exit_code = -os.WTERMSIG(status)
+            # process exited using exit(2) system call; return the
+            # integer exit(2) system call has been called with
+            elif os.WIFEXITED(status):
+                exit_code = os.WEXITSTATUS(status)
+            else:
+                # should never happen
+                raise RuntimeError("Unknown process exit status")
         else:
-            # should never happen
-            raise RuntimeError("Unknown process exit status")
+            # On Windows we don't have such distinction
+            exit_code = status
 
         # if the process is dead or a zombie try to definitely stop it.
         if process.status in (DEAD_OR_ZOMBIE, UNEXISTING):
