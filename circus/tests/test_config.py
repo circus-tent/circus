@@ -110,10 +110,9 @@ class TestConfig(TestCase):
         def load(watcher_conf):
             watcher = Watcher.load_from_config(watcher_conf.copy())
 
-            if IS_WINDOWS:
-                # We can't close the sockets on Windows as we
-                # are redirecting stdout
-                watcher.use_sockets = True
+            # Make sure we don't close the sockets as we will be
+            # launching the Watcher with IS_WINDOWS=True
+            watcher.use_sockets = True
 
             process = Process(watcher._nextwid, watcher.cmd,
                               args=watcher.args,
@@ -172,7 +171,7 @@ class TestConfig(TestCase):
                 self.assertEqual(formatted_args, ['foo', '--fd'])
                 self.assertTrue(mock_logger_warn.called)
         finally:
-            circus.process.is_win = IS_WINDOWS
+            circus.process.IS_WINDOWS = IS_WINDOWS
 
     def test_include_wildcards(self):
         conf = get_config(_CONF['include'])
