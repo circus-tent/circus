@@ -682,8 +682,14 @@ def configure_logger(logger, level='INFO', output="-", loggerconfig=None,
             handler = logging.handlers.SysLogHandler(
                 address=address, facility=facility)
         else:
-            handler = logging.handlers.WatchedFileHandler(output)
-            close_on_exec(handler.stream.fileno())
+            if not IS_WINDOWS:
+                handler = logging.handlers.WatchedFileHandler(output)
+                close_on_exec(handler.stream.fileno())
+            else:
+                # WatchedFileHandler is not supported on Windows,
+                # but a FileHandler should be a good drop-in replacement
+                # as log files are locked
+                handler = logging.FileHandler(output)
         formatter = logging.Formatter(fmt=LOG_FMT, datefmt=datefmt)
         handler.setFormatter(formatter)
         root_logger.handlers = [handler]
