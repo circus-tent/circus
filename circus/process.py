@@ -20,7 +20,8 @@ try:
 except ImportError:
     resource = None     # NOQA
 
-from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
+from psutil import (Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess,
+                    AccessDenied)
 
 from circus.py3compat import bytestring, string_types, quote
 from circus.sockets import CircusSocket
@@ -420,7 +421,12 @@ class Process(object):
         try:
             try:
                 if self._worker.poll() is None:
-                    return self._worker.terminate()
+                    try:
+                        return self._worker.terminate()
+                    except AccessDenied:
+                        # It can happen on Windows if the process
+                        # dies after poll returns (unlikely)
+                        pass
             finally:
                 if self._worker.stderr is not None:
                     self._worker.stderr.close()
