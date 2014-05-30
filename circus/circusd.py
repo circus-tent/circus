@@ -73,7 +73,7 @@ def daemonize():
 def main():
     import zmq
     try:
-        zmq_version = [int(part) for part in zmq.__version__.split('.')]
+        zmq_version = [int(part) for part in zmq.__version__.split('.')[:2]]
         if len(zmq_version) < 2:
             raise ValueError()
     except (AttributeError, ValueError):
