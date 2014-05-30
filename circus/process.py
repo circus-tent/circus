@@ -152,7 +152,8 @@ class Process(object):
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
 
-    - **use_fds**: if True, will not close the fds in the subprocess.
+    - **use_fds**: if True, will not close the fds in the subprocess. Must be
+      be set to True on Windows if stdout or stderr are redirected.
       default: False.
 
     - **pipe_stdout**: if True, will open a PIPE on stdout. default: True.
@@ -198,6 +199,11 @@ class Process(object):
 
         if self.uid is not None and self.gid is None:
             self.gid = get_default_gid(self.uid)
+
+        if IS_WINDOWS:
+            if not self.use_fds and (self.pipe_stderr or self.pipe_stdout):
+                raise ValueError("On Windows, you can't close the fds if "
+                                 "you are redirecting stdout or stderr")
 
         if spawn:
             self.spawn()
