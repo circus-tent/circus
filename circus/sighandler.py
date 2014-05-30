@@ -4,12 +4,15 @@ import sys
 
 from circus import logger
 from circus.client import make_json
+from circus.util import IS_WINDOWS
 
 
 class SysHandler(object):
 
-    SIGNALS = [getattr(signal, "SIG%s" % x) for x in
-               "HUP QUIT INT TERM WINCH".split()]
+    _SIGNALS_NAMES = ("ILL ABRT BREAK INT TERM" if IS_WINDOWS else
+                      "HUP QUIT INT TERM WINCH")
+
+    SIGNALS = [getattr(signal, "SIG%s" % x) for x in _SIGNALS_NAMES.split()]
 
     SIG_NAMES = dict(
         (getattr(signal, name), name[3:].lower()) for name in dir(signal)
@@ -57,17 +60,39 @@ class SysHandler(object):
                 logger.error("error: %s [%s]" % (e, tb))
                 sys.exit(1)
 
+    def quit(self):
+        # We need to transfer the control to the loop's thread
+        self.controller.loop.add_callback_from_signal(
+            self.controller.dispatch, (None, make_json("quit"))
+        )
+
+    def reload(self):
+        # We need to transfer the control to the loop's thread
+        self.controller.loop.add_callback_from_signal(
+            self.controller.dispatch,
+            (None, make_json("reload", graceful=True))
+        )
+
     def handle_int(self):
-        self.controller.dispatch((None, make_json("quit")))
+        self.quit()
 
     def handle_term(self):
-        self.controller.dispatch((None, make_json("quit")))
+        self.quit()
 
     def handle_quit(self):
-        self.controller.dispatch((None, make_json("quit")))
+        self.quit()
+
+    def handle_ill(self):
+        self.quit()
+
+    def handle_abrt(self):
+        self.quit()
+
+    def handle_break(self):
+        self.quit()
 
     def handle_winch(self):
         pass
 
     def handle_hup(self):
-        self.controller.dispatch((None, make_json("reload", graceful=True)))
+        self.reload()
