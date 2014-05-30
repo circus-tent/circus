@@ -24,7 +24,7 @@ from circus.process import RUNNING, UNEXISTING
 from circus.stream import QueueStream
 from circus.tests.support import TestCircus, truncate_file
 from circus.tests.support import async_poll_for, EasyTestSuite
-from circus.tests.support import MagicMockFuture
+from circus.tests.support import MagicMockFuture, skipIf, IS_WINDOWS
 from circus.util import get_python_version, tornado_sleep
 from circus.watcher import Watcher
 from circus.py3compat import s
@@ -227,9 +227,10 @@ class TestWatcherInitialization(TestCircus):
         finally:
             os.environ = old_environ
 
+    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_copy_path(self):
-        watcher = SomeWatcher()
+        watcher = SomeWatcher(stream=True)
         yield watcher.run()
         # wait for watcher data at most 5s
         messages = []
@@ -289,8 +290,11 @@ class TestWatcherInitialization(TestCircus):
 
 class SomeWatcher(object):
 
-    def __init__(self, loop=None, **kw):
-        self.stream = QueueStream()
+    def __init__(self, stream=False, loop=None, **kw):
+        if stream:
+            self.stream = QueueStream()
+        else:
+            self.stream = None
         self.watcher = None
         self.kw = kw
         if loop is None:
@@ -300,7 +304,11 @@ class SomeWatcher(object):
 
     @tornado.gen.coroutine
     def run(self):
-        qstream = {'stream': self.stream}
+        if self.stream:
+            qstream = {'stream': self.stream}
+        else:
+            qstream = None
+
         old_environ = os.environ
         old_paths = sys.path[:]
         try:
@@ -331,13 +339,22 @@ ERROR = 3
 
 class TestWatcherHooks(TestCircus):
 
-    def run_with_hooks(self, hooks):
-        self.stream = QueueStream()
-        self.errstream = QueueStream()
+    def run_with_hooks(self, hooks, streams=False):
+        if streams:
+            self.stream = QueueStream()
+            self.errstream = QueueStream()
+            stdout_stream = {'stream': self.stream}
+            stderr_stream = {'stream': self.errstream}
+        else:
+            self.stream = None
+            self.errstream = None
+            stdout_stream = None
+            stderr_stream = None
+
         dummy_process = 'circus.tests.support.run_process'
         return self._create_circus(dummy_process,
-                                   stdout_stream={'stream': self.stream},
-                                   stderr_stream={'stream': self.errstream},
+                                   stdout_stream=stdout_stream,
+                                   stderr_stream=stderr_stream,
                                    hooks=hooks, debug=True, async=True)
 
     @tornado.gen.coroutine

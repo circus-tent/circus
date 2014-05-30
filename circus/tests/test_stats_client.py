@@ -4,7 +4,7 @@ import os
 import sys
 import tornado
 
-from circus.tests.support import TestCircus, EasyTestSuite
+from circus.tests.support import TestCircus, EasyTestSuite, skipIf, IS_WINDOWS
 from circus.client import AsyncCircusClient
 from circus.stream import FileStream
 from circus.py3compat import get_next
@@ -44,6 +44,7 @@ class TestStatsClient(TestCircus):
             if os.path.exists(file):
                 os.remove(file)
 
+    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_handler(self):
         log = self._get_file()

@@ -3,7 +3,7 @@ import sys
 
 from circus.process import Process
 from circus.tests.support import (TestCircus, skipIf, EasyTestSuite, DEBUG,
-                                  poll_for)
+                                  poll_for, IS_WINDOWS, PYTHON, SLEEP)
 import circus.py3compat
 from circus.py3compat import StringIO, PY2
 
@@ -127,6 +127,7 @@ class TestProcess(TestCircus):
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
     @skipIf(_nose_no_s(), 'Nose runs without -s')
+    @skipIf(IS_WINDOWS, "Streams not supported")
     def test_streams(self):
         script_file = self.get_tmpfile(VERBOSE)
         output_file = self.get_tmpfile()
