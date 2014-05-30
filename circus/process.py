@@ -22,8 +22,8 @@ from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 from circus.py3compat import bytestring, string_types, quote
 from circus.sockets import CircusSocket
 from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
-                         ObjectDict, replace_gnu_args, is_win, get_default_gid,
-                         get_username_from_uid)
+                         ObjectDict, replace_gnu_args, get_default_gid,
+                         get_username_from_uid, IS_WINDOWS)
 from circus import logger
 
 
@@ -353,7 +353,7 @@ class Process(object):
             # requested command, remaining args are applied to sh.
             args = [' '.join(quote(arg) for arg in args)]
             shell_args = format_kwargs.get('shell_args', None)
-            if shell_args and is_win():
+            if shell_args and IS_WINDOWS:
                 logger.warn("shell_args won't apply for "
                             "windows platforms: %s", shell_args)
             elif isinstance(shell_args, string_types):

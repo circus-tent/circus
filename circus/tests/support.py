@@ -32,6 +32,7 @@ import tornado
 from circus import get_arbiter
 from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
 from circus.util import tornado_sleep, ConflictError
+from circus.util import IS_WINDOWS
 from circus.client import AsyncCircusClient, make_message
 from circus.stream import QueueStream
 
