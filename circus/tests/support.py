@@ -84,7 +84,7 @@ def resolve_name(name):
     return ret
 
 
-_CMD = sys.executable
+PYTHON = sys.executable
 
 
 def get_ioloop():
@@ -289,7 +289,7 @@ class TestCircus(AsyncTestCase):
         os.close(fd)
         wdir = os.path.dirname(__file__)
         args = ['generic.py', callable_path, testfile]
-        worker = {'cmd': _CMD, 'args': args, 'working_dir': wdir,
+        worker = {'cmd': PYTHON, 'args': args, 'working_dir': wdir,
                   'name': 'test', 'graceful_timeout': 2}
         worker.update(kw)
         if not arbiter_kw:
