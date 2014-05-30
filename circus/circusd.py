@@ -1,7 +1,10 @@
 import sys
 import argparse
 import os
-import resource
+try:
+    import resource
+except ImportError:
+    resource = None     # NOQA
 
 from circus import logger
 from circus.arbiter import Arbiter
@@ -12,9 +15,12 @@ from circus.util import check_future_exception_and_log
 
 
 def get_maxfd():
-    maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
-    if maxfd == resource.RLIM_INFINITY:
+    if not resource:
         maxfd = MAXFD
+    else:
+        maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+        if maxfd == resource.RLIM_INFINITY:
+            maxfd = MAXFD
     return maxfd
 
 
