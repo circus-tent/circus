@@ -250,7 +250,7 @@ class Process(object):
 
         args = self.format_args(sockets_fds=sockets_fds)
 
-        def preexec_fn():
+        def preexec():
             streams = [sys.stdin]
 
             if self.close_child_stdout:
@@ -291,6 +291,12 @@ class Process(object):
 
             if self.uid:
                 os.setuid(self.uid)
+
+        if IS_WINDOWS:
+            # On Windows we can't use a pre-exec function
+            preexec_fn = None
+        else:
+            preexec_fn = preexec
 
         extra = {}
         if self.pipe_stdout:
