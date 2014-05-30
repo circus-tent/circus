@@ -11,11 +11,14 @@ except ImportError:
 import sys
 import errno
 import os
-import resource
 from subprocess import PIPE
 import time
 import shlex
 import warnings
+try:
+    import resource
+except ImportError:
+    resource = None     # NOQA
 
 from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
 
@@ -259,12 +262,15 @@ class Process(object):
             self._null_streams(streams)
             os.setsid()
 
-            for limit, value in self.rlimits.items():
-                res = getattr(resource, 'RLIMIT_%s' % limit.upper(), None)
-                if res is None:
-                    raise ValueError('unknown rlimit "%s"' % limit)
-                # TODO(petef): support hard/soft limits
-                resource.setrlimit(res, (value, value))
+            if resource:
+                for limit, value in self.rlimits.items():
+                    res = getattr(
+                        resource, 'RLIMIT_%s' % limit.upper(), None
+                    )
+                    if res is None:
+                        raise ValueError('unknown rlimit "%s"' % limit)
+                    # TODO(petef): support hard/soft limits
+                    resource.setrlimit(res, (value, value))
 
             if self.gid:
                 try:

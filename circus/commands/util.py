@@ -1,9 +1,11 @@
 from circus.exc import ArgumentError, MessageError
 from circus.py3compat import string_types
 from circus import util
-import resource
 import warnings
-
+try:
+    import resource
+except ImportError:
+    resource = None     # NOQA
 
 _HOOKS = ('before_start', 'after_start', 'before_stop', 'after_stop',
           'before_spawn', 'after_spawn', 'before_signal', 'after_signal',
@@ -146,9 +148,15 @@ def validate_option(key, val):
                           "anymore for %r" % key)
 
     elif key.startswith('rlimit_'):
-        rlimit_key = key[7:]
-        rlimit_int = getattr(resource, 'RLIMIT_' + rlimit_key.upper(), None)
-        if rlimit_int is None:
-            raise MessageError("%r isn't a valid rlimit setting" % key)
+        if resource:
+            rlimit_key = key[7:]
+            rlimit_int = getattr(
+                resource, 'RLIMIT_' + rlimit_key.upper(), None
+            )
+            if rlimit_int is None:
+                raise MessageError("%r isn't a valid rlimit setting" % key)
+        else:
+            raise MessageError("rlimit options are not supported on this"
+                               " platform")
         if not isinstance(val, int):
             raise MessageError("%r rlimit value isn't a valid int" % val)
