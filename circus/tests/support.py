@@ -357,11 +357,20 @@ class Process(object):
 
     def __init__(self, testfile):
         self.testfile = testfile
+
         # init signal handling
-        signal.signal(signal.SIGQUIT, self.handle_quit)
-        signal.signal(signal.SIGTERM, self.handle_quit)
-        signal.signal(signal.SIGINT, self.handle_quit)
-        signal.signal(signal.SIGCHLD, self.handle_chld)
+        if IS_WINDOWS:
+            signal.signal(signal.SIGABRT, self.handle_quit)
+            signal.signal(signal.SIGTERM, self.handle_quit)
+            signal.signal(signal.SIGINT, self.handle_quit)
+            signal.signal(signal.SIGILL, self.handle_quit)
+            signal.signal(signal.SIGBREAK, self.handle_quit)
+        else:
+            signal.signal(signal.SIGQUIT, self.handle_quit)
+            signal.signal(signal.SIGTERM, self.handle_quit)
+            signal.signal(signal.SIGINT, self.handle_quit)
+            signal.signal(signal.SIGCHLD, self.handle_chld)
+
         self.alive = True
 
     def _write(self, msg):
