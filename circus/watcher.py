@@ -138,7 +138,9 @@ class Watcher(object):
       (default: False)
 
     - **copy_env** -- If True, the environment in which circus is running
-      run will be reproduced for the workers. (default: False)
+      run will be reproduced for the workers. This defaults to True on
+      Windows as you cannot run any executable without the **SYSTEMROOT**
+      variable. (default: False)
 
     - **copy_path** -- If True, circusd *sys.path* is sent to the
       process through *PYTHONPATH*. You must activate **copy_env** for
@@ -235,6 +237,13 @@ class Watcher(object):
             if self.stdout_stream or self.stderr_stream:
                 raise NotImplementedError("Streams are not supported"
                                           " on Windows.")
+
+            if not copy_env and not env:
+                # Copy the env by default on Windows as we can't run any
+                # executable without some env variables
+                # Eventually, we could set only some required variables,
+                # such as SystemRoot
+                self.copy_env = True
 
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
                           "uid", "gid", "send_hup", "stop_signal",
