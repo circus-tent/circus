@@ -232,7 +232,7 @@ class TestCircus(AsyncTestCase):
         return plugin
 
     @tornado.gen.coroutine
-    def start_arbiter(self, cmd='circus.tests.support.run_process',
+    def start_arbiter(self, cmd='support.run_process',
                       stdout_stream=None, debug=True, **kw):
         testfile, arbiter = self._create_circus(
             cmd, stdout_stream=stdout_stream,
@@ -285,11 +285,10 @@ class TestCircus(AsyncTestCase):
     @classmethod
     def _create_circus(cls, callable_path, plugins=None, stats=False,
                        async=False, arbiter_kw=None, **kw):
-        resolve_name(callable_path)   # used to check the callable
         fd, testfile = mkstemp()
         os.close(fd)
-        wdir = os.path.dirname(__file__)
-        args = ['generic.py', callable_path, testfile]
+        wdir = os.getcwd()
+        args = ['circus/tests/generic.py', callable_path, testfile]
         worker = {'cmd': PYTHON, 'args': args, 'working_dir': wdir,
                   'name': 'test', 'graceful_timeout': 2}
         worker.update(kw)
