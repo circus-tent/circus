@@ -34,7 +34,6 @@ from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
 from circus.util import tornado_sleep, ConflictError
 from circus.util import IS_WINDOWS
 from circus.client import AsyncCircusClient, make_message
-from circus.stream import QueueStream
 
 ioloop.install()
 if 'ASYNC_TEST_TIMEOUT' not in os.environ:
@@ -230,9 +229,6 @@ class TestCircus(AsyncTestCase):
     @tornado.gen.coroutine
     def start_arbiter(self, cmd='circus.tests.support.run_process',
                       stdout_stream=None, debug=True, **kw):
-        if stdout_stream is None:
-            self.stream = QueueStream()
-            stdout_stream = {'stream': self.stream}
         testfile, arbiter = self._create_circus(
             cmd, stdout_stream=stdout_stream,
             debug=debug, async=True, **kw)
