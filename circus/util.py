@@ -261,7 +261,9 @@ def get_info(process=None, interval=0, with_childs=False):
     raw_cmdline = get_cmdline(process)
 
     try:
-        cmdline = os.path.basename(shlex.split(raw_cmdline[0])[0])
+        cmdline = os.path.basename(
+            shlex.split(raw_cmdline[0], posix=not IS_WINDOWS)[0]
+        )
     except (AccessDenied, IndexError):
         cmdline = "N/A"
 

@@ -363,9 +363,9 @@ class Process(object):
             else:
                 args = [bytestring(replace_gnu_args(arg, **format_kwargs))
                         for arg in self.args]
-            args = shlex.split(bytestring(cmd)) + args
+            args = shlex.split(bytestring(cmd), posix=not IS_WINDOWS) + args
         else:
-            args = shlex.split(bytestring(cmd))
+            args = shlex.split(bytestring(cmd), posix=not IS_WINDOWS)
 
         if self.shell:
             # subprocess.Popen(shell=True) implies that 1st arg is the
