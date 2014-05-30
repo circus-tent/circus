@@ -687,8 +687,12 @@ class Watcher(object):
             yield tornado_sleep(0.1)
             waited += 0.1
         if waited >= self.graceful_timeout:
-            # We are not smart anymore
-            self.send_signal_process(process, signal.SIGKILL)
+            # On Windows we can't send a SIGKILL signal, but the
+            # process.stop function will terminate the process
+            # later anyway
+            if hasattr(signal, 'SIGKILL'):
+                # We are not smart anymore
+                self.send_signal_process(process, signal.SIGKILL)
         self._process_remove_redirections(process)
         process.stopping = False
         process.stop()
@@ -708,11 +712,12 @@ class Watcher(object):
 
     @util.debuglog
     def send_signal(self, pid, signum):
+        is_sigkill = hasattr(signal, 'SIGKILL') and signum == signal.SIGKILL
         if pid in self.processes:
             process = self.processes[pid]
             hook_result = self.call_hook("before_signal",
                                          pid=pid, signum=signum)
-            if signum != signal.SIGKILL and not hook_result:
+            if not is_sigkill and not hook_result:
                 logger.debug("before_signal hook didn't return True "
                              "=> signal %i is not sent to %i" % (signum, pid))
             else:
