@@ -25,15 +25,16 @@ class Pidfile(object):
         self.pid = pid
 
         # Write pidfile
-        fdir = os.path.dirname(self.fname)
-        if fdir and not os.path.isdir(fdir):
-            raise RuntimeError("%s doesn't exist. Can't create pidfile" % fdir)
-        fd, fname = tempfile.mkstemp(dir=fdir)
-        os.write(fd, "{0}\n".format(self.pid).encode('utf-8'))
         if self.fname:
-            os.rename(fname, self.fname)
+            fdir = os.path.dirname(self.fname)
+            if fdir and not os.path.isdir(fdir):
+                raise RuntimeError("%s doesn't exist. Can't create"
+                                   "pidfile" % fdir)
+            fd = os.open(self.fname, os.O_CREAT | os.O_WRONLY)
         else:
-            self.fname = fname
+            fd, self.fname = tempfile.mkstemp(dir=fdir)
+
+        os.write(fd, "{0}\n".format(self.pid).encode('utf-8'))
         os.close(fd)
 
         # set permissions to -rw-r--r--
