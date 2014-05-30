@@ -5,10 +5,12 @@ from circus import logger
 
 
 _FAMILY = {
-    'AF_UNIX': socket.AF_UNIX,
     'AF_INET': socket.AF_INET,
     'AF_INET6': socket.AF_INET6
 }
+
+if hasattr(socket, 'AF_UNIX'):
+    _FAMILY['AF_UNIX'] = socket.AF_UNIX
 
 _TYPE = {
     'SOCK_STREAM': socket.SOCK_STREAM,
@@ -38,7 +40,11 @@ class CircusSocket(socket.socket):
                  proto=0, backlog=2048, path=None, umask=None, replace=False,
                  interface=None, so_reuseport=False):
         if path is not None:
-            family = socket.AF_UNIX
+            if not hasattr(socket, 'AF_UNIX'):
+                raise NotImplementedError("AF_UNIX not supported on this"
+                                          " platform")
+            else:
+                family = socket.AF_UNIX
 
         super(CircusSocket, self).__init__(family=family, type=type,
                                            proto=proto)
@@ -48,7 +54,7 @@ class CircusSocket(socket.socket):
         self.umask = umask
         self.replace = replace
 
-        if family == socket.AF_UNIX:
+        if hasattr(socket, 'AF_UNIX') and family == socket.AF_UNIX:
             self.host = self.port = None
             self.is_unix = True
         else:
@@ -135,6 +141,10 @@ class CircusSocket(socket.socket):
 
     @classmethod
     def load_from_config(cls, config):
+        if config.get('family') == 'AF_INET':
+            raise NotImplementedError("AF_UNIX not supported on this"
+                                      "platform")
+
         params = {'name': config['name'],
                   'host': config.get('host', 'localhost'),
                   'port': int(config.get('port', '8080')),
