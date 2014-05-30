@@ -62,6 +62,7 @@ class TestProcess(TestCircus):
             process.stop()
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
+    @skipIf(IS_WINDOWS, "RLIMIT is not supported on Windows")
     def test_rlimits(self):
         script_file = self.get_tmpfile(RLIMIT)
         output_file = self.get_tmpfile()
@@ -178,6 +179,7 @@ class TestProcess(TestCircus):
         finally:
             process.stop()
 
+    @skipIf(IS_WINDOWS, "No GID on Windows")
     def test_initgroups(self):
         cmd = sys.executable
         args = [SLEEP % 2]

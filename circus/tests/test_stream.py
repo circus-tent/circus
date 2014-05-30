@@ -298,6 +298,8 @@ class TestWatchedFileStream(TestFileStream):
         stream.now = lambda: now
         return stream
 
+    # we can't run this test on Windows due to file locking
+    @skipIf(IS_WINDOWS, "On Windows")
     def test_move_file(self):
         _test_fd, test_filename = tempfile.mkstemp()
         stream = self.get_real_stream(filename=test_filename)

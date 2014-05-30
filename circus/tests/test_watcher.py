@@ -253,6 +253,7 @@ class TestWatcherInitialization(TestCircus):
         self.assertTrue(resp)
         yield watcher.stop()
 
+    @skipIf(IS_WINDOWS, "virtualenv not supported yet on Windows")
     @tornado.testing.gen_test
     def test_venv(self):
         venv = os.path.join(os.path.dirname(__file__), 'venv')
@@ -270,6 +271,7 @@ class TestWatcherInitialization(TestCircus):
             yield watcher.stop()
         self.assertTrue(wanted in ppath)
 
+    @skipIf(IS_WINDOWS, "virtualenv not supported yet on Windows")
     @tornado.testing.gen_test
     def test_venv_site_packages(self):
         venv = os.path.join(os.path.dirname(__file__), 'venv')

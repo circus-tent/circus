@@ -7,7 +7,7 @@ except ImportError:
     pass
 import mock
 
-from circus.tests.support import TestCase, skipIf, EasyTestSuite
+from circus.tests.support import TestCase, skipIf, EasyTestSuite, IS_WINDOWS
 from circus.sockets import CircusSocket, CircusSockets
 
 
@@ -79,6 +79,7 @@ class TestSockets(TestCase):
         config = {'name': '', 'proto': 'foo'}
         self.assertRaises(socket.error, CircusSocket.load_from_config, config)
 
+    @skipIf(IS_WINDOWS, "Unix sockets not supported on this platform")
     def test_load_from_config_umask(self):
         sockfile = self._get_tmp_filename()
         config = {'name': 'somename', 'path': sockfile, 'umask': 0}
@@ -88,6 +89,7 @@ class TestSockets(TestCase):
         finally:
             sock.close()
 
+    @skipIf(IS_WINDOWS, "Unix sockets not supported on this platform")
     def test_load_from_config_replace(self):
         sockfile = self._get_file()
 
@@ -106,6 +108,7 @@ class TestSockets(TestCase):
         finally:
             sock.close()
 
+    @skipIf(IS_WINDOWS, "Unix sockets not supported on this platform")
     def test_unix_socket(self):
         sockfile = self._get_tmp_filename()
         sock = CircusSocket('somename', path=sockfile, umask=0)
@@ -117,6 +120,7 @@ class TestSockets(TestCase):
         finally:
             sock.close()
 
+    @skipIf(IS_WINDOWS, "Unix sockets not supported on this platform")
     def test_unix_cleanup(self):
         sockets = CircusSockets()
         sockfile = self._get_tmp_filename()
@@ -195,6 +199,7 @@ class TestSockets(TestCase):
 
     @skipIf(not hasattr(os, 'set_inheritable'),
             'os.set_inheritable unsupported')
+    @skipIf(IS_WINDOWS, "Unix sockets not supported on this platform")
     def test_set_inheritable(self):
         sockfile = self._get_tmp_filename()
         sock = CircusSocket('somename', path=sockfile, umask=0)

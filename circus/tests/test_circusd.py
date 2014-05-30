@@ -9,7 +9,8 @@ from circus import circusd
 from circus.arbiter import Arbiter
 from circus.util import REDIRECT_TO
 from circus import util
-from circus.tests.support import has_gevent, TestCase, skipIf, EasyTestSuite
+from circus.tests.support import (has_gevent, TestCase, skipIf, EasyTestSuite,
+                                  IS_WINDOWS)
 
 
 CIRCUS_INI = os.path.join(os.path.dirname(__file__), 'config', 'circus.ini')
@@ -90,6 +91,7 @@ class TestCircusd(TestCase):
         self.assertTrue(isinstance(max, six.integer_types))
 
     @skipIf(has_gevent(), "Gevent is loaded")
+    @skipIf(IS_WINDOWS, "Daemonizing not supported on Windows")
     def test_daemonize(self):
         daemonize()
         self.assertEqual(self.forked, 2)
