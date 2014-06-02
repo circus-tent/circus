@@ -6,7 +6,7 @@ from circus import logger
 _CONFIGURED = False
 
 if not _CONFIGURED and 'TESTING' in os.environ:
-    configure_logger(logger, level='CRITICAL', output="/dev/null")
+    configure_logger(logger, level='CRITICAL', output=os.devnull)
     _CONFIGURED = True
 
 
