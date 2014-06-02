@@ -1,14 +1,16 @@
 import tempfile
 import os
+import shlex
 import subprocess
 
 from circus.pidfile import Pidfile
-from circus.tests.support import TestCase, EasyTestSuite, SLEEP
+from circus.tests.support import TestCase, EasyTestSuite, SLEEP, IS_WINDOWS
 
 
 class TestPidfile(TestCase):
     def test_pidfile(self):
-        proc = subprocess.Popen(SLEEP % 120, shell=True)
+        cmd = shlex.split(SLEEP % 120, posix=not IS_WINDOWS)
+        proc = subprocess.Popen(cmd, shell=True)
         fd, path = tempfile.mkstemp()
         os.close(fd)
 
