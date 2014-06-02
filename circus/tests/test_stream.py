@@ -244,11 +244,15 @@ class TestFileStream(TestCase):
         expected += "[333] | " + data['data'] + '\n'
         return output, expected
 
+    @skipIf(IS_WINDOWS and sys.version_info[0] < 3,
+            "StringIO has no fileno on Python 2 and Windows")
     def test_time_formatting(self):
         stream = self.get_stream(time_format='%Y/%m/%d %H.%M.%S')
         output, expected = self.get_output(stream)
         self.assertEqual(output, expected)
 
+    @skipIf(IS_WINDOWS and sys.version_info[0] < 3,
+            "StringIO has no fileno on Python 2 and Windows")
     def test_data_split_into_lines(self):
         stream = self.get_stream(time_format='%Y/%m/%d %H.%M.%S')
         data = {'data': '\n'.join(['foo', 'bar', 'baz']),
@@ -262,6 +266,8 @@ class TestFileStream(TestCase):
         #       in order to prepare for the next chunk
         self.assertEqual(len(output.split('\n')), 4)
 
+    @skipIf(IS_WINDOWS and sys.version_info[0] < 3,
+            "StringIO has no fileno on Python 2 and Windows")
     def test_data_with_extra_lines(self):
         stream = self.get_stream(time_format='%Y/%m/%d %H.%M.%S')
 
@@ -274,6 +280,8 @@ class TestFileStream(TestCase):
         stream._file.close()
         self.assertEqual(len(output.split('\n')), 4)
 
+    @skipIf(IS_WINDOWS and sys.version_info[0] < 3,
+            "StringIO has no fileno on Python 2 and Windows")
     def test_data_with_no_EOL(self):
         stream = self.get_stream()
 
