@@ -21,7 +21,7 @@ from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
 from circus.util import parse_env_dict, resolve_name, tornado_sleep, IS_WINDOWS
-from circus.py3compat import bytestring, is_callable, b
+from circus.py3compat import bytestring, is_callable, b, PY2
 
 
 class Watcher(object):
@@ -1061,7 +1061,12 @@ class Watcher(object):
             self.shell = val
             action = 1
         elif key == "env":
-            self.env = val
+            if PY2 and IS_WINDOWS:
+                # Windows on Python 2 does not accept Unicode values
+                # in env dictionary
+                self.env = dict((b(k), b(v)) for k, v in val.iteritems())
+            else:
+                self.env = val
             action = 1
         elif key == "cmd":
             self.cmd = val
