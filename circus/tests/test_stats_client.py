@@ -67,7 +67,6 @@ class TestStatsClient(TestCircus):
         # checking that our system is live and running
         client = AsyncCircusClient(endpoint=self.arbiter.endpoint)
         res = yield client.send_message('list')
-        
         print (1)
 
         watchers = sorted(res['watchers'])
@@ -89,6 +88,7 @@ class TestStatsClient(TestCircus):
         next = get_next(client.iter_messages())
 
         for i in range(10):
+            print (3, i)
             watcher, pid, stat = next()
             self.assertTrue(watcher in ('test', 'circusd-stats', 'circus'),
                             watcher)
