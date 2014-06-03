@@ -56,11 +56,13 @@ class TestStatsClient(TestCircus):
                                  debug=False)
 
         # waiting for data to appear in the file stream
+        print ('before file wait')
         empty = True
         while empty:
             with open(log) as f:
                 empty = f.read() == ''
             yield tornado_sleep(.1)
+        print ('after file wait')
 
         # checking that our system is live and running
         client = AsyncCircusClient(endpoint=self.arbiter.endpoint)
