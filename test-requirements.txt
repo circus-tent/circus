@@ -1,9 +1,0 @@
--r pip-requirements.txt
-
-flake8==2.1.0
-mock==1.0.1
-python-coveralls==2.4.0
-nose-cov==1.6
-coverage==3.7
-randomize==0.9
-PyYAML==3.10
