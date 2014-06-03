@@ -67,6 +67,8 @@ class TestStatsClient(TestCircus):
         # checking that our system is live and running
         client = AsyncCircusClient(endpoint=self.arbiter.endpoint)
         res = yield client.send_message('list')
+        
+        print (1)
 
         watchers = sorted(res['watchers'])
         self.assertEqual(['circusd-stats', 'test'], watchers)
@@ -74,9 +76,11 @@ class TestStatsClient(TestCircus):
         # making sure the stats process run
         res = yield client.send_message('status', name='test')
         self.assertEqual(res['status'], 'active')
+        print (2)
 
         res = yield client.send_message('status', name='circusd-stats')
         self.assertEqual(res['status'], 'active')
+        print (3)
 
         # playing around with the stats now: we should get some !
         from circus.stats.client import StatsClient
@@ -88,6 +92,8 @@ class TestStatsClient(TestCircus):
             watcher, pid, stat = next()
             self.assertTrue(watcher in ('test', 'circusd-stats', 'circus'),
                             watcher)
+        print (4)
         yield self.stop_arbiter()
+        print (5)
 
 test_suite = EasyTestSuite(__name__)
