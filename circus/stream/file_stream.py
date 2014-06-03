@@ -50,6 +50,8 @@ class _FileStreamBase(object):
                 file_data = file_data.encode('latin-1', errors='replace')
                 file_data = file_data.decode('latin-1')
                 self._file.write(file_data)
+            else:
+                raise
 
         self._file.flush()
 
