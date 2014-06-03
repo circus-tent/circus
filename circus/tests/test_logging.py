@@ -63,7 +63,9 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
             os.path.join(HERE, os.pardir, os.pardir)))
         env['PYTHONPATH'] = pythonpath
         argv = ["circus.circusd"] + options + [circus_ini_path]
-        if sys.gettrace() is None:
+        if sys.gettrace() is None or IS_WINDOWS:
+            # killing a coverage run process leaves a zombie on
+            # Windows so we should skip coverage
             argv = [PYTHON, "-m"] + argv
         else:
             exe_dir = os.path.dirname(PYTHON)
