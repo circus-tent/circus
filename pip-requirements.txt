@@ -1,4 +1,0 @@
-iowait>=0.1
-psutil>=1.0.1
-pyzmq>=13.1.0
-tornado>=3.1.1

@@ -2,14 +2,9 @@ import sys
 from setuptools import setup, find_packages
 from circus import __version__
 
-tests_require = ['mock==1.0.1']
 if not hasattr(sys, 'version_info') or sys.version_info < (2, 6, 0, 'final'):
     raise SystemExit("Circus requires Python 2.6 or higher.")
 
-try:
-    from unittest import skipIf
-except ImportError:
-    tests_require.append('unittest2==0.5.1')
 
 install_requires = ['iowait', 'psutil', 'pyzmq', 'tornado']
 
@@ -41,7 +36,6 @@ setup(name='circus',
           "License :: OSI Approved :: Apache Software License"
       ],
       install_requires=install_requires,
-      tests_require=tests_require,
       test_suite='circus.tests',
       entry_points="""
       [console_scripts]
