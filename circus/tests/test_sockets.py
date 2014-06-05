@@ -193,5 +193,16 @@ class TestSockets(TestCase):
                 socket.SO_REUSEPORT = saved
             sock.close()
 
+    @skipIf(not hasattr(os, 'set_inheritable'),
+            'os.set_inheritable unsupported')
+    def test_set_inheritable(self):
+        sockfile = self._get_tmp_filename()
+        sock = CircusSocket('somename', path=sockfile, umask=0)
+        try:
+            sock.bind_and_listen()
+            self.assertTrue(sock.get_inheritable())
+        finally:
+            sock.close()
+
 
 test_suite = EasyTestSuite(__name__)
