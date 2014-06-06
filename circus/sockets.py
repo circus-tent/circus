@@ -70,6 +70,11 @@ class CircusSocket(socket.socket):
 
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
+        # Since python 3.4, file descriptors inheritance for children processes
+        #  is not the default anymore (#787)
+        if hasattr(self, 'set_inheritable'):
+            self.set_inheritable(True)
+
     @property
     def location(self):
         if self.is_unix:
