@@ -9,7 +9,7 @@ from circus.py3compat import StringIO
 
 from circus.client import make_message
 from circus.tests.support import TestCircus, async_poll_for, truncate_file
-from circus.tests.support import TestCase, EasyTestSuite
+from circus.tests.support import TestCase, EasyTestSuite, skipIf, IS_WINDOWS
 from circus.stream import FileStream, WatchedFileStream
 from circus.stream import TimedRotatingFileStream
 from circus.stream import FancyStdoutStream
@@ -67,6 +67,7 @@ class TestWatcher(TestCircus):
         resp = yield self.cli.call(msg)
         raise tornado.gen.Return(resp)
 
+    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_file_stream(self):
         yield self._start_arbiter()
@@ -76,6 +77,7 @@ class TestWatcher(TestCircus):
         yield self.stop_arbiter()
         stream.close()
 
+    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_watched_file_stream(self):
         yield self._start_arbiter()
@@ -85,6 +87,7 @@ class TestWatcher(TestCircus):
         yield self.stop_arbiter()
         stream.close()
 
+    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_timed_rotating_file_stream(self):
         yield self._start_arbiter()
@@ -102,6 +105,7 @@ class TestWatcher(TestCircus):
         yield self.stop_arbiter()
         stream.close()
 
+    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_stream(self):
         yield self._start_arbiter()
@@ -240,11 +244,15 @@ class TestFileStream(TestCase):
         expected += "[333] | " + data['data'] + '\n'
         return output, expected
 
+    @skipIf(IS_WINDOWS and sys.version_info[0] < 3,
+            "StringIO has no fileno on Python 2 and Windows")
     def test_time_formatting(self):
         stream = self.get_stream(time_format='%Y/%m/%d %H.%M.%S')
         output, expected = self.get_output(stream)
         self.assertEqual(output, expected)
 
+    @skipIf(IS_WINDOWS and sys.version_info[0] < 3,
+            "StringIO has no fileno on Python 2 and Windows")
     def test_data_split_into_lines(self):
         stream = self.get_stream(time_format='%Y/%m/%d %H.%M.%S')
         data = {'data': '\n'.join(['foo', 'bar', 'baz']),
@@ -258,6 +266,8 @@ class TestFileStream(TestCase):
         #       in order to prepare for the next chunk
         self.assertEqual(len(output.split('\n')), 4)
 
+    @skipIf(IS_WINDOWS and sys.version_info[0] < 3,
+            "StringIO has no fileno on Python 2 and Windows")
     def test_data_with_extra_lines(self):
         stream = self.get_stream(time_format='%Y/%m/%d %H.%M.%S')
 
@@ -270,6 +280,8 @@ class TestFileStream(TestCase):
         stream._file.close()
         self.assertEqual(len(output.split('\n')), 4)
 
+    @skipIf(IS_WINDOWS and sys.version_info[0] < 3,
+            "StringIO has no fileno on Python 2 and Windows")
     def test_data_with_no_EOL(self):
         stream = self.get_stream()
 
@@ -294,6 +306,8 @@ class TestWatchedFileStream(TestFileStream):
         stream.now = lambda: now
         return stream
 
+    # we can't run this test on Windows due to file locking
+    @skipIf(IS_WINDOWS, "On Windows")
     def test_move_file(self):
         _test_fd, test_filename = tempfile.mkstemp()
         stream = self.get_real_stream(filename=test_filename)

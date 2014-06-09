@@ -1,9 +1,10 @@
+import os
 import time
 
 from tornado.testing import gen_test
 from tornado.gen import coroutine, Return
 
-from circus.tests.support import TestCircus, EasyTestSuite
+from circus.tests.support import TestCircus, EasyTestSuite, IS_WINDOWS
 from circus.client import make_message, CallError
 from circus.stream import QueueStream
 
@@ -54,13 +55,19 @@ class TestClient(TestCircus):
         self.assertEqual((yield self.numprocesses("decr", name="test", nb=3)),
                          1)
         self.assertEqual((yield self.numprocesses("numprocesses")), 1)
-        self.assertEqual((yield self.set("test", env={"test": 2})),
-                         'error')
-        self.assertEqual((yield self.set("test", env={"test": '2'})),
-                         'ok')
+
+        if IS_WINDOWS:
+            # On Windows we can't set an env to a process without some keys
+            env = dict(os.environ)
+        else:
+            env = {}
+        env['test'] = 2
+        self.assertEqual((yield self.set("test", env=env)), 'error')
+        env['test'] = '2'
+        self.assertEqual((yield self.set("test", env=env)), 'ok')
         resp = yield self.call('get', name='test', keys=['env'])
         options = resp.get('options', {})
-        self.assertEqual(options.get('env'), {'test': '2'})
+        self.assertEqual(options.get('env', {}), env)
 
         resp = yield self.call('stats', name='test')
         self.assertEqual(resp['status'], 'ok')

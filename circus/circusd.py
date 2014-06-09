@@ -1,7 +1,10 @@
 import sys
 import argparse
 import os
-import resource
+try:
+    import resource
+except ImportError:
+    resource = None     # NOQA
 
 from circus import logger
 from circus.arbiter import Arbiter
@@ -12,9 +15,12 @@ from circus.util import check_future_exception_and_log
 
 
 def get_maxfd():
-    maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
-    if maxfd == resource.RLIM_INFINITY:
+    if not resource:
         maxfd = MAXFD
+    else:
+        maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
+        if maxfd == resource.RLIM_INFINITY:
+            maxfd = MAXFD
     return maxfd
 
 
@@ -39,7 +45,10 @@ def daemonize():
         if module.startswith('gevent'):
             raise ValueError('Cannot daemonize if gevent is loaded')
 
-    child_pid = os.fork()
+    if hasattr(os, 'fork'):
+        child_pid = os.fork()
+    else:
+        raise ValueError("Daemonizing is not available on this platform.")
 
     if child_pid != 0:
         # we're in the parent
@@ -64,7 +73,7 @@ def daemonize():
 def main():
     import zmq
     try:
-        zmq_version = [int(part) for part in zmq.__version__.split('.')]
+        zmq_version = [int(part) for part in zmq.__version__.split('.')[:2]]
         if len(zmq_version) < 2:
             raise ValueError()
     except (AttributeError, ValueError):
@@ -93,7 +102,8 @@ def main():
         "the default logging configuration for the arbiter."))
 
     parser.add_argument('--daemon', dest='daemonize', action='store_true',
-                        help="Start circusd in the background")
+                        help="Start circusd in the background. Not supported "
+                             "on Windows")
     parser.add_argument('--pidfile', dest='pidfile')
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays Circus version and exits.')

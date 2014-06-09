@@ -1,9 +1,10 @@
 import os
 import sys
+import time
 
 from circus.process import Process
 from circus.tests.support import (TestCircus, skipIf, EasyTestSuite, DEBUG,
-                                  poll_for)
+                                  poll_for, IS_WINDOWS, PYTHON, SLEEP)
 import circus.py3compat
 from circus.py3compat import StringIO, PY2
 
@@ -37,6 +38,10 @@ finally:
 
 """
 
+# On Windows we can't close the fds if we are
+# redirecting stdout or stderr
+USE_FDS = IS_WINDOWS
+
 
 def _nose_no_s():
     if PY2:
@@ -48,12 +53,16 @@ def _nose_no_s():
 class TestProcess(TestCircus):
 
     def test_base(self):
-        cmd = sys.executable
-        args = "-c 'import time; time.sleep(2)'"
-        process = Process('test', cmd, args=args, shell=False)
+        cmd = PYTHON
+        args = "-c 'import time; time.sleep(10)'"
+        process = Process('test', cmd, args=args, shell=False,
+                          use_fds=USE_FDS)
         try:
             info = process.info()
             self.assertEqual(process.pid, info['pid'])
+            # Make sure the process lived a measurable amount of time
+            # (precision error on Windows)
+            time.sleep(0.01)
             age = process.age()
             self.assertTrue(age > 0.)
             self.assertFalse(process.is_child(0))
@@ -61,11 +70,12 @@ class TestProcess(TestCircus):
             process.stop()
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
+    @skipIf(IS_WINDOWS, "RLIMIT is not supported on Windows")
     def test_rlimits(self):
         script_file = self.get_tmpfile(RLIMIT)
         output_file = self.get_tmpfile()
 
-        cmd = sys.executable
+        cmd = PYTHON
         args = [script_file, output_file]
         rlimits = {'nofile': 20,
                    'nproc': 20}
@@ -93,10 +103,13 @@ class TestProcess(TestCircus):
         self.assertEqual(srt2ints(output['NPROC']), wanted)
 
     def test_comparison(self):
-        cmd = sys.executable
+        cmd = PYTHON
         args = ['import time; time.sleep(2)', ]
-        p1 = Process('1', cmd, args=args)
-        p2 = Process('2', cmd, args=args)
+        p1 = Process('1', cmd, args=args, use_fds=USE_FDS)
+        # Make sure the two processes are launched with a measurable
+        # difference. (precsion error on Windows)
+        time.sleep(0.01)
+        p2 = Process('2', cmd, args=args, use_fds=USE_FDS)
 
         self.assertTrue(p1 < p2)
         self.assertFalse(p1 == p2)
@@ -111,27 +124,29 @@ class TestProcess(TestCircus):
 
         p1 = Process('1', 'make-me-a-coffee',
                      '$(circus.wid) --type $(circus.env.type)',
-                     shell=False, spawn=False, env={'type': 'macchiato'})
+                     shell=False, spawn=False, env={'type': 'macchiato'},
+                     use_fds=USE_FDS)
 
         self.assertEqual(['make-me-a-coffee', '1', '--type', 'macchiato'],
                          p1.format_args())
 
-        p2 = Process('1', 'yeah $(CIRCUS.WID)', spawn=False)
+        p2 = Process('1', 'yeah $(CIRCUS.WID)', spawn=False, use_fds=USE_FDS)
         self.assertEqual(['yeah', '1'], p2.format_args())
 
         os.environ['coffee_type'] = 'american'
         p3 = Process('1', 'yeah $(circus.env.type)', shell=False, spawn=False,
-                     env={'type': 'macchiato'})
+                     env={'type': 'macchiato'}, use_fds=USE_FDS)
         self.assertEqual(['yeah', 'macchiato'], p3.format_args())
         os.environ.pop('coffee_type')
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
     @skipIf(_nose_no_s(), 'Nose runs without -s')
+    @skipIf(IS_WINDOWS, "Streams not supported")
     def test_streams(self):
         script_file = self.get_tmpfile(VERBOSE)
         output_file = self.get_tmpfile()
 
-        cmd = sys.executable
+        cmd = PYTHON
         args = [script_file, output_file]
 
         # 1. streams sent to /dev/null
@@ -176,9 +191,10 @@ class TestProcess(TestCircus):
         finally:
             process.stop()
 
+    @skipIf(IS_WINDOWS, "No GID on Windows")
     def test_initgroups(self):
         cmd = sys.executable
-        args = ['import time; time.sleep(2)']
+        args = [SLEEP % 2]
         gid = os.getgid()
         uid = os.getuid()
         p1 = Process('1', cmd, args=args, gid=gid, uid=uid)

@@ -11,19 +11,23 @@ except ImportError:
 import sys
 import errno
 import os
-import resource
 from subprocess import PIPE
 import time
 import shlex
 import warnings
+try:
+    import resource
+except ImportError:
+    resource = None     # NOQA
 
-from psutil import Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess
+from psutil import (Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess,
+                    AccessDenied)
 
 from circus.py3compat import bytestring, string_types, quote
 from circus.sockets import CircusSocket
 from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
-                         ObjectDict, replace_gnu_args, is_win, get_default_gid,
-                         get_username_from_uid)
+                         ObjectDict, replace_gnu_args, get_default_gid,
+                         get_username_from_uid, IS_WINDOWS)
 from circus import logger
 
 
@@ -149,7 +153,8 @@ class Process(object):
     - **rlimits**: a mapping containing rlimit names and values that will
       be set before the command runs.
 
-    - **use_fds**: if True, will not close the fds in the subprocess.
+    - **use_fds**: if True, will not close the fds in the subprocess. Must be
+      be set to True on Windows if stdout or stderr are redirected.
       default: False.
 
     - **pipe_stdout**: if True, will open a PIPE on stdout. default: True.
@@ -195,6 +200,11 @@ class Process(object):
 
         if self.uid is not None and self.gid is None:
             self.gid = get_default_gid(self.uid)
+
+        if IS_WINDOWS:
+            if not self.use_fds and (self.pipe_stderr or self.pipe_stdout):
+                raise ValueError("On Windows, you can't close the fds if "
+                                 "you are redirecting stdout or stderr")
 
         if spawn:
             self.spawn()
@@ -247,7 +257,7 @@ class Process(object):
 
         args = self.format_args(sockets_fds=sockets_fds)
 
-        def preexec_fn():
+        def preexec():
             streams = [sys.stdin]
 
             if self.close_child_stdout:
@@ -259,12 +269,15 @@ class Process(object):
             self._null_streams(streams)
             os.setsid()
 
-            for limit, value in self.rlimits.items():
-                res = getattr(resource, 'RLIMIT_%s' % limit.upper(), None)
-                if res is None:
-                    raise ValueError('unknown rlimit "%s"' % limit)
-                # TODO(petef): support hard/soft limits
-                resource.setrlimit(res, (value, value))
+            if resource:
+                for limit, value in self.rlimits.items():
+                    res = getattr(
+                        resource, 'RLIMIT_%s' % limit.upper(), None
+                    )
+                    if res is None:
+                        raise ValueError('unknown rlimit "%s"' % limit)
+                    # TODO(petef): support hard/soft limits
+                    resource.setrlimit(res, (value, value))
 
             if self.gid:
                 try:
@@ -285,6 +298,12 @@ class Process(object):
 
             if self.uid:
                 os.setuid(self.uid)
+
+        if IS_WINDOWS:
+            # On Windows we can't use a pre-exec function
+            preexec_fn = None
+        else:
+            preexec_fn = preexec
 
         extra = {}
         if self.pipe_stdout:
@@ -344,16 +363,16 @@ class Process(object):
             else:
                 args = [bytestring(replace_gnu_args(arg, **format_kwargs))
                         for arg in self.args]
-            args = shlex.split(bytestring(cmd)) + args
+            args = shlex.split(bytestring(cmd), posix=not IS_WINDOWS) + args
         else:
-            args = shlex.split(bytestring(cmd))
+            args = shlex.split(bytestring(cmd), posix=not IS_WINDOWS)
 
         if self.shell:
             # subprocess.Popen(shell=True) implies that 1st arg is the
             # requested command, remaining args are applied to sh.
             args = [' '.join(quote(arg) for arg in args)]
             shell_args = format_kwargs.get('shell_args', None)
-            if shell_args and is_win():
+            if shell_args and IS_WINDOWS:
                 logger.warn("shell_args won't apply for "
                             "windows platforms: %s", shell_args)
             elif isinstance(shell_args, string_types):
@@ -402,7 +421,12 @@ class Process(object):
         try:
             try:
                 if self._worker.poll() is None:
-                    return self._worker.terminate()
+                    try:
+                        return self._worker.terminate()
+                    except AccessDenied:
+                        # It can happen on Windows if the process
+                        # dies after poll returns (unlikely)
+                        pass
             finally:
                 if self._worker.stderr is not None:
                     self._worker.stderr.close()
@@ -410,6 +434,15 @@ class Process(object):
                     self._worker.stdout.close()
         except NoSuchProcess:
             pass
+
+    def wait(self, timeout=None):
+        """
+        Wait for the process to terminate, in the fashion
+        of waitpid.
+
+        Accepts a timeout in seconds.
+        """
+        self._worker.wait(timeout)
 
     def age(self):
         """Return the age of the process in seconds."""

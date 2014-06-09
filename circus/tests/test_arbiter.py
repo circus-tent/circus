@@ -1,6 +1,5 @@
 import os
 import socket
-import sys
 import tornado
 from tempfile import mkstemp
 from time import time
@@ -13,8 +12,9 @@ except ImportError:
 from circus.arbiter import Arbiter
 from circus.client import CircusClient
 from circus.plugins import CircusPlugin
-from circus.tests.support import TestCircus, async_poll_for, truncate_file
-from circus.tests.support import EasyTestSuite, skipIf, get_ioloop
+from circus.tests.support import (TestCircus, async_poll_for, truncate_file,
+                                  EasyTestSuite, skipIf, get_ioloop, SLEEP,
+                                  PYTHON)
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
                          DEFAULT_ENDPOINT_SUB)
 from circus.watcher import Watcher
@@ -110,14 +110,14 @@ class TestTrainer(TestCircus):
         fd, testfile = mkstemp()
         os.close(fd)
         cmd = '%s %s %s %s' % (
-            sys.executable, _GENERIC,
+            PYTHON, _GENERIC,
             'circus.tests.support.run_process',
             testfile)
 
         return cmd
 
     def _get_cmd_args(self):
-        cmd = sys.executable
+        cmd = PYTHON
         args = [_GENERIC, 'circus.tests.support.run_process']
         return cmd, args
 
@@ -536,7 +536,7 @@ class TestTrainer(TestCircus):
 
         watcher_mod.tornado_sleep = _sleep
 
-        watcher = MockWatcher(name='foo', cmd='sleep 1', priority=1)
+        watcher = MockWatcher(name='foo', cmd=SLEEP % 1, priority=1)
         yield self.arbiter.start_watcher(watcher)
 
         self.assertTrue(called, [self.arbiter.warmup_delay])
@@ -583,7 +583,7 @@ class TestArbiter(TestCircus):
         sub = "tcp://127.0.0.1:%d" % get_available_port()
         arbiter = Arbiter([], controller, sub, loop=get_ioloop(),
                           check_delay=-1)
-        arbiter.add_watcher('foo', 'sleep 5')
+        arbiter.add_watcher('foo', SLEEP % 5)
         try:
             yield arbiter.start()
             self.assertEqual(arbiter.watchers[0].status(), 'active')
@@ -595,7 +595,7 @@ class TestArbiter(TestCircus):
         arbiter = Arbiter([], DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                           loop=get_ioloop(),
                           check_delay=-1)
-        arbiter.add_watcher('foo', 'sleep 5', autostart=False)
+        arbiter.add_watcher('foo', SLEEP % 5, autostart=False)
         try:
             yield arbiter.start()
             self.assertEqual(arbiter.watchers[0].status(), 'stopped')

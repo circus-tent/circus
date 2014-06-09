@@ -12,7 +12,7 @@ except ImportError:
 import site
 from tornado import gen
 
-from psutil import NoSuchProcess
+from psutil import NoSuchProcess, TimeoutExpired
 import zmq.utils.jsonapi as json
 from zmq.eventloop import ioloop
 
@@ -20,8 +20,8 @@ from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
-from circus.util import parse_env_dict, resolve_name, tornado_sleep
-from circus.py3compat import bytestring, is_callable, b
+from circus.util import parse_env_dict, resolve_name, tornado_sleep, IS_WINDOWS
+from circus.py3compat import bytestring, is_callable, b, PY2
 
 
 class Watcher(object):
@@ -94,6 +94,8 @@ class Watcher(object):
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
 
+      This is not supported on Windows.
+
     - **stderr_stream**: a mapping that defines the stream for
       the process stderr. Defaults to None.
 
@@ -117,6 +119,8 @@ class Watcher(object):
       - **name** - the stream name (*stderr* or *stdout*)
       - **data** - the data
 
+      This is not supported on Windows.
+
     - **priority** -- integer that defines a priority for the watcher. When
       the Arbiter do some operations on all watchers, it will sort them
       with this field, from the bigger number to the smallest.
@@ -134,7 +138,9 @@ class Watcher(object):
       (default: False)
 
     - **copy_env** -- If True, the environment in which circus is running
-      run will be reproduced for the workers. (default: False)
+      run will be reproduced for the workers. This defaults to True on
+      Windows as you cannot run any executable without the **SYSTEMROOT**
+      variable. (default: False)
 
     - **copy_path** -- If True, circusd *sys.path* is sent to the
       process through *PYTHONPATH*. You must activate **copy_env** for
@@ -226,6 +232,18 @@ class Watcher(object):
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
+
+        if IS_WINDOWS:
+            if self.stdout_stream or self.stderr_stream:
+                raise NotImplementedError("Streams are not supported"
+                                          " on Windows.")
+
+            if not copy_env and not env:
+                # Copy the env by default on Windows as we can't run any
+                # executable without some env variables
+                # Eventually, we could set only some required variables,
+                # such as SystemRoot
+                self.copy_env = True
 
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
                           "uid", "gid", "send_hup", "stop_signal",
@@ -401,50 +419,68 @@ class Watcher(object):
             return
         process = self.processes.pop(pid)
 
-        if status is None:
-            while True:
+        timeout = 0.001
+
+        while status is None:
+            if IS_WINDOWS:
+                try:
+                    # On Windows we can't use waitpid as it's blocking,
+                    # so we use psutils' wait
+                    status = process.wait(timeout=timeout)
+                except TimeoutExpired:
+                    continue
+            else:
                 try:
                     _, status = os.waitpid(pid, os.WNOHANG)
                 except OSError as e:
                     if e.errno == errno.EAGAIN:
-                        time.sleep(0.001)
+                        time.sleep(timeout)
                         continue
                     elif e.errno == errno.ECHILD:
-                        # nothing to do here, we do not have any child
-                        # process running
-                        # but we still need to send the "reap" signal.
-                        #
-                        # This can happen if poll() or wait() were called on
-                        # the underlying process.
-                        logger.debug('reaping already dead process %s [%s]',
-                                     pid, self.name)
-                        self.notify_event(
-                            "reap",
-                            {"process_pid": pid,
-                             "time": time.time(),
-                             "exit_code": process.returncode()})
-                        process.stop()
-                        return
+                        status = None
                     else:
                         raise
 
+            if status is None:
+                # nothing to do here, we do not have any child
+                # process running
+                # but we still need to send the "reap" signal.
+                #
+                # This can happen if poll() or wait() were called on
+                # the underlying process.
+                logger.debug('reaping already dead process %s [%s]',
+                             pid, self.name)
+                self.notify_event(
+                    "reap",
+                    {"process_pid": pid,
+                     "time": time.time(),
+                     "exit_code": process.returncode()})
+                process.stop()
+                return
+
         # get return code
-        if os.WIFSIGNALED(status):
-            # The Python Popen object returns <-signal> in it's returncode
-            # property if the process exited on a signal, so emulate that
-            # behavior here so that pubsub clients watching for reap can
-            # distinguish between an exit with a non-zero exit code and
-            # a signal'd exit. This is also consistent with the notify_event
-            # reap message above that uses the returncode function (that ends
-            # up calling Popen.returncode)
-            exit_code = -os.WTERMSIG(status)
-        # process exited using exit(2) system call; return the
-        # integer exit(2) system call has been called with
-        elif os.WIFEXITED(status):
-            exit_code = os.WEXITSTATUS(status)
+        if hasattr(os, 'WIFSIGNALED'):
+            exit_code = 0
+
+            if os.WIFSIGNALED(status):
+                # The Python Popen object returns <-signal> in it's returncode
+                # property if the process exited on a signal, so emulate that
+                # behavior here so that pubsub clients watching for reap can
+                # distinguish between an exit with a non-zero exit code and
+                # a signal'd exit. This is also consistent with the notify
+                # event reap message above that uses the returncode function
+                # (that ends up calling Popen.returncode)
+                exit_code = -os.WTERMSIG(status)
+            # process exited using exit(2) system call; return the
+            # integer exit(2) system call has been called with
+            elif os.WIFEXITED(status):
+                exit_code = os.WEXITSTATUS(status)
+            else:
+                # should never happen
+                raise RuntimeError("Unknown process exit status")
         else:
-            # should never happen
-            raise RuntimeError("Unknown process exit status")
+            # On Windows we don't have such distinction
+            exit_code = status
 
         # if the process is dead or a zombie try to definitely stop it.
         if process.status in (DEAD_OR_ZOMBIE, UNEXISTING):
@@ -678,8 +714,12 @@ class Watcher(object):
             yield tornado_sleep(0.1)
             waited += 0.1
         if waited >= self.graceful_timeout:
-            # We are not smart anymore
-            self.send_signal_process(process, signal.SIGKILL)
+            # On Windows we can't send a SIGKILL signal, but the
+            # process.stop function will terminate the process
+            # later anyway
+            if hasattr(signal, 'SIGKILL'):
+                # We are not smart anymore
+                self.send_signal_process(process, signal.SIGKILL)
         self._process_remove_redirections(process)
         process.stopping = False
         process.stop()
@@ -699,11 +739,12 @@ class Watcher(object):
 
     @util.debuglog
     def send_signal(self, pid, signum):
+        is_sigkill = hasattr(signal, 'SIGKILL') and signum == signal.SIGKILL
         if pid in self.processes:
             process = self.processes[pid]
             hook_result = self.call_hook("before_signal",
                                          pid=pid, signum=signum)
-            if signum != signal.SIGKILL and not hook_result:
+            if not is_sigkill and not hook_result:
                 logger.debug("before_signal hook didn't return True "
                              "=> signal %i is not sent to %i" % (signum, pid))
             else:
@@ -1020,7 +1061,12 @@ class Watcher(object):
             self.shell = val
             action = 1
         elif key == "env":
-            self.env = val
+            if PY2 and IS_WINDOWS:
+                # Windows on Python 2 does not accept Unicode values
+                # in env dictionary
+                self.env = dict((b(k), b(v)) for k, v in val.iteritems())
+            else:
+                self.env = val
             action = 1
         elif key == "cmd":
             self.cmd = val

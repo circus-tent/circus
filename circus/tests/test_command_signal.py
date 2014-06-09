@@ -5,6 +5,7 @@ import multiprocessing
 import tornado
 
 from circus.tests.support import TestCircus, EasyTestSuite, TimeoutException
+from circus.tests.support import skipIf, IS_WINDOWS
 from circus.client import AsyncCircusClient
 from circus.stream import QueueStream, Empty
 from circus.util import tornado_sleep
@@ -76,6 +77,7 @@ def read_from_stream(stream, desired_channel, timeout=5):
 
 class SignalCommandTest(TestCircus):
 
+    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_handler(self):
         stream = QueueStream()

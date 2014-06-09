@@ -1,4 +1,4 @@
-from circus.tests.support import TestCase, EasyTestSuite
+from circus.tests.support import TestCase, EasyTestSuite, IS_WINDOWS
 from mock import patch
 
 from circus.commands.util import validate_option
@@ -47,13 +47,18 @@ class TestValidateOption(TestCase):
                           {'IDONTEXIST': ['all', False]})
 
     def test_rlimit(self):
-        validate_option('rlimit_core', 1)
+        if IS_WINDOWS:
+            # rlimits are not supported on Windows
+            self.assertRaises(MessageError, validate_option, 'rlimit_core', 1)
+        else:
+            validate_option('rlimit_core', 1)
 
-        # require int parameter
-        self.assertRaises(MessageError, validate_option, 'rlimit_core', '1')
+            # require int parameter
+            self.assertRaises(MessageError, validate_option,
+                              'rlimit_core', '1')
 
-        # require valid rlimit settings
-        self.assertRaises(MessageError, validate_option, 'rlimit_foo', 1)
+            # require valid rlimit settings
+            self.assertRaises(MessageError, validate_option, 'rlimit_foo', 1)
 
 
 test_suite = EasyTestSuite(__name__)

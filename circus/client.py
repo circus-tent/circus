@@ -48,7 +48,7 @@ class AsyncCircusClient(object):
         # only supported by libzmq >= 3
         if hasattr(self.socket, 'disconnect'):
             self.socket.disconnect(self.endpoint)
-        self.socket.close()
+        self.stream.close()
 
     def send_message(self, command, **props):
         return self.call(make_message(command, **props))

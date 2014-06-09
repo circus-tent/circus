@@ -5,6 +5,7 @@ import signal
 import time
 
 from circus.tests.support import TestCircus, EasyTestSuite, TimeoutException
+from circus.tests.support import skipIf, IS_WINDOWS
 from circus.stream import QueueStream, Empty
 from circus.util import tornado_sleep
 from zmq.utils.strtypes import u
@@ -78,6 +79,7 @@ class UmaskTest(TestCircus):
         resp = yield self.call(_cmd, waiting=True, **props)
         raise tornado.gen.Return(resp)
 
+    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_inherited(self):
         cmd = 'circus.tests.test_umask.run_process'
@@ -94,6 +96,7 @@ class UmaskTest(TestCircus):
         mode = oct(os.stat(self.test_file).st_mode)[-3:]
         self.assertEqual(mode, '755')
 
+    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_set_before_launch(self):
         os.umask(2)
@@ -111,6 +114,7 @@ class UmaskTest(TestCircus):
         mode = oct(os.stat(self.test_file).st_mode)[-3:]
         self.assertEqual(mode, '775')
 
+    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_set_by_arbiter(self):
         cmd = 'circus.tests.test_umask.run_process'

@@ -9,7 +9,7 @@ except ImportError:
     from ConfigParser import ConfigParser  # NOQA
 from circus.tests.support import TestCase
 from circus.tests.support import EasyTestSuite
-from circus.tests.support import skipIf
+from circus.tests.support import skipIf, PYTHON, IS_WINDOWS
 import os
 import shutil
 import tempfile
@@ -31,7 +31,7 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
     options = list(options)
     additional_files = dict(additional_files)
     config_ini_update = {
-        "watcher:touch.cmd": sys.executable,
+        "watcher:touch.cmd": PYTHON,
         "watcher:touch.args": "-c \"open('workerstart.txt', 'w+').close()\"",
         "watcher:touch.respawn": 'False'
     }
@@ -54,18 +54,21 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
             with open(path, "w") as fh:
                 fh.write(additional_files[relpath])
         env = os.environ.copy()
+        sep = ';' if IS_WINDOWS else ':'
         # We're going to run circus from a process with a different
         # cwd, so we need to make sure that Python will import the
         # current version of circus
         pythonpath = env.get('PYTHONPATH', '')
-        pythonpath += ':%s' % os.path.abspath(
-            os.path.join(HERE, os.pardir, os.pardir))
+        pythonpath += '%s%s' % (sep, os.path.abspath(
+            os.path.join(HERE, os.pardir, os.pardir)))
         env['PYTHONPATH'] = pythonpath
         argv = ["circus.circusd"] + options + [circus_ini_path]
-        if sys.gettrace() is None:
-            argv = [sys.executable, "-m"] + argv
+        if sys.gettrace() is None or IS_WINDOWS:
+            # killing a coverage run process leaves a zombie on
+            # Windows so we should skip coverage
+            argv = [PYTHON, "-m"] + argv
         else:
-            exe_dir = os.path.dirname(sys.executable)
+            exe_dir = os.path.dirname(PYTHON)
             coverage = os.path.join(exe_dir, "coverage")
             if not os.path.isfile(coverage):
                 coverage = "coverage"
@@ -113,7 +116,14 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
                 source = os.path.join(temp_dir, basename)
                 target = os.path.abspath(basename)
                 shutil.copy(source, target)
-        shutil.rmtree(temp_dir)
+
+        try:
+            shutil.rmtree(temp_dir)
+        except OSError:
+            # Sometimes on Windows we can't delete the
+            # logging file because it says it's still in
+            # use (lock).
+            pass
 
 EXAMPLE_YAML = """\
 version: 1

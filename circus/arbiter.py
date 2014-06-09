@@ -19,6 +19,7 @@ from circus import logger
 from circus.watcher import Watcher
 from circus.util import debuglog, _setproctitle, parse_env_dict
 from circus.util import DictDiffer, synchronized, tornado_sleep
+from circus.util import IS_WINDOWS
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
@@ -593,25 +594,26 @@ class Arbiter(object):
                     watchers_pids[process.pid] = watcher
 
         # detect dead children
-        while True:
-            try:
-                # wait for our child (so it's not a zombie)
-                pid, status = os.waitpid(-1, os.WNOHANG)
-                if not pid:
-                    break
+        if not IS_WINDOWS:
+            while True:
+                try:
+                    # wait for our child (so it's not a zombie)
+                    pid, status = os.waitpid(-1, os.WNOHANG)
+                    if not pid:
+                        break
 
-                if pid in watchers_pids:
-                    watcher = watchers_pids[pid]
-                    watcher.reap_process(pid, status)
-            except OSError as e:
-                if e.errno == errno.EAGAIN:
-                    sleep(0)
-                    continue
-                elif e.errno == errno.ECHILD:
-                    # process already reaped
-                    return
-                else:
-                    raise
+                    if pid in watchers_pids:
+                        watcher = watchers_pids[pid]
+                        watcher.reap_process(pid, status)
+                except OSError as e:
+                    if e.errno == errno.EAGAIN:
+                        sleep(0)
+                        continue
+                    elif e.errno == errno.ECHILD:
+                        # process already reaped
+                        return
+                    else:
+                        raise
 
     @synchronized("manage_watchers")
     @gen.coroutine

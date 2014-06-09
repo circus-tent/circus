@@ -19,7 +19,7 @@ class DummyWatchDogged(Process):
             my_pid = os.getpid()
             for _ in range(5):
                 message = "{pid};{time}".format(pid=my_pid, time=time.time())
-                sock.sendto(message, ('127.0.0.1', 1664))
+                sock.sendto(message.encode('utf-8'), ('127.0.0.1', 1664))
                 time.sleep(0.5)
             self._write('STOPWD')
         finally:

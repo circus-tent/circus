@@ -1,15 +1,22 @@
 from __future__ import unicode_literals
 import tempfile
-import grp
-import pwd
 import shutil
 import os
 import sys
 
+try:
+    import grp
+    import pwd
+except ImportError:
+    grp = None
+    pwd = None
+
+import psutil
 from psutil import Popen
 import mock
 
-from circus.tests.support import TestCase, EasyTestSuite
+from circus.tests.support import (TestCase, EasyTestSuite, skipIf,
+                                  IS_WINDOWS, SLEEP)
 
 from circus import util
 from circus.util import (
@@ -30,14 +37,18 @@ class TestUtil(TestCase):
                 shutil.rmtree(dir)
 
     def test_get_info(self):
-        worker = Popen(["python -c 'import time;time.sleep(5)'"], shell=True)
+        worker = Popen(["python", "-c", SLEEP % 5])
         try:
             info = get_info(worker)
         finally:
             worker.terminate()
 
         self.assertTrue(isinstance(info['pid'], int))
-        self.assertEqual(info['nice'], 0)
+
+        if IS_WINDOWS:
+            self.assertEqual(info['nice'], psutil.NORMAL_PRIORITY_CLASS)
+        else:
+            self.assertEqual(info['nice'], 0)
 
     def test_get_info_still_works_when_denied_access(self):
         def access_denied():
@@ -109,6 +120,7 @@ class TestUtil(TestCase):
         self.assertEqual(parsed, {'test': '1', 'booo': '2'})
         self.assertEqual(env_to_str(parsed), env)
 
+    @skipIf(not pwd, "Pwd not supported")
     def test_to_uid(self):
         with mock.patch('pwd.getpwnam') as getpw:
             m = mock.Mock()
@@ -119,6 +131,7 @@ class TestUtil(TestCase):
             uid = to_uid('user')
             self.assertEqual('1000', uid)
 
+    @skipIf(not grp, "Grp not supported")
     def test_to_uidgid(self):
         self.assertRaises(ValueError, to_uid, 'xxxxxxx')
         self.assertRaises(ValueError, to_gid, 'xxxxxxx')
@@ -127,18 +140,21 @@ class TestUtil(TestCase):
         self.assertRaises(TypeError, to_uid, None)
         self.assertRaises(TypeError, to_gid, None)
 
+    @skipIf(not pwd, "Pwd not supported")
     def test_to_uid_str(self):
         with mock.patch('pwd.getpwuid') as getpwuid:
             uid = to_uid('1066')
             self.assertEqual(1066, uid)
             getpwuid.assert_called_with(1066)
 
+    @skipIf(not grp, "Grp not supported")
     def test_to_gid_str(self):
         with mock.patch('grp.getgrgid') as getgrgid:
             gid = to_gid('1042')
             self.assertEqual(1042, gid)
             getgrgid.assert_called_with(1042)
 
+    @skipIf(not grp, "Grp not supported")
     def test_negative_uid_gid(self):
         # OSX allows negative uid/gid and throws KeyError on a miss. On
         # 32-bit and 64-bit Linux, all negative values throw KeyError as do
