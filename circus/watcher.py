@@ -192,7 +192,7 @@ class Watcher(object):
                  max_age_variance=30, hooks=None, respawn=True,
                  autostart=True, on_demand=False, virtualenv=None,
                  close_child_stdout=False, close_child_stderr=False,
-                 **options):
+                 virtualenv_py_ver=None, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.on_demand = on_demand
@@ -217,6 +217,7 @@ class Watcher(object):
         self.copy_env = copy_env
         self.copy_path = copy_path
         self.virtualenv = virtualenv
+        self.virtualenv_py_ver = virtualenv_py_ver
         self.max_age = int(max_age)
         self.max_age_variance = int(max_age_variance)
         self.ignore_hook_failure = ['before_stop', 'after_stop',
@@ -281,7 +282,7 @@ class Watcher(object):
             self.env = env
 
         if self.virtualenv:
-            util.load_virtualenv(self)
+            util.load_virtualenv(self, py_ver=virtualenv_py_ver)
 
         # load directories in PYTHONPATH if provided
         # so if a hook is there, it can be loaded
