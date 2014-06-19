@@ -91,7 +91,7 @@ created and bound on the 8888 *port*.
    Starting at Circus 0.8 there's an alternate syntax to avoid some
    conflicts with some config parsers. You can write::
 
-       *((circus.sockets.foo))*
+       ((circus.sockets.foo))
 
 
 Real-world example
