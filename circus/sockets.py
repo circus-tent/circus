@@ -141,7 +141,8 @@ class CircusSocket(socket.socket):
 
     @classmethod
     def load_from_config(cls, config):
-        if config.get('family') == 'AF_INET':
+        if (config.get('family') == 'AF_UNIX' and
+            not hasattr(socket, 'AF_UNIX')):
             raise NotImplementedError("AF_UNIX not supported on this"
                                       "platform")
 
