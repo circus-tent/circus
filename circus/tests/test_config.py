@@ -42,6 +42,7 @@ _CONF = {
     'issue651': os.path.join(CONFIG_DIR, 'issue651.ini'),
     'issue665': os.path.join(CONFIG_DIR, 'issue665.ini'),
     'issue680': os.path.join(CONFIG_DIR, 'issue680.ini'),
+    'virtualenv': os.path.join(CONFIG_DIR, 'virtualenv.ini')
 }
 
 
@@ -364,6 +365,12 @@ class TestConfig(TestCase):
     def test_check_delay(self):
         conf = get_config(_CONF['issue651'])
         self.assertEqual(conf['check_delay'], 10.5)
+
+    def test_virtualenv(self):
+        conf = get_config(_CONF['virtualenv'])
+        watcher = conf['watchers'][0]
+        self.assertEqual(watcher['virtualenv'], "/tmp/.virtualenvs/test")
+        self.assertEqual(watcher['virtualenv_py_ver'], "3.3")
 
 
 test_suite = EasyTestSuite(__name__)

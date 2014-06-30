@@ -278,6 +278,15 @@ class TestUtil(TestCase):
         load_virtualenv(watcher)
         self.assertEqual(site_pkg, watcher.env['PYTHONPATH'])
 
+        # test with a specific python version for the virtualenv site packages
+        py_ver = "my_python_version"
+        site_pkg = os.path.join(watcher.virtualenv, 'lib',
+                                'python%s' % py_ver, 'site-packages')
+        os.makedirs(site_pkg)
+        watcher.env = {}
+        load_virtualenv(watcher, py_ver=py_ver)
+        self.assertEqual(site_pkg, watcher.env['PYTHONPATH'])
+
     @mock.patch('circus.util.os.environ', {'PWD': '/path/to/pwd'})
     @mock.patch('circus.util.os.getcwd', lambda: '/path/to/cwd')
     def test_working_dir_return_pwd_when_paths_are_equals(self):
