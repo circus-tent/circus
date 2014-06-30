@@ -838,11 +838,12 @@ def get_connection(socket, endpoint, ssh_server=None, ssh_keyfile=None):
                               "Paramiko.  You need to install Paramiko")
 
 
-def load_virtualenv(watcher):
+def load_virtualenv(watcher, py_ver=None):
     if not watcher.copy_env:
         raise ValueError('copy_env must be True to to use virtualenv')
 
-    py_ver = sys.version.split()[0][:3]
+    if not py_ver:
+        py_ver = sys.version.split()[0][:3]
 
     # XXX Posix scheme - need to add others
     sitedir = os.path.join(watcher.virtualenv, 'lib', 'python' + py_ver,

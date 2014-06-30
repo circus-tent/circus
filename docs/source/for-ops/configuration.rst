@@ -313,6 +313,13 @@ watcher:NAME - as many sections as you want
         into the execution environment. Must be used with **copy_env** set
         to True. Defaults to None.
 
+    **virtualenv_py_ver**
+        Specifies the python version of the virtualenv (e.g "3.3").
+        It's usefull if circus run with another python version (e.g "2.7")
+        The watcher will scan the local **site-packages** of the specified
+        python version and load its content into the execution
+        environment. Must be used with **virtualenv**. Defaults to None.
+
     **respawn**
         If set to False, the processes handled by a watcher will not be
         respawned automatically. The processes can be manually respawned with
