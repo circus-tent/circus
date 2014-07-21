@@ -62,7 +62,7 @@ Coming from Supervisor
 Supervisor is a very popular solution in the Python world and we're
 often asked how Circus compares with it.
 
-If you are coming from `Supervisor <http://supervisord.org_>`_, this page
+If you are coming from `Supervisor <http://supervisord.org>`_, this page
 tries to give an overview of how the tools differ.
 
 
