@@ -545,6 +545,41 @@ class Watcher(object):
 
     @gen.coroutine
     @util.debuglog
+    def remove_processes(self, pids):
+        """Remove processes."""
+        if self.is_stopped():
+            return
+
+        processes_to_kill = []
+
+        for pid in pids:
+            if pid in self.processes:
+                process = self.processes[pid]
+                hook_result = self.call_hook("before_remove",
+                                             pid=pid)
+                if process.status in (DEAD_OR_ZOMBIE, UNEXISTING):
+                    logger.debug('remove dead or zombie process %s', process.pid)
+                    self.processes.pop(process.pid)
+                else:
+                    logger.debug('kill process %s', process.pid)
+                    processes_to_kill.append(process)
+            else:
+                logger.warning('process %s does not exist' % pid)
+
+        removes = yield [self.kill_process(process)
+                         for process in processes_to_kill]
+        for i, process in enumerate(processes_to_kill):
+            if removes[i]:
+                logger.info('process %s removed', process.pid)
+                self.processes.pop(process.pid)
+                self.call_hook("after_remove", pid=process.pid)
+            else:
+                logger.debug('process kill failed for %s', pid)
+        raise gen.Return(len([_r for _r in removes if _r]))
+
+
+    @gen.coroutine
+    @util.debuglog
     def remove_expired_processes(self):
         max_age = self.max_age + randint(0, self.max_age_variance)
         expired_processes = [p for p in self.processes.values()
@@ -1008,8 +1043,10 @@ class Watcher(object):
     @gen.coroutine
     @util.debuglog
     def incr(self, nb=1):
+        before_pids = set() if self.is_stopped() else set(self.processes)
         res = yield self.set_numprocesses(self.numprocesses + nb)
-        raise gen.Return(res)
+        after_pids = set(self.processes)
+        raise gen.Return({'numprocesses': res, 'pids': sorted(after_pids - before_pids)})
 
     @util.synchronized("watcher_decr")
     @gen.coroutine
@@ -1017,6 +1054,14 @@ class Watcher(object):
     def decr(self, nb=1):
         res = yield self.set_numprocesses(self.numprocesses - nb)
         raise gen.Return(res)
+
+    @util.synchronized("watcher_rm_process")
+    @util.debuglog
+    @gen.coroutine
+    def rm_processes(self, pids=()):
+        res = yield self.remove_processes(pids)
+        self.numprocesses -= res
+        raise gen.Return({'nr': res})
 
     @util.synchronized("watcher_set_opt")
     def set_opt(self, key, val):
