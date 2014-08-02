@@ -94,37 +94,88 @@ in the left menu:
    :height: 400px
 
 
-Running behind Nginx and Varnish
-================================
+Running behind Nginx
+====================
 
-Nginx can act as a proxy in front of Circus. It can also deal with security.
+Nginx can act as a proxy and security layer in front of circus-web.
 
-To hook Nginx, you define a *location* directive that proxies the calls
-to Circus.
+.. note:: To receive real-time status updates and graphs in circus-web, you must provide a Nginx proxy solution that has websocket support
 
-Example::
+Nginx >= 1.3.13
+---------------
 
-    location ~/media/*(.jpg|.css|.js)$ {
-        alias /path/to/circus/web/;
+As of Nginx>=1.3.13 websocket support is built-in, so there is no need to combine Nginx with Varnish or HAProxy. 
+An example Nginx config with websocket support:
+
+
+.. code-block:: ini
+
+    upstream circusweb_server {
+      server 127.0.0.1:8080;
     }
 
-    location / {
+    server {
+     listen   80;
+     server_name  _;
+
+     location / {
+       proxy_pass http://circusweb_server;
+       proxy_http_version 1.1;
+       proxy_set_header Upgrade $http_upgrade;
+       proxy_set_header Connection "upgrade";
+       proxy_set_header Host $host;
+       proxy_set_header X-Real-IP $remote_addr;
+       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header X-Forwarded-Proto http;
+       proxy_redirect off;
+      }
+
+     location ~/media/\*(.png|.jpg|.css|.js|.ico)$ {
+       alias /path_to_site-packages/circusweb/media/;
+      }
+    }
+
+
+Nginx < 1.3.13
+--------------
+
+Nginx versions < 1.3.13 do not have websocket support built-in.
+
+To provide websocket support for circus-web when using Nginx < 1.3.13, you can combine Nginx with Varnish or HAProxy. That is, Nginx in front of circus-web, with Varnish or HAProxy in front of Nginx.
+
+The example below shows the combined Nginix and Varnish configuration required to proxy circus-web and provide websocket support.
+
+**Nginx configuration:**
+
+.. code-block:: ini
+
+    upstream circusweb_server {
+      server 127.0.0.1:8080;
+    }
+
+    server {
+     listen   8001;
+     server_name  _;
+
+     location / {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header Host $http_host;
         proxy_redirect off;
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://circusweb_server;
+      }
+
+     location ~/media/\*(.png|.jpg|.css|.js|.ico)$ {
+       alias /path_to_site-packages/circusweb/media/;
+      }
     }
 
+If you want more Nginx configuration options, see http://wiki.nginx.org/HttpProxyModule.
 
-If you want more configuration options, see http://wiki.nginx.org/HttpProxyModule.
+**Varnish configuration:**
 
-Websockets in Nginx (v1.2.5) is currently unsupported, although it will be
-implemented in 1.3. To receive real-time statuses and graphs in the web console,
-you need to use a websocket-compatible proxy like Varnish or HAProxy. In Varnish,
-two backends can be defined: one for serving the web console and one for the
-handling the socket connections.
 
-Example::
+.. code-block:: ini
+
 
     backend default {
         .host = "127.0.0.1";
@@ -152,62 +203,25 @@ Example::
         }
     }
 
-Here, web console requests are bound to port 8001, and Nginx should be configured to
-listen on that port. Websocket connections are upgraded and piped directly to the
-circushttpd process listening on port 8080.
+In the Varnish configuration example above two backends are defined.
+One serving the web console and one serving the socket connections.
+Web console requests are bound to port 8001. The Nginx 'server' directive should be configured to listen on port 8001.
 
+Websocket connections are upgraded and piped directly to the circushttpd process listening on port 8080 by Varnish. i.e. bypassing the Nginx proxy.
 
-Running behind Nginx >= 1.3.13
-==============================
+Ubuntu
+------
 
-
-As of `Nginx>=1.3.13 <http://nginx.com/news/nginx-websockets.html>`_
-websockets are supported by the web server. With Nginx>=1.3.13 there is no
-longer a need to reroute websocket traffic via Varnish or HAProxy.
-
-On Ubuntu you can install Nginx>=1.3.13 from Chris Lea's development branch
-`PPA <https://launchpad.net/~chris-lea/+archive/nginx-devel>`_, as so:
+Since the version 13.10 (*Saucy*), Ubuntu includes Nginx with websocket support in its own repositories. For older versions, 
+you can install Nginx>=1.3.13 from the official Nginx stable PPA, as so:
 
 .. code-block:: sh
 
-   sudo apt-get install python-software-properties
-   sudo add-apt-repository ppa:chris-lea/nginx-devel
-   sudo apt-get update
-   sudo apt-get install nginx
-   nginx -v
-
-An example Nginx config with websocket support:
-
-.. code-block:: ini
-
-
-   # /etc/nginx/sites-enabled/default
-
-   upstream circusweb_server {
-     server localhost:8080;
-   }
-
-   server {
-    listen   80;
-    server_name  _;
-
-    location / {
-      proxy_pass http://circusweb_server;
-      proxy_http_version 1.1;
-      proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection "upgrade";
-      proxy_set_header Host $http_host;
-      proxy_set_header X-Forwarded-Host $http_host;
-      proxy_set_header X-Real-IP $remote_addr;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto $scheme;
-      proxy_redirect off;
-     }
-
-    location ~/media/\*(.png|.jpg|.css|.js|.ico)$ {
-      alias /path_to_site-packages/circusweb/media/;
-     }
-   }
+    sudo apt-get install python-software-properties
+    sudo add-apt-repository ppa:nginx/stable
+    sudo apt-get update
+    sudo apt-get install nginx
+    nginx -v
 
 
 
