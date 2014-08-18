@@ -17,7 +17,8 @@ NAME=circusd
 DAEMON=/usr/bin/circusd
 PIDFILE=/var/run/$NAME.pid
 CONFIG=/etc/circus/circusd.ini
-DAEMON_ARGS="--daemon --pidfile $PIDFILE $CONFIG"
+LOGFILE=/var/log/circus/circus.log
+DAEMON_ARGS="--log-output $LOGFILE --daemon --pidfile $PIDFILE $CONFIG"
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
