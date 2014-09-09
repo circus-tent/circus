@@ -1,6 +1,39 @@
+import re
+import fnmatch
+from functools import partial
 from circus.commands.base import Command
-from circus.exc import ArgumentError
+from circus.exc import ArgumentError, MessageError
 from circus.util import TransformableFuture
+
+
+def execute_watcher_start_stop_restart(arbiter, props, watcher_function_name,
+                                       watchers_function, arbiter_function):
+    """base function to handle start/stop/restart watcher requests.
+    since this is always the same procedure except some function names this
+    function handles all watcher start/stop commands
+    """
+    if 'name' in props:
+        name = re.compile(fnmatch.translate(props['name']))
+        watchers = [watcher
+                    for watcher in arbiter.iter_watchers()
+                    if name.match(watcher.name.lower())]
+        if not watchers:
+            raise MessageError("program %s not found" % props['name'])
+
+        if len(watchers) == 1:
+            if props.get('waiting'):
+                resp = TransformableFuture()
+                func = getattr(watchers[0], watcher_function_name)
+                resp.set_upstream_future(func())
+                resp.set_transform_function(lambda x: {"info": x})
+                return resp
+            return getattr(watchers[0], watcher_function_name)()
+
+        watcher_iter_func = lambda reverse=True: \
+            sorted(watchers, key=lambda a: a.priority, reverse=reverse)
+        return watchers_function(watcher_iter_func=watcher_iter_func)
+    else:
+        return arbiter_function()
 
 
 class Restart(Command):
@@ -48,7 +81,7 @@ class Restart(Command):
         Options
         +++++++
 
-        - <name>: name of the watcher
+        - <name>: (wildcard) name of the watcher(s)
     """
 
     name = "restart"
@@ -64,13 +97,6 @@ class Restart(Command):
         return self.make_message(**opts)
 
     def execute(self, arbiter, props):
-        if 'name' in props:
-            watcher = self._get_watcher(arbiter, props['name'])
-            if props.get('waiting'):
-                resp = TransformableFuture()
-                resp.set_upstream_future(watcher.restart())
-                resp.set_transform_function(lambda x: {"info": x})
-                return resp
-            return watcher.restart()
-        else:
-            return arbiter.restart(inside_circusd=True)
+        return execute_watcher_start_stop_restart(
+            arbiter, props, 'restart', arbiter.restart,
+            partial(arbiter.restart, inside_circusd=True))
