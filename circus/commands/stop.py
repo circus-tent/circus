@@ -1,4 +1,5 @@
 from circus.commands.base import Command
+from circus.commands.restart import execute_watcher_start_stop_restart
 
 
 class Stop(Command):
@@ -46,7 +47,7 @@ class Stop(Command):
         Options
         +++++++
 
-        - <name>: name of the watcher
+        - <name>: (wildcard) name of the watcher(s)
     """
 
     name = "stop"
@@ -58,8 +59,6 @@ class Stop(Command):
         return self.make_message(**opts)
 
     def execute(self, arbiter, props):
-        if 'name' in props:
-            watcher = self._get_watcher(arbiter, props['name'])
-            return watcher.stop()
-        else:
-            return arbiter.stop_watchers()
+        return execute_watcher_start_stop_restart(
+            arbiter, props, 'stop', arbiter.stop_watchers,
+            arbiter.stop_watchers)
