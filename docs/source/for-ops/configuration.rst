@@ -125,7 +125,6 @@ circus - single section
 		
 	.. code-block:: yaml
 	
-	        ---
 	        version: 1
 	        disable_existing_loggers: false
 	        formatters:
