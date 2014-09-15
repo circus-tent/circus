@@ -3,6 +3,10 @@ import os
 import signal
 import warnings
 from fnmatch import fnmatch
+try:
+    import resource
+except ImportError:
+    resource = None     # NOQA
 
 from circus import logger
 from circus.py3compat import sort_by_field
@@ -79,6 +83,13 @@ class DefaultConfigParser(StrictConfigParser):
             raise NotImplementedError()
 
         return value
+
+
+def rlimit_value(val):
+    if resource is not None and (val is None or len(val) == 0):
+        return resource.RLIM_INFINITY
+    else:
+        return int(val)
 
 
 def read_config(config_path):
@@ -225,7 +236,7 @@ def get_config(config_file):
                     watcher[stream_name][stream_opt] = val
                 elif opt.startswith('rlimit_'):
                     limit = opt[7:]
-                    watcher['rlimits'][limit] = int(val)
+                    watcher['rlimits'][limit] = rlimit_value(val)
                 elif opt == 'priority':
                     watcher['priority'] = dget(section, "priority", 0, int)
                 elif opt.startswith('hooks.'):

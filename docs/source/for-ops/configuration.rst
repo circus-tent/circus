@@ -169,7 +169,8 @@ watcher:NAME - as many sections as you want
         sensitive) listed in the `Python resource module reference
         <http://docs.python.org/library/resource.html#resource-limits>`_.
         For example, the config line 'rlimit_nofile = 500' sets the maximum
-        number of open files to 500.
+        number of open files to 500. To set a limit value to RLIM_INFINITY,
+        do not set a value, like this config line: 'rlimit_nofile = '.
     **stderr_stream.class**
         A fully qualified Python class name that will be instanciated, and
         will receive the **stderr** stream of all processes in its
