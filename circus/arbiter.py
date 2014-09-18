@@ -240,12 +240,6 @@ class Arbiter(object):
     def get_socket(self, name):
         return self.sockets.get(name, None)
 
-    def get_socket_config(self, config, name):
-        for i in config.get('sockets', []):
-            if i['name'] == name:
-                return i.copy()
-        return None
-
     def get_watcher_config(self, config, name):
         for i in config.get('watchers', []):
             if i['name'] == name:
@@ -290,7 +284,8 @@ class Arbiter(object):
 
         # Gather socket names.
         current_sn = set([i.name for i in self.sockets.values()]) - ignore_sn
-        new_sn = set([i['name'] for i in new_cfg.get('sockets', [])])
+        new_sockets = dict((i['name'], i.copy()) for i in new_cfg.get('sockets', []))
+        new_sn = set(new_sockets.keys())
         added_sn = new_sn - current_sn
         deleted_sn = current_sn - new_sn
         maybechanged_sn = current_sn - deleted_sn
@@ -302,6 +297,8 @@ class Arbiter(object):
         for n in maybechanged_sn:
             s = self.get_socket(n)
             if self.get_socket_config(new_cfg, n) != s._cfg:
+                # if we're changing any socket configs, require a full restart
+                can_hot_upgrade = False
                 changed_sn.add(n)
 
                 # just delete the socket and add it again
@@ -327,7 +324,7 @@ class Arbiter(object):
 
         # get added sockets
         for n in added_sn:
-            socket_config = self.get_socket_config(new_cfg, n)
+            socket_config = new_sockets[n]
             s = CircusSocket.load_from_config(socket_config)
             s.bind_and_listen()
             self.sockets[s.name] = s
