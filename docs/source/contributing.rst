@@ -11,7 +11,7 @@ discussions, feature proposal etc.
 
 You can start a topic in our mailing list : http://tech.groups.yahoo.com/group/circus-dev/
 
-Or add an issue in our `bug tracker <https://github.com/mozilla-services/circus/>`_
+Or add an issue in our `bug tracker <https://github.com/mozilla-circus/circus/>`_
 
 
 Fixing typos and enhancing the documentation

@@ -30,5 +30,5 @@ Licence
 Contributors
 ============
 
-See the full list at https://github.com/mozilla-services/circus/blob/master/CONTRIBUTORS.txt
+See the full list at https://github.com/mozilla-circus/circus/blob/master/CONTRIBUTORS.txt
 

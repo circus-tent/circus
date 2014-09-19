@@ -3,7 +3,7 @@
 Step-by-step tutorial
 #####################
 
-The `examples directory <https://github.com/mozilla-services/circus/tree/master/examples>`_ in
+The `examples directory <https://github.com/mozilla-circus/circus/tree/master/examples>`_ in
 the Circus  repository contains many examples to get you started, but here's
 a full tutorial that gives you an overview of the features.
 
