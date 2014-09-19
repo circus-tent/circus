@@ -96,8 +96,8 @@ More on contributing: :ref:`contribs`.
 Useful Links:
 
 - There's a mailing-list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
-- The repository and issue tracker are on GitHub : https://github.com/mozilla-circus/circus
-- Join us on the IRC : Freenode, channel **#mozilla-circus**
+- The repository and issue tracker are on GitHub : https://github.com/circus-tent/circus
+- Join us on the IRC : Freenode, channel **#circus-tent**
 
 
 Documentation index
