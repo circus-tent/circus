@@ -20,6 +20,6 @@ Links:
 
 - Full Documentation : http://circus.readthedocs.org
 - How to Contribute : http://circus.readthedocs.org/en/latest/contributing/
-- Mailing List : http://tech.groups.yahoo.com/group/circus-dev/
+- Mailing List : https://groups.yahoo.com/neo/groups/circus-dev/info
 - Repository & Issue Tracker : https://github.com/mozilla-services/circus
 - IRC : Freenode, channel #mozilla-circus
