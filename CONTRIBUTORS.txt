@@ -87,3 +87,4 @@ List of contributors:
 - Wynn Wilkes <wynnwilkes@gmail.com>
 - Sylvain Viollon <sviollon@minddistrict.com>
 - James Ascroft-Leigh <jwal@jwal.me.uk>
+- Mike Dunn <mike@eikonomega.com>
