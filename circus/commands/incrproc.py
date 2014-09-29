@@ -60,7 +60,11 @@ class IncrProc(Command):
     def execute(self, arbiter, props):
         watcher = self._get_watcher(arbiter, props.get('name'))
         if watcher.singleton:
-            return {"numprocesses": watcher.numprocesses, "singleton": True, 'pids': []}
+            return {
+                "numprocesses": watcher.numprocesses,
+                "singleton": True,
+                "pids": []
+            }
         else:
             nb = props.get("nb", 1)
             resp = TransformableFuture()

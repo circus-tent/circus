@@ -555,10 +555,9 @@ class Watcher(object):
         for pid in pids:
             if pid in self.processes:
                 process = self.processes[pid]
-                hook_result = self.call_hook("before_remove",
-                                             pid=pid)
+                self.call_hook("before_remove", pid=pid)
                 if process.status in (DEAD_OR_ZOMBIE, UNEXISTING):
-                    logger.debug('remove dead or zombie process %s', process.pid)
+                    logger.debug("Remove dead or zombie process %s", pid)
                     self.processes.pop(process.pid)
                 else:
                     logger.debug('kill process %s', process.pid)
@@ -566,17 +565,17 @@ class Watcher(object):
             else:
                 logger.warning('process %s does not exist' % pid)
 
-        removes = yield [self.kill_process(process)
-                         for process in processes_to_kill]
-        for i, process in enumerate(processes_to_kill):
+        removes = yield [self.kill_process(p)
+                         for p in processes_to_kill]
+        for i, process_to_kill in enumerate(processes_to_kill):
+            pid = process_to_kill.pid
             if removes[i]:
-                logger.info('process %s removed', process.pid)
-                self.processes.pop(process.pid)
-                self.call_hook("after_remove", pid=process.pid)
+                logger.info('process %s removed', pid)
+                self.processes.pop(pid)
+                self.call_hook("after_remove", pid=pid)
             else:
                 logger.debug('process kill failed for %s', pid)
         raise gen.Return(len([_r for _r in removes if _r]))
-
 
     @gen.coroutine
     @util.debuglog
@@ -1046,7 +1045,8 @@ class Watcher(object):
         before_pids = set() if self.is_stopped() else set(self.processes)
         res = yield self.set_numprocesses(self.numprocesses + nb)
         after_pids = set(self.processes)
-        raise gen.Return({'numprocesses': res, 'pids': sorted(after_pids - before_pids)})
+        pids = sorted(after_pids - before_pids)
+        raise gen.Return({'numprocesses': res, 'pids': pids})
 
     @util.synchronized("watcher_decr")
     @gen.coroutine

@@ -1,6 +1,5 @@
 from circus.commands.base import Command
 from circus.exc import ArgumentError
-from circus.util import TransformableFuture
 
 
 class RmProcess(Command):
