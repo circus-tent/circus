@@ -8,7 +8,6 @@ from time import sleep
 import select
 import socket
 from tornado import gen
-import time
 
 import zmq
 from zmq.eventloop import ioloop
@@ -578,12 +577,9 @@ class Arbiter(object):
             cb = self.stop_controller_and_close_sockets
             self.loop.add_callback(cb)
         else:
-            self.loop.add_timeout(time.time() + 1, self._stop_cb)
-
-    def _stop_cb(self):
-        self.loop.stop()
-        # stop_controller_and_close_sockets will be
-        # called in the end of start() method
+            # stop_controller_and_close_sockets will be
+            # called in the end of start() method
+            self.loop.add_callback(self.loop.stop)
 
     def reap_processes(self):
         # map watcher to pids
