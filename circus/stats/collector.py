@@ -1,6 +1,6 @@
 import errno
 from collections import defaultdict
-from select import select
+import select
 import socket
 
 from circus import util
@@ -123,11 +123,14 @@ class SocketStatsCollector(BaseStatsCollector):
 
     def _select(self):
         try:
-            rlist, wlist, xlist = select(self.sockets, [], [], .01)
+            rlist, wlist, xlist = select.select(self.sockets, [], [], .01)
         except socket.error as err:
-            if err.errno == errno.EBADF:
+            if err.errno in (errno.EBADF, errno.EINTR):
                 return
             raise
+        except select.error as err:
+            if err.args[0] == errno.EINTR:
+                return
 
         if len(rlist) == 0:
             return
