@@ -1,5 +1,6 @@
 import threading
 from threading import _active_limbo_lock, _active, _sys
+from .util import get_python_version
 
 
 debugger = False
@@ -21,17 +22,19 @@ if not debugger:
                 if 'dummy_threading' not in _sys.modules:
                     raise
 
-        # http://bugs.python.org/issue14308
-        def _stop(self):
-            # DummyThreads delete self.__block, but they have no waiters to
-            # notify anyway (join() is forbidden on them).
-            if not hasattr(self, '_Thread__block'):
-                return
-            self._Thread__stop_old()
-
         threading.Thread._Thread__delete = _delete
-        threading.Thread._Thread__stop_old = threading.Thread._Thread__stop
-        threading.Thread._Thread__stop = _stop
+
+        # see http://bugs.python.org/issue14308
+        if get_python_version() < (2, 7, 0):
+            def _stop(self):
+                # DummyThreads delete self.__block, but they have no waiters to
+                # notify anyway (join() is forbidden on them).
+                if not hasattr(self, '_Thread__block'):
+                    return
+                self._Thread__stop_old()
+
+            threading.Thread._Thread__stop_old = threading.Thread._Thread__stop
+            threading.Thread._Thread__stop = _stop
     else:
         # see http://bugs.python.org/issue1596321
         def _delete(self):  # NOQA
@@ -42,14 +45,16 @@ if not debugger:
                 if 'dummy_threading' not in _sys.modules:
                     raise
 
-        # http://bugs.python.org/issue14308
-        def _stop(self):  # NOQA
-            # DummyThreads delete self.__block, but they have no waiters to
-            # notify anyway (join() is forbidden on them).
-            if not hasattr(self, '_block'):
-                return
-            self._stop_old()
-
         threading.Thread._delete = _delete
-        threading.Thread._stop_old = threading.Thread._stop
-        threading.Thread._stop = _stop
+
+        # see http://bugs.python.org/issue14308
+        if get_python_version() < (3, 2, 0):
+            def _stop(self):  # NOQA
+                # DummyThreads delete self.__block, but they have no waiters to
+                # notify anyway (join() is forbidden on them).
+                if not hasattr(self, '_block'):
+                    return
+                self._stop_old()
+
+            threading.Thread._stop_old = threading.Thread._stop
+            threading.Thread._stop = _stop
