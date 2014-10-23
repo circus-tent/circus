@@ -12,8 +12,8 @@ except ImportError:
     pass
 
 if not debugger:
-    if hasattr(threading.Thread, '_Thread__stop'):
-        # see http://bugs.python.org/issue1596321
+    # see http://bugs.python.org/issue1596321
+    if hasattr(threading.Thread, '_Thread__delete'):
         def _delete(self):
             try:
                 with _active_limbo_lock:
@@ -23,20 +23,7 @@ if not debugger:
                     raise
 
         threading.Thread._Thread__delete = _delete
-
-        # see http://bugs.python.org/issue14308
-        if get_python_version() < (2, 7, 0):
-            def _stop(self):
-                # DummyThreads delete self.__block, but they have no waiters to
-                # notify anyway (join() is forbidden on them).
-                if not hasattr(self, '_Thread__block'):
-                    return
-                self._Thread__stop_old()
-
-            threading.Thread._Thread__stop_old = threading.Thread._Thread__stop
-            threading.Thread._Thread__stop = _stop
     else:
-        # see http://bugs.python.org/issue1596321
         def _delete(self):  # NOQA
             try:
                 with _active_limbo_lock:
@@ -47,14 +34,14 @@ if not debugger:
 
         threading.Thread._delete = _delete
 
-        # see http://bugs.python.org/issue14308
-        if get_python_version() < (3, 2, 0):
-            def _stop(self):  # NOQA
-                # DummyThreads delete self.__block, but they have no waiters to
-                # notify anyway (join() is forbidden on them).
-                if not hasattr(self, '_block'):
-                    return
-                self._stop_old()
+    # see http://bugs.python.org/issue14308
+    if get_python_version() < (2, 7, 0):
+        def _stop(self):
+            # DummyThreads delete self.__block, but they have no waiters to
+            # notify anyway (join() is forbidden on them).
+            if not hasattr(self, '_Thread__block'):
+                return
+            self._Thread__stop_old()
 
-            threading.Thread._stop_old = threading.Thread._stop
-            threading.Thread._stop = _stop
+        threading.Thread._Thread__stop_old = threading.Thread._Thread__stop
+        threading.Thread._Thread__stop = _stop
