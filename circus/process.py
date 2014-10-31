@@ -167,12 +167,13 @@ class Process(object):
     - **close_child_stderr**: If True, redirects the child process' stdout
       to /dev/null after the fork. default: False.
     """
-    def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
+    def __init__(self, name, wid, cmd, args=None, working_dir=None, shell=False,
                  uid=None, gid=None, env=None, rlimits=None, executable=None,
                  use_fds=False, watcher=None, spawn=True,
                  pipe_stdout=True, pipe_stderr=True,
                  close_child_stdout=False, close_child_stderr=False):
 
+        self.name = name
         self.wid = wid
         self.cmd = cmd
         self.args = args
@@ -208,6 +209,7 @@ class Process(object):
 
         if spawn:
             self.spawn()
+        self.started = time.time()
 
     def _null_streams(self, streams):
         devnull = os.open(os.devnull, os.O_RDWR)
@@ -320,8 +322,6 @@ class Process(object):
         # let go of sockets created only for self._worker to inherit
         self._sockets = []
 
-        self.started = time.time()
-
     def format_args(self, sockets_fds=None):
         """ It's possible to use environment variables and some other variables
         that are available in this context, when spawning the processes.
@@ -420,7 +420,7 @@ class Process(object):
         """
         try:
             try:
-                if self._worker.poll() is None:
+                if self.is_alive():
                     try:
                         return self._worker.terminate()
                     except AccessDenied:
@@ -428,12 +428,15 @@ class Process(object):
                         # dies after poll returns (unlikely)
                         pass
             finally:
-                if self._worker.stderr is not None:
-                    self._worker.stderr.close()
-                if self._worker.stdout is not None:
-                    self._worker.stdout.close()
+                self.close_output_channels()
         except NoSuchProcess:
             pass
+
+    def close_output_channels(self):
+        if self._worker.stderr is not None:
+            self._worker.stderr.close()
+        if self._worker.stdout is not None:
+            self._worker.stdout.close()
 
     def wait(self, timeout=None):
         """

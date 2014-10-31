@@ -618,7 +618,7 @@ class Watcher(object):
 
             ProcCls = PapaProcessProxy if self.use_papa else Process
             try:
-                process = ProcCls(self._nextwid, cmd,
+                process = ProcCls(self.name, self._nextwid, cmd,
                                   args=self.args, working_dir=self.working_dir,
                                   shell=self.shell, uid=self.uid, gid=self.gid,
                                   env=self.env, rlimits=self.rlimits,

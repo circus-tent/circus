@@ -76,7 +76,7 @@ class TestConfig(TestCase):
                 # are redirecting stdout
                 watcher.use_sockets = True
 
-            process = Process(watcher._nextwid, watcher.cmd,
+            process = Process('test', watcher._nextwid, watcher.cmd,
                               args=watcher.args,
                               working_dir=watcher.working_dir,
                               shell=watcher.shell, uid=watcher.uid,
@@ -115,7 +115,7 @@ class TestConfig(TestCase):
             # launching the Watcher with IS_WINDOWS=True
             watcher.use_sockets = True
 
-            process = Process(watcher._nextwid, watcher.cmd,
+            process = Process('test', watcher._nextwid, watcher.cmd,
                               args=watcher.args,
                               working_dir=watcher.working_dir,
                               shell=watcher.shell, uid=watcher.uid,
