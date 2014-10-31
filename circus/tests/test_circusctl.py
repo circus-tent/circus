@@ -148,9 +148,10 @@ class CLITest(TestCircus):
             self.assertIn('UserWarning', stderr)
         output = stdout.splitlines()
         self.assertEqual(output[0], VERSION)
-        # strip of term escape characters, if any
-        prompt = output[2][-len(CircusCtl.prompt):]
-        self.assertEqual(prompt, CircusCtl.prompt)
+        # strip off term escape characters, if any
+        if not output[2].startswith(CircusCtl.prompt):
+            prompt = output[2][-len(CircusCtl.prompt):]
+            self.assertEqual(prompt, CircusCtl.prompt)
 
         yield self.stop_arbiter()
 
