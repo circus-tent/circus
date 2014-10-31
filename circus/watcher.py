@@ -17,10 +17,12 @@ import zmq.utils.jsonapi as json
 from zmq.eventloop import ioloop
 
 from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
+from circus.papa_process_proxy import PapaProcessProxy
 from circus import logger
 from circus import util
 from circus.stream import get_pipe_redirector, get_stream
 from circus.util import parse_env_dict, resolve_name, tornado_sleep, IS_WINDOWS
+from circus.util import papa
 from circus.py3compat import bytestring, is_callable, b, PY2
 
 
@@ -179,6 +181,9 @@ class Watcher(object):
 
     - **close_child_stderr**: If True, closes the stderr after the fork.
       default: False.
+
+    - **use_papa**: If True, use the papa process kernel for this process.
+      default: False.
     """
 
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
@@ -192,7 +197,7 @@ class Watcher(object):
                  max_age_variance=30, hooks=None, respawn=True,
                  autostart=True, on_demand=False, virtualenv=None,
                  close_child_stdout=False, close_child_stderr=False,
-                 virtualenv_py_ver=None, **options):
+                 virtualenv_py_ver=None, use_papa=False, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.on_demand = on_demand
@@ -228,6 +233,7 @@ class Watcher(object):
         self.autostart = autostart
         self.close_child_stdout = close_child_stdout
         self.close_child_stderr = close_child_stderr
+        self.use_papa = use_papa and papa is not None
         self.loop = loop or ioloop.IOLoop.instance()
 
         if singleton and self.numprocesses not in (0, 1):
@@ -254,7 +260,8 @@ class Watcher(object):
                           "priority", "copy_env", "singleton",
                           "stdout_stream_conf", "on_demand",
                           "stderr_stream_conf", "max_age", "max_age_variance",
-                          "close_child_stdout", "close_child_stderr")
+                          "close_child_stdout", "close_child_stderr",
+                          "use_papa")
                          + tuple(options.keys()))
 
         if not working_dir:
@@ -609,8 +616,9 @@ class Watcher(object):
             pipe_stdout = self.stdout_redirector is not None
             pipe_stderr = self.stderr_redirector is not None
 
+            ProcCls = PapaProcessProxy if self.use_papa else Process
             try:
-                process = Process(self._nextwid, cmd,
+                process = ProcCls(self._nextwid, cmd,
                                   args=self.args, working_dir=self.working_dir,
                                   shell=self.shell, uid=self.uid, gid=self.gid,
                                   env=self.env, rlimits=self.rlimits,

@@ -9,7 +9,7 @@ from circus.py3compat import sort_by_field
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
                          StrictConfigParser, replace_gnu_args, to_signum,
-                         to_bool)
+                         to_bool, papa)
 
 
 def watcher_defaults():
@@ -39,7 +39,8 @@ def watcher_defaults():
         'copy_path': False,
         'hooks': dict(),
         'respawn': True,
-        'autostart': True}
+        'autostart': True,
+        'use_papa': False}
 
 
 class DefaultConfigParser(StrictConfigParser):
@@ -169,6 +170,7 @@ def get_config(config_file):
     config['logoutput'] = dget('circus', 'logoutput')
     config['loggerconfig'] = dget('circus', 'loggerconfig', None)
     config['fqdn_prefix'] = dget('circus', 'fqdn_prefix', None, str)
+    config['papa_endpoint'] = dget('circus', 'fqdn_prefix', None, str)
 
     # Initialize watchers, plugins & sockets to manage
     watchers = []
@@ -228,6 +230,14 @@ def get_config(config_file):
                     watcher['rlimits'][limit] = int(val)
                 elif opt == 'priority':
                     watcher['priority'] = dget(section, "priority", 0, int)
+                elif opt == 'use_papa' and dget(section, 'use_papa', False,
+                                                bool):
+                    if papa:
+                        watcher['use_papa'] = True
+                    else:
+                        warnings.warn("Config file says use_papa but the papa "
+                                      "module is missing.",
+                                      ImportWarning)
                 elif opt.startswith('hooks.'):
                     hook_name = opt[len('hooks.'):]
                     val = [elmt.strip() for elmt in val.split(',', 1)]
