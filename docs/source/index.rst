@@ -63,7 +63,7 @@ Controlling Circus
 
 Circus provides two command-line tools to manage your running daemon:
 
-- *circusctl*, a management console you can use it to perform
+- *circusctl*, a management console you can use to perform
   actions such as adding or removing :term:`workers`
 
 - *circus-top*, a top-like console you can use to display the memory and
