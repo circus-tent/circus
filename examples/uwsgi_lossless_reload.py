@@ -1,3 +1,5 @@
+from circus.py3compat import s
+
 __author__ = 'Code Cobblers, Inc.'
 
 # This is an example of how to get lossless reload of WSGI web servers with
@@ -60,7 +62,7 @@ def get_uwsgi_stats(name, wid):
             "Error: No stats seem available for WID %d of %s", wid, name)
         return
     # recent versions of uWSGI had some garbage in the JSON so strip it out
-    data = NON_JSON_CHARACTERS.sub('', data.decode())
+    data = NON_JSON_CHARACTERS.sub('', s(data))
     return loads(data)
 
 
