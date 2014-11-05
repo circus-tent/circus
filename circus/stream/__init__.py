@@ -78,6 +78,7 @@ class FancyStdoutStream(StdoutStream):
 
     # Generate a datetime object
     now = datetime.now
+    fromtimestamp = datetime.fromtimestamp
 
     def __init__(self, color=None, time_format=None, **kwargs):
         super(FancyStdoutStream, self).__init__(**kwargs)
@@ -86,7 +87,7 @@ class FancyStdoutStream(StdoutStream):
             color = random.choice(self.colors)
         self.color_code = self.colors.index(color) + 1
 
-    def prefix(self, pid):
+    def prefix(self, data):
         """
         Create a prefix for each line.
 
@@ -96,7 +97,12 @@ class FancyStdoutStream(StdoutStream):
 
         http://stackoverflow.com/questions/287871
         """
-        time = self.now().strftime(self.time_format)
+        pid = data['pid']
+        if 'timestamp' in data:
+            time = self.fromtimestamp(data['timestamp'])
+        else:
+            time = self.now()
+        time = time.strftime(self.time_format)
 
         # start the coloring with the ansi escape sequence
         color = '\033[0;3%s;40m' % self.color_code
@@ -107,7 +113,7 @@ class FancyStdoutStream(StdoutStream):
     def __call__(self, data):
         for line in s(data['data']).split('\n'):
             if line:
-                self.out.write(self.prefix(data['pid']))
+                self.out.write(self.prefix(data))
                 self.out.write(line)
                 # stop coloring
                 self.out.write('\033[0m\n')
