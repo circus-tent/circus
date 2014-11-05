@@ -1,10 +1,5 @@
-import errno
-import os
-import sys
-
 from zmq.eventloop import ioloop
 from circus.stream import Redirector
-from circus.util import papa
 
 
 class PapaRedirector(Redirector):
@@ -21,24 +16,20 @@ class PapaRedirector(Redirector):
                 if events == ioloop.IOLoop.ERROR:
                     self.redirector.remove_fd(fd)
                 return
-            try:
-                data = os.read(fd, self.redirector.buffer)
-                if len(data) == 0:
-                    self.redirector.remove_fd(fd)
-                else:
-                    datamap = {'data': data, 'pid': self.process.pid,
-                               'name': self.name}
-                    datamap.update(self.redirector.extra_info)
-                    self.redirector.redirect(datamap)
-            except IOError as ex:
-                if ex.args[0] != errno.EAGAIN:
-                    raise
-                try:
-                    sys.exc_clear()
-                except Exception:
-                    pass
+            out, err, close = self.pipe.read()
+            for output_type, output_list in (('stdout', out), ('stderr', err)):
+                if output_list:
+                    for line in output_list:
+                        datamap = {'data': line.data,
+                                   'pid': self.process.pid,
+                                   'name': output_type,
+                                   'timestamp': line.timestamp}
+                        self.redirector.redirect[output_type](datamap)
+            self.pipe.acknowledge()
+            if close:
+                self.redirector.remove_fd(fd)
 
     @staticmethod
     def get_process_pipes(process):
         if process.pipe_stdout or process.pipe_stderr:
-            yield 'watcher', process.watcher
+            yield 'output', process.output
