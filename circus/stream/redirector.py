@@ -87,6 +87,7 @@ class Redirector(object):
             self.pipes[fd] = name, process, pipe
             if self.running:
                 self._start_one(name, process, pipe)
+        process.redirected = True
 
     def remove_fd(self, fd):
         self._stop_one(fd)
@@ -96,6 +97,7 @@ class Redirector(object):
     def remove_redirections(self, process):
         for _, pipe in self.get_process_pipes(process):
             self.remove_fd(pipe.fileno())
+        process.redirected = False
 
     def change_stream(self, stream_name, redirect_writer):
         self.redirect[stream_name] = redirect_writer

@@ -198,6 +198,8 @@ class Process(object):
         self.stopping = False
         # sockets created before fork, should be let go after.
         self._sockets = []
+        self._worker = None
+        self.redirected = False
 
         if self.uid is not None and self.gid is None:
             self.gid = get_default_gid(self.uid)
@@ -350,8 +352,8 @@ class Process(object):
 
         if '$WID' in cmd or (self.args and '$WID' in self.args):
             msg = "Using $WID in the command is deprecated. You should use "\
-                  "the python string format instead. In you case, this means "\
-                  "replacing the $WID in your command by $(WID)."
+                  "the python string format instead. In your case, this "\
+                  "means replacing the $WID in your command by $(WID)."
 
             warnings.warn(msg, DeprecationWarning)
             self.cmd = cmd.replace('$WID', str(self.wid))
