@@ -1,5 +1,3 @@
-from circus.py3compat import s
-
 __author__ = 'Code Cobblers, Inc.'
 
 # This is an example of how to get lossless reload of WSGI web servers with
@@ -8,7 +6,7 @@ __author__ = 'Code Cobblers, Inc.'
 #
 # This example also solves another problem I have faced many times with uWSGI.
 # When you start an app with a defect in uWSGI, uWSGI will keep restarting
-# if forever. So this example includes an after_spawn hook that does flapping
+# it forever. So this example includes an after_spawn hook that does flapping
 # detection on the uWSGI workers.
 #
 # Here is the flow for a reload:
@@ -30,6 +28,7 @@ import socket
 from json import loads
 import signal
 from circus import logger
+from circus.py3compat import PY2
 import re
 
 worker_states = {
@@ -43,15 +42,8 @@ class TimeoutError(Exception):
     """The operation timed out."""
 
 
-def get_uwsgi_stats(name, wid):
-    try:
-        sock = socket.create_connection(('127.0.0.1', 8090 + wid),
-                                        timeout=1)
-    except Exception as e:
-        logger.error(
-            "Error: Connection refused for {0}} on 127.0.0.1:809{1} - {2}"
-            .format(name, wid, e))
-        raise e
+def get_uwsgi_stats(name, wid, base_port):
+    sock = socket.create_connection(('127.0.0.1', 8090 + wid), timeout=1)
     received = sock.recv(100000)
     data = bytes()
     while received:
@@ -62,12 +54,14 @@ def get_uwsgi_stats(name, wid):
             "Error: No stats seem available for WID %d of %s", wid, name)
         return
     # recent versions of uWSGI had some garbage in the JSON so strip it out
-    data = NON_JSON_CHARACTERS.sub('', s(data))
+    if not PY2:
+        data = data.decode('latin', 'replace')
+    data = NON_JSON_CHARACTERS.sub('', data)
     return loads(data)
 
 
-def get_worker_states(name, wid, minimum_age=0.0):
-    stats = get_uwsgi_stats(name, wid)
+def get_worker_states(name, wid, base_port, minimum_age=0.0):
+    stats = get_uwsgi_stats(name, wid, base_port)
     if 'workers' not in stats:
         logger.error("Error: No workers found for WID %d of %d", wid, name)
         return ['unknown']
@@ -78,16 +72,16 @@ def get_worker_states(name, wid, minimum_age=0.0):
     ]
 
 
-def wait_for_workers(name, wid, state, timeout_seconds=60, minimum_age=0):
+def wait_for_workers(name, wid, base_port, state, timeout_seconds=60, minimum_age=0):
     started = time()
     while True:
         try:
             if all(worker.lower() in worker_states[state]
-                   for worker in get_worker_states(name, wid, minimum_age)):
+                   for worker in get_worker_states(name, wid, base_port, minimum_age)):
                 return
         except Exception:
             if time() > started + 3:
-                raise TimeoutError('timeout')
+                raise
         if timeout_seconds and time() > started + timeout_seconds:
             raise TimeoutError('timeout')
         sleep(0.25)
@@ -97,7 +91,7 @@ def extended_stats(watcher, arbiter, hook_name, pid, stats, **kwargs):
     name = watcher.name
     wid = watcher.processes[pid].wid
     try:
-        uwsgi_stats = get_uwsgi_stats(name, wid)
+        uwsgi_stats = get_uwsgi_stats(name, wid, int(watcher._options.get('stats_base_port', 8090)))
         for k in ('load', 'version'):
             if k in uwsgi_stats:
                 stats[k] = uwsgi_stats[k]
@@ -117,12 +111,17 @@ def extended_stats(watcher, arbiter, hook_name, pid, stats, **kwargs):
 def children_started(watcher, arbiter, hook_name, pid, **kwargs):
     name = watcher.name
     wid = watcher.processes[pid].wid
+    base_port = int(watcher._options.get('stats_base_port', 8090))
+    logger.info('%s waiting for workers', name)
     try:
-        wait_for_workers(name, wid, 'running', timeout_seconds=10,
+        wait_for_workers(name, wid, base_port, 'running', timeout_seconds=15,
                          minimum_age=5)
         return True
     except TimeoutError:
         logger.error('%s children are flapping on %d', name, pid)
+        return False
+    except Exception:
+        logger.error('%s not publishing stats on %d', name, pid)
         return False
 
 
@@ -135,11 +134,12 @@ def clean_stop(watcher, arbiter, hook_name, pid, signum, **kwargs):
         if len(newer_pids) < watcher.numprocesses:
             return True
         wid = watcher.processes[pid].wid
+        base_port = int(watcher._options.get('stats_base_port', 8090))
         logger.info('%s pausing', name)
-        watcher.send_signal(pid, signal.SIGTSTP)
         try:
-            wait_for_workers(name, wid, 'paused')
+            watcher.send_signal(pid, signal.SIGTSTP)
+            wait_for_workers(name, wid, base_port, 'paused')
             logger.info('%s workers idle', name)
         except Exception as e:
-            logger.exception('trouble pausing %s: %s', name, e)
+            logger.error('trouble pausing %s: %s', name, e)
     return True
