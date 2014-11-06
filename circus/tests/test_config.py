@@ -61,7 +61,7 @@ class TestConfig(TestCase):
 
     def test_issue310(self):
         '''
-        https://github.com/mozilla-services/circus/pull/310
+        https://github.com/circus-tent/circus/pull/310
 
         Allow $(circus.sockets.name) to be used in args.
         '''
@@ -102,7 +102,7 @@ class TestConfig(TestCase):
 
     def test_issues665(self):
         '''
-        https://github.com/mozilla-services/circus/pull/665
+        https://github.com/circus-tent/circus/pull/665
 
         Ensure args formatting when shell = True.
         '''
@@ -186,7 +186,7 @@ class TestConfig(TestCase):
 
     @patch.object(logger, 'warn')
     def test_empty_include(self, mock_logger_warn):
-        """https://github.com/mozilla-services/circus/pull/473"""
+        """https://github.com/circus-tent/circus/pull/473"""
         try:
             get_config(_CONF['empty_include'])
         except:
@@ -293,7 +293,7 @@ class TestConfig(TestCase):
 
     def test_expand_vars(self):
         '''
-        https://github.com/mozilla-services/circus/pull/554
+        https://github.com/circus-tent/circus/pull/554
         '''
         conf = get_config(_CONF['expand_vars'])
         watcher = conf['watchers'][0]

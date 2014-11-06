@@ -63,7 +63,7 @@ Controlling Circus
 
 Circus provides two command-line tools to manage your running daemon:
 
-- *circusctl*, a management console you can use it to perform
+- *circusctl*, a management console you can use to perform
   actions such as adding or removing :term:`workers`
 
 - *circus-top*, a top-like console you can use to display the memory and
@@ -96,8 +96,8 @@ More on contributing: :ref:`contribs`.
 Useful Links:
 
 - There's a mailing-list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
-- The repository and issue tracker are on GitHub : https://github.com/mozilla-services/circus
-- Join us on the IRC : Freenode, channel **#mozilla-circus**
+- The repository and issue tracker are on GitHub : https://github.com/circus-tent/circus
+- Join us on the IRC : Freenode, channel **#circus-tent**
 
 
 Documentation index

@@ -11,7 +11,7 @@ discussions, feature proposal etc.
 
 You can start a topic in our mailing list : http://tech.groups.yahoo.com/group/circus-dev/
 
-Or add an issue in our `bug tracker <https://github.com/mozilla-services/circus/>`_
+Or add an issue in our `bug tracker <https://github.com/circus-tent/circus/>`_
 
 
 Fixing typos and enhancing the documentation
@@ -79,8 +79,8 @@ Discussing
 ==========
 
 If you find yourself in need of any help while looking at the code of Circus,
-you can go and find us on irc at `#mozilla-circus on irc.freenode.org
-<irc://irc.freenode.net/mozilla-circus>`_ (or if you don't have any IRC client,
+you can go and find us on irc at `#circus-tent on irc.freenode.org
+<irc://irc.freenode.net/circus-tent>`_ (or if you don't have any IRC client,
 use `the webchat
 <http://webchat.freenode.net/?channels=mozilla-circus&uio=d4>`_)
 

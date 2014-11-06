@@ -89,7 +89,7 @@ the daemon, while Circus uses ZeroMQ.
 Circus & Supervisor both have a web interface to display what's going
 on. Circus' one is more advanced because you can follow in real time
 what's going on and interact with the daemon. It uses web sockets and
-is developed in a separate project (`circus-web <https://github.com/mozilla-services/circus-web>`_.)
+is developed in a separate project (`circus-web <https://github.com/circus-tent/circus-web>`_.)
 
 There are many other subtle differences in the core design, we
 might list here one day… In the meantime, you can learn more about circus
