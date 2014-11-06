@@ -2,16 +2,10 @@ __author__ = 'Scott Maxwell'
 
 from circus.process import Process, debuglog
 from circus.util import papa
+from circus import logger
 import psutil
 import select
 import time
-
-# TODO(papa) Make all processes for a watcher use the same redirector
-# TODO(papa) Verify that sockets are set as use_papa
-# TODO(papa) Save state of watchers to papa
-# TODO(papa) Recover state of watchers on startup
-# TODO(papa) Remove sockets on stop or restart all
-# TODO(papa) Add support for OS-assigned ports
 
 
 def _bools_to_papa_out(pipe, close):
@@ -35,36 +29,57 @@ class PapaProcessProxy(Process):
         self._papa_name = None
         super(PapaProcessProxy, self).__init__(*args, **kwargs)
 
-    @staticmethod
-    def _fix_socket_name(s):
+    def _fix_socket_name(self, s, socket_fds):
         if s:
             while '$(circus.sockets.' in s:
                 start = s.index('$(circus.sockets.')
                 end = s.index(')', start)
-                s = s[:start] + '$(socket.circus.' + s[start + 17:end] + '.fileno)' + s[end + 1:]
+                socket_name = s[start + 17:end]
+                if socket_name not in socket_fds:
+                    logger.warning('Process "{0}" refers to socket "{1}" but '
+                                   'they do not have the same "use_papa" state'
+                                   .format(self.name, socket_name))
+                s = ''.join((s[:start], '$(socket.circus.', socket_name,
+                             '.fileno)', s[end + 1:]))
         return s
 
     def spawn(self):
-        self.cmd = self._fix_socket_name(self.cmd)
-        self.args = [self._fix_socket_name(arg) for arg in self.args]
+        # noinspection PyUnusedLocal
+        sockets_fds = self.watcher._get_sockets_fds()
+        self.cmd = self._fix_socket_name(self.cmd, sockets_fds)
+        self.args = [self._fix_socket_name(arg, sockets_fds)
+                     for arg in self.args]
         args = self.format_args()
         stdout = _bools_to_papa_out(self.pipe_stdout, self.close_child_stdout)
         stderr = _bools_to_papa_out(self.pipe_stderr, self.close_child_stderr)
         papa_name = 'circus.{0}.{1}'.format(self.name, self.wid)
         self._papa_name = papa_name
         self._papa = papa.Papa()
-        p = self._papa.make_process(papa_name,
-                                    executable=self.executable, args=args,
-                                    env=self.env, working_dir=self.working_dir,
-                                    uid=self.uid, gid=self.gid,
-                                    rlimits=self.rlimits,
-                                    stdout=stdout, stderr=stderr)
+        try:
+            p = self._papa.make_process(papa_name,
+                                        executable=self.executable, args=args,
+                                        env=self.env,
+                                        working_dir=self.working_dir,
+                                        uid=self.uid, gid=self.gid,
+                                        rlimits=self.rlimits,
+                                        stdout=stdout, stderr=stderr)
+        except papa.Error as e:
+            p = self._papa.list_processes(papa_name)
+            if p:
+                p = p[papa_name]
+                logger.warning('Process "%s" wid "%d" already exists in papa. '
+                               'Using the existing process.',
+                               self.name, self.wid)
+            else:
+                raise
         self._worker = PapaProcessWorker(self, p['pid'])
         self._papa_watcher = self._papa.watch_processes(papa_name)
+        self.started = p['started']
 
     def returncode(self):
         exit_code = self._papa_watcher.exit_code.get(self._papa_name)
-        if exit_code is None and not self.redirected and self._papa_watcher.ready:
+        if exit_code is None and not self.redirected and\
+                self._papa_watcher.ready:
             self._papa_watcher.read()
             exit_code = self._papa_watcher.exit_code.get(self._papa_name)
         return exit_code
@@ -76,7 +91,10 @@ class PapaProcessProxy(Process):
     def close_output_channels(self):
         self._papa_watcher.close()
         if self.is_alive():
-            self._papa.remove_processes(self._papa_name)
+            try:
+                self._papa.remove_processes(self._papa_name)
+            except papa.Error as e:
+                pass
 
     def wait(self, timeout=None):
         until = time.time() + timeout if timeout else None

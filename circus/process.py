@@ -200,6 +200,7 @@ class Process(object):
         self._sockets = []
         self._worker = None
         self.redirected = False
+        self.started = 0
 
         if self.uid is not None and self.gid is None:
             self.gid = get_default_gid(self.uid)
@@ -211,7 +212,6 @@ class Process(object):
 
         if spawn:
             self.spawn()
-        self.started = time.time()
 
     def _null_streams(self, streams):
         devnull = os.open(os.devnull, os.O_RDWR)
@@ -257,6 +257,7 @@ class Process(object):
         return sockets_fds
 
     def spawn(self):
+        self.started = time.time()
         sockets_fds = self._get_sockets_fds()
 
         args = self.format_args(sockets_fds=sockets_fds)

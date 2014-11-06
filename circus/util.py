@@ -299,6 +299,8 @@ FALSY_STRINGS = ('no', 'false', 'off', '0')
 def to_bool(s):
     if isinstance(s, bool):
         return s
+    if s is None:
+        return False
 
     if s.lower().strip() in TRUTHY_STRINGS:
         return True

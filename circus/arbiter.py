@@ -570,7 +570,7 @@ class Arbiter(object):
     @synchronized("arbiter_stop")
     @gen.coroutine
     def stop(self):
-        yield self._stop()
+        yield self._stop(True)
 
     @gen.coroutine
     def _emergency_stop(self):
@@ -582,10 +582,10 @@ class Arbiter(object):
         self.stop_controller_and_close_sockets()
 
     @gen.coroutine
-    def _stop(self):
+    def _stop(self, for_shutdown=False):
         logger.info('Arbiter exiting')
         self._stopping = True
-        yield self._stop_watchers(close_output_streams=True)
+        yield self._stop_watchers(close_output_streams=True, for_shutdown=for_shutdown)
         if self._provided_loop:
             cb = self.stop_controller_and_close_sockets
             self.loop.add_callback(cb)
@@ -751,8 +751,8 @@ class Arbiter(object):
 
     @gen.coroutine
     @debuglog
-    def _stop_watchers(self, close_output_streams=False):
-        yield [w._stop(close_output_streams)
+    def _stop_watchers(self, close_output_streams=False, for_shutdown=False):
+        yield [w._stop(close_output_streams, for_shutdown)
                for w in self.iter_watchers(reverse=False)]
 
     @synchronized("arbiter_stop_watchers")

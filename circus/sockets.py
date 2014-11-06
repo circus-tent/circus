@@ -2,7 +2,7 @@ import socket
 import os
 
 from circus import logger
-from circus.util import papa
+from circus.util import papa, to_bool
 
 
 _FAMILY = {
@@ -34,9 +34,9 @@ def addrinfo(host, port, family):
 
 
 class PapaSocketProxy(object):
-    def __init__(self, name='', host='localhost', port=8080,
-                 family=socket.AF_INET, type=socket.SOCK_STREAM,
-                 proto=0, backlog=2048, path=None, umask=None, replace=False,
+    def __init__(self, name='', host=None, port=None,
+                 family=None, type=None,
+                 proto=None, backlog=None, path=None, umask=None, replace=None,
                  interface=None, so_reuseport=False):
         if path is not None:
             if not hasattr(socket, 'AF_UNIX'):
@@ -44,9 +44,22 @@ class PapaSocketProxy(object):
                                           " platform")
             else:
                 family = socket.AF_UNIX
+                host = port = None
 
+        log_differences = False
         with papa.Papa() as p:
-            papa_socket = p.make_socket('circus.' + name, host, port, family, type, backlog, path, umask, interface, so_reuseport)
+            prefixed_name = 'circus.' + name
+            try:
+                papa_socket = p.make_socket(prefixed_name, host, port, family,
+                                            type, backlog, path, umask,
+                                            interface, so_reuseport)
+            except papa.Error as e:
+                papa_socket = p.list_sockets(prefixed_name)
+                if papa_socket:
+                    papa_socket = papa_socket[prefixed_name]
+                    log_differences = True
+                else:
+                    raise
 
         self.name = name
         self.host = papa_socket.get('host')
@@ -59,6 +72,27 @@ class PapaSocketProxy(object):
         self.interface = papa_socket.get('interface')
         self.so_reuseport = papa_socket.get('so_reuseport', False)
         self._fileno = papa_socket.get('fileno')
+        self.use_papa = True
+        if log_differences:
+            differences = []
+            if host != self.host:
+                differences.append('host={0}'.format(self.host))
+            if port != self.port:
+                differences.append('port={0}'.format(self.port))
+            if backlog != self.backlog:
+                differences.append('backlog={0}'.format(self.backlog))
+            if path != self.path:
+                differences.append('path={0}'.format(self.path))
+            if umask != self.umask:
+                differences.append('umask={0}'.format(self.umask))
+            if interface != self.interface:
+                differences.append('interface={0}'.format(self.interface))
+            if so_reuseport != self.so_reuseport:
+                differences.append('so_reuseport={0}'.format(self.so_reuseport))
+            if differences:
+                logger.warning('Socket "%s" already exists in papa with '
+                               '%s. Using the existing socket.',
+                               name, ' '.join(differences))
 
         self.replace = True
 
@@ -102,6 +136,7 @@ class CircusSocket(socket.socket):
         self.path = path
         self.umask = umask
         self.replace = replace
+        self.use_papa = False
 
         if hasattr(socket, 'AF_UNIX') and family == socket.AF_UNIX:
             self.host = self.port = None
@@ -203,10 +238,10 @@ class CircusSocket(socket.socket):
                   'family': _FAMILY[config.get('family', 'AF_INET').upper()],
                   'type': _TYPE[config.get('type', 'SOCK_STREAM').upper()],
                   'backlog': int(config.get('backlog', 2048)),
-                  'so_reuseport': config.get('so_reuseport', False),
+                  'so_reuseport': to_bool(config.get('so_reuseport')),
                   'umask': int(config.get('umask', 8)),
                   'replace': config.get('replace')}
-        use_papa = config.get('use_papa', False) and papa is not None
+        use_papa = to_bool(config.get('use_papa')) and papa is not None
         proto_name = config.get('proto')
         if proto_name is not None:
             params['proto'] = socket.getprotobyname(proto_name)
@@ -248,8 +283,19 @@ class CircusSockets(dict):
         return sock
 
     def close_all(self):
+        papa_sockets = 0
         for sock in self.values():
             sock.close()
+            if isinstance(sock, PapaSocketProxy):
+                papa_sockets += 1
+        if papa_sockets:
+            with papa.Papa() as p:
+                procs = p.list_processes('circus.*')
+                if not procs:
+                    p.remove_sockets('circus.*')
+                    result = p.exit_if_idle()
+                    if result.startswith('Exiting'):
+                        logger.info('closing papa')
 
     def bind_and_listen_all(self):
         for sock in self.values():

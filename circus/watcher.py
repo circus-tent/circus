@@ -309,6 +309,13 @@ class Watcher(object):
         self.arbiter = None
         self.hooks = {}
         self._resolve_hooks(hooks)
+        self._found_wids = []
+
+        if self.use_papa:
+            with papa.Papa() as p:
+                base_name = 'circus.{0}.*'.format(name)
+                running = p.list_processes(base_name)
+                self._found_wids = [int(name[len(base_name) - 1:]) for name in running]
 
     def _reload_hook(self, key, hook, ignore_error):
         hook_name = key.split('.')[-1]
@@ -574,23 +581,31 @@ class Watcher(object):
         if self.pending_socket_event:
             self._status = "stopped"
             return
+        for i in self._found_wids:
+            self.spawn_process(i)
+            yield tornado_sleep(0)
+        self._found_wids = {}
+
         for i in range(self.numprocesses - len(self.processes)):
             res = self.spawn_process()
             if res is False:
                 yield self._stop()
                 break
-            yield tornado_sleep(self.warmup_delay)
+            age = time.time() - res
+            delay = self.warmup_delay - age
+            if delay < 0:
+                delay = 0
+            yield tornado_sleep(delay)
 
     def _get_sockets_fds(self):
         # XXX should be cached
         if self.sockets is None:
             return {}
-        fds = {}
-        for name, sock in self.sockets.items():
-            fds[name] = sock.fileno()
-        return fds
+        return dict((name, sock.fileno())
+                    for name, sock in self.sockets.items()
+                    if sock.use_papa == self.use_papa)
 
-    def spawn_process(self):
+    def spawn_process(self, recovery_wid=None):
         """Spawn process.
 
         Return True if ok, False if the watcher must be stopped
@@ -598,7 +613,7 @@ class Watcher(object):
         if self.is_stopped():
             return True
 
-        if not self.call_hook('before_spawn'):
+        if not recovery_wid and not self.call_hook('before_spawn'):
             return False
 
         cmd = util.replace_gnu_args(self.cmd, env=self.env)
@@ -612,7 +627,7 @@ class Watcher(object):
             # noinspection PyPep8Naming
             ProcCls = self._process_class
             try:
-                process = ProcCls(self.name, self._nextwid, cmd,
+                process = ProcCls(self.name, recovery_wid or self._nextwid, cmd,
                                   args=self.args, working_dir=self.working_dir,
                                   shell=self.shell, uid=self.uid, gid=self.gid,
                                   env=self.env, rlimits=self.rlimits,
@@ -642,8 +657,8 @@ class Watcher(object):
                 continue
             else:
                 self.notify_event("spawn", {"process_pid": process.pid,
-                                            "time": time.time()})
-                return True
+                                            "time": process.started})
+                return process.started
         return False
 
     @util.debuglog
@@ -792,17 +807,19 @@ class Watcher(object):
 
     @util.debuglog
     @gen.coroutine
-    def _stop(self, close_output_streams=False):
+    def _stop(self, close_output_streams=False, for_shutdown=False):
         if self.is_stopped():
             return
         self._status = "stopping"
-        logger.debug('stopping the %s watcher' % self.name)
-        logger.debug('gracefully stopping processes [%s] for %ss' % (
-                     self.name, self.graceful_timeout))
-        # We ignore the hook result
-        self.call_hook('before_stop')
-        yield self.kill_processes()
-        self.reap_processes()
+        skip = for_shutdown and self.use_papa
+        if not skip:
+            logger.debug('stopping the %s watcher' % self.name)
+            logger.debug('gracefully stopping processes [%s] for %ss' % (
+                         self.name, self.graceful_timeout))
+            # We ignore the hook result
+            self.call_hook('before_stop')
+            yield self.kill_processes()
+            self.reap_processes()
 
         # stop redirectors
         if self.stream_redirector:
@@ -814,12 +831,15 @@ class Watcher(object):
             if self.stderr_stream and hasattr(self.stderr_stream, 'close'):
                 self.stderr_stream.close()
         # notify about the stop
-        if self.evpub_socket is not None:
-            self.notify_event("stop", {"time": time.time()})
-        self._status = "stopped"
-        # We ignore the hook result
-        self.call_hook('after_stop')
-        logger.info('%s stopped', self.name)
+        if skip:
+            logger.info('%s left running in papa', self.name)
+        else:
+            if self.evpub_socket is not None:
+                self.notify_event("stop", {"time": time.time()})
+            self._status = "stopped"
+            # We ignore the hook result
+            self.call_hook('after_stop')
+            logger.info('%s stopped', self.name)
 
     def get_active_processes(self):
         """return a list of pids of active processes (not already stopped)"""
@@ -890,7 +910,8 @@ class Watcher(object):
                 yield self.spawn_processes()
             return
 
-        if not self.call_hook('before_start'):
+        found_wids = len(self._found_wids)
+        if not self._found_wids and not self.call_hook('before_start'):
             logger.debug('Aborting startup')
             return
 
@@ -911,7 +932,10 @@ class Watcher(object):
             self.stream_redirector.start()
 
         self._status = "active"
-        logger.info('%s started' % self.name)
+        if found_wids:
+            logger.info('%s already running' % self.name)
+        else:
+            logger.info('%s started' % self.name)
         self.notify_event("start", {"time": time.time()})
 
     @util.synchronized("watcher_restart")
