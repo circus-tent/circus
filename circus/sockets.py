@@ -53,7 +53,7 @@ class PapaSocketProxy(object):
                 papa_socket = p.make_socket(prefixed_name, host, port, family,
                                             type, backlog, path, umask,
                                             interface, so_reuseport)
-            except papa.Error as e:
+            except papa.Error:
                 papa_socket = p.list_sockets(prefixed_name)
                 if papa_socket:
                     papa_socket = papa_socket[prefixed_name]
@@ -88,7 +88,8 @@ class PapaSocketProxy(object):
             if interface != self.interface:
                 differences.append('interface={0}'.format(self.interface))
             if so_reuseport != self.so_reuseport:
-                differences.append('so_reuseport={0}'.format(self.so_reuseport))
+                differences.append('so_reuseport={0}'.format(
+                    self.so_reuseport))
             if differences:
                 logger.warning('Socket "%s" already exists in papa with '
                                '%s. Using the existing socket.',

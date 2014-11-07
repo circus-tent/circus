@@ -315,7 +315,8 @@ class Watcher(object):
             with papa.Papa() as p:
                 base_name = 'circus.{0}.*'.format(name.lower())
                 running = p.list_processes(base_name)
-                self._found_wids = [int(name[len(base_name) - 1:]) for name in running]
+                self._found_wids = [int(proc_name[len(base_name) - 1:])
+                                    for proc_name in running]
 
     def _reload_hook(self, key, hook, ignore_error):
         hook_name = key.split('.')[-1]
@@ -333,7 +334,8 @@ class Watcher(object):
         parts = key.split('.', 1)
 
         stream_type = 'stdout' if parts[0] == 'stdout_stream' else 'stderr'
-        old_stream = self.stream_redirector.get_stream(stream_type) if self.stream_redirector else None
+        old_stream = self.stream_redirector.get_stream(stream_type) if\
+            self.stream_redirector else None
         if stream_type == 'stdout':
             self.stdout_stream_conf[parts[1]] = val
             new_stream = get_stream(self.stdout_stream_conf, reload=True)
@@ -628,8 +630,9 @@ class Watcher(object):
             # noinspection PyPep8Naming
             ProcCls = self._process_class
             try:
-                process = ProcCls(self.name, recovery_wid or self._nextwid, cmd,
-                                  args=self.args, working_dir=self.working_dir,
+                process = ProcCls(self.name, recovery_wid or self._nextwid,
+                                  cmd, args=self.args,
+                                  working_dir=self.working_dir,
                                   shell=self.shell, uid=self.uid, gid=self.gid,
                                   env=self.env, rlimits=self.rlimits,
                                   executable=self.executable,

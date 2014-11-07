@@ -167,9 +167,9 @@ class Process(object):
     - **close_child_stderr**: If True, redirects the child process' stdout
       to /dev/null after the fork. default: False.
     """
-    def __init__(self, name, wid, cmd, args=None, working_dir=None, shell=False,
-                 uid=None, gid=None, env=None, rlimits=None, executable=None,
-                 use_fds=False, watcher=None, spawn=True,
+    def __init__(self, name, wid, cmd, args=None, working_dir=None,
+                 shell=False, uid=None, gid=None, env=None, rlimits=None,
+                 executable=None, use_fds=False, watcher=None, spawn=True,
                  pipe_stdout=True, pipe_stderr=True,
                  close_child_stdout=False, close_child_stderr=False):
 

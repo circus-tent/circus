@@ -6,6 +6,11 @@ from circus import logger
 import psutil
 import select
 import time
+from circus.py3compat import PY2
+
+if PY2:
+    class TimeoutError(Exception):
+        """The operation timed out."""
 
 
 def _bools_to_papa_out(pipe, close):
@@ -47,7 +52,8 @@ class PapaProcessProxy(Process):
 
     def spawn(self):
         # noinspection PyUnusedLocal
-        socket_names = set(socket_name.lower() for socket_name in self.watcher._get_sockets_fds())
+        socket_names = set(socket_name.lower()
+                           for socket_name in self.watcher._get_sockets_fds())
         self.cmd = self._fix_socket_name(self.cmd, socket_names)
         self.args = [self._fix_socket_name(arg, socket_names)
                      for arg in self.args]
@@ -65,7 +71,7 @@ class PapaProcessProxy(Process):
                                         uid=self.uid, gid=self.gid,
                                         rlimits=self.rlimits,
                                         stdout=stdout, stderr=stderr)
-        except papa.Error as e:
+        except papa.Error:
             p = self._papa.list_processes(papa_name)
             if p:
                 p = p[papa_name]
@@ -95,7 +101,7 @@ class PapaProcessProxy(Process):
         if self.is_alive():
             try:
                 self._papa.remove_processes(self._papa_name)
-            except papa.Error as e:
+            except papa.Error:
                 pass
 
     def wait(self, timeout=None):

@@ -35,7 +35,8 @@ class Redirector(object):
                 except Exception:
                     pass
 
-    def __init__(self, stdout_redirect, stderr_redirect, buffer=1024, loop=None):
+    def __init__(self, stdout_redirect, stderr_redirect, buffer=1024,
+                 loop=None):
         self.running = False
         self.pipes = {}
         self._active = {}
