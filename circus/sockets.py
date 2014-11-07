@@ -292,9 +292,9 @@ class CircusSockets(dict):
             with papa.Papa() as p:
                 procs = p.list_processes('circus.*')
                 if not procs:
+                    logger.info('removing all papa sockets')
                     p.remove_sockets('circus.*')
-                    result = p.exit_if_idle()
-                    if result.startswith('Exiting'):
+                    if p.exit_if_idle():
                         logger.info('closing papa')
 
     def bind_and_listen_all(self):
