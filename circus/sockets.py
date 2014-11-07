@@ -48,7 +48,7 @@ class PapaSocketProxy(object):
 
         log_differences = False
         with papa.Papa() as p:
-            prefixed_name = 'circus.' + name
+            prefixed_name = 'circus.' + name.lower()
             try:
                 papa_socket = p.make_socket(prefixed_name, host, port, family,
                                             type, backlog, path, umask,

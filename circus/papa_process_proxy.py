@@ -29,30 +29,32 @@ class PapaProcessProxy(Process):
         self._papa_name = None
         super(PapaProcessProxy, self).__init__(*args, **kwargs)
 
-    def _fix_socket_name(self, s, socket_fds):
+    def _fix_socket_name(self, s, socket_names):
         if s:
-            while '$(circus.sockets.' in s:
-                start = s.index('$(circus.sockets.')
-                end = s.index(')', start)
-                socket_name = s[start + 17:end]
-                if socket_name not in socket_fds:
+            s_lower = s.lower()
+            while '$(circus.sockets.' in s_lower:
+                start = s_lower.index('$(circus.sockets.')
+                end = s_lower.index(')', start)
+                socket_name = s_lower[start + 17:end]
+                if socket_name not in socket_names:
                     logger.warning('Process "{0}" refers to socket "{1}" but '
                                    'they do not have the same "use_papa" state'
                                    .format(self.name, socket_name))
                 s = ''.join((s[:start], '$(socket.circus.', socket_name,
                              '.fileno)', s[end + 1:]))
+                s_lower = s.lower()
         return s
 
     def spawn(self):
         # noinspection PyUnusedLocal
-        sockets_fds = self.watcher._get_sockets_fds()
-        self.cmd = self._fix_socket_name(self.cmd, sockets_fds)
-        self.args = [self._fix_socket_name(arg, sockets_fds)
+        socket_names = set(socket_name.lower() for socket_name in self.watcher._get_sockets_fds())
+        self.cmd = self._fix_socket_name(self.cmd, socket_names)
+        self.args = [self._fix_socket_name(arg, socket_names)
                      for arg in self.args]
         args = self.format_args()
         stdout = _bools_to_papa_out(self.pipe_stdout, self.close_child_stdout)
         stderr = _bools_to_papa_out(self.pipe_stderr, self.close_child_stderr)
-        papa_name = 'circus.{0}.{1}'.format(self.name, self.wid)
+        papa_name = 'circus.{0}.{1}'.format(self.name, self.wid).lower()
         self._papa_name = papa_name
         self._papa = papa.Papa()
         try:

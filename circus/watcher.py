@@ -313,7 +313,7 @@ class Watcher(object):
 
         if self.use_papa:
             with papa.Papa() as p:
-                base_name = 'circus.{0}.*'.format(name)
+                base_name = 'circus.{0}.*'.format(name.lower())
                 running = p.list_processes(base_name)
                 self._found_wids = [int(name[len(base_name) - 1:]) for name in running]
 
