@@ -591,10 +591,11 @@ class Watcher(object):
             if res is False:
                 yield self._stop()
                 break
-            age = time.time() - res
-            delay = self.warmup_delay - age
-            if delay < 0:
-                delay = 0
+            delay = self.warmup_delay
+            if isinstance(res, float):
+                delay -= (time.time() - res)
+                if delay < 0:
+                    delay = 0
             yield tornado_sleep(delay)
 
     def _get_sockets_fds(self):
