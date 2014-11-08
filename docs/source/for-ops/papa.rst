@@ -108,6 +108,34 @@ plugins.
     If the Papa processes use any sockets, those sockets must also use papa.
 
 
+Design Goal
+===========
+
+Papa is designed to be very minimalist in features and requirements. It does:
+
+* Start and stop sockets
+* Provide a key/value store
+* Start processes and return stdout, stderr and the exit code
+
+It does not:
+
+* Restart processes
+* Provide a way to stop processes
+* Provide any information about processes other than whether or not they
+  are still running
+
+Papa requires no third-party libraries so it can run on just the standard
+Python library. It can make use of the `setproctitle` package but that is only
+used for making the title prettier for `ps` and `top` and is not essential.
+
+The functionality has been kept to a minimum so that you should never need to
+restart the Papa daemon. As much of the functionality has been pushed to the
+client library as possible. That way you should be able to deploy a new copy
+of Papa for new client features without needing to restart the Papa daemon.
+Papa is meant to be a pillar of stability in a changing sea of 3rd party
+libraries.
+
+
 Operation
 =========
 
