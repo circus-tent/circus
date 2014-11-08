@@ -43,7 +43,7 @@ class TimeoutError(Exception):
 
 
 def get_uwsgi_stats(name, wid, base_port):
-    sock = socket.create_connection(('127.0.0.1', 8090 + wid), timeout=1)
+    sock = socket.create_connection(('127.0.0.1', base_port + wid), timeout=1)
     received = sock.recv(100000)
     data = bytes()
     while received:
