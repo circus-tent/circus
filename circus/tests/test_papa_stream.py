@@ -4,6 +4,7 @@ import os
 import tempfile
 import tornado
 import papa
+import random
 
 from circus.client import make_message
 from circus.tests.support import TestCircus, async_poll_for, truncate_file
@@ -28,10 +29,12 @@ def run_process(testfile, *args, **kw):
 
 class TestPapaStream(TestCircus):
     dummy_process = 'circus.tests.test_stream.run_process'
+    papa_port = random.randint(20000, 30000)
 
     def setUp(self):
         super(TestPapaStream, self).setUp()
         papa.set_debug_mode(quit_when_connection_closed=True)
+        papa.set_default_port(self.papa_port)
         fd, self.stdout = tempfile.mkstemp()
         os.close(fd)
         fd, self.stderr = tempfile.mkstemp()
