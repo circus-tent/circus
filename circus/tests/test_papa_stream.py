@@ -35,6 +35,7 @@ class TestPapaStream(TestCircus):
         super(TestPapaStream, self).setUp()
         papa.set_debug_mode(quit_when_connection_closed=True)
         papa.set_default_port(self.papa_port)
+        papa.set_default_connection_timeout(30)
         fd, self.stdout = tempfile.mkstemp()
         os.close(fd)
         fd, self.stderr = tempfile.mkstemp()
