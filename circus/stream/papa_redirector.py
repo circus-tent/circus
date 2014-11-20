@@ -16,6 +16,9 @@ class PapaRedirector(Redirector):
                 if events == ioloop.IOLoop.ERROR:
                     self.redirector.remove_fd(fd)
                 return
+            return self.do_read(fd)
+
+        def do_read(self, fd):
             out, err, close = self.pipe.read()
             for output_type, output_list in (('stdout', out), ('stderr', err)):
                 if output_list:
@@ -28,6 +31,16 @@ class PapaRedirector(Redirector):
             self.pipe.acknowledge()
             if close:
                 self.redirector.remove_fd(fd)
+
+    def stop(self):
+        count = 0
+        for fd, handler in list(self._active.items()):
+            # flush whatever is pending
+            if handler.pipe.ready:
+                handler.do_read(fd)
+            count += self._stop_one(fd)
+        self.running = False
+        return count
 
     @staticmethod
     def get_process_pipes(process):
