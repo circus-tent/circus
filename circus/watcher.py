@@ -622,6 +622,10 @@ class Watcher(object):
         cmd = util.replace_gnu_args(self.cmd, env=self.env)
         nb_tries = 0
 
+        # start the redirector now so we can catch any startup errors
+        if self.stream_redirector:
+            self.stream_redirector.start()
+
         while nb_tries < self.max_retry or self.max_retry == -1:
             process = None
             pipe_stdout = self.stdout_stream is not None
@@ -931,9 +935,6 @@ class Watcher(object):
             logger.debug('Aborting startup')
             yield self._stop()
             return
-
-        if self.stream_redirector:
-            self.stream_redirector.start()
 
         self._status = "active"
         if found_wids:
