@@ -281,8 +281,34 @@ class Process(object):
                     )
                     if res is None:
                         raise ValueError('unknown rlimit "%s"' % limit)
+
                     # TODO(petef): support hard/soft limits
-                    resource.setrlimit(res, (value, value))
+
+                    # for the NOFILE limit, if we fail to set an unlimited
+                    # value then check the existing hard limit because we
+                    # probably can't bypass it due to a kernel limit - so just
+                    # assume that the caller means they want to use the kernel
+                    # limit when they pass the unlimited value. This is better
+                    # than failing to start the process and forcing the caller
+                    # to always be aware of what the kernel configuration is.
+                    # If they do pass in a real limit value, then we'll just
+                    # raise the failure as they should know that their
+                    # expectations couldn't be met.
+                    # TODO - we can't log here as this occurs in the child
+                    # process after the fork but it would be very good to
+                    # notify the admin of the situation somehow.
+                    retry = False
+                    try:
+                        resource.setrlimit(res, (value, value))
+                    except ValueError:
+                        if res == resource.RLIMIT_NOFILE and \
+                                value == resource.RLIM_INFINITY:
+                            _soft, value = resource.getrlimit(res)
+                            retry = True
+                        else:
+                            raise
+                    if retry:
+                        resource.setrlimit(res, (value, value))
 
             if self.gid:
                 try:

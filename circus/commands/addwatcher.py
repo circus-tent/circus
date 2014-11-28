@@ -1,6 +1,7 @@
 from circus.commands.base import Command
 from circus.commands.util import validate_option
 from circus.exc import ArgumentError, MessageError
+from circus.config import rlimit_value
 
 
 class AddWatcher(Command):
@@ -77,6 +78,20 @@ class AddWatcher(Command):
             cmd_uid = options.get('uid', None)
             if cmd_uid != arbiter.endpoint_owner:
                 raise MessageError("uid does not match endpoint_owner")
+
+        # convert all rlimit_* options into one rlimits dict which is required
+        # by the watcher constructor (follows same pattern as config.py)
+        rlimits = {}
+        for key, val in options.items():
+            if key.startswith('rlimit_'):
+                rlimits[key[7:]] = rlimit_value(val)
+
+        if len(rlimits) > 0:
+            options['rlimits'] = rlimits
+            for key in rlimits.keys():
+                del options['rlimit_' + key]
+
+        # now create and start the watcher
         watcher = arbiter.add_watcher(props['name'], props['cmd'],
                                       args=props.get('args'), **options)
         if props.get('start', False):

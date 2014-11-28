@@ -657,7 +657,10 @@ class Watcher(object):
                     self.kill_process(process)
                     del self.processes[process.pid]
                     return False
-            except OSError as e:
+
+            # catch ValueError as well, as a misconfigured rlimit setting could
+            # lead to bad infinite retries here
+            except (OSError, ValueError) as e:
                 logger.warning('error in %r: %s', self.name, str(e))
 
             if process is None:

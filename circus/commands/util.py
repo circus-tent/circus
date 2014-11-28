@@ -158,5 +158,7 @@ def validate_option(key, val):
         else:
             raise MessageError("rlimit options are not supported on this"
                                " platform")
-        if not isinstance(val, int):
+
+        # note that a null val means RLIM_INFINITY
+        if val is not None and not isinstance(val, int):
             raise MessageError("%r rlimit value isn't a valid int" % val)
