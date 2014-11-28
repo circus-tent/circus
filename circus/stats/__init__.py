@@ -10,10 +10,12 @@ Stats architecture:
    stream of stats.
 """
 import sys
+import signal
 import argparse
 
 from circus.stats.streamer import StatsStreamer
 from circus.util import configure_logger
+from circus.sighandler import SysHandler
 from circus import logger
 from circus import util
 from circus import __version__
@@ -58,6 +60,13 @@ def main():
 
     stats = StatsStreamer(args.endpoint, args.pubsub, args.statspoint,
                           args.ssh)
+
+    # Register some sighandlers to stop the loop when killed
+    for sig in SysHandler.SIGNALS:
+        signal.signal(
+            sig, lambda *_: stats.loop.add_callback_from_signal(stats.stop)
+        )
+
     try:
         stats.start()
     finally:
