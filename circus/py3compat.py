@@ -4,9 +4,9 @@ PY2 = sys.version_info[0] < 3
 
 if PY2:
     string_types = basestring  # NOQA
-    integer_types = (int, long)
+    integer_types = (int, long)  # NOQA
     text_type = unicode  # NOQA
-    long = long
+    long = long  # NOQA
     bytes = str
 
     def bytestring(s):  # NOQA
@@ -28,7 +28,7 @@ if PY2:
         return str(s).decode(encoding)
 
     def cast_string(s, errors='replace'):
-        return s if isinstance(s, basestring) else str(s)
+        return s if isinstance(s, basestring) else str(s)  # NOQA
 
     try:
         import cStringIO
@@ -64,7 +64,7 @@ if PY2:
 
     def sort_by_field(obj, field='name'):   # NOQA
         def _by_field(item1, item2):
-            return cmp(item1[field], item2[field])
+            return cmp(item1[field], item2[field])  # NOQA
 
         obj.sort(_by_field)
 
