@@ -78,6 +78,7 @@ class FancyStdoutStream(StdoutStream):
 
     # Generate a datetime object
     now = datetime.now
+    fromtimestamp = datetime.fromtimestamp
 
     def __init__(self, color=None, time_format=None, **kwargs):
         super(FancyStdoutStream, self).__init__(**kwargs)
@@ -86,7 +87,7 @@ class FancyStdoutStream(StdoutStream):
             color = random.choice(self.colors)
         self.color_code = self.colors.index(color) + 1
 
-    def prefix(self, pid):
+    def prefix(self, data):
         """
         Create a prefix for each line.
 
@@ -96,7 +97,12 @@ class FancyStdoutStream(StdoutStream):
 
         http://stackoverflow.com/questions/287871
         """
-        time = self.now().strftime(self.time_format)
+        pid = data['pid']
+        if 'timestamp' in data:
+            time = self.fromtimestamp(data['timestamp'])
+        else:
+            time = self.now()
+        time = time.strftime(self.time_format)
 
         # start the coloring with the ansi escape sequence
         color = '\033[0;3%s;40m' % self.color_code
@@ -107,7 +113,7 @@ class FancyStdoutStream(StdoutStream):
     def __call__(self, data):
         for line in s(data['data']).split('\n'):
             if line:
-                self.out.write(self.prefix(data['pid']))
+                self.out.write(self.prefix(data))
                 self.out.write(line)
                 # stop coloring
                 self.out.write('\033[0m\n')
@@ -115,48 +121,20 @@ class FancyStdoutStream(StdoutStream):
 
 
 def get_stream(conf, reload=False):
-    if not conf:
-        return conf
-
-    # we can have 'stream' or 'class' or 'filename'
-    if 'class' in conf:
-        class_name = conf.pop('class')
-        if not "." in class_name:
-            cls = globals()[class_name]
-            inst = cls(**conf)
+    if conf:
+        # we can have 'stream' or 'class' or 'filename'
+        if 'class' in conf:
+            class_name = conf.pop('class')
+            if not "." in class_name:
+                cls = globals()[class_name]
+                inst = cls(**conf)
+            else:
+                inst = resolve_name(class_name, reload=reload)(**conf)
+        elif 'stream' in conf:
+            inst = conf['stream']
+        elif 'filename' in conf:
+            inst = FileStream(**conf)
         else:
-            inst = resolve_name(class_name, reload=reload)(**conf)
-    elif 'stream' in conf:
-        inst = conf['stream']
-    elif 'filename' in conf:
-        inst = FileStream(**conf)
-    else:
-        raise ValueError("stream configuration invalid")
+            raise ValueError("stream configuration invalid")
 
-    return {'stream': inst}
-
-
-def get_pipe_redirector(redirect, extra_info=None, buffer=1024, loop=None):
-    """Redirects data received in pipes to the redirect callable.
-
-    The data is a mapping with a **data** key containing the data
-    received from the pipe, extended with all values passed in
-    **extra_info**
-
-    Options:
-    - **redirect**: the callable to send data to
-    - **extra_info**: a mapping of values to add to each call
-    - **buffer**: the size of the buffer when reading data
-    - **loop**: the ioloop to use. If not provided will use the
-      global IOLoop
-    """
-    # XXX backend is deprecated
-
-    # get stream infos
-    if 'stream' not in redirect:
-        return
-
-    stream = redirect.get('stream')
-
-    # finally setup the redirection
-    return Redirector(stream, extra_info, buffer, loop=loop)
+        return inst

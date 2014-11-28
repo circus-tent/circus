@@ -17,7 +17,7 @@ from circus.exc import AlreadyExist
 from circus import logger
 from circus.watcher import Watcher
 from circus.util import debuglog, _setproctitle, parse_env_dict
-from circus.util import DictDiffer, synchronized, tornado_sleep
+from circus.util import DictDiffer, synchronized, tornado_sleep, papa
 from circus.util import IS_WINDOWS
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
@@ -75,6 +75,7 @@ class Arbiter(object):
     - **fqdn_prefix** -- a prefix for the unique identifier of the circus
                          instance on the cluster.
     - **endpoint_owner** -- unix user to chown the endpoint to if using ipc.
+    - **papa_endpoint** -- the papa process kernel endpoint
     """
 
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.0,
@@ -86,7 +87,8 @@ class Arbiter(object):
                  httpd_close_outputs=False, debug=False, debug_gc=False,
                  ssh_server=None, proc_name='circusd', pidfile=None,
                  loglevel=None, logoutput=None, loggerconfig=None,
-                 fqdn_prefix=None, umask=None, endpoint_owner=None):
+                 fqdn_prefix=None, umask=None, endpoint_owner=None,
+                 papa_endpoint=None):
 
         self.watchers = watchers
         self.endpoint = endpoint
@@ -115,6 +117,16 @@ class Arbiter(object):
         else:
             fqdn = '{}@{}'.format(fqdn_prefix, socket_fqdn)
         self.fqdn = fqdn
+
+        if papa_endpoint and papa:
+            if papa_endpoint.startswith('ipc:/'):
+                papa_endpoint = papa_endpoint[4:]
+                while papa_endpoint[:2] == '//':
+                    papa_endpoint = papa_endpoint[1:]
+                papa.set_default_path(papa_endpoint)
+            elif papa_endpoint.startswith('tcp://'):
+                papa_endpoint = papa_endpoint[6:].partition(':')[2]
+                papa.set_default_port = papa_endpoint
 
         self.ctrl = self.loop = None
         self._provided_loop = False
@@ -557,7 +569,7 @@ class Arbiter(object):
     @synchronized("arbiter_stop")
     @gen.coroutine
     def stop(self):
-        yield self._stop()
+        yield self._stop(True)
 
     @gen.coroutine
     def _emergency_stop(self):
@@ -569,10 +581,11 @@ class Arbiter(object):
         self.stop_controller_and_close_sockets()
 
     @gen.coroutine
-    def _stop(self):
+    def _stop(self, for_shutdown=False):
         logger.info('Arbiter exiting')
         self._stopping = True
-        yield self._stop_watchers(close_output_streams=True)
+        yield self._stop_watchers(close_output_streams=True,
+                                  for_shutdown=for_shutdown)
         if self._provided_loop:
             cb = self.stop_controller_and_close_sockets
             self.loop.add_callback(cb)
@@ -735,8 +748,8 @@ class Arbiter(object):
 
     @gen.coroutine
     @debuglog
-    def _stop_watchers(self, close_output_streams=False):
-        yield [w._stop(close_output_streams)
+    def _stop_watchers(self, close_output_streams=False, for_shutdown=False):
+        yield [w._stop(close_output_streams, for_shutdown)
                for w in self.iter_watchers(reverse=False)]
 
     @synchronized("arbiter_stop_watchers")

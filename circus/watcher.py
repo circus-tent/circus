@@ -5,6 +5,7 @@ import signal
 import time
 import sys
 from random import randint
+
 try:
     from itertools import zip_longest as izip_longest
 except ImportError:
@@ -17,10 +18,13 @@ import zmq.utils.jsonapi as json
 from zmq.eventloop import ioloop
 
 from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
+from circus.papa_process_proxy import PapaProcessProxy
 from circus import logger
 from circus import util
-from circus.stream import get_pipe_redirector, get_stream
+from circus.stream import get_stream, Redirector
+from circus.stream.papa_redirector import PapaRedirector
 from circus.util import parse_env_dict, resolve_name, tornado_sleep, IS_WINDOWS
+from circus.util import papa
 from circus.py3compat import bytestring, is_callable, b, PY2
 
 
@@ -179,6 +183,9 @@ class Watcher(object):
 
     - **close_child_stderr**: If True, closes the stderr after the fork.
       default: False.
+
+    - **use_papa**: If True, use the papa process kernel for this process.
+      default: False.
     """
 
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
@@ -192,7 +199,7 @@ class Watcher(object):
                  max_age_variance=30, hooks=None, respawn=True,
                  autostart=True, on_demand=False, virtualenv=None,
                  close_child_stdout=False, close_child_stderr=False,
-                 virtualenv_py_ver=None, **options):
+                 virtualenv_py_ver=None, use_papa=False, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.on_demand = on_demand
@@ -210,7 +217,7 @@ class Watcher(object):
         self.stderr_stream_conf = copy.copy(stderr_stream)
         self.stdout_stream = get_stream(self.stdout_stream_conf)
         self.stderr_stream = get_stream(self.stderr_stream_conf)
-        self.stdout_redirector = self.stderr_redirector = None
+        self.stream_redirector = None
         self.max_retry = max_retry
         self._options = options
         self.singleton = singleton
@@ -228,6 +235,7 @@ class Watcher(object):
         self.autostart = autostart
         self.close_child_stdout = close_child_stdout
         self.close_child_stderr = close_child_stderr
+        self.use_papa = use_papa and papa is not None
         self.loop = loop or ioloop.IOLoop.instance()
 
         if singleton and self.numprocesses not in (0, 1):
@@ -254,7 +262,8 @@ class Watcher(object):
                           "priority", "copy_env", "singleton",
                           "stdout_stream_conf", "on_demand",
                           "stderr_stream_conf", "max_age", "max_age_variance",
-                          "close_child_stdout", "close_child_stderr")
+                          "close_child_stdout", "close_child_stderr",
+                          "use_papa")
                          + tuple(options.keys()))
 
         if not working_dir:
@@ -300,64 +309,64 @@ class Watcher(object):
         self.arbiter = None
         self.hooks = {}
         self._resolve_hooks(hooks)
+        self._found_wids = []
+
+        if self.use_papa:
+            with papa.Papa() as p:
+                base_name = 'circus.{0}.*'.format(name.lower())
+                running = p.list_processes(base_name)
+                self._found_wids = [int(proc_name[len(base_name) - 1:])
+                                    for proc_name in running]
 
     def _reload_hook(self, key, hook, ignore_error):
         hook_name = key.split('.')[-1]
         self._resolve_hook(hook_name, hook, ignore_error, reload_module=True)
 
+    @property
+    def _redirector_class(self):
+        return PapaRedirector if self.use_papa else Redirector
+
+    @property
+    def _process_class(self):
+        return PapaProcessProxy if self.use_papa else Process
+
     def _reload_stream(self, key, val):
         parts = key.split('.', 1)
 
-        action = 0
-        if parts[0] == 'stdout_stream':
-            old_stream = self.stdout_stream
+        stream_type = 'stdout' if parts[0] == 'stdout_stream' else 'stderr'
+        old_stream = self.stream_redirector.get_stream(stream_type) if\
+            self.stream_redirector else None
+        if stream_type == 'stdout':
             self.stdout_stream_conf[parts[1]] = val
-            self.stdout_stream = get_stream(self.stdout_stream_conf,
-                                            reload=True)
-            if self.stdout_redirector:
-                self.stdout_redirector.redirect = self.stdout_stream['stream']
-            else:
-                self.stdout_redirector = get_pipe_redirector(
-                    self.stdout_stream, loop=self.loop)
-                self.stdout_redirector.start()
-                action = 1
-
-            if old_stream and hasattr(old_stream['stream'], 'close'):
-                old_stream['stream'].close()
+            new_stream = get_stream(self.stdout_stream_conf, reload=True)
+            self.stdout_stream = new_stream
         else:
-            old_stream = self.stderr_stream
             self.stderr_stream_conf[parts[1]] = val
-            self.stderr_stream = get_stream(self.stderr_stream_conf,
-                                            reload=True)
-            if self.stderr_redirector:
-                self.stderr_redirector.redirect = self.stderr_stream['stream']
-            else:
-                self.stderr_redirector = get_pipe_redirector(
-                    self.stderr_stream, loop=self.loop)
-                self.stderr_redirector.start()
-                action = 1
+            new_stream = get_stream(self.stderr_stream_conf, reload=True)
+            self.stderr_stream = new_stream
 
-            if old_stream and hasattr(old_stream['stream'], 'close'):
-                old_stream['stream'].close()
+        if self.stream_redirector:
+            self.stream_redirector.change_stream(stream_type, new_stream)
+        else:
+            self.stream_redirector = self._redirector_class(
+                self.stdout_stream, self.stderr_stream, loop=self.loop)
 
-        return action
+        if old_stream:
+            if hasattr(old_stream, 'close'):
+                old_stream.close()
+            return 0
+
+        self.stream_redirector.start()
+        return 1
 
     def _create_redirectors(self):
-        if self.stdout_stream:
-            if self.stdout_redirector is not None:
-                self.stdout_redirector.stop()
-            self.stdout_redirector = get_pipe_redirector(
-                self.stdout_stream, loop=self.loop)
+        if self.stdout_stream or self.stderr_stream:
+            if self.stream_redirector:
+                self.stream_redirector.stop()
+            self.stream_redirector = self._redirector_class(
+                self.stdout_stream, self.stderr_stream, loop=self.loop)
         else:
-            self.stdout_redirector = None
-
-        if self.stderr_stream:
-            if self.stderr_redirector is not None:
-                self.stderr_redirector.stop()
-            self.stderr_redirector = get_pipe_redirector(
-                self.stderr_stream, loop=self.loop)
-        else:
-            self.stderr_redirector = None
+            self.stream_redirector = None
 
     def _resolve_hook(self, name, callable_or_name, ignore_failure,
                       reload_module=False):
@@ -574,23 +583,32 @@ class Watcher(object):
         if self.pending_socket_event:
             self._status = "stopped"
             return
+        for i in self._found_wids:
+            self.spawn_process(i)
+            yield tornado_sleep(0)
+        self._found_wids = {}
+
         for i in range(self.numprocesses - len(self.processes)):
             res = self.spawn_process()
             if res is False:
                 yield self._stop()
                 break
-            yield tornado_sleep(self.warmup_delay)
+            delay = self.warmup_delay
+            if isinstance(res, float):
+                delay -= (time.time() - res)
+                if delay < 0:
+                    delay = 0
+            yield tornado_sleep(delay)
 
     def _get_sockets_fds(self):
         # XXX should be cached
         if self.sockets is None:
             return {}
-        fds = {}
-        for name, sock in self.sockets.items():
-            fds[name] = sock.fileno()
-        return fds
+        return dict((name, sock.fileno())
+                    for name, sock in self.sockets.items()
+                    if sock.use_papa == self.use_papa)
 
-    def spawn_process(self):
+    def spawn_process(self, recovery_wid=None):
         """Spawn process.
 
         Return True if ok, False if the watcher must be stopped
@@ -598,20 +616,27 @@ class Watcher(object):
         if self.is_stopped():
             return True
 
-        if not self.call_hook('before_spawn'):
+        if not recovery_wid and not self.call_hook('before_spawn'):
             return False
 
         cmd = util.replace_gnu_args(self.cmd, env=self.env)
         nb_tries = 0
 
+        # start the redirector now so we can catch any startup errors
+        if self.stream_redirector:
+            self.stream_redirector.start()
+
         while nb_tries < self.max_retry or self.max_retry == -1:
             process = None
-            pipe_stdout = self.stdout_redirector is not None
-            pipe_stderr = self.stderr_redirector is not None
+            pipe_stdout = self.stdout_stream is not None
+            pipe_stderr = self.stderr_stream is not None
 
+            # noinspection PyPep8Naming
+            ProcCls = self._process_class
             try:
-                process = Process(self._nextwid, cmd,
-                                  args=self.args, working_dir=self.working_dir,
+                process = ProcCls(self.name, recovery_wid or self._nextwid,
+                                  cmd, args=self.args,
+                                  working_dir=self.working_dir,
                                   shell=self.shell, uid=self.uid, gid=self.gid,
                                   env=self.env, rlimits=self.rlimits,
                                   executable=self.executable,
@@ -622,15 +647,8 @@ class Watcher(object):
                                   close_child_stderr=self.close_child_stderr)
 
                 # stream stderr/stdout if configured
-                if pipe_stdout and self.stdout_redirector is not None:
-                    self.stdout_redirector.add_redirection('stdout',
-                                                           process,
-                                                           process.stdout)
-
-                if pipe_stderr and self.stderr_redirector is not None:
-                    self.stderr_redirector.add_redirection('stderr',
-                                                           process,
-                                                           process.stderr)
+                if self.stream_redirector:
+                    self.stream_redirector.add_redirections(process)
 
                 self.processes[process.pid] = process
                 logger.debug('running %s process [pid %d]', self.name,
@@ -647,8 +665,8 @@ class Watcher(object):
                 continue
             else:
                 self.notify_event("spawn", {"process_pid": process.pid,
-                                            "time": time.time()})
-                return True
+                                            "time": process.started})
+                return process.started
         return False
 
     @util.debuglog
@@ -680,14 +698,6 @@ class Watcher(object):
             except NoSuchProcess:
                 # already dead !
                 pass
-
-    def _process_remove_redirections(self, process):
-        """Remove process redirections
-        """
-        if self.stdout_redirector is not None and process.stdout is not None:
-            self.stdout_redirector.remove_redirection(process.stdout)
-        if self.stderr_redirector is not None and process.stderr is not None:
-            self.stderr_redirector.remove_redirection(process.stderr)
 
     @gen.coroutine
     @util.debuglog
@@ -721,7 +731,8 @@ class Watcher(object):
             if hasattr(signal, 'SIGKILL'):
                 # We are not smart anymore
                 self.send_signal_process(process, signal.SIGKILL)
-        self._process_remove_redirections(process)
+        if self.stream_redirector:
+            self.stream_redirector.remove_redirections(process)
         process.stopping = False
         process.stop()
         raise gen.Return(True)
@@ -804,39 +815,39 @@ class Watcher(object):
 
     @util.debuglog
     @gen.coroutine
-    def _stop(self, close_output_streams=False):
+    def _stop(self, close_output_streams=False, for_shutdown=False):
         if self.is_stopped():
             return
         self._status = "stopping"
-        logger.debug('stopping the %s watcher' % self.name)
-        logger.debug('gracefully stopping processes [%s] for %ss' % (
-                     self.name, self.graceful_timeout))
-        # We ignore the hook result
-        self.call_hook('before_stop')
-        yield self.kill_processes()
-        self.reap_processes()
+        skip = for_shutdown and self.use_papa
+        if not skip:
+            logger.debug('stopping the %s watcher' % self.name)
+            logger.debug('gracefully stopping processes [%s] for %ss' % (
+                         self.name, self.graceful_timeout))
+            # We ignore the hook result
+            self.call_hook('before_stop')
+            yield self.kill_processes()
+            self.reap_processes()
 
         # stop redirectors
-        if self.stdout_redirector is not None:
-            self.stdout_redirector.stop()
-            self.stdout_redirector = None
-        if self.stderr_redirector is not None:
-            self.stderr_redirector.stop()
-            self.stderr_redirector = None
+        if self.stream_redirector:
+            self.stream_redirector.stop()
+            self.stream_redirector = None
         if close_output_streams:
-            if self.stdout_stream and hasattr(self.stdout_stream['stream'],
-                                              'close'):
-                self.stdout_stream['stream'].close()
-            if self.stderr_stream and hasattr(self.stderr_stream['stream'],
-                                              'close'):
-                self.stderr_stream['stream'].close()
+            if self.stdout_stream and hasattr(self.stdout_stream, 'close'):
+                self.stdout_stream.close()
+            if self.stderr_stream and hasattr(self.stderr_stream, 'close'):
+                self.stderr_stream.close()
         # notify about the stop
-        if self.evpub_socket is not None:
-            self.notify_event("stop", {"time": time.time()})
-        self._status = "stopped"
-        # We ignore the hook result
-        self.call_hook('after_stop')
-        logger.info('%s stopped', self.name)
+        if skip:
+            logger.info('%s left running in papa', self.name)
+        else:
+            if self.evpub_socket is not None:
+                self.notify_event("stop", {"time": time.time()})
+            self._status = "stopped"
+            # We ignore the hook result
+            self.call_hook('after_stop')
+            logger.info('%s stopped', self.name)
 
     def get_active_processes(self):
         """return a list of pids of active processes (not already stopped)"""
@@ -907,7 +918,8 @@ class Watcher(object):
                 yield self.spawn_processes()
             return
 
-        if not self.call_hook('before_start'):
+        found_wids = len(self._found_wids)
+        if not self._found_wids and not self.call_hook('before_start'):
             logger.debug('Aborting startup')
             return
 
@@ -924,14 +936,11 @@ class Watcher(object):
             yield self._stop()
             return
 
-        if self.stdout_redirector is not None:
-            self.stdout_redirector.start()
-
-        if self.stderr_redirector is not None:
-            self.stderr_redirector.start()
-
         self._status = "active"
-        logger.info('%s started' % self.name)
+        if found_wids:
+            logger.info('%s already running' % self.name)
+        else:
+            logger.info('%s started' % self.name)
         self.notify_event("start", {"time": time.time()})
 
     @util.synchronized("watcher_restart")
@@ -965,7 +974,7 @@ class Watcher(object):
     def _reload(self, graceful=True, sequential=False):
         """ reload
         """
-        if not(graceful) and sequential:
+        if not graceful and sequential:
             logger.warn("with graceful=False, sequential=True is ignored")
         if self.prereload_fn is not None:
             self.prereload_fn(self)

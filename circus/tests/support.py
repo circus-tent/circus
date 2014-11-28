@@ -287,7 +287,8 @@ class TestCircus(AsyncTestCase):
                        async=False, arbiter_kw=None, **kw):
         fd, testfile = mkstemp()
         os.close(fd)
-        wdir = os.getcwd()
+        wdir = os.path.dirname(os.path.dirname(os.path.dirname(
+            os.path.realpath(__file__))))
         args = ['circus/tests/generic.py', callable_path, testfile]
         worker = {'cmd': PYTHON, 'args': args, 'working_dir': wdir,
                   'name': 'test', 'graceful_timeout': 2}

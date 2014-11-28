@@ -11,8 +11,10 @@ from circus.py3compat import s, PY2
 
 class _FileStreamBase(object):
     """Base class for all file writer handler classes"""
-    # You may want to use another now method (not naive or a mock).
+    # You may want to use another now or fromtimestamp method
+    # (not naive or a mock).
     now = datetime.now
+    fromtimestamp = datetime.fromtimestamp
 
     def __init__(self, filename, time_format):
         if filename is None:
@@ -35,7 +37,11 @@ class _FileStreamBase(object):
 
         # If we want to prefix the stream with the current datetime
         if self._time_format is not None:
-            time = self.now().strftime(self._time_format)
+            if 'timestamp' in data:
+                time = self.fromtimestamp(data['timestamp'])
+            else:
+                time = self.now()
+            time = time.strftime(self._time_format)
             prefix = '{time} [{pid}] | '.format(time=time, pid=data['pid'])
             file_data = prefix + file_data.rstrip('\n')
             file_data = file_data.replace('\n', '\n' + prefix)

@@ -167,12 +167,13 @@ class Process(object):
     - **close_child_stderr**: If True, redirects the child process' stdout
       to /dev/null after the fork. default: False.
     """
-    def __init__(self, wid, cmd, args=None, working_dir=None, shell=False,
-                 uid=None, gid=None, env=None, rlimits=None, executable=None,
-                 use_fds=False, watcher=None, spawn=True,
+    def __init__(self, name, wid, cmd, args=None, working_dir=None,
+                 shell=False, uid=None, gid=None, env=None, rlimits=None,
+                 executable=None, use_fds=False, watcher=None, spawn=True,
                  pipe_stdout=True, pipe_stderr=True,
                  close_child_stdout=False, close_child_stderr=False):
 
+        self.name = name
         self.wid = wid
         self.cmd = cmd
         self.args = args
@@ -197,6 +198,9 @@ class Process(object):
         self.stopping = False
         # sockets created before fork, should be let go after.
         self._sockets = []
+        self._worker = None
+        self.redirected = False
+        self.started = 0
 
         if self.uid is not None and self.gid is None:
             self.gid = get_default_gid(self.uid)
@@ -253,6 +257,7 @@ class Process(object):
         return sockets_fds
 
     def spawn(self):
+        self.started = time.time()
         sockets_fds = self._get_sockets_fds()
 
         args = self.format_args(sockets_fds=sockets_fds)
@@ -320,8 +325,6 @@ class Process(object):
         # let go of sockets created only for self._worker to inherit
         self._sockets = []
 
-        self.started = time.time()
-
     def format_args(self, sockets_fds=None):
         """ It's possible to use environment variables and some other variables
         that are available in this context, when spawning the processes.
@@ -350,8 +353,8 @@ class Process(object):
 
         if '$WID' in cmd or (self.args and '$WID' in self.args):
             msg = "Using $WID in the command is deprecated. You should use "\
-                  "the python string format instead. In you case, this means "\
-                  "replacing the $WID in your command by $(WID)."
+                  "the python string format instead. In your case, this "\
+                  "means replacing the $WID in your command by $(WID)."
 
             warnings.warn(msg, DeprecationWarning)
             self.cmd = cmd.replace('$WID', str(self.wid))
@@ -420,7 +423,7 @@ class Process(object):
         """
         try:
             try:
-                if self._worker.poll() is None:
+                if self.is_alive():
                     try:
                         return self._worker.terminate()
                     except AccessDenied:
@@ -428,12 +431,15 @@ class Process(object):
                         # dies after poll returns (unlikely)
                         pass
             finally:
-                if self._worker.stderr is not None:
-                    self._worker.stderr.close()
-                if self._worker.stdout is not None:
-                    self._worker.stdout.close()
+                self.close_output_channels()
         except NoSuchProcess:
             pass
+
+    def close_output_channels(self):
+        if self._worker.stderr is not None:
+            self._worker.stderr.close()
+        if self._worker.stdout is not None:
+            self._worker.stdout.close()
 
     def wait(self, timeout=None):
         """
