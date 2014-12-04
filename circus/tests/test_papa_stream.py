@@ -27,6 +27,7 @@ def run_process(testfile, *args, **kw):
         return 1
 
 
+@skipIf('TRAVIS' in os.environ, "Skipped on Travis")
 class TestPapaStream(TestCircus):
     dummy_process = 'circus.tests.test_stream.run_process'
     papa_port = random.randint(20000, 30000)
@@ -35,7 +36,7 @@ class TestPapaStream(TestCircus):
         super(TestPapaStream, self).setUp()
         papa.set_debug_mode(quit_when_connection_closed=True)
         papa.set_default_port(self.papa_port)
-        papa.set_default_connection_timeout(120)
+        # papa.set_default_connection_timeout(120)
         fd, self.stdout = tempfile.mkstemp()
         os.close(fd)
         fd, self.stderr = tempfile.mkstemp()
