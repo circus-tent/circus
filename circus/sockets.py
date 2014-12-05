@@ -176,7 +176,7 @@ class CircusSocket(socket.socket):
         return 'socket %r at %s' % (self.name, self.location)
 
     def close(self):
-        socket.socket.close(self)
+        super(CircusSocket, self).close()
         if self.is_unix and os.path.exists(self.path):
             os.remove(self.path)
 
