@@ -15,6 +15,8 @@ Circus can be used as a library or through the command line.
    :target: https://python.org/pypi/circus/
 .. image:: https://pypip.in/d/circus/badge.png
    :target: https://python.org/pypi/circus/
+.. image:: http://allmychanges.com/p/python/circus/badge/
+   :target: http://allmychanges.com/p/python/circus/?utm_source=badge
 
 Links:
 
