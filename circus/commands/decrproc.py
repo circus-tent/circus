@@ -7,7 +7,8 @@ class DecrProcess(IncrProc):
         Decrement the number of processes in a watcher
         ==============================================
 
-        This comment decrement the number of processes in a watcher by -1.
+        This comment decrement the number of processes in a watcher
+        by <nbprocess>, being 1 the default.
 
         ZMQ Message
         -----------
