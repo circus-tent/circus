@@ -5,10 +5,12 @@ import tornado
 from tempfile import mkstemp
 from time import time
 import zmq.utils.jsonapi as json
+import mock
 try:
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse  # NOQA
+from tornado import gen
 
 from circus.arbiter import Arbiter
 from circus.client import CircusClient
@@ -586,6 +588,41 @@ class TestArbiter(TestCircus):
     Unit tests for the arbiter class to codify requirements within
     behavior.
     """
+    @tornado.testing.gen_test
+    def test_start_with_callback(self):
+        controller = "tcp://127.0.0.1:%d" % get_available_port()
+        sub = "tcp://127.0.0.1:%d" % get_available_port()
+        arbiter = Arbiter([], controller, sub, check_delay=-1)
+
+        callee = mock.MagicMock()
+
+        def callback(*args):
+            callee()
+            arbiter.loop.stop()
+
+        try:
+            yield arbiter.start(cb=callback)
+        finally:
+            yield arbiter.stop()
+
+        self.assertEqual(callee.call_count, 1)
+
+    @tornado.testing.gen_test
+    def test_start_with_callback_and_given_loop(self):
+        controller = "tcp://127.0.0.1:%d" % get_available_port()
+        sub = "tcp://127.0.0.1:%d" % get_available_port()
+        arbiter = Arbiter([], controller, sub, check_delay=-1,
+                          loop=get_ioloop())
+
+        callback = mock.MagicMock()
+
+        try:
+            yield arbiter.start(cb=callback)
+        finally:
+            yield arbiter.stop()
+
+        self.assertEqual(callback.call_count, 0)
+
     @tornado.testing.gen_test
     def test_start_watcher(self):
         watcher = MockWatcher(name='foo', cmd='serve', priority=1)
