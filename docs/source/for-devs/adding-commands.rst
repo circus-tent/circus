@@ -63,8 +63,7 @@ allow you to follow more easily):
             # this method is used to map console arguments to the command
             # options. (its is used for instance when calling the command via
             # circusctl)
-            # "NotImplementedError: message function isn't implemented" will
-            # be thrown if the function is missing
+            # NotImplementedError will be thrown if the function is missing
             numArgs = 1
             if not len(args) == numArgs:
                 raise ArgumentError('Invalid number of arguments.')
