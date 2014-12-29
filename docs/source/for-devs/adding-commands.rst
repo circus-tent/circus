@@ -17,6 +17,8 @@ allow you to follow more easily):
 
 .. code-block:: python
 
+    from circus.commands.base import Command
+    from circus.exc import ArgumentError, MessageError
     class NumWatchers(Command):
         """It is a good practice to describe what the class does here.
 
