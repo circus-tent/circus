@@ -57,6 +57,20 @@ allow you to follow more easily):
             # this method is used to format the response for a console (it is
             # used for instance by circusctl to print its messages)
             return "a string that will be displayed"
+        
+        def message(self, *args, **opts):
+            # message handles console input.
+            # this method is used to map console arguments to the command
+            # options. (its is used for instance when calling the command via
+            # circusctl)
+            # "NotImplementedError: message function isn't implemented" will
+            # be thrown if the function is missing
+            numArgs = 1
+            if not len(args) == numArgs:
+                raise ArgumentError('Invalid number of arguments.')
+            else:
+                opts['optname'] = args[0]
+            return self.make_message(**opts)
 
         def validate(self, props):
             # this method is used to validate that the arguments passed to the
