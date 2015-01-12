@@ -588,7 +588,6 @@ class TestArbiter(TestCircus):
     Unit tests for the arbiter class to codify requirements within
     behavior.
     """
-    @tornado.testing.gen_test
     def test_start_with_callback(self):
         controller = "tcp://127.0.0.1:%d" % get_available_port()
         sub = "tcp://127.0.0.1:%d" % get_available_port()
@@ -598,12 +597,9 @@ class TestArbiter(TestCircus):
 
         def callback(*args):
             callee()
-            arbiter.loop.stop()
+            arbiter.stop()
 
-        try:
-            yield arbiter.start(cb=callback)
-        finally:
-            yield arbiter.stop()
+        arbiter.start(cb=callback)
 
         self.assertEqual(callee.call_count, 1)
 
