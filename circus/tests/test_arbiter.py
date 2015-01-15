@@ -10,7 +10,6 @@ try:
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse  # NOQA
-from tornado import gen
 
 from circus.arbiter import Arbiter
 from circus.client import CircusClient
