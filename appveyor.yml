@@ -9,7 +9,7 @@ install:
   - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:/get-pip.py')
   - "%PYTHON%/python.exe C:/get-pip.py"
   - "%PYTHON%/Scripts/pip.exe install -e ."
-  - "%PYTHON%/Scripts/pip.exe install nose"
+  - "%PYTHON%/Scripts/pip.exe install nose six mock PyYAML"
 
 test_script:
   - "%PYTHON%/Scripts/nosetests.exe -v circus/tests"
