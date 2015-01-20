@@ -346,7 +346,7 @@ class Arbiter(object):
         if added_sn or deleted_sn:
             # make sure all existing watchers get the new sockets in
             # their attributes and get the old removed
-            # XXX: is this necessary? self.sockets is an mutable
+            # XXX: is this necessary? self.sockets is a mutable
             # object
             for watcher in self.iter_watchers():
                 # XXX: What happens as initalize is called on a
@@ -399,6 +399,9 @@ class Arbiter(object):
                 changed_wn.add(n)
                 deleted_wn.add(n)
                 added_wn.add(n)
+            else:
+                # reload hooks of unchanged watcher
+                w.reload_hooks()
 
         # delete watchers
         for n in deleted_wn:
@@ -417,6 +420,9 @@ class Arbiter(object):
             yield self.start_watcher(w)
             self.watchers.append(w)
             self._watchers_names[w.name.lower()] = w
+            # when the watcher was changed reload it's hooks
+            if n in changed_wn:
+                w.reload_hooks()
 
     @classmethod
     def load_from_config(cls, config_file, loop=None):

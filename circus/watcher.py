@@ -388,6 +388,11 @@ class Watcher(object):
         for name, (callable_or_name, ignore_failure) in hooks.items():
             self._resolve_hook(name, callable_or_name, ignore_failure)
 
+    def reload_hooks(self, ignore_failure=False):
+        for hook_name, func in self.hooks.items():
+            hook = func.__module__ + ':' + func.__name__
+            self._resolve_hook(hook_name, hook, ignore_failure, reload_module=True)
+
     @property
     def pending_socket_event(self):
         return self.on_demand and not self.arbiter.socket_event
