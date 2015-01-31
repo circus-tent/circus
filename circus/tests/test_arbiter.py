@@ -315,6 +315,27 @@ class TestTrainer(TestCircus):
         yield self.stop_arbiter()
 
     @tornado.testing.gen_test
+    def test_reload_uppercase(self):
+        yield self.start_arbiter(graceful_timeout=0)
+        name = 'test_RELOAD'
+        yield self._call("add", name=name, cmd=self._get_cmd(),
+                         start=True, options=self._get_options())
+
+        resp = yield self._call("list", name=name)
+        processes1 = resp.get('pids')
+
+        truncate_file(self.test_file)  # clean slate
+
+        yield self._call("reload")
+        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+
+        resp = yield self._call("list", name=name)
+        processes2 = resp.get('pids')
+
+        self.assertNotEqual(processes1, processes2)
+        yield self.stop_arbiter()
+
+    @tornado.testing.gen_test
     def test_reload_sequential(self):
         yield self.start_arbiter(graceful_timeout=0)
         name = 'test_reload_sequential'

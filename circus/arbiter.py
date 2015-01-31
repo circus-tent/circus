@@ -686,7 +686,7 @@ class Arbiter(object):
 
     def get_watcher(self, name):
         """Return the watcher *name*."""
-        return self._watchers_names[name]
+        return self._watchers_names[name.lower()]
 
     def statuses(self):
         return dict([(watcher.name, watcher.status())
@@ -727,7 +727,7 @@ class Arbiter(object):
         logger.debug('Deleting %r watcher', name)
 
         # remove the watcher from the list
-        watcher = self._watchers_names.pop(name)
+        watcher = self._watchers_names.pop(name.lower())
         del self.watchers[self.watchers.index(watcher)]
 
         if not nostop:
