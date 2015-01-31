@@ -507,7 +507,7 @@ class Arbiter(object):
 
     @gen.coroutine
     @debuglog
-    def start(self):
+    def start(self, cb=None):
         """Starts all the watchers.
 
         If the ioloop has been provided during __init__() call,
@@ -517,6 +517,10 @@ class Arbiter(object):
         starts all watchers and the eventloop (and blocks here). In this mode
         the method MUST NOT yield anything because it's called as a standard
         method.
+
+        :param cb: Callback called after all the watchers have been started,
+                   when the loop hasn't been provided.
+        :type function:
         """
         logger.info("Starting master on pid %s", self.pid)
         self.initialize()
@@ -531,7 +535,9 @@ class Arbiter(object):
                 yield self.start_watchers()
             else:
                 # start_watchers will be called just after the start_io_loop()
-                self.loop.add_future(self.start_watchers(), lambda x: None)
+                if not cb:
+                    cb = lambda x: None
+                self.loop.add_future(self.start_watchers(), cb)
             logger.info('Arbiter now waiting for commands')
             self._running = True
             if not self._provided_loop:
