@@ -264,6 +264,6 @@ class Controller(object):
         try:
             self.stream.send(cid, zmq.SNDMORE)
             self.stream.send(resp)
-        except zmq.ZMQError as e:
+        except (IOError, zmq.ZMQError) as e:
             logger.debug("Received %r - Could not send back %r - %s", msg,
                          resp, str(e))
