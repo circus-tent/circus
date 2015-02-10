@@ -536,7 +536,7 @@ class Arbiter(object):
             else:
                 # start_watchers will be called just after the start_io_loop()
                 if not cb:
-                    cb = lambda x: None
+                    def cb(x): pass
                 self.loop.add_future(self.start_watchers(), cb)
             logger.info('Arbiter now waiting for commands')
             self._running = True
