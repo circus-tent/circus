@@ -177,8 +177,9 @@ class TestUtil(TestCase):
         uid_min, uid_max = uid_min_max()
         gid_min, gid_max = gid_min_max()
 
-        getpwuid = lambda pid: pwd.getpwuid(pid)
-        getgrgid = lambda gid: grp.getgrgid(gid)
+        def getpwuid(pid): return pwd.getpwuid(pid)
+
+        def getgrgid(gid): return grp.getgrgid(gid)
 
         self.assertRaises(KeyError, getpwuid, uid_max + 1)
         self.assertRaises(KeyError, getpwuid, uid_min - 1)

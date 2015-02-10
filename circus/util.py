@@ -1036,9 +1036,10 @@ class TransformableFuture(concurrent.Future):
 
     _upstream_future = None
     _upstream_callback = None
-    _transform_function = lambda x: x
     _result = None
     _exception = None
+
+    def _transform_function(x): return x
 
     def set_transform_function(self, fn):
         self._transform_function = fn

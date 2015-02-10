@@ -1,5 +1,3 @@
-__author__ = 'Scott Maxwell'
-
 from circus.process import Process, debuglog
 from circus.util import papa
 from circus import logger
@@ -7,6 +5,9 @@ import psutil
 import select
 import time
 from circus.py3compat import PY2
+
+__author__ = 'Scott Maxwell'
+
 
 if PY2:
     class TimeoutError(Exception):
