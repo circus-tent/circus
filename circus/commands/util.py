@@ -92,7 +92,7 @@ def validate_option(key, val):
                   'shell', 'env', 'cmd', 'args', 'copy_env', 'retry_in',
                   'max_retry', 'graceful_timeout', 'stdout_stream',
                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
-                  'singleton', 'hooks')
+                  'singleton', 'hooks', 'virtualenv', 'virtualenv_py_ver')
 
     valid_prefixes = ('stdout_stream.', 'stderr_stream.', 'hooks.', 'rlimit_')
 
