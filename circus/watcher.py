@@ -254,7 +254,7 @@ class Watcher(object):
                 # such as SystemRoot
                 self.copy_env = True
 
-        self.optnames = (("numprocesses", "warmup_delay", "working_dir",
+        self.optnames = (("respawn", "numprocesses", "warmup_delay", "working_dir",
                           "uid", "gid", "send_hup", "stop_signal",
                           "stop_children", "shell", "shell_args",
                           "env", "max_retry", "cmd", "args",
