@@ -153,8 +153,8 @@ class ResourceWatcher(BaseObserver):
         if self.min_mem is not None:
             under_percent = (self._min_percent and
                              stats['min_mem'] < self.min_mem)
-            under_value = (not self._min_percent
-                           and stats['min_mem_abs'] < self.min_mem)
+            under_value = (not self._min_percent and
+                           stats['min_mem_abs'] < self.min_mem)
 
             if under_percent or under_value:
                 self.statsd.increment("_resource_watcher.%s.under_memory" %
