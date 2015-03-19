@@ -176,8 +176,8 @@ def logging_dictconfig_to_ini(config):
         ini.add_section(section)
         args = []
         for key, value in sorted(handlers[handler].items()):
-            if (handlers[handler]["class"] == "logging.FileHandler"
-                    and key == "filename"):
+            if (handlers[handler]["class"] == "logging.FileHandler" and
+                    key == "filename"):
                 args.append(value)
             else:
                 ini.set(section, key, value)
