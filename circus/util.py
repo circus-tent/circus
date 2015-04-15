@@ -9,6 +9,7 @@ import sys
 import time
 import traceback
 import json
+import struct
 try:
     import yaml
 except ImportError:
@@ -941,7 +942,10 @@ def create_udp_socket(mcast_addr, mcast_port):
             # see #699
             pass
     # Put packet ttl to max
-    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
+    # The following ttl fix is to make this work on SunOS and BSD systems.
+    # Ref : Issue #875
+    ttl = struct.pack('B', 255)
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
     # Register socket to multicast group
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
                     socket.inet_aton(mcast_addr) + socket.inet_aton(any_addr))
