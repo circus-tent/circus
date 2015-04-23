@@ -72,7 +72,6 @@ def read_from_stream(stream, desired_channel, timeout=5):
     while not channels[desired_channel] and time.time() - start < timeout:
         try:
             data = stream.get_nowait()
-            print data
             data = s(data['data']).split('\n')
             accumulator += data.pop(0)
             if data:
