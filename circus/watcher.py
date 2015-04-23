@@ -779,11 +779,11 @@ class Watcher(object):
                 raise
 
     @util.debuglog
-    def send_signal_children(self, pid, signum):
+    def send_signal_children(self, pid, signum, recursive=False):
         """Send signal to all children.
         """
         process = self.processes[int(pid)]
-        process.send_signal_children(signum)
+        process.send_signal_children(signum, recursive)
 
     @util.debuglog
     def status(self):
