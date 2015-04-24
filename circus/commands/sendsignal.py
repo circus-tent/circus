@@ -140,7 +140,7 @@ class Signal(Command):
 
                 if recursive:
                     # also send to the children
-                    watcher.send_signal_children(pid, signum)
+                    watcher.send_signal_children(pid, signum, recursive=True)
 
     def validate(self, props):
         super(Signal, self).validate(props)

@@ -531,9 +531,9 @@ class Process(object):
             raise NoSuchProcess(pid)
 
     @debuglog
-    def send_signal_children(self, signum):
+    def send_signal_children(self, signum, recursive=False):
         """Send signal *signum* to all children."""
-        for child in get_children(self._worker):
+        for child in get_children(self._worker, recursive):
             try:
                 child.send_signal(signum)
             except OSError as e:
