@@ -34,6 +34,7 @@ from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
 from circus.util import tornado_sleep, ConflictError
 from circus.util import IS_WINDOWS
 from circus.client import AsyncCircusClient, make_message
+from circus.tests.generic import resolve_name
 
 ioloop.install()
 if 'ASYNC_TEST_TIMEOUT' not in os.environ:
@@ -47,40 +48,6 @@ class EasyTestSuite(TestSuite):
                 findTestCases(sys.modules[name]))
         except KeyError:
             pass
-
-
-def resolve_name(name):
-    ret = None
-    parts = name.split('.')
-    cursor = len(parts)
-    module_name = parts[:cursor]
-    last_exc = None
-
-    while cursor > 0:
-        try:
-            ret = __import__('.'.join(module_name))
-            break
-        except ImportError as exc:
-            last_exc = exc
-            if cursor == 0:
-                raise
-            cursor -= 1
-            module_name = parts[:cursor]
-
-    for part in parts[1:]:
-        try:
-            ret = getattr(ret, part)
-        except AttributeError:
-            if last_exc is not None:
-                raise last_exc
-            raise ImportError(name)
-
-    if ret is None:
-        if last_exc is not None:
-            raise last_exc
-        raise ImportError(name)
-
-    return ret
 
 
 PYTHON = sys.executable
