@@ -3,9 +3,9 @@ import sys
 import os
 import tempfile
 import tornado
-import papa
 import random
 
+from circus.util import papa
 from circus.client import make_message
 from circus.tests.support import TestCircus, async_poll_for, truncate_file
 from circus.tests.support import EasyTestSuite, skipIf, IS_WINDOWS
@@ -27,6 +27,7 @@ def run_process(testfile, *args, **kw):
         return 1
 
 
+@skipIf(papa is None, "papa not available")
 @skipIf('TRAVIS' in os.environ, "Skipped on Travis")
 class TestPapaStream(TestCircus):
     dummy_process = 'circus.tests.test_stream.run_process'
