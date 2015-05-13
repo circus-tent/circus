@@ -122,7 +122,7 @@ def validate_option(key, val):
             raise MessageError("%r isn't an integer or string" % key)
 
     elif key in ('send_hup', 'shell', 'copy_env', 'respawn', 'stop_children',
-		 'close_child_stdout', 'close_child_stderr'):
+                 'close_child_stdout', 'close_child_stderr'):
         if not isinstance(val, bool):
             raise MessageError("%r isn't a valid boolean" % key)
 
