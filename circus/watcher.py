@@ -178,6 +178,10 @@ class Watcher(object):
     - **virtualenv** -- The root directory of a virtualenv. If provided, the
       watcher will load the environment for its execution. (default: None)
 
+    - **virtualenv_py_ver** -- Python version that is installed in virtualenv.
+      Use it to change default circus behaviour when it tries to load same version as
+      circus is using.
+
     - **close_child_stdout**: If True, closes the stdout after the fork.
       default: False.
 
