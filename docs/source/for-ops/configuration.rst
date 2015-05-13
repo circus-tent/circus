@@ -18,7 +18,7 @@ Example:
 
     [watcher:myprogram]
     cmd = python
-    args = -u myprogram.py $(circus.wid) $(ENV.VAR)
+    args = -u myprogram.py $(circus.wid) $(CIRCUS.ENV.VAR)
     warmup_delay = 0
     numprocesses = 5
 
