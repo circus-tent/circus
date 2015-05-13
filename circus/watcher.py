@@ -257,7 +257,7 @@ class Watcher(object):
         self.optnames = (("numprocesses", "warmup_delay", "working_dir",
                           "uid", "gid", "send_hup", "stop_signal",
                           "stop_children", "shell", "shell_args",
-                          "env", "max_retry", "cmd", "args",
+                          "env", "max_retry", "cmd", "args", "respawn",
                           "graceful_timeout", "executable", "use_sockets",
                           "priority", "copy_env", "singleton",
                           "stdout_stream_conf", "on_demand",
