@@ -9,7 +9,7 @@ class IncrProc(Command):
         ==============================================
 
         This comment increment the number of processes in a watcher
-        by <nbprocess>, being 1 the default.
+        by <nbprocess>, 1 being the default
 
         ZMQ Message
         -----------
