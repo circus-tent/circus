@@ -45,7 +45,7 @@ do_start() {
 
 do_stop() {
     log_begin_msg "Stopping $DESC ..."
-    start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
+    start-stop-daemon --stop --retry=5 --quiet --oknodo --pidfile $PIDFILE
     RC=$?
     [ $RC -eq 0 ] && rm -f $PIDFILE
     log_end_msg $RC
