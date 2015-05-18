@@ -115,6 +115,7 @@ Documentation index
    contributing
    faq
    changelog
+   man/index
    glossary
    copyright
 
