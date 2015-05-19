@@ -9,6 +9,7 @@ from random import randint
 try:
     from itertools import zip_longest as izip_longest
 except ImportError:
+    # noinspection PyUnresolvedReferences
     from itertools import izip_longest  # NOQA
 import site
 from tornado import gen
@@ -813,7 +814,8 @@ class Watcher(object):
     @util.synchronized("watcher_stop")
     @gen.coroutine
     def stop(self):
-        yield self._stop()
+        # stop streams too since we are stopping the watcher completely
+        yield self._stop(True)
 
     @util.debuglog
     @gen.coroutine
@@ -935,7 +937,8 @@ class Watcher(object):
         # probably prevented startup so give up
         if not self.processes or not self.call_hook('after_start'):
             logger.debug('Aborting startup')
-            yield self._stop()
+            # stop streams too since we are bailing on this watcher completely
+            yield self._stop(True)
             return
 
         self._status = "active"
