@@ -8,7 +8,8 @@ class IncrProc(Command):
         Increment the number of processes in a watcher
         ==============================================
 
-        This comment increment the number of processes in a watcher by +1.
+        This comment increment the number of processes in a watcher
+        by <nbprocess>, 1 being the default
 
         ZMQ Message
         -----------

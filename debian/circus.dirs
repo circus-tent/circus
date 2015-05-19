@@ -1,2 +1,3 @@
 /var/log/circus
 /etc/circus/conf.d
+/etc/bash_completion.d

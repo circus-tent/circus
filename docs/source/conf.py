@@ -261,7 +261,17 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'circus', u'Circus Documentation',
-     [u'Mozilla Foundation', u'Benoit Chesneau'], 1)
+     [u'Mozilla Foundation', u'Benoit Chesneau'], 1),
+    ('man/circusd', 'circusd', u'the circus daemon',
+     [u'David Douard'], 1),
+    ('man/circusctl', 'circusctl', u'circus daemon control insterface',
+     [u'David Douard'], 1),
+    ('man/circusd-stats', 'circusd-stats', u'circus daemon stats aggregator',
+     [u'David Douard'], 1),
+    ('man/circus-top', 'circus-top', u'display Circus processes',
+     [u'David Douard'], 1),
+    ('man/circus-plugin', 'circus-plugin', u'execute a Circus plugin',
+     [u'David Douard'], 1),
 ]
 
 # If true, show URL addresses after external links.
