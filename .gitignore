@@ -24,3 +24,4 @@ eggs/*
 parts/*
 *.un~
 *.swp
+.pc
