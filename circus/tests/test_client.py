@@ -1,16 +1,16 @@
 import os
-import time
+import tempfile
 
 from tornado.testing import gen_test
 from tornado.gen import coroutine, Return
 
+from circus.util import tornado_sleep
 from circus.tests.support import TestCircus, EasyTestSuite, IS_WINDOWS
-from circus.client import make_message, CallError
+from circus.client import make_message
 from circus.stream import QueueStream
 
 
 class TestClient(TestCircus):
-
     @coroutine
     def status(self, cmd, **props):
         resp = yield self.call(cmd, **props)
@@ -78,41 +78,50 @@ class TestClient(TestCircus):
         yield self.stop_arbiter()
 
 
+_, tmp_filename = tempfile.mkstemp(prefix='test_hook')
+
+
 def long_hook(*args, **kw):
-    time.sleep(5)
+    os.unlink(tmp_filename)
 
 
 class TestWithHook(TestCircus):
-
     def run_with_hooks(self, hooks):
         self.stream = QueueStream()
         self.errstream = QueueStream()
         dummy_process = 'circus.tests.support.run_process'
-        return self._create_circus(dummy_process,
+        return self._create_circus(dummy_process, async=True,
                                    stdout_stream={'stream': self.stream},
                                    stderr_stream={'stream': self.errstream},
                                    hooks=hooks)
 
+    @gen_test
     def test_message_id(self):
         hooks = {'before_stop': ('circus.tests.test_client.long_hook', False)}
         testfile, arbiter = self.run_with_hooks(hooks)
+        yield arbiter.start()
         try:
+            self.assertTrue(os.path.exists(tmp_filename))
+
             msg = make_message("numwatchers")
             resp = yield self.cli.call(msg)
             self.assertEqual(resp.get("numwatchers"), 1)
 
             # this should timeout
-            self.assertRaises(CallError, self.cli.call, make_message("stop"))
-
-            # and we should get back on our feet
-            del arbiter.watchers[0].hooks['before_stop']
+            resp = yield self.cli.call(make_message("stop"))
+            self.assertEqual(resp.get('status'), 'ok')
 
             while arbiter.watchers[0].status() != 'stopped':
-                time.sleep(.1)
+                yield tornado_sleep(.1)
 
-            resp = self.cli.call(make_message("numwatchers"))
+            resp = yield self.cli.call(make_message("numwatchers"))
             self.assertEqual(resp.get("numwatchers"), 1)
+
+            self.assertFalse(os.path.exists(tmp_filename))
         finally:
+            if os.path.exists(tmp_filename):
+                os.unlink(tmp_filename)
             arbiter.stop()
+
 
 test_suite = EasyTestSuite(__name__)
