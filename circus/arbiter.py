@@ -742,40 +742,50 @@ class Arbiter(object):
 
     @synchronized("arbiter_start_watchers")
     @gen.coroutine
-    def start_watchers(self):
-        yield self._start_watchers()
+    def start_watchers(self, watcher_iter_func=None):
+        yield self._start_watchers(watcher_iter_func=watcher_iter_func)
 
     @gen.coroutine
-    def _start_watchers(self):
-        for watcher in self.iter_watchers():
+    def _start_watchers(self, watcher_iter_func=None):
+        if watcher_iter_func is None:
+            watchers = self.iter_watchers()
+        else:
+            watchers = watcher_iter_func()
+        for watcher in watchers:
             if watcher.autostart:
                 yield watcher._start()
                 yield tornado_sleep(self.warmup_delay)
 
     @gen.coroutine
     @debuglog
-    def _stop_watchers(self, close_output_streams=False, for_shutdown=False):
+    def _stop_watchers(self, close_output_streams=False,
+                       watcher_iter_func=None, for_shutdown=False):
+        if watcher_iter_func is None:
+            watchers = self.iter_watchers(reverse=False)
+        else:
+            watchers = watcher_iter_func(reverse=False)
         yield [w._stop(close_output_streams, for_shutdown)
-               for w in self.iter_watchers(reverse=False)]
+               for w in watchers]
 
     @synchronized("arbiter_stop_watchers")
     @gen.coroutine
-    def stop_watchers(self):
-        yield self._stop_watchers()
+    def stop_watchers(self, watcher_iter_func=None):
+        yield self._stop_watchers(watcher_iter_func=watcher_iter_func)
 
     @gen.coroutine
-    def _restart(self, inside_circusd=False):
+    def _restart(self, inside_circusd=False, watcher_iter_func=None):
         if inside_circusd:
             self._restarting = True
             yield self._stop()
         else:
-            yield self._stop_watchers()
-            yield self._start_watchers()
+            yield self._stop_watchers(watcher_iter_func=watcher_iter_func)
+            yield self._start_watchers(watcher_iter_func=watcher_iter_func)
 
     @synchronized("arbiter_restart")
     @gen.coroutine
-    def restart(self, inside_circusd=False):
-        yield self._restart(inside_circusd=inside_circusd)
+    def restart(self, inside_circusd=False, watcher_iter_func=None):
+        yield self._restart(inside_circusd=inside_circusd,
+                            watcher_iter_func=watcher_iter_func)
 
     @property
     def endpoint_owner_mode(self):
