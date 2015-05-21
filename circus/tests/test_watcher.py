@@ -500,7 +500,6 @@ class TestWatcherHooks(TestCircus):
         yield self._test_hooks(hook_name='before_stop', status='stopped',
                                call=self._stop)
 
-    @tornado.testing.gen_test
     def _hook_signal_kwargs_test_function(self, kwargs):
         self.assertTrue("pid" not in kwargs)
         self.assertTrue("signum" not in kwargs)

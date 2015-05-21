@@ -565,3 +565,7 @@ class MagicMockFuture(mock.MagicMock, tornado.concurrent.Future):
 
     def set_exception(self, exception):
         pass
+
+    def __del__(self):
+        # Don't try to print non-consumed exceptions
+        pass
