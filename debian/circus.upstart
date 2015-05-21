@@ -1,7 +1,7 @@
 description "circusd"
 
 start on filesystem and net-device-up IFACE=lo
-stop on runlevel [016]
+stop on shutdown
 
 respawn
 exec /usr/bin/circusd /etc/circus/circusd.ini
