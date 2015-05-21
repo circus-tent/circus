@@ -59,6 +59,7 @@ def async_run_ctl(args, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
 class CommandlineTest(TestCircus):
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
+    @gen_test
     def test_help_switch_no_command(self):
         stdout, stderr = yield async_run_ctl('--help')
         if stderr:
@@ -68,6 +69,7 @@ class CommandlineTest(TestCircus):
         self.assertEqual(output[2], 'Controls a Circus daemon')
         self.assertEqual(output[4], 'Commands:')
 
+    @gen_test
     def test_help_invalid_command(self):
         stdout, stderr = yield async_run_ctl('foo')
         self.assertEqual(stdout, '')
@@ -79,6 +81,7 @@ class CommandlineTest(TestCircus):
                          'circusctl.py: error: unrecognized arguments: foo')
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
+    @gen_test
     def test_help_for_add_command(self):
         stdout, stderr = yield async_run_ctl('--help add')
         if stderr:
@@ -155,11 +158,15 @@ class CLITest(TestCircus):
 
         yield self.stop_arbiter()
 
+    @gen_test
     def test_cli_help(self):
-        stdout, stderr = yield self.run_ctl('help')
+        yield self.start_arbiter()
+        stdout, stderr = yield self.run_ctl('help',
+                                            endpoint=self.arbiter.endpoint)
         self.assertEqual(stderr, '')
         prompt = stdout.splitlines()
         # first two lines are VERSION and prompt, followed by a blank line
         self.assertEqual(prompt[3], "Documented commands (type help <topic>):")
+        yield self.stop_arbiter()
 
 test_suite = EasyTestSuite(__name__)
