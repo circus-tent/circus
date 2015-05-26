@@ -1,1 +1,3 @@
 *.egg-info/*
+docs/source/for-ops/commands/*.rst
+docs/source/for-ops/commands.rst

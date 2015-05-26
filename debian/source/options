@@ -1,1 +1,1 @@
-extend-diff-ignore="^([^/]+\.egg-info/|tst/.*|docs/source/for-ops/commands/*.rst$|docs/source/source/for-ops/commands.rst$)"
+extend-diff-ignore="^([^/]+\.egg-info/|tst/.*$)"
