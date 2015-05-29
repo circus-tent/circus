@@ -1,5 +1,6 @@
 from circus.commands.base import Command
 from circus.commands.restart import execute_watcher_start_stop_restart
+from circus.commands.restart import match_options
 
 
 class Stop(Command):
@@ -18,7 +19,8 @@ class Stop(Command):
                 "command": "stop",
                 "properties": {
                     "name": "<name>",
-                    "waiting": False
+                    "waiting": False,
+                    "match": "[simple|glob|regex]"
                 }
             }
 
@@ -36,22 +38,28 @@ class Stop(Command):
         :ref:`graceful_timeout option <graceful_timeout>`, it can take some
         time.
 
+        The ``match`` parameter can have the value ``simple`` for string
+        compare, ``glob`` for wildcard matching (default) or ``regex`` for
+        regex matching.
+
 
         Command line
         ------------
 
         ::
 
-            $ circusctl stop [<name>] [--waiting]
+            $ circusctl stop [name] [--waiting] [--match=simple|glob|regex]
 
         Options
         +++++++
 
-        - <name>: (wildcard) name of the watcher(s)
+        - <name>: name or pattern of the watcher(s)
+        - <match>: watcher match method
     """
 
     name = "stop"
-    options = Command.waiting_options
+    options = list(Command.waiting_options)
+    options.append(match_options)
 
     def message(self, *args, **opts):
         if len(args) >= 1:
@@ -60,5 +68,5 @@ class Stop(Command):
 
     def execute(self, arbiter, props):
         return execute_watcher_start_stop_restart(
-            arbiter, props, 'stop', arbiter.stop_watchers,
+            self, arbiter, props, 'stop', arbiter.stop_watchers,
             arbiter.stop_watchers)
