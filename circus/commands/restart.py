@@ -6,17 +6,28 @@ from circus.exc import ArgumentError, MessageError
 from circus.util import TransformableFuture
 
 
-def execute_watcher_start_stop_restart(arbiter, props, watcher_function_name,
+def execute_watcher_start_stop_restart(command, arbiter, props,
+                                       watcher_function_name,
                                        watchers_function, arbiter_function):
     """base function to handle start/stop/restart watcher requests.
     since this is always the same procedure except some function names this
     function handles all watcher start/stop commands
     """
     if 'name' in props:
-        name = re.compile(fnmatch.translate(props['name']))
-        watchers = [watcher
-                    for watcher in arbiter.iter_watchers()
-                    if name.match(watcher.name.lower())]
+        match = props.get('match', 'glob')
+        if match == 'simple':
+            watchers = [command._get_watcher(arbiter, props['name'])]
+        else:
+            if match == 'glob':
+                name = re.compile(fnmatch.translate(props['name']))
+            elif match == 'regex':
+                name = re.compile(props['name'])
+            else:
+                raise MessageError("unknown match method %s" % match)
+            watchers = [watcher
+                        for watcher in arbiter.iter_watchers()
+                        if name.match(watcher.name.lower())]
+
         if not watchers:
             raise MessageError("program %s not found" % props['name'])
 
@@ -36,6 +47,9 @@ def execute_watcher_start_stop_restart(arbiter, props, watcher_function_name,
     else:
         return arbiter_function()
 
+match_options = ('match', 'match', 'glob',
+                 "Watcher name matching method (simple, glob or regex)")
+
 
 class Restart(Command):
     """\
@@ -54,7 +68,8 @@ class Restart(Command):
                 "command": "restart",
                 "properties": {
                     "name": "<name>",
-                    "waiting": False
+                    "waiting": False,
+                    "match": "[simple|glob|regex]"
                 }
             }
 
@@ -71,22 +86,28 @@ class Restart(Command):
         :ref:`graceful_timeout option <graceful_timeout>`, it can take some
         time.
 
+        The ``match`` parameter can have the value ``simple`` for string
+        compare, ``glob`` for wildcard matching (default) or ``regex`` for
+        regex matching.
+
 
         Command line
         ------------
 
         ::
 
-            $ circusctl restart [<name>] [--waiting]
+            $ circusctl restart [name] [--waiting] [--match=simple|glob|regex]
 
         Options
         +++++++
 
-        - <name>: (wildcard) name of the watcher(s)
+        - <name>: name or pattern of the watcher(s)
+        - <match>: watcher match method
     """
 
     name = "restart"
-    options = Command.waiting_options
+    options = list(Command.waiting_options)
+    options.append(match_options)
 
     def message(self, *args, **opts):
         if len(args) > 1:
@@ -99,5 +120,5 @@ class Restart(Command):
 
     def execute(self, arbiter, props):
         return execute_watcher_start_stop_restart(
-            arbiter, props, 'restart', arbiter.restart,
+            self, arbiter, props, 'restart', arbiter.restart,
             partial(arbiter.restart, inside_circusd=True))
