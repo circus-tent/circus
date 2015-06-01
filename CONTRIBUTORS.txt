@@ -89,3 +89,4 @@ List of contributors:
 - James Ascroft-Leigh <jwal@jwal.me.uk>
 - Mike Dunn <mike@eikonomega.com>
 - Yannick PEROUX <yannick.peroux@gmail.com>
+- David Douard <david.douard@logilab.fr>
