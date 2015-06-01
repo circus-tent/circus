@@ -1,10 +1,15 @@
 #!/usr/bin/make -f
-export DH_VERBOSE=1
+#export DH_VERBOSE=1
+
+export PYBUILD_NAME=circus
 export PYBUILD_AFTER_INSTALL=rm -rf '{destdir}/{install_dir}/examples'
 %:
-	dh $@ --with python2 --buildsystem=pybuild --test-nose
+	dh $@ --with python2 --buildsystem=pybuild
 
 override_dh_installman:
 	make -C docs man
 	dh_installman
 
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf docs/build
