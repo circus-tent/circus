@@ -2,6 +2,9 @@ Source: circus
 Section: admin
 Priority: optional
 Maintainer: David Douard <david.douard@logilab.fr>
+Homepage: http://circus.readthedocs.org
+Vcs-Git: git://github.com/circus-tent/circus.git -b debian
+Vcs-Browser: https://github.com/circus-tent/circus
 Build-Depends:
   debhelper (>= 9),
   python-all (>=2.6.6-3),
@@ -16,7 +19,6 @@ Build-Depends:
   python-yaml,
   python-sphinx,
 Standards-Version: 3.9.6
-Homepage: http://circus.readthedocs.org
 X-Python-Version: >= 2.7
 
 Package: circus
