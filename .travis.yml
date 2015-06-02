@@ -24,3 +24,9 @@ notifications:
     on_success: change
 after_success:
   - .coveralls.sh
+deploy:
+  provider: pypi
+  user: "FOO"
+  password: "BAR"
+  on:
+    tags: true
