@@ -1,8 +1,34 @@
 Changelog history
 =================
 
-0.12 - XXX
+0.12 - 2015-06-02
 ----------
+This release brings Python 3.4, Tornado 4 and Windows support, among
+several exciting features and fixes.
+
+The Windows support is still experimental, and does not handle streams.
+
+Major changes:
+
+- Compatibility with Python 3.4 - #768
+- Experimental Windows support - #788
+- Compatibility with Tornado 4 - #872
+- Revamped Debian packaging - #896 - #903
+- Add support for Papa process kernel - #850
+- Add globing and regex matching for starting, stopping and restarting
+  watchers - #829 - #902
+
+More changes:
+
+- Optimization of the shutdown - #784 - #842
+- Add possibility to specify virtualenv version for the watchers - #805
+- Add --nostop option to the rmwatcher command - #777
+- Add a callback to Arbiter.start - #840
+- Fix reloading watchers with uppercase letters - #823
+- Remove leaking socket in stats daemon - #843
+- Fix multicast on SunOS - #876
+- Close output streams when stopping a watcher - #885
+- Fix signal sending to grandchildren with --recursive - #888
 
 
 0.11.1 - 2014-05-22
