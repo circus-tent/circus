@@ -5,7 +5,7 @@ Circus
 Circus is a program that runs and watches processes and sockets.
 Circus can be used as a library or through the command line.
 
-.. image:: https://secure.travis-ci.org/circus-tent/circus.png?branch=master
+.. image:: https://secure.travis-ci.org/circus-tent/circus.svg?branch=master
    :alt: Build Status
    :target: https://secure.travis-ci.org/circus-tent/circus
 .. image:: https://coveralls.io/repos/circus-tent/circus/badge.png?branch=master
