@@ -2,4 +2,4 @@ circus (0.12.0-1) unstable; urgency=medium
 
   * Initial release. (Closes: #784653)
 
- -- David Douard <david.douard@logilab.fr>  Mon, 01 Jun 2015 15:04:26 +0200
+ -- David Douard <david.douard@logilab.fr>  Sun, 14 Jun 2015 22:19:25 +0200
