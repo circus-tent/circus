@@ -1,3 +1,1 @@
-debian/circus.service lib/systemd/system
 debian/circusd.ini etc/circus
-extras/circusctl_bash_completion etc/bash_completion.d/

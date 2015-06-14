@@ -4,7 +4,7 @@
 export PYBUILD_NAME=circus
 export PYBUILD_AFTER_INSTALL=rm -rf '{destdir}/{install_dir}/examples'
 %:
-	dh $@ --with python2 --buildsystem=pybuild
+	dh $@ --with python2,systemd --buildsystem=pybuild
 
 override_dh_installman:
 	make -C docs man
@@ -13,3 +13,9 @@ override_dh_installman:
 override_dh_auto_clean:
 	dh_auto_clean
 	rm -rf docs/build
+
+override_dh_installinit:
+	dh_installinit --name=circusd
+
+override_dh_systemd_enable:
+	dh_systemd_enable --name=circusd
