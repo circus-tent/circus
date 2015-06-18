@@ -7,7 +7,7 @@ Why should I use Circus instead of X ?
 1. **Circus simplifies your web stack process management**
 
    Circus knows how to manage processes *and* sockets, so you don't
-   have to delegate web workers managment to a WGSI server.
+   have to delegate web workers management to a WGSI server.
 
    See :ref:`whycircussockets`
 
@@ -52,7 +52,7 @@ Why should I use Circus instead of X ?
 4. **Circus scales**
 
   One of the use cases of Circus is to manage thousands of processes without
-  adding overhead -- we're dedicated to focus on this.
+  adding overhead -- we're dedicated to focusing on this.
 
 .. _supervisor:
 
@@ -87,9 +87,9 @@ underlying technology: Supervisor uses XML-RPC for interacting with
 the daemon, while Circus uses ZeroMQ.
 
 Circus & Supervisor both have a web interface to display what's going
-on. Circus' one is more advanced because you can follow in real time
-what's going on and interact with the daemon. It uses web sockets and
-is developed in a separate project (`circus-web <https://github.com/circus-tent/circus-web>`_.)
+on. Circus' is more advanced because you can follow in real time what's
+going on and interact with the daemon. It uses web sockets and is developed
+in a separate project (`circus-web <https://github.com/circus-tent/circus-web>`_.)
 
 There are many other subtle differences in the core design, we
 might list here one day… In the meantime, you can learn more about circus
@@ -131,5 +131,3 @@ the incoming stream. Circus provides some built-in stream classes
 like **StdoutStream**, **FileStream**, **WatchedFileStream**, or **TimedRotatingFileStream**.
 
 .. XXX add more complex examples
-
-
