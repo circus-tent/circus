@@ -38,7 +38,6 @@ Depends:
 Recommends:
   python-gevent (>=0.13),
   python-gevent-websocket,
-  python-gevent-zeromq,
 Description: process & socket manager. It can be used to monitor and control
  processes and sockets.
  .
