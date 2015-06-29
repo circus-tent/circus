@@ -28,7 +28,6 @@ Architecture: all
 Depends:
   ${python:Depends},
   ${misc:Depends},
-  ${shlibs:Depends},
   python-six (>= 1.3),
   python-iowait (>= 0.1),
   python-psutil (>= 1.0.1),
@@ -42,6 +41,6 @@ Description: process & socket manager. It can be used to monitor and control
  processes and sockets.
  .
  Circus can be driven via a command-line interface or programmatically trough
- its python API.
+ its Python API.
  .
  It shares some of the goals of Supervisord, BluePill and Daemontools.
