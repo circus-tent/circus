@@ -53,6 +53,8 @@ def convert_option(key, val):
         return util.to_bool(val)
     elif key == "singleton":
         return util.to_bool(val)
+    elif key == "close_child_stdin":
+        return util.to_bool(val)
     elif key == "close_child_stdout":
         return util.to_bool(val)
     elif key == "close_child_stderr":

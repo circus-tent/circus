@@ -259,7 +259,8 @@ def get_config(config_file):
 
                     watcher['hooks'][hook_name] = val
                 # default bool to True
-                elif opt in ('check_flapping', 'respawn', 'autostart'):
+                elif opt in ('check_flapping', 'respawn', 'autostart',
+                             'close_child_stdin'):
                     watcher[opt] = dget(section, opt, True, bool)
                 else:
                     # freeform

@@ -179,6 +179,9 @@ class Watcher(object):
     - **virtualenv** -- The root directory of a virtualenv. If provided, the
       watcher will load the environment for its execution. (default: None)
 
+    - **close_child_stdin**: If True, closes the stdin after the fork.
+      default: True.
+
     - **close_child_stdout**: If True, closes the stdout after the fork.
       default: False.
 
@@ -199,8 +202,9 @@ class Watcher(object):
                  copy_env=False, copy_path=False, max_age=0,
                  max_age_variance=30, hooks=None, respawn=True,
                  autostart=True, on_demand=False, virtualenv=None,
-                 close_child_stdout=False, close_child_stderr=False,
-                 virtualenv_py_ver=None, use_papa=False, **options):
+                 close_child_stdin=True, close_child_stdout=False,
+                 close_child_stderr=False, virtualenv_py_ver=None,
+                 use_papa=False, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.on_demand = on_demand
@@ -234,6 +238,7 @@ class Watcher(object):
 
         self.respawn = respawn
         self.autostart = autostart
+        self.close_child_stdin = close_child_stdin
         self.close_child_stdout = close_child_stdout
         self.close_child_stderr = close_child_stderr
         self.use_papa = use_papa and papa is not None
@@ -263,8 +268,9 @@ class Watcher(object):
                           "priority", "copy_env", "singleton",
                           "stdout_stream_conf", "on_demand",
                           "stderr_stream_conf", "max_age", "max_age_variance",
-                          "close_child_stdout", "close_child_stderr",
-                          "use_papa") + tuple(options.keys()))
+                          "close_child_stdin", "close_child_stdout",
+                          "close_child_stderr", "use_papa") + \
+                          tuple(options.keys()))
 
         if not working_dir:
             # working dir hasn't been set
@@ -643,6 +649,7 @@ class Watcher(object):
                                   use_fds=self.use_sockets, watcher=self,
                                   pipe_stdout=pipe_stdout,
                                   pipe_stderr=pipe_stderr,
+                                  close_child_stdin=self.close_child_stdin,
                                   close_child_stdout=self.close_child_stdout,
                                   close_child_stderr=self.close_child_stderr)
 
