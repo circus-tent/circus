@@ -234,6 +234,10 @@ watcher:NAME - as many sections as you want
         be passed the constructor when creating an instance of the
         class defined in **stdout_stream.class**.
 
+    **close_child_stdin**
+        If set to True, the stdin stream of each process will be sent to
+        /dev/null after the fork. Defaults to True.
+
     **close_child_stdout**
         If set to True, the stdout stream of each process will be sent to
         /dev/null after the fork. Defaults to False.
