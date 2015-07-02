@@ -98,8 +98,8 @@ def validate_option(key, val):
                   'shell', 'env', 'cmd', 'args', 'copy_env', 'retry_in',
                   'max_retry', 'graceful_timeout', 'stdout_stream',
                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
-                  'singleton', 'hooks', 'close_child_stdout',
-                  'close_child_stderr')
+                  'singleton', 'hooks', 'close_child_stdin',
+                  'close_child_stdout', 'close_child_stderr')
 
     valid_prefixes = ('stdout_stream.', 'stderr_stream.', 'hooks.', 'rlimit_')
 
@@ -126,7 +126,8 @@ def validate_option(key, val):
             raise MessageError("%r isn't an integer or string" % key)
 
     elif key in ('send_hup', 'shell', 'copy_env', 'respawn', 'stop_children',
-                 'close_child_stdout', 'close_child_stderr'):
+                 'close_child_stdin', 'close_child_stdout',
+                 'close_child_stderr'):
         if not isinstance(val, bool):
             raise MessageError("%r isn't a valid boolean" % key)
 
