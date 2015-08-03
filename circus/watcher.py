@@ -929,6 +929,11 @@ class Watcher(object):
 
         self._status = "starting"
 
+        if self.stdout_stream and hasattr(self.stdout_stream, 'open'):
+            self.stdout_stream.open()
+        if self.stderr_stream and hasattr(self.stderr_stream, 'open'):
+            self.stderr_stream.open()
+
         self._create_redirectors()
         self.reap_processes()
         yield self.spawn_processes()
