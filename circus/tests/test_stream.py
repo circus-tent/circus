@@ -129,6 +129,43 @@ class TestWatcher(TestCircus):
         self.assertTrue(res2)
         yield self.stop_arbiter()
 
+    @skipIf(IS_WINDOWS, "Streams not supported")
+    @tornado.testing.gen_test
+    def test_stop_and_restart(self):
+        # cf https://github.com/circus-tent/circus/issues/912
+
+        yield self._start_arbiter()
+        # wait for the process to be started
+        res1 = yield async_poll_for(self.stdout, 'stdout')
+        res2 = yield async_poll_for(self.stderr, 'stderr')
+        self.assertTrue(res1)
+        self.assertTrue(res2)
+        self.assertFalse(self.stdout_stream._file.closed)
+        self.assertFalse(self.stderr_stream._file.closed)
+
+        # clean slate
+        truncate_file(self.stdout)
+        truncate_file(self.stderr)
+
+        # stop the watcher
+        yield self.arbiter.watchers[0].stop()
+
+        self.assertTrue(self.stdout_stream._file.closed)
+        self.assertTrue(self.stderr_stream._file.closed)
+
+        # start it again
+        yield self.arbiter.watchers[0].start()
+
+        # wait for the process to be restarted
+        res1 = yield async_poll_for(self.stdout, 'stdout')
+        res2 = yield async_poll_for(self.stderr, 'stderr')
+        self.assertTrue(res1)
+        self.assertTrue(res2)
+        self.assertFalse(self.stdout_stream._file.closed)
+        self.assertFalse(self.stderr_stream._file.closed)
+
+        yield self.stop_arbiter()
+
 
 class TestFancyStdoutStream(TestCase):
 
