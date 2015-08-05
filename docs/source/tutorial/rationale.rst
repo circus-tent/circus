@@ -71,7 +71,7 @@ Differences overview
 
 Supervisor & Circus have the same goals - they both manage processes and
 provide a command-line script — respectively **supervisord** and **circusd** —
-that reads a configuration file, forks new processes and maintain them alive.
+that reads a configuration file, forks new processes and keep them alive.
 
 Circus has an extra feature: the ability to bind sockets and
 let the processes it manages use them. This "pre-fork" model is used
