@@ -1,6 +1,6 @@
-circus (0.12.0-1) unstable; urgency=medium
+circus (0.12.0+dfsg-1) unstable; urgency=medium
 
   * Initial release. (Closes: #784653)
   * Do not ship buildout related files
 
- -- David Douard <david.douard@logilab.fr>  Fri, 26 Jun 2015 09:18:09 +0200
+ -- David Douard <david.douard@logilab.fr>  Mon, 31 Aug 2015 10:00:24 +0200
