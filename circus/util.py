@@ -263,9 +263,9 @@ def get_info(process=None, interval=0, with_childs=False):
     except NoSuchProcess:
         info['nice'] = 'Zombie'
 
-    raw_cmdline = get_cmdline(process)
-
     try:
+        raw_cmdline = get_cmdline(process)
+
         cmdline = os.path.basename(
             shlex.split(raw_cmdline[0], posix=not IS_WINDOWS)[0]
         )
