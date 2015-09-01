@@ -24,7 +24,9 @@ class PapaProcessWorker(psutil.Process):
         try:
             self._init(pid, _ignore_nsp=True)
         except AttributeError:
-            raise NotImplementedError('PapaProcessWorker requires psutil 2.0.0 or higher. You probably have 1.x installed.')
+            raise NotImplementedError(
+                'PapaProcessWorker requires psutil 2.0.0 or higher. '
+                'You probably have 1.x installed.')
         self._proxy = proxy
 
     def wait(self, timeout=None):
