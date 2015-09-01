@@ -21,7 +21,10 @@ def _bools_to_papa_out(pipe, close):
 class PapaProcessWorker(psutil.Process):
     # noinspection PyMissingConstructor
     def __init__(self, proxy, pid):
-        self._init(pid, _ignore_nsp=True)
+        try:
+            self._init(pid, _ignore_nsp=True)
+        except AttributeError:
+            raise NotImplementedError('PapaProcessWorker requires psutil 2.0.0 or higher. You probably have 1.x installed.')
         self._proxy = proxy
 
     def wait(self, timeout=None):
