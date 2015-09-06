@@ -1,6 +1,12 @@
 Changelog history
 =================
 
+0.12.1 - 2015-08-05
+----------
+- Fix error when restarting a watcher with an output stream - #913
+- Minor doc tweaks
+
+
 0.12 - 2015-06-02
 ----------
 This release brings Python 3.4, Tornado 4 and Windows support, among
