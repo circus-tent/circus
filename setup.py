@@ -19,7 +19,7 @@ with open("README.rst") as f:
 
 setup(name='circus',
       version=__version__,
-      packages=find_packages(exclude=["docs"]),
+      packages=find_packages(exclude=["docs", "examples", "examples.*"]),
       description=("Circus is a program that will let you run and watch "
                    " multiple processes and sockets."),
       long_description=README,

@@ -2,3 +2,4 @@ include CONTRIBUTORS.txt
 include README.rst
 include LICENSE
 include pip-requirements.txt
+recursive-include examples *
