@@ -21,7 +21,11 @@ To manage a Circus daemon, you should get familiar with the list of
 :ref:`commands` you can use in **circusctl**. Notice that you can have the same
 help online when you run **circusctl** as a shell.
 
-We also provide **circus-top**, see :ref:`cli` and a nice web dashboard. see :ref:`circushttpd`.
+We also provide **circus-top**, see :ref:`cli`, and a nice web dashboard, see
+:ref:`circushttpd`.
+
+For quick watcher and process management – start, stop, increment, decrement
+etc – there is a Tcl/Tk interface. See `Ringmaster <https://github.com/viotti/ringmaster>`_.
 
 Last, to get the most out of Circus, make sure to check out how
 to use plugins and hooks. See :ref:`plugins` and :ref:`hooks`.
