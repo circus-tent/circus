@@ -18,10 +18,11 @@ def execute_watcher_start_stop_restart(command, arbiter, props,
         if match == 'simple':
             watchers = [command._get_watcher(arbiter, props['name'])]
         else:
+            watcher_name = props['name'].lower()
             if match == 'glob':
-                name = re.compile(fnmatch.translate(props['name']))
+                name = re.compile(fnmatch.translate(watcher_name))
             elif match == 'regex':
-                name = re.compile(props['name'])
+                name = re.compile(watcher_name)
             else:
                 raise MessageError("unknown match method %s" % match)
             watchers = [watcher
