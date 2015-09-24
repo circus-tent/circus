@@ -22,5 +22,3 @@ notifications:
     email: tarek@mozilla.com
     irc: "irc.freenode.org#mozilla-circus"
     on_success: change
-after_success:
-  - .coveralls.sh

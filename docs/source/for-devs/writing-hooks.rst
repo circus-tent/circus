@@ -31,7 +31,7 @@ events.  Available hooks are:
   the hook returns **False** the signal is not sent (except SIGKILL which is
   always sent)
 
-- **after_signal**: called after a signal is sent to a watcher's process. 
+- **after_signal**: called after a signal is sent to a watcher's process.
 
 - **extended_stats**: called when stats are requested with extended=True.
   Used for adding process-specific stats to the regular stats output.
@@ -48,11 +48,11 @@ you can order the startup by using the ``priority`` option:
 
     [watcher:queue-worker]
     cmd = python -u worker.py
-    priority = 2
+    priority = 1
 
     [watcher:redis]
     cmd = redis-server
-    priority = 1
+    priority = 2
 
 With this setup, Circus will start *Redis* first and then it will start the queue
 worker.  But Circus does not really control that *Redis* is up and
@@ -76,11 +76,11 @@ This function can be plugged into Circus as an ``before_start`` hook:
     [watcher:queue-worker]
     cmd = python -u worker.py
     hooks.before_start = mycoolapp.myplugins.check_redis
-    priority = 2
+    priority = 1
 
     [watcher:redis]
     cmd = redis-server
-    priority = 1
+    priority = 2
 
 
 Once Circus has started the **redis** watcher, it will start the
@@ -125,7 +125,7 @@ Likewise, **before_signal** and **after_signal** hooks add pid and signum::
 
 Where **pid** is the PID of the corresponding process and **signum** is the
 corresponding signal.
-        
+
 You can ignore those but being able to use the watcher and/or arbiter
 data and methods can be useful in some hooks.
 

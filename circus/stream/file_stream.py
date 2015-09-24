@@ -28,6 +28,10 @@ class _FileStreamBase(object):
     def _open(self):
         return open(self._filename, 'a+')
 
+    def open(self):
+        if self._file.closed:
+            self._file = self._open()
+
     def close(self):
         self._file.close()
 
