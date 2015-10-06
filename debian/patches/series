@@ -1,1 +1,4 @@
 0001-do-not-depend-on-mozilla_sphinx_theme.patch
+0002-fix-manifest.patch
+0003-fix-mock.patch
+0004-fix-docs-circus_ext.patch

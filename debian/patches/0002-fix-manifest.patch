@@ -1,0 +1,22 @@
+From: David Douard <david.douard@logilab.fr>
+Date: Tue, 06 Oct 2015 14:27:51 +0200
+Subject: add test data files in MANIFEST.in
+
+It seems the behaviour of a 'python setup.py build' has changed between jessie
+and stretch. We need to explicitemy add circus/tests/config files and
+circus/tests/venv files so the unit tests can find them in the 
+built setup produced by pybuild.
+
+
+Index: circus/MANIFEST.in
+===================================================================
+--- circus.orig/MANIFEST.in
++++ circus/MANIFEST.in
+@@ -1,4 +1,6 @@
+ include CONTRIBUTORS.txt
+ include README.rst
+ include LICENSE
+-include pip-requirements.txt
++include doc-requirements.txt
++recursive-include circus/tests/config *.ini
++recursive-include circus/tests/venv *

@@ -1,3 +1,13 @@
+circus (0.12.1+dfsg-1) unstable; urgency=medium
+
+  * New upstream release
+  * Fix the MANIFEST.in to include data files when running 
+    'python setup.py build'
+  * Fix WorkerMock for newer mock versions
+  * Fix man page generation for newer sphinx versions 
+
+ -- David Douard <david.douard@logilab.fr>  Tue, 06 Oct 2015 14:23:51 +0200
+
 circus (0.12.0+dfsg-1) unstable; urgency=medium
 
   * Initial release. (Closes: #784653)

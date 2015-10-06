@@ -1,0 +1,17 @@
+From: David Douard <david.douard@logilab.fr>
+Date: Tue, 06 Oct 2015 14:31:43 +0200
+Subject: fix the WorkerMock class for newer python-mock
+
+Without this fix, 2 unit tests fail with AccessDenied exception.
+
+--- circus-0.12.1+dfsg.orig/circus/tests/test_util.py
++++ circus-0.12.1+dfsg/circus/tests/test_util.py
+@@ -56,6 +56,8 @@ class TestUtil(TestCase):
+ 
+         class WorkerMock(mock.MagicMock):
+             def __getattr__(self, attr):
++                if attr in ('_mock_methods', '_spec_set', '_spec_class'):
++                    return self.__dict__.get(attr)
+                 raise util.AccessDenied()
+ 
+         worker = WorkerMock()

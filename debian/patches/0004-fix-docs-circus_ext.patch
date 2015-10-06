@@ -1,0 +1,17 @@
+From: David Douard <david.douard@logilab.fr>
+Date: Tue, 06 Oct 2015 14:34:32 +0200
+Subject: fix the docs/circus_ext.py for newer sphinx
+
+Looks like newer sphinx makes every config option a list.
+
+--- circus-0.12.1+dfsg.orig/docs/circus_ext.py
++++ circus-0.12.1+dfsg/docs/circus_ext.py
+@@ -5,6 +5,8 @@ from circus.commands import get_commands
+ def generate_commands(app):
+     path = os.path.join(app.srcdir, "for-ops", "commands")
+     ext = app.config['source_suffix']
++    if isinstance(ext, list): # true with recent sphinx versions
++        ext = ext[0]
+     if not os.path.exists(path):
+         os.makedirs(path)
+ 
