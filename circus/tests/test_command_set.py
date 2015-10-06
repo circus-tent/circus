@@ -1,5 +1,5 @@
 from circus.tests.support import TestCircus, EasyTestSuite
-from circus.tests.test_command_incrproc import FakeArbiter as _FakeArbiter
+from circus.tests.test_command_incrproc import FakeArbiter
 from circus.commands.set import Set
 
 
@@ -15,14 +15,10 @@ class FakeWatcher(object):
         self.actions.append(action)
 
 
-class FakeArbiter(_FakeArbiter):
-    watcher_class = FakeWatcher
-
-
 class SetTest(TestCircus):
 
     def test_set_stream(self):
-        arbiter = FakeArbiter()
+        arbiter = FakeArbiter(watcher_class=FakeWatcher)
         cmd = Set()
 
         # setting streams
@@ -55,7 +51,7 @@ class SetTest(TestCircus):
                          'hook')
 
     def test_set_args(self):
-        arbiter = FakeArbiter()
+        arbiter = FakeArbiter(watcher_class=FakeWatcher)
         cmd = Set()
 
         props = cmd.message('dummy2', 'args', '--arg1 1 --arg2 2')
