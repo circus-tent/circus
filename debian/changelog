@@ -1,16 +1,10 @@
 circus (0.12.1+dfsg-1) unstable; urgency=medium
 
-  * New upstream release
+  * Initial release. (Closes: #784653)
+  * Do not ship buildout related files
   * Fix the MANIFEST.in to include data files when running 
     'python setup.py build'
   * Fix WorkerMock for newer mock versions
   * Fix man page generation for newer sphinx versions 
 
- -- David Douard <david.douard@logilab.fr>  Tue, 06 Oct 2015 14:23:51 +0200
-
-circus (0.12.0+dfsg-1) unstable; urgency=medium
-
-  * Initial release. (Closes: #784653)
-  * Do not ship buildout related files
-
- -- David Douard <david.douard@logilab.fr>  Mon, 31 Aug 2015 10:00:24 +0200
+ -- David Douard <david.douard@logilab.fr>  Thu, 08 Oct 2015 09:45:26 +0200

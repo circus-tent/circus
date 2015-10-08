@@ -16,7 +16,7 @@ Files: examples/webclient/static/bootstrap.css
 Copyright: 2012 Twitter, Inc
 License: Apache-2.0
 
-Files: circus/test/venv/*
+Files: circus/tests/venv/*
 Copyright: 2012 The pip developpers
 License: MIT
 
