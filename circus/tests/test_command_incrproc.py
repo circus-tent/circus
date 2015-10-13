@@ -23,6 +23,10 @@ class FakeWatcher(object):
         self.numprocesses -= nb
 
 
+class FakeSingletonWatcher(FakeWatcher):
+    singleton = True
+
+
 class FakeLoop(object):
     def add_callback(self, function):
         function()
@@ -46,6 +50,10 @@ class FakeArbiter(object):
         self.stop_watchers(**options)
 
 
+class FakeArbiterWithSingletonWatchers(FakeArbiter):
+    watcher_class = FakeSingletonWatcher
+
+
 class IncrProcTest(TestCircus):
 
     def test_incr_proc_message(self):
@@ -65,5 +73,15 @@ class IncrProcTest(TestCircus):
         props = cmd.message('dummy', 3)['properties']
         cmd.execute(arbiter, props)
         self.assertEqual(arbiter.watchers[0].numprocesses, size_before + 3)
+
+    def test_incr_proc_singleton(self):
+        cmd = IncrProc()
+        arbiter = FakeArbiterWithSingletonWatchers()
+        size_before = arbiter.watchers[0].numprocesses
+
+        props = cmd.message('dummy', 3)['properties']
+        cmd.execute(arbiter, props)
+        self.assertEqual(arbiter.watchers[0].numprocesses, size_before)
+
 
 test_suite = EasyTestSuite(__name__)
