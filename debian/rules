@@ -3,6 +3,7 @@
 
 export PYBUILD_NAME=circus
 export PYBUILD_AFTER_INSTALL=rm -rf '{destdir}/{install_dir}/examples'
+export PYBUILD_AFTER_BUILD=rm -rf '{build_dir}/examples'
 %:
 	dh $@ --with python2,systemd --buildsystem=pybuild
 
