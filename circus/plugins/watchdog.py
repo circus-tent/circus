@@ -1,19 +1,19 @@
 import re
 import socket
 import time
-import signal
 
 from zmq.eventloop import ioloop
 from circus.plugins import CircusPlugin
 from circus import logger
+from circus import util
 
 
 class WatchDog(CircusPlugin):
     """Plugin that bind an udp socket and wait for watchdog messages.
-    For "watchdoged" processes, the watchdog will kill them if they
-    don't send heartbeat in a certain period of time materialized by
-    loop_rate * max_count. (circus will automatically restart the missing
-    processes in the watcher)
+    For "watchdoged" processes, the watchdog will kill them (using the "kill"
+    command) if they don't send heartbeat in a certain period of time
+    materialized by loop_rate * max_count. (circus will automatically restart
+    the missing processes in the watcher)
 
     Each monitored process should send udp message at least at the loop_rate.
     The udp message format is a line of text, decoded using **msg_regex**
@@ -42,6 +42,10 @@ class WatchDog(CircusPlugin):
       any heartbeat before restarting process (default: 3)
     - **ip** -- ip the watchdog will bind on (default: 127.0.0.1)
     - **port** -- port the watchdog will bind on (default: 1664)
+    - **watchers_stop_signal** -- optionally override the stop_signal used
+      when killing the processes
+    - **watchers_graceful_timeout** -- optionally override the graceful_timeout
+      used when killing the processes
     """
     name = 'watchdog'
 
@@ -54,9 +58,15 @@ class WatchDog(CircusPlugin):
         self.watchers_regex = config.get("watchers_regex", ".*")
         self.msg_regex = config.get("msg_regex",
                                     "^(?P<pid>.*);(?P<timestamp>.*)$")
-        self.max_count = config.get("max_count", 3)
+        self.max_count = int(config.get("max_count", 3))
         self.watchdog_ip = config.get("ip", "127.0.0.1")
-        self.watchdog_port = config.get("port", 1664)
+        self.watchdog_port = int(config.get("port", 1664))
+        self.stop_signal = config.get("watchers_stop_signal")
+        if self.stop_signal:
+            self.stop_signal = util.to_signum(self.stop_signal)
+        self.graceful_timeout = config.get("watchers_graceful_timeout")
+        if self.graceful_timeout:
+            self.graceful_timeout = float(self.graceful_timeout)
 
         self.pid_status = dict()
         self.period = None
@@ -212,7 +222,15 @@ class WatchDog(CircusPlugin):
                 logger.info("watcher:%s, pid:%s is not responding. Kill it !",
                             detail['watcher'],
                             pid)
-                self.cast("signal",
-                          name=detail['watcher'],
-                          pid=int(pid),
-                          signum=signal.SIGKILL)
+
+                props = dict(name=detail['watcher'], pid=int(pid))
+                if self.stop_signal is not None:
+                    props['signum'] = self.stop_signal
+                if self.graceful_timeout is not None:
+                    props['graceful_timeout'] = self.graceful_timeout
+
+                self.cast('kill', **props)
+
+                # Trusting watcher to eventually stop the process after
+                # graceful timeout
+                del self.pid_status[pid]
