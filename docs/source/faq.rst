@@ -40,12 +40,12 @@ A Circus stack can look like this:
 
 
 So, like Gunicorn,
-Circus is able to bind a socket that will be proxied by Nginx. Circus don't
+Circus is able to bind a socket that will be proxied by Nginx. Circus doesn't
 deal with the requests but simply binds the socket. It's then up to a web worker
 process to accept connections on the socket and do the work.
 
 It provides equivalent features than Supervisord but will also let you
-manage all processes at the same level, wether they are web workers or Redis or
+manage all processes at the same level, whether they are web workers or Redis or
 whatever. Adding a new web worker is done exactly like adding a new Redis
 process.
 
