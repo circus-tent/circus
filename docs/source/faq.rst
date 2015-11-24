@@ -40,7 +40,7 @@ A Circus stack can look like this:
 
 
 So, like Gunicorn,
-Circus is able to bind a socket that will be proxied by Nginx. Circus don't
+Circus is able to bind a socket that will be proxied by Nginx. Circus doesn't
 deal with the requests but simply binds the socket. It's then up to a web worker
 process to accept connections on the socket and do the work.
 
