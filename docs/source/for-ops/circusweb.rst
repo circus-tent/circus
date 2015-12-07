@@ -67,7 +67,6 @@ With the Web Console logged in, you should get a list of watchers, and a real-ti
 status of the two Circus processes (circusd and circusd-stats).
 
 .. image:: web-index.png
-   :target: web-index.png
    :align: center
    :height: 400px
 
@@ -79,7 +78,6 @@ If you click on the watcher name, you will get a web page for that particular
 watcher, with its processes:
 
 .. image:: web-watchers.png
-   :target: web-watchers.png
    :align: center
    :height: 400px
 
@@ -89,7 +87,6 @@ Last but not least, you can add a brand new watcher by clicking on the *Add Watc
 in the left menu:
 
 .. image:: web-add-watcher.png
-   :target: web-add-watcher.png
    :align: center
    :height: 400px
 
