@@ -23,7 +23,8 @@ class StatsdClient(object):
         if self.prefix:
             bucket = "%s.%s" % (self.prefix, bucket)
 
-        self.socket.sendto("%s:%s" % (bucket, value), (self.host, self.port))
+        msg = "%s:%s" % (bucket, value)
+        self.socket.sendto(msg.encode('utf-8'), (self.host, self.port))
 
     def decrement(self, bucket, delta=1):
         if delta > 0:
