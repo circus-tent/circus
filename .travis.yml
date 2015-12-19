@@ -1,8 +1,11 @@
 language: python
-before_install:
-    - sudo apt-get install -y libev-dev
-    - sudo apt-get install -y libevent-dev
+sudo: false
 python: 2.7
+addons:
+  apt:
+    packages:
+      - libev-dev
+      - libevent-dev
 env:
   - TOX_ENV=py32
   - TOX_ENV=py33
