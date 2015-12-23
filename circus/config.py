@@ -56,8 +56,8 @@ class DefaultConfigParser(StrictConfigParser):
     def set_env(self, env):
         self._env = dict(env)
 
-    def get(self, section, option):
-        res = StrictConfigParser.get(self, section, option)
+    def get(self, section, option, **kwargs):
+        res = StrictConfigParser.get(self, section, option, **kwargs)
         return replace_gnu_args(res, env=self._env)
 
     def items(self, section, noreplace=False):
