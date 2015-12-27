@@ -69,6 +69,13 @@ class PapaProcessProxy(Process):
         papa_name = 'circus.{0}.{1}'.format(self.name, self.wid).lower()
         self._papa_name = papa_name
         self._papa = papa.Papa()
+        if stderr is None and stdout is None:
+            p = self._papa.list_processes(papa_name)
+            if p:
+                p = p[papa_name]
+                if not p['running']:
+                    self._papa.remove_processes(papa_name)
+
         try:
             p = self._papa.make_process(papa_name,
                                         executable=self.executable, args=args,
