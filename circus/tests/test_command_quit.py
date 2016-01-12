@@ -7,7 +7,7 @@ class QuitTest(TestCircus):
     def test_quit(self):
         cmd = Quit()
         arbiter = FakeArbiter()
-        self.assertTrue(arbiter.watchers[0].nb, 1)
+        self.assertTrue(arbiter.watchers[0].numprocesses, 1)
         props = cmd.message('dummy')['properties']
         cmd.execute(arbiter, props)
         self.assertEqual(len(arbiter.watchers), 0)
