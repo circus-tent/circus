@@ -79,8 +79,8 @@ Discussing
 ==========
 
 If you find yourself in need of any help while looking at the code of Circus,
-you can go and find us on irc at `#circus-tent on irc.freenode.org
-<irc://irc.freenode.net/circus-tent>`_ (or if you don't have any IRC client,
+you can go and find us on irc at `#mozilla-circus on irc.freenode.org
+<irc://irc.freenode.net/mozilla-circus>`_ (or if you don't have any IRC client,
 use `the webchat
 <http://webchat.freenode.net/?channels=mozilla-circus&uio=d4>`_)
 

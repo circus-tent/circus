@@ -97,7 +97,7 @@ Useful Links:
 
 - There's a mailing-list for any feedback or question: http://tech.groups.yahoo.com/group/circus-dev/
 - The repository and issue tracker are on GitHub : https://github.com/circus-tent/circus
-- Join us on the IRC : Freenode, channel **#circus-tent**
+- Join us on the IRC : Freenode, channel **#mozilla-circus**
 
 
 Documentation index
