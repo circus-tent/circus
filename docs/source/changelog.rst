@@ -1,6 +1,17 @@
 Changelog history
 =================
 
+0.12.# - 2016-01-27
+----------
+- Compatibility with Python 3.5 - #939, #
+- Fix issues with case for start, stop and restart commands - #927
+- Fix AccessDenied error - #920
+- DecrProcess was renamed DecrProc - #932
+- Fix issues with DecrProc and singleton watchers - #932
+- Fix encoding issue with statsd sockets - #947
+- Some fixes for Papa sockets - #953, #922
+- Minor doc updates
+
 0.12.1 - 2015-08-05
 ----------
 - Fix error when restarting a watcher with an output stream - #913
