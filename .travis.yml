@@ -1,6 +1,6 @@
 language: python
 sudo: false
-python: 2.7
+python: 3.5
 addons:
   apt:
     packages:
@@ -10,6 +10,7 @@ env:
   - TOX_ENV=py32
   - TOX_ENV=py33
   - TOX_ENV=py34
+  - TOX_ENV=py35
   - TOX_ENV=py26-no-gevent
   - TOX_ENV=py27-no-gevent
   - TOX_ENV=docs
