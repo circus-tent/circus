@@ -3,7 +3,7 @@ import os
 import warnings
 
 
-version_info = (0, 13, 0)
+version_info = (0, 13, 1)
 __version__ = ".".join(map(str, version_info))
 
 # This config call is done to avoid any
