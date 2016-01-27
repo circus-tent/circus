@@ -1,9 +1,15 @@
 Changelog history
 =================
 
-0.12.# - 2016-01-27
+0.13 - 2016-01-27
 ----------
-- Compatibility with Python 3.5 - #939, #
+This release brings Python 3.5 support, a better handling
+of stdin for the watchers, a new kill command, and several
+interesting bugfixes.
+
+- Compatibility with Python 3.5 - #939, #956
+- Add close_child_stdin option to the watchers - #910
+- Add 'kill' command - #957
 - Fix issues with case for start, stop and restart commands - #927
 - Fix AccessDenied error - #920
 - DecrProcess was renamed DecrProc - #932
