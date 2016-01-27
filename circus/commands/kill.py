@@ -45,7 +45,7 @@ class Kill(Command):
 
         ::
 
-            $ circusctl kill <name> [<pid>] [<signum>] [<graceful_timeout>]
+            $ circusctl kill <name> [<pid>] [--signum] [--graceful_timeout]
 
         Options:
         ++++++++
@@ -59,21 +59,25 @@ class Kill(Command):
 
     name = "kill"
     properties = ['name']
+    options = Command.waiting_options + [
+        ('signum', 'signum', None, "overrides the watcher's stop_signal "
+                                   "(number or name)"),
+        ('graceful_timeout', 'graceful_timeout', None, "overrides the watcher"
+                                                       "'s graceful_timeout"),
+    ]
 
     def message(self, *args, **opts):
-        largs = len(args)
-        if largs < 1 or largs > 4:
+        if len(args) < 1 or len(args) > 2:
             raise ArgumentError("Invalid number of arguments")
 
-        props = {
-            'name': args[0],
-        }
-        if len(args) >= 2:
+        props = {}
+        props['name'] = args[0]
+        if len(args) > 1:
             props['pid'] = args[1]
-        if len(args) >= 3:
-            props['signum'] = args[2]
-        if len(args) >= 4:
-            props['graceful_timeout'] = args[3]
+        if opts['signum'] is not None:
+            props['signum'] = opts['signum']
+        if opts['graceful_timeout'] is not None:
+            props['graceful_timeout'] = opts['graceful_timeout']
         return self.make_message(**props)
 
     @gen.coroutine
@@ -99,8 +103,6 @@ class Kill(Command):
 
         if 'pid' in props:
             props['pid'] = int(props['pid'])
-        if 'graceful_timeout' in props:
-            props['graceful_timeout'] = float(props['graceful_timeout'])
 
         try:
             if 'signum' in props:

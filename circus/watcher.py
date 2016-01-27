@@ -707,7 +707,8 @@ class Watcher(object):
     def kill_process(self, process, stop_signal=None, graceful_timeout=None):
         """Kill process (stop_signal, graceful_timeout then SIGKILL)
         """
-        stop_signal = stop_signal or self.stop_signal
+        if stop_signal is None:
+            stop_signal = self.stop_signal
         if graceful_timeout is None:
             graceful_timeout = self.graceful_timeout
 
