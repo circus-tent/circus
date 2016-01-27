@@ -312,21 +312,32 @@ def to_bool(s):
 
 
 def to_signum(signum):
-    if not _all_signals:
-        for name in dir(signal):
-            if name.startswith('SIG'):
-                value = getattr(signal, name)
-                _all_signals[name[3:]] = value
-                _all_signals[name] = value
-                _all_signals[str(value)] = value
-                _all_signals[value] = value
+    """Resolves the signal number from arbitrary signal representation.
 
-    try:
-        if isinstance(signum, string_types):
-            signum = signum.upper()
-        return _all_signals[signum]
-    except KeyError:
-        raise ValueError('signal invalid')
+     Supported formats:
+        10 - plain integers
+        '10' - integers as a strings
+        'KILL' - signal names
+        'SIGKILL' - signal names with SIG prefix
+        'SIGRTMIN+1' - signal names with offsets
+    """
+    if isinstance(signum, int):
+        return signum
+
+    m = re.match(r'(\w+)(\+(\d+))?', signum)
+    if m:
+        name = m.group(1).upper()
+        if not name.startswith('SIG'):
+            name = 'SIG' + name
+
+        offset = int(m.group(3)) if m.group(3) else 0
+
+        try:
+            return getattr(signal, name) + offset
+        except KeyError:
+            pass
+
+    raise ValueError('signal invalid: {}'.format(signum))
 
 
 if pwd is None:
