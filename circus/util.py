@@ -365,8 +365,6 @@ else:
             except KeyError:
                 raise ValueError("%r isn't a valid user id" % name)
 
-        from circus.py3compat import string_types  # circular import fix
-
         if not isinstance(name, string_types):
             raise TypeError(name)
 
@@ -401,8 +399,6 @@ else:
             # see http://bugs.python.org/issue17531
             except (KeyError, OverflowError):
                 raise ValueError("No such group: %r" % name)
-
-        from circus.py3compat import string_types  # circular import fix
 
         if not isinstance(name, string_types):
             raise TypeError(name)
