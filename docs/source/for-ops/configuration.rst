@@ -73,7 +73,7 @@ circus - single section
         The ZMQ PUB/SUB socket receiving publications of stats.
         (default: *tcp://127.0.0.1:5557*)
     **statsd_close_outputs**
-        If True sends the circusd-stats stdout/stderr to /dev/null.
+        If True sends the circusd-stats stdout/stderr to ``/dev/null``.
         (default: False)
     **check_delay**
         The polling interval in seconds for the ZMQ socket. (default: 5)
@@ -97,7 +97,7 @@ circus - single section
     **httpd_port**
         The port ran by the circushttpd daemon. (default: 8080)
     **httpd_close_outputs**
-        If True, sends the circushttpd stdout/stderr to /dev/null.
+        If True, sends the circushttpd stdout/stderr to ``/dev/null``.
         (default: False)
     **debug**
         If set to True, all Circus stout/stderr daemons are redirected to circusd
@@ -234,13 +234,29 @@ watcher:NAME - as many sections as you want
         be passed the constructor when creating an instance of the
         class defined in **stdout_stream.class**.
 
+    **close_child_stdin**
+        If set to True, the stdin stream of each process will be sent to
+        ``/dev/null`` after the fork. Defaults to True.
+
+        The primary use case for this option is debugging. Set it to False and
+        Circus will leave *stdin* open for the watcher processes. This allows
+        interactive debugger sessions to be attached to them. In case of a
+        Python program, one could insert a Pdb call (``import pdb;
+        pdb.set_trace()``) somewhere in the code and acquire its shell to
+        debug the program.
+
+        If debugging a process is not expected, leave this option in its default
+        value, True. This will prevent, for example, that the process hangs
+        indefinitely waiting on input which could never come, especially if
+        Circus runs as a daemon.
+
     **close_child_stdout**
         If set to True, the stdout stream of each process will be sent to
-        /dev/null after the fork. Defaults to False.
+        ``/dev/null`` after the fork. Defaults to False.
 
     **close_child_stderr**
         If set to True, the stderr stream of each process will be sent to
-        /dev/null after the fork. Defaults to False.
+        ``/dev/null`` after the fork. Defaults to False.
 
     **send_hup**
         If True, a process reload will be done by sending the SIGHUP signal.

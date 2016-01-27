@@ -161,6 +161,9 @@ class Process(object):
 
     - **pipe_stderr**: if True, will open a PIPE on stderr. default: True.
 
+    - **close_child_stdin**: If True, redirects the child process' stdin
+      to /dev/null after the fork. default: True.
+
     - **close_child_stdout**: If True, redirects the child process' stdout
       to /dev/null after the fork. default: False.
 
@@ -170,7 +173,7 @@ class Process(object):
     def __init__(self, name, wid, cmd, args=None, working_dir=None,
                  shell=False, uid=None, gid=None, env=None, rlimits=None,
                  executable=None, use_fds=False, watcher=None, spawn=True,
-                 pipe_stdout=True, pipe_stderr=True,
+                 pipe_stdout=True, pipe_stderr=True, close_child_stdin=True,
                  close_child_stdout=False, close_child_stderr=False):
 
         self.name = name
@@ -193,6 +196,7 @@ class Process(object):
         self.watcher = watcher
         self.pipe_stdout = pipe_stdout
         self.pipe_stderr = pipe_stderr
+        self.close_child_stdin = close_child_stdin
         self.close_child_stdout = close_child_stdout
         self.close_child_stderr = close_child_stderr
         self.stopping = False
@@ -263,7 +267,10 @@ class Process(object):
         args = self.format_args(sockets_fds=sockets_fds)
 
         def preexec():
-            streams = [sys.stdin]
+            streams = []
+
+            if self.close_child_stdin:
+                streams.append(sys.stdin)
 
             if self.close_child_stdout:
                 streams.append(sys.stdout)
