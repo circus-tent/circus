@@ -136,7 +136,8 @@ class WatchDog(CircusPlugin):
         self.pid_status = dict()
         all_watchers = self.call("list")
         for watcher_name in all_watchers['watchers']:
-            if self._match_watcher_name(watcher_name):
+            # This can be done via regex, but regex can be reconfigured and watchdog shouldn't kill itself
+            if self._match_watcher_name(watcher_name) and watcher_name != 'plugin:' + self.name:
                 processes = self.call("list", name=watcher_name)
                 if 'pids' in processes:
                     for pid in processes['pids']:
@@ -182,7 +183,9 @@ class WatchDog(CircusPlugin):
         :return: decoded message
         :rtype: dict or None
         """
-        result = re.match(self.msg_regex, data)
+        """regex is created with string, but bytes are received from the socket,
+        that cause exception. Probably this can be done better, that just decode data"""
+        result = re.match(self.msg_regex, data.decode())
         if result is not None:
             return result.groupdict()
 
@@ -217,6 +220,8 @@ class WatchDog(CircusPlugin):
 
         max_timeout = self.loop_rate * self.max_count
         too_old_time = time.time() - max_timeout
+        # Instead of del in loop, that will cause exception in Python3, add to list and del from pid_status after loop
+        pids_to_del = list()
         for pid, detail in self.pid_status.items():
             if detail['last_activity'] < too_old_time:
                 logger.info("watcher:%s, pid:%s is not responding. Kill it !",
@@ -233,4 +238,6 @@ class WatchDog(CircusPlugin):
 
                 # Trusting watcher to eventually stop the process after
                 # graceful timeout
-                del self.pid_status[pid]
+                pids_to_del.append(pid)
+        for pid in pids_to_del:
+            del self.pid_status[pid]
