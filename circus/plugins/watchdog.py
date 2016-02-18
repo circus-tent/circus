@@ -136,9 +136,8 @@ class WatchDog(CircusPlugin):
         self.pid_status = dict()
         all_watchers = self.call("list")
         for watcher_name in all_watchers['watchers']:
-            # Do not discover watchdog
-            if self._match_watcher_name(watcher_name) and \
-            watcher_name != 'plugin:' + self.name:
+            # TODO: Do not discover watchdog
+            if self._match_watcher_name(watcher_name):
                 processes = self.call("list", name=watcher_name)
                 if 'pids' in processes:
                     for pid in processes['pids']:

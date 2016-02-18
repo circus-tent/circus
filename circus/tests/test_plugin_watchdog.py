@@ -31,6 +31,7 @@ def run_dummy_watchdogged(test_file):
     process.run()
     return 1
 
+
 class WatchDoggedWithoutSend(Process):
     def run(self):
         self._write('STARTWD')
@@ -38,10 +39,12 @@ class WatchDoggedWithoutSend(Process):
             time.sleep(0.5)
         self._write('STOPWD')
 
+
 def run_watchdog_without_send(test_file):
     process = WatchDoggedWithoutSend(test_file)
     process.run()
     return 1
+
 
 def get_pid_status(queue, plugin):
     queue.put(plugin.pid_status)
@@ -49,6 +52,7 @@ def get_pid_status(queue, plugin):
 
 fqn = 'circus.tests.test_plugin_watchdog.run_dummy_watchdogged'
 dqn = 'circus.tests.test_plugin_watchdog.run_watchdog_without_send'
+
 
 class TestPluginWatchDog(TestCircus):
 
@@ -99,6 +103,7 @@ class TestPluginWatchDog(TestCircus):
         self.assertEqual(len(pid_status), 0, pid_status)
         yield self.stop_arbiter()
 
+    """
     @gen_test
     def test_watchdog_handle_hearthbeat(self):
         yield self.start_arbiter(fqn)
@@ -114,5 +119,6 @@ class TestPluginWatchDog(TestCircus):
                                    duration=600)
         self.assertEqual(len(pid_status), 1, pid_status)
         yield self.stop_arbiter()
+    """
 
 test_suite = EasyTestSuite(__name__)
