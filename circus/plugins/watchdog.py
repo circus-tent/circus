@@ -135,10 +135,10 @@ class WatchDog(CircusPlugin):
         """
         self.pid_status = dict()
         all_watchers = self.call("list")
-        """Probably it's also bad, that watchdog kills itself.
-        """
         for watcher_name in all_watchers['watchers']:
-            if self._match_watcher_name(watcher_name):
+            # Do not discover watchdog
+            if self._match_watcher_name(watcher_name) and \
+            watcher_name != 'plugin:' + self.name:
                 processes = self.call("list", name=watcher_name)
                 if 'pids' in processes:
                     for pid in processes['pids']:
