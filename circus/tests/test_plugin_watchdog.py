@@ -32,26 +32,11 @@ def run_dummy_watchdogged(test_file):
     return 1
 
 
-class WatchDoggedWithoutSend(Process):
-    def run(self):
-        self._write('STARTWD')
-        for _ in range(5):
-            time.sleep(0.5)
-        self._write('STOPWD')
-
-
-def run_watchdog_without_send(test_file):
-    process = WatchDoggedWithoutSend(test_file)
-    process.run()
-    return 1
-
-
 def get_pid_status(queue, plugin):
     queue.put(plugin.pid_status)
 
 
 fqn = 'circus.tests.test_plugin_watchdog.run_dummy_watchdogged'
-dqn = 'circus.tests.test_plugin_watchdog.run_watchdog_without_send'
 
 
 class TestPluginWatchDog(TestCircus):
@@ -87,38 +72,5 @@ class TestPluginWatchDog(TestCircus):
         self.assertEqual(len(pid_status), 0, pid_status)
         yield self.stop_arbiter()
 
-    @gen_test
-    def test_watchdog_kill_processes(self):
-        yield self.start_arbiter(dqn)
-        async_poll_for(self.test_file, 'START')
-        pubsub = self.arbiter.pubsub_endpoint
-
-        config = {'loop_rate': 0.1}
-        with warnings.catch_warnings():
-            pid_status = yield arp(WatchDog, config,
-                                   get_pid_status,
-                                   endpoint=self.arbiter.endpoint,
-                                   pubsub_endpoint=pubsub,
-                                   duration=1000)
-        self.assertEqual(len(pid_status), 0, pid_status)
-        yield self.stop_arbiter()
-
-    """
-    @gen_test
-    def test_watchdog_handle_hearthbeat(self):
-        yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'START')
-        pubsub = self.arbiter.pubsub_endpoint
-
-        config = {'loop_rate': 0.1}
-        with warnings.catch_warnings():
-            pid_status = yield arp(WatchDog, config,
-                                   get_pid_status,
-                                   endpoint=self.arbiter.endpoint,
-                                   pubsub_endpoint=pubsub,
-                                   duration=600)
-        self.assertEqual(len(pid_status), 1, pid_status)
-        yield self.stop_arbiter()
-    """
 
 test_suite = EasyTestSuite(__name__)
