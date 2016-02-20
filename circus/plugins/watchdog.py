@@ -139,7 +139,7 @@ class WatchDog(CircusPlugin):
         for watcher_name in all_watchers['watchers']:
             # do not discover watchdog
             if self._match_watcher_name(watcher_name) and \
-            watcher_name != self.plugin_name:
+               watcher_name != self.plugin_name:
                 processes = self.call("list", name=watcher_name)
                 if 'pids' in processes:
                     for pid in processes['pids']:
