@@ -4,7 +4,7 @@ from circus import logger
 import psutil
 import select
 import time
-from circus.py3compat import PY2
+from circus.py3compat import PY2, string_types
 
 __author__ = 'Scott Maxwell'
 
@@ -61,8 +61,11 @@ class PapaProcessProxy(Process):
         socket_names = set(socket_name.lower()
                            for socket_name in self.watcher._get_sockets_fds())
         self.cmd = self._fix_socket_name(self.cmd, socket_names)
-        self.args = [self._fix_socket_name(arg, socket_names)
-                     for arg in self.args]
+        if isinstance(self.args, string_types):
+            self.args = self._fix_socket_name(self.args, socket_names)
+        else:
+            self.args = [self._fix_socket_name(arg, socket_names)
+                         for arg in self.args]
         args = self.format_args()
         stdout = _bools_to_papa_out(self.pipe_stdout, self.close_child_stdout)
         stderr = _bools_to_papa_out(self.pipe_stderr, self.close_child_stderr)
