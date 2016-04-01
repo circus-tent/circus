@@ -1,5 +1,6 @@
 import errno
 import os
+import stat
 import tempfile
 
 
@@ -7,20 +8,25 @@ class Pidfile(object):
     """
     Manage a PID file. If a specific name is provided
     it and '"%s.oldpid" % name' will be used. Otherwise
-    we create a temp file using os.mkstemp.
+    we create a temp file using tempfile.mkstemp.
     """
 
     def __init__(self, fname):
         self.fname = fname
-        self.pid = None
+        self.pid = os.getpid()
+        # set permissions to -rw-r--r--
+        self.perm_mode = (stat.S_IRUSR | stat.S_IWUSR |
+                          stat.S_IRGRP |
+                          stat.S_IROTH)
 
     def create(self, pid):
+        pid = int(pid)
         oldpid = self.validate()
         if oldpid:
-            if oldpid == os.getpid():
+            if oldpid == pid:
                 return
-            raise RuntimeError("Already running on PID %s (or pid file '%s' "
-                               "is stale)" % (os.getpid(), self.fname))
+            raise RuntimeError("pid file '{0}' is stale, current pid {1}"
+                               .format(self.fname, pid))
 
         self.pid = pid
 
@@ -28,17 +34,17 @@ class Pidfile(object):
         if self.fname:
             fdir = os.path.dirname(self.fname)
             if fdir and not os.path.isdir(fdir):
-                raise RuntimeError("%s doesn't exist. Can't create"
-                                   "pidfile" % fdir)
-            fd = os.open(self.fname, os.O_CREAT | os.O_WRONLY)
+                raise RuntimeError("{0} doesn't exist. Can't create pidfile"
+                                   .format(fdir))
+            flags = os.O_CREAT | os.O_WRONLY | os.O_TRUNC
+            fd = os.open(self.fname, flags, self.perm_mode)
         else:
-            fd, self.fname = tempfile.mkstemp(dir=fdir)
+            fd, self.fname = tempfile.mkstemp()
 
+        os.chmod(self.fname, self.perm_mode)
         os.write(fd, "{0}\n".format(self.pid).encode('utf-8'))
+        os.fsync(fd)
         os.close(fd)
-
-        # set permissions to -rw-r--r--
-        os.chmod(self.fname, 420)
 
     def rename(self, path):
         self.unlink()
@@ -49,7 +55,10 @@ class Pidfile(object):
         """ delete pidfile"""
         try:
             with open(self.fname, "r") as f:
-                pid1 = int(f.read() or 0)
+                try:
+                    pid1 = int(f.read() or 0)
+                except ValueError:
+                    pid1 = self.pid
 
             if pid1 == self.pid:
                 os.unlink(self.fname)
@@ -74,6 +83,8 @@ class Pidfile(object):
                     if e.args[0] == errno.ESRCH:
                         return
                     raise
+        except ValueError:
+            return
         except IOError as e:
             if e.args[0] == errno.ENOENT:
                 return
