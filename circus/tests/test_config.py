@@ -42,7 +42,7 @@ _CONF = {
     'issue651': os.path.join(CONFIG_DIR, 'issue651.ini'),
     'issue665': os.path.join(CONFIG_DIR, 'issue665.ini'),
     'issue680': os.path.join(CONFIG_DIR, 'issue680.ini'),
-    'virtualenv': os.path.join(CONFIG_DIR, 'virtualenv.ini')
+    'virtualenv': os.path.join(CONFIG_DIR, 'virtualenv.ini'),
 }
 
 
