@@ -43,6 +43,7 @@ _CONF = {
     'issue665': os.path.join(CONFIG_DIR, 'issue665.ini'),
     'issue680': os.path.join(CONFIG_DIR, 'issue680.ini'),
     'virtualenv': os.path.join(CONFIG_DIR, 'virtualenv.ini'),
+    'empty_section': os.path.join(CONFIG_DIR, 'empty_section.ini'),
 }
 
 
@@ -371,6 +372,11 @@ class TestConfig(TestCase):
         watcher = conf['watchers'][0]
         self.assertEqual(watcher['virtualenv'], "/tmp/.virtualenvs/test")
         self.assertEqual(watcher['virtualenv_py_ver'], "3.3")
+
+    def test_empty_section(self):
+        conf = get_config(_CONF['empty_section'])
+        self.assertEqual([], conf.get('sockets'))
+        self.assertEqual([], conf.get('plugins'))
 
 
 test_suite = EasyTestSuite(__name__)
