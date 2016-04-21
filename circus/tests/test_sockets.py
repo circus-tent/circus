@@ -6,6 +6,7 @@ try:
 except ImportError:
     pass
 import mock
+import fcntl
 
 from circus.tests.support import TestCase, skipIf, EasyTestSuite, IS_WINDOWS
 from circus.sockets import CircusSocket, CircusSockets
@@ -19,6 +20,10 @@ def so_bindtodevice_supported():
         pass
     return False
 
+def is_nonblock(fd):
+    fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+    nonblock = fl & os.O_NONBLOCK
+    return nonblock != 0
 
 class TestSockets(TestCase):
 
@@ -107,6 +112,27 @@ class TestSockets(TestCase):
             self.assertEqual(sock.replace, True)
         finally:
             sock.close()
+
+    @skipIf(IS_WINDOWS, "Unix sockets not supported on this platform")
+    def test_load_from_config_blocking(self):
+        # test default to false
+        config = {'name': 'somename', 'host': 'localhost', 'port': 0}
+        sock = CircusSocket.load_from_config(config)
+        self.assertEqual(sock.blocking, False)
+        sock.bind_and_listen()
+        fl = fcntl.fcntl(sock.fileno(), fcntl.F_GETFL)
+        self.assertTrue(is_nonblock(sock.fileno()))
+        sock.close()
+
+        # test when true
+        config = {'name': 'somename', 'host': 'localhost', 'port': 0,
+                  'blocking': True}
+        sock = CircusSocket.load_from_config(config)
+        self.assertEqual(sock.blocking, True)
+        sock.bind_and_listen()
+        fl2 = fcntl.fcntl(sock.fileno(), fcntl.F_GETFL)
+        self.assertFalse(is_nonblock(sock.fileno()))
+        sock.close()
 
     @skipIf(IS_WINDOWS, "Unix sockets not supported on this platform")
     def test_unix_socket(self):
