@@ -37,7 +37,7 @@ class PapaSocketProxy(object):
     def __init__(self, name='', host=None, port=None,
                  family=None, type=None,
                  proto=None, backlog=None, path=None, umask=None, replace=None,
-                 interface=None, so_reuseport=False):
+                 interface=None, so_reuseport=False, blocking=False):
         if path is not None:
             if not hasattr(socket, 'AF_UNIX'):
                 raise NotImplementedError("AF_UNIX not supported on this"
@@ -122,7 +122,7 @@ class CircusSocket(socket.socket):
     def __init__(self, name='', host='localhost', port=8080,
                  family=socket.AF_INET, type=socket.SOCK_STREAM,
                  proto=0, backlog=2048, path=None, umask=None, replace=False,
-                 interface=None, so_reuseport=False):
+                 interface=None, so_reuseport=False, blocking=False):
         if path is not None:
             if not hasattr(socket, 'AF_UNIX'):
                 raise NotImplementedError("AF_UNIX not supported on this"
@@ -149,6 +149,7 @@ class CircusSocket(socket.socket):
         self.interface = interface
         self.backlog = backlog
         self.so_reuseport = so_reuseport
+        self.blocking = blocking
 
         if self.so_reuseport and hasattr(socket, 'SO_REUSEPORT'):
             try:
@@ -211,7 +212,10 @@ class CircusSocket(socket.socket):
             logger.error('Could not bind %s' % self.location)
             raise
 
-        self.setblocking(0)
+        if self.blocking:
+            self.setblocking(1)
+        else:
+            self.setblocking(0)
         if self.socktype in (socket.SOCK_STREAM, socket.SOCK_SEQPACKET):
             self.listen(self.backlog)
 
@@ -241,7 +245,8 @@ class CircusSocket(socket.socket):
                   'backlog': int(config.get('backlog', 2048)),
                   'so_reuseport': to_bool(config.get('so_reuseport')),
                   'umask': int(config.get('umask', 8)),
-                  'replace': config.get('replace')}
+                  'replace': config.get('replace'),
+                  'blocking': to_bool(config.get('blocking'))}
         use_papa = to_bool(config.get('use_papa')) and papa is not None
         proto_name = config.get('proto')
         if proto_name is not None:
