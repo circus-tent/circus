@@ -409,6 +409,9 @@ socket:NAME - as many sections as you want
         If set to True and SO_REUSEPORT is available on target platform, circus
         will create and bind new SO_REUSEPORT socket(s) for every worker it starts
         which is a user of this socket(s).
+    **blocking**
+        If `True`, socket is set to blocking. If `False`, socket is set to non-blocking.
+        (default: False)
 
     **use_papa**
         Set to true to use the :ref:`papa`.
