@@ -27,4 +27,3 @@ for i in range(50):
         }
     }
     """ % (command, name + str(i))))
-
