@@ -9,4 +9,3 @@ try:
     arbiter.start()
 finally:
     arbiter.stop()
-

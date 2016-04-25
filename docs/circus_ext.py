@@ -35,5 +35,6 @@ def generate_commands(app):
         toc.write("   :glob:\n\n")
         toc.write("   commands/*\n")
 
+
 def setup(app):
     app.connect('builder-inited', generate_commands)

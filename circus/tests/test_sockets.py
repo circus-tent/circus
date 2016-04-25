@@ -20,10 +20,12 @@ def so_bindtodevice_supported():
         pass
     return False
 
+
 def is_nonblock(fd):
     fl = fcntl.fcntl(fd, fcntl.F_GETFL)
     nonblock = fl & os.O_NONBLOCK
     return nonblock != 0
+
 
 class TestSockets(TestCase):
 
@@ -120,7 +122,6 @@ class TestSockets(TestCase):
         sock = CircusSocket.load_from_config(config)
         self.assertEqual(sock.blocking, False)
         sock.bind_and_listen()
-        fl = fcntl.fcntl(sock.fileno(), fcntl.F_GETFL)
         self.assertTrue(is_nonblock(sock.fileno()))
         sock.close()
 
@@ -130,7 +131,6 @@ class TestSockets(TestCase):
         sock = CircusSocket.load_from_config(config)
         self.assertEqual(sock.blocking, True)
         sock.bind_and_listen()
-        fl2 = fcntl.fcntl(sock.fileno(), fcntl.F_GETFL)
         self.assertFalse(is_nonblock(sock.fileno()))
         sock.close()
 

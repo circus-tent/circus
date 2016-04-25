@@ -6,7 +6,7 @@ import sys
 i = 0
 
 while True:
-    #print '%d:%d' % (os.getpid(), i)
+    # print '%d:%d' % (os.getpid(), i)
     sys.stdout.write('%d:%d\n' % (os.getpid(), i))
     sys.stdout.flush()
     time.sleep(0.1)

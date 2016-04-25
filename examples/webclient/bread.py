@@ -17,6 +17,7 @@ ZMQ_ENDPOINT = 'tcp://127.0.0.1:5556'
 
 app = Flask(__name__)
 
+
 @app.route('/')
 def index():
     return render_template('index.html')

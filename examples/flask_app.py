@@ -1,6 +1,6 @@
-#import resource
+# import resource
 
-#resource.setrlimit(resource.RLIMIT_NOFILE, (100, 100))
+# resource.setrlimit(resource.RLIMIT_NOFILE, (100, 100))
 
 from flask import Flask
 app = Flask(__name__)
