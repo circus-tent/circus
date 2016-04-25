@@ -260,6 +260,10 @@ class Process(object):
 
         return sockets_fds
 
+    def _get_stdin_socket_fd(self):
+        if self.watcher is not None:
+            return self.watcher._get_stdin_socket_fd()
+
     def spawn(self):
         self.started = time.time()
         sockets_fds = self._get_sockets_fds()
@@ -336,6 +340,10 @@ class Process(object):
 
             if self.uid:
                 os.setuid(self.uid)
+
+            stdin_socket_fd = self._get_stdin_socket_fd()
+            if stdin_socket_fd is not None:
+                os.dup2(stdin_socket_fd, 0)
 
         if IS_WINDOWS:
             # On Windows we can't use a pre-exec function

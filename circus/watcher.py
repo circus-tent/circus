@@ -179,6 +179,10 @@ class Watcher(object):
     - **virtualenv** -- The root directory of a virtualenv. If provided, the
       watcher will load the environment for its execution. (default: None)
 
+    - **stdin_socket**: If not None, the socket with matching name is placed
+      at file descriptor 0 (stdin) of the processes.
+      default: None.
+
     - **close_child_stdin**: If True, closes the stdin after the fork.
       default: True.
 
@@ -202,7 +206,7 @@ class Watcher(object):
                  copy_env=False, copy_path=False, max_age=0,
                  max_age_variance=30, hooks=None, respawn=True,
                  autostart=True, on_demand=False, virtualenv=None,
-                 close_child_stdin=True, close_child_stdout=False,
+                 stdin_socket=None, close_child_stdin=True, close_child_stdout=False,
                  close_child_stderr=False, virtualenv_py_ver=None,
                  use_papa=False, **options):
         self.name = name
@@ -238,6 +242,7 @@ class Watcher(object):
 
         self.respawn = respawn
         self.autostart = autostart
+        self.stdin_socket = stdin_socket
         self.close_child_stdin = close_child_stdin
         self.close_child_stdout = close_child_stdout
         self.close_child_stderr = close_child_stderr
@@ -613,6 +618,13 @@ class Watcher(object):
         return dict((name, sock.fileno())
                     for name, sock in self.sockets.items()
                     if sock.use_papa == self.use_papa)
+
+    def _get_stdin_socket_fd(self):
+        if self.stdin_socket is not None:
+            if not self.sockets.has_key(self.stdin_socket):
+                raise Exception("stdin_socket '%s' does not exist" % self.stdin_socket)
+            return self.sockets[self.stdin_socket].fileno()
+
 
     def spawn_process(self, recovery_wid=None):
         """Spawn process.
