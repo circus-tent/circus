@@ -140,4 +140,4 @@ world simply by pointing the application callable.
 
 Chaussette also comes with many backends like Gevent or Meinheld.
 
-Read https://chaussette.readthedocs.org/ for all options.
+Read https://chaussette.readthedocs.io/ for all options.
