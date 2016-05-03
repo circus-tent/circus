@@ -234,6 +234,10 @@ watcher:NAME - as many sections as you want
         be passed the constructor when creating an instance of the
         class defined in **stdout_stream.class**.
 
+    **stdin_socket**
+        If not None, the socket with matching name is placed at file descriptor 0 (stdin)
+	of the processes. (Default: None)
+
     **close_child_stdin**
         If set to True, the stdin stream of each process will be sent to
         ``/dev/null`` after the fork. Defaults to True.
