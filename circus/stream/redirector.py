@@ -44,8 +44,7 @@ class Redirector(object):
         self.buffer = buffer
         self.loop = loop or ioloop.IOLoop.instance()
 
-    def _start_one(self, stream_name, process, pipe):
-        fd = pipe.fileno()
+    def _start_one(self, fd, stream_name, process, pipe):
         if fd not in self._active:
             handler = self.Handler(self, stream_name, process, pipe)
             self.loop.add_handler(fd, handler, ioloop.IOLoop.READ)
@@ -55,8 +54,9 @@ class Redirector(object):
 
     def start(self):
         count = 0
-        for name, process, pipe in self.pipes.values():
-            count += self._start_one(name, process, pipe)
+        for fd, value in self.pipes.items():
+            name, process, pipe = value
+            count += self._start_one(fd, name, process, pipe)
         self.running = True
         return count
 
@@ -87,7 +87,7 @@ class Redirector(object):
             self._stop_one(fd)
             self.pipes[fd] = name, process, pipe
             if self.running:
-                self._start_one(name, process, pipe)
+                self._start_one(fd, name, process, pipe)
         process.redirected = True
 
     def remove_fd(self, fd):
