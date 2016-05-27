@@ -111,8 +111,6 @@ case, the application will be started and restarted in case it crashes ::
     command=npm start
     directory=/home/www/my-server/
     user=www-data
-    autostart=true
-    autorestart=true
     redirect_stderr=True
 
 In Circus, the same configuration is done by::
