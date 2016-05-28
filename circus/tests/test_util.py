@@ -56,6 +56,11 @@ class TestUtil(TestCase):
 
         class WorkerMock(mock.MagicMock):
             def __getattr__(self, attr):
+                # this attr is accessed during the initialization
+                # of the MagicMock, so we cannot raise here
+                if attr == "_mock_methods":
+                    return None
+
                 raise util.AccessDenied()
 
         worker = WorkerMock()
