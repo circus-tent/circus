@@ -14,16 +14,14 @@ from zmq.utils.strtypes import u
 class Process(object):
 
     def __init__(self, test_file):
-        with open('/tmp/aack.txt', 'a') as f:
-            if os.path.exists(test_file):
-                f.write('Removing {0}\n'.format(test_file))
-                if os.path.isdir(test_file):
-                    os.removedirs(test_file)
-                else:
-                    os.unlink(test_file)
+        try:
+            if os.path.isdir(test_file):
+                os.removedirs(test_file)
             else:
-                f.write('Hmm, {0} is missing\n'.format(test_file))
-            f.write('Creating folder {0}\n'.format(test_file))
+                os.unlink(test_file)
+        except OSError:
+            pass
+        else:
             os.makedirs(test_file)
 
         # init signal handling
