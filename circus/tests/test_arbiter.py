@@ -51,9 +51,15 @@ class TestTrainer(TestCircus):
     def setUp(self):
         super(TestTrainer, self).setUp()
         self.old = watcher_mod.tornado_sleep
+        self.to_remove = []
 
     def tearDown(self):
         watcher_mod.tornado_sleep = self.old
+        for path in self.to_remove:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
         super(TestTrainer, self).tearDown()
 
     @tornado.gen.coroutine
@@ -111,6 +117,7 @@ class TestTrainer(TestCircus):
     def _get_cmd(self):
         fd, testfile = mkstemp()
         os.close(fd)
+        self.to_remove.append(testfile)
         cmd = '%s %s %s %s' % (
             PYTHON, _GENERIC,
             'circus.tests.support.run_process',
@@ -509,6 +516,7 @@ class TestTrainer(TestCircus):
         self.assertEqual(nb_processes(), 3)
         # wait for the plugin to receive the signal
         self.assertTrue(async_poll_for(datafile, 'test:spawn'))
+        os.remove(datafile)
 
     # XXX TODO
     @tornado.testing.gen_test
