@@ -62,7 +62,7 @@ class TestResourceWatcher(TestCircus):
     def test_resource_watcher_max_mem(self):
         yield self.start_arbiter(fqn)
         async_poll_for(self.test_file, 'START')
-        config = {'loop_rate': 0.1, 'max_mem': 0.05, 'watcher': 'test'}
+        config = {'loop_rate': 0.1, 'max_mem': 0.01, 'watcher': 'test'}
         kw = {'endpoint': self.arbiter.endpoint,
               'pubsub_endpoint': self.arbiter.pubsub_endpoint}
 
