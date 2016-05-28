@@ -7,23 +7,19 @@ addons:
       - libev-dev
       - libevent-dev
 env:
-  - TOX_ENV=py32
+  - TOX_ENV=py26
+  - TOX_ENV=py26-no-gevent
+  - TOX_ENV=py27
+  - TOX_ENV=py27-no-gevent
   - TOX_ENV=py33
   - TOX_ENV=py34
   - TOX_ENV=py35
-  - TOX_ENV=py26-no-gevent
-  - TOX_ENV=py27-no-gevent
   - TOX_ENV=docs
   - TOX_ENV=flake8
-  - TOX_ENV=circus-web
-  - TOX_ENV=py26
-  - TOX_ENV=py27
+
 script:
     - tox -e $TOX_ENV
 install:
-    # For Python 3.2
-    - pip install tox "virtualenv<14"
-
     - pip install tox
 
 notifications:
