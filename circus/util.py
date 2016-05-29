@@ -231,7 +231,7 @@ def get_info(process=None, interval=0, with_childs=False):
         info['cpu'] = "N/A"
 
     try:
-        info['mem'] = round(get_memory_percent(process), 1)
+        info['mem'] = round(get_memory_percent(process), 3)
     except AccessDenied:
         info['mem'] = "N/A"
 
