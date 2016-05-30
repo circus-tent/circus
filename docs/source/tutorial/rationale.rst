@@ -102,7 +102,7 @@ Configuration
 Both systems use an ini-like file as a configuration.
 
 - `Supervisor documentation <http://supervisord.org/configuration.html>`_
-- `Circus documentation <http://circus.readthedocs.org/en/latest/configuration/>`_
+- `Circus documentation <http://circus.readthedocs.io/en/latest/configuration/>`_
 
 Here's a small example of running an application with Supervisor. In this
 case, the application will be started and restarted in case it crashes ::

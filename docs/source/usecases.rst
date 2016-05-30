@@ -118,4 +118,4 @@ the *env* configation option:
     PYTHONPATH = /path/to/parent-of-dproject
     DJANGO_SETTINGS_MODULE=dproject.settings
 
-See http://chaussette.readthedocs.org for more about chaussette.
+See http://chaussette.readthedocs.io for more about chaussette.
