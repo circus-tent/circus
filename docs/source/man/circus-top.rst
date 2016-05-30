@@ -38,4 +38,4 @@ See also
 
 `circus` (1), `circusctl` (1), `circusd` (1), `circusd-stats` (1), `circus-plugin` (1).
 
-Full Documentation is available at http://circus.readthedocs.org
+Full Documentation is available at https://circus.readthedocs.io

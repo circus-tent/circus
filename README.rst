@@ -20,8 +20,8 @@ Circus can be used as a library or through the command line.
 
 Links:
 
-- Full Documentation : http://circus.readthedocs.org
-- How to Contribute : http://circus.readthedocs.org/en/latest/contributing/
+- Full Documentation : https://circus.readthedocs.io
+- How to Contribute : https://circus.readthedocs.io/en/latest/contributing/
 - Mailing List : https://groups.yahoo.com/neo/groups/circus-dev/info
 - Repository & Issue Tracker : https://github.com/circus-tent/circus
 - IRC : Freenode, channel #mozilla-circus
