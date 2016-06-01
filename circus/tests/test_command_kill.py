@@ -81,6 +81,10 @@ class KillCommandTest(TestCircus):
         self.reader = StreamReader(self.stream)
         self._client = None
 
+    def tearDown(self):
+        self._client.stop()
+        self.stream.close()
+
     @property
     def client(self):
         if not self._client:
@@ -113,6 +117,7 @@ class KillCommandTest(TestCircus):
 
         yield self.assertMessage('SIGINT')
         yield self.assertMessage('STOPPED')
+        yield self.stop_arbiter()
 
     @tornado.testing.gen_test
     def test_kills_after_graceful_timeout(self):
@@ -129,3 +134,4 @@ class KillCommandTest(TestCircus):
         self.assertEqual(res['status'], 'ok')
 
         yield self.assertMessage('SIGINT')
+        yield self.stop_arbiter()
