@@ -51,7 +51,7 @@ class FakeProcess(object):
     def returncode(self):
         return 0
 
-    def children(self):
+    def children(self, **kwargs):
         return []
 
     def is_alive(self):
