@@ -532,7 +532,7 @@ class TestTrainer(TestCircus):
     # XXX TODO
     @tornado.testing.gen_test
     def _test_singleton(self):
-        self._stop_runners()
+        yield self._stop_runners()
 
         dummy_process = 'circus.tests.support.run_process'
         self._run_circus(dummy_process, singleton=True)
@@ -548,7 +548,7 @@ class TestTrainer(TestCircus):
         """test_udp_discovery: Test that when the circusd answer UDP call.
 
         """
-        self._stop_runners()
+        yield self._stop_runners()
 
         dummy_process = 'circus.tests.support.run_process'
         self._run_circus(dummy_process)
