@@ -167,7 +167,7 @@ class TestWatcher(TestCircus):
 
         # we want to make sure the watcher is really up and running 14
         # processes, and stable
-        async_poll_for(self.test_file, 'START' * 15)
+        yield async_poll_for(self.test_file, 'START' * 15)
         truncate_file(self.test_file)  # make sure we have a clean slate
 
         # we want a max age of 1 sec.

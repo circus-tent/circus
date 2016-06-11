@@ -44,7 +44,7 @@ class TestPluginWatchDog(TestCircus):
     @gen_test
     def test_watchdog_discovery_found(self):
         yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'STARTWD')
+        yield async_poll_for(self.test_file, 'STARTWD')
         pubsub = self.arbiter.pubsub_endpoint
 
         config = {'loop_rate': 0.1, 'watchers_regex': "^test.*$"}
@@ -55,12 +55,12 @@ class TestPluginWatchDog(TestCircus):
                                    pubsub_endpoint=pubsub)
         self.assertEqual(len(pid_status), 1, pid_status)
         yield self.stop_arbiter()
-        async_poll_for(self.test_file, 'STOPWD')
+        yield async_poll_for(self.test_file, 'STOPWD')
 
     @gen_test
     def test_watchdog_discovery_not_found(self):
         yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'START')
+        yield async_poll_for(self.test_file, 'START')
         pubsub = self.arbiter.pubsub_endpoint
 
         config = {'loop_rate': 0.1, 'watchers_regex': "^foo.*$"}

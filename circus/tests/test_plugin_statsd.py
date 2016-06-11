@@ -15,7 +15,7 @@ class TestFullStats(TestCircus):
     def test_full_stats(self):
         dummy_process = 'circus.tests.support.run_process'
         yield self.start_arbiter(dummy_process)
-        async_poll_for(self.test_file, 'START')
+        yield async_poll_for(self.test_file, 'START')
 
         config = {'loop_rate': 0.2}
         gauges = yield async_run_plugin(

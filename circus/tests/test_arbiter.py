@@ -314,7 +314,8 @@ class TestTrainer(TestCircus):
         truncate_file(self.test_file)  # clean slate
 
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')
+        self.assertTrue(res)  # restarted
 
         resp = yield self._call("list", name=name)
         processes2 = resp.get('pids')
@@ -335,7 +336,8 @@ class TestTrainer(TestCircus):
         truncate_file(self.test_file)  # clean slate
 
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')
+        self.assertTrue(res)  # restarted
 
         resp = yield self._call("list", name=name)
         processes2 = resp.get('pids')
@@ -354,7 +356,8 @@ class TestTrainer(TestCircus):
         processes1 = resp.get('pids')
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload", sequential=True)
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
         resp = yield self._call("list", name=name)
         processes2 = resp.get('pids')
         self.assertNotEqual(processes1, processes2)
@@ -369,7 +372,8 @@ class TestTrainer(TestCircus):
 
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
 
         resp = yield self._call("list", name="test")
         processes2 = resp.get('pids')
@@ -389,7 +393,8 @@ class TestTrainer(TestCircus):
 
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
 
         resp = yield self._call("stats", name="test")
         processes2 = list(resp['info'].keys())
@@ -400,7 +405,8 @@ class TestTrainer(TestCircus):
 
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
 
         resp = yield self._call("stats", name="test")
         processes3 = list(resp['info'].keys())
@@ -425,7 +431,8 @@ class TestTrainer(TestCircus):
 
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
 
         resp = yield self._call("stats", name="test")
         processes2 = list(resp['info'].keys())
@@ -436,7 +443,8 @@ class TestTrainer(TestCircus):
 
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
 
         resp = yield self._call("stats", name="test")
         processes3 = list(resp['info'].keys())
@@ -503,19 +511,22 @@ class TestTrainer(TestCircus):
             return cli.send_message('incr', name='test')
 
         # wait for the plugin to be started
-        self.assertTrue(async_poll_for(datafile, 'PLUGIN STARTED'))
+        res = yield async_poll_for(datafile, 'PLUGIN STARTED')
+        self.assertTrue(res)
 
         cli = CircusClient()
         self.assertEqual(nb_processes(), 1)
         incr_processes()
         self.assertEqual(nb_processes(), 2)
         # wait for the plugin to receive the signal
-        self.assertTrue(async_poll_for(datafile, 'test:spawn'))
+        res = yield async_poll_for(datafile, 'test:spawn')
+        self.assertTrue(res)
         truncate_file(datafile)
         incr_processes()
         self.assertEqual(nb_processes(), 3)
         # wait for the plugin to receive the signal
-        self.assertTrue(async_poll_for(datafile, 'test:spawn'))
+        res = yield async_poll_for(datafile, 'test:spawn')
+        self.assertTrue(res)
         os.remove(datafile)
 
     # XXX TODO
