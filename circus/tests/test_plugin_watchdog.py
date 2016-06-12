@@ -21,7 +21,6 @@ class DummyWatchDogged(Process):
                 message = "{pid};{time}".format(pid=my_pid, time=time.time())
                 sock.sendto(message.encode('utf-8'), ('127.0.0.1', 1664))
                 time.sleep(0.5)
-            self._write('STOPWD')
         finally:
             sock.close()
 
@@ -55,7 +54,6 @@ class TestPluginWatchDog(TestCircus):
                                    pubsub_endpoint=pubsub)
         self.assertEqual(len(pid_status), 1, pid_status)
         yield self.stop_arbiter()
-        yield async_poll_for(self.test_file, 'STOPWD')
 
     @gen_test
     def test_watchdog_discovery_not_found(self):
