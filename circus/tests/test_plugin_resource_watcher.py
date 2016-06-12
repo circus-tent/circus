@@ -7,8 +7,8 @@ from circus.tests.support import async_run_plugin, EasyTestSuite
 from circus.plugins.resource_watcher import ResourceWatcher
 
 # Make sure we don't allow more than 300MB in case things go wrong
-MAX_CHUNKS = 10000
-CHUNK_SIZE = 30000
+MAX_CHUNKS = 1000000
+CHUNK_SIZE = 300
 
 
 class Leaky(Process):
