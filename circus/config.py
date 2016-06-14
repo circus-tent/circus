@@ -31,6 +31,7 @@ def watcher_defaults():
         'send_hup': False,
         'stop_signal': signal.SIGTERM,
         'stop_children': False,
+        'async_kill': False,
         'max_retry': 5,
         'graceful_timeout': 30,
         'rlimits': dict(),
@@ -223,7 +224,8 @@ def get_config(config_file):
                 # default bool to False
                 elif opt in ('shell', 'send_hup', 'stop_children',
                              'close_child_stderr', 'use_sockets', 'singleton',
-                             'copy_env', 'copy_path', 'close_child_stdout'):
+                             'copy_env', 'copy_path', 'close_child_stdout',
+                             'async_kill'):
                     watcher[opt] = dget(section, opt, False, bool)
                 elif opt == 'stop_signal':
                     watcher['stop_signal'] = to_signum(val)

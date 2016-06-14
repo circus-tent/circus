@@ -69,6 +69,12 @@ class Watcher(object):
     - **stop_children**: send the **stop_signal** to the children too.
       Defaults to False.
 
+    - **async_kill**: don't wait for kill total completion (SIGTERM + 
+      graceful timeout + SIGKILL), can help if you have a big graceful
+      timeout and if you don't worry about to have more processes than
+      numprocesses during the graceful killing phase.
+      Defaults to False.
+
     - **env**: a mapping containing the environment variables the command
       will run with. Optional.
 
@@ -194,7 +200,7 @@ class Watcher(object):
 
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
                  working_dir=None, shell=False, shell_args=None, uid=None,
-                 max_retry=5, gid=None, send_hup=False,
+                 max_retry=5, gid=None, send_hup=False, async_kill=False,
                  stop_signal=signal.SIGTERM, stop_children=False, env=None,
                  graceful_timeout=30.0, prereload_fn=None, rlimits=None,
                  executable=None, stdout_stream=None, stderr_stream=None,
@@ -311,6 +317,7 @@ class Watcher(object):
         self.send_hup = send_hup
         self.stop_signal = stop_signal
         self.stop_children = stop_children
+        self.async_kill = async_kill
         self.sockets = self.evpub_socket = None
         self.arbiter = None
         self.hooks = {}
@@ -520,6 +527,9 @@ class Watcher(object):
         for pid in list(self.processes.keys()):
             self.reap_process(pid)
 
+    def _async_kill_cb(self, future):
+        pass
+
     @gen.coroutine
     @util.debuglog
     def manage_processes(self):
@@ -552,12 +562,16 @@ class Watcher(object):
                     self.processes.pop(process.pid)
                 else:
                     processes_to_kill.append(process)
-
-            removes = yield [self.kill_process(process)
-                             for process in processes_to_kill]
-            for i, process in enumerate(processes_to_kill):
-                if removes[i]:
-                    self.processes.pop(process.pid)
+            if self.async_kill:
+                for process in processes_to_kill:
+                    self.loop.add_future(self.kill_process(process),
+                                         self._async_kill_cb)
+            else:
+                removes = yield [self.kill_process(process)
+                                 for process in processes_to_kill]
+                for i, process in enumerate(processes_to_kill):
+                    if removes[i]:
+                        self.processes.pop(process.pid)
 
     @gen.coroutine
     @util.debuglog
@@ -565,10 +579,16 @@ class Watcher(object):
         expired_processes = [p for p in self.processes.values()
                              if p.age() > (self.max_age + randint(0,
                                            self.max_age_variance))]
-        removes = yield [self.kill_process(x) for x in expired_processes]
-        for i, process in enumerate(expired_processes):
-            if removes[i]:
+        if self.async_kill:
+            for process in expired_processes:
                 self.processes.pop(process.pid)
+                self.loop.add_future(self.kill_process(process),
+                                     self._async_kill_cb)
+        else:
+            removes = yield [self.kill_process(x) for x in expired_processes]
+            for i, process in enumerate(expired_processes):
+                if removes[i]:
+                    self.processes.pop(process.pid)
 
     @gen.coroutine
     @util.debuglog
