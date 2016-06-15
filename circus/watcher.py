@@ -17,6 +17,7 @@ from tornado import gen
 from psutil import NoSuchProcess, TimeoutExpired
 import zmq.utils.jsonapi as json
 from zmq.eventloop import ioloop
+from functools import partial
 
 from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus.papa_process_proxy import PapaProcessProxy
@@ -284,6 +285,7 @@ class Watcher(object):
 
         self.working_dir = working_dir
         self.processes = {}
+        self.async_killing_futures = {}
         self.shell = shell
         self.shell_args = shell_args
         self.uid = uid
@@ -527,8 +529,9 @@ class Watcher(object):
         for pid in list(self.processes.keys()):
             self.reap_process(pid)
 
-    def _async_kill_cb(self, future):
-        pass
+    def _async_kill_cb(self, pid, future):
+        logger.debug("_async_kill_cb called")
+        self.async_killing_futures.pop(pid)
 
     @gen.coroutine
     @util.debuglog
@@ -549,8 +552,10 @@ class Watcher(object):
         if len(self.processes) < self.numprocesses and not self.is_stopping():
             if self.respawn:
                 yield self.spawn_processes()
-            elif not len(self.processes) and not self.on_demand:
-                yield self._stop()
+            elif not len(self.processes) and \
+                 not self.on_demand and \
+                 len(self.async_killing_futures) == 0:
+                yield self._stop(True)
 
         # removing extra processes
         if len(self.processes) > self.numprocesses:
@@ -564,8 +569,12 @@ class Watcher(object):
                     processes_to_kill.append(process)
             if self.async_kill:
                 for process in processes_to_kill:
-                    self.loop.add_future(self.kill_process(process),
-                                         self._async_kill_cb)
+                    self.processes.pop(process.pid)
+                    future = self.kill_process(process)
+                    self.async_killing_futures[process.pid] = future
+                    self.loop.add_future(future,
+                                         partial(self._async_kill_cb,
+                                                 process.pid))
             else:
                 removes = yield [self.kill_process(process)
                                  for process in processes_to_kill]
@@ -582,8 +591,11 @@ class Watcher(object):
         if self.async_kill:
             for process in expired_processes:
                 self.processes.pop(process.pid)
-                self.loop.add_future(self.kill_process(process),
-                                     self._async_kill_cb)
+                future = self.kill_process(process)
+                self.async_killing_futures[process.pid] = future
+                self.loop.add_future(future,
+                                     partial(self._async_kill_cb,
+                                             process.pid))
         else:
             removes = yield [self.kill_process(x) for x in expired_processes]
             for i, process in enumerate(expired_processes):
@@ -617,7 +629,8 @@ class Watcher(object):
         for i in range(self.numprocesses - len(self.processes)):
             res = self.spawn_process()
             if res is False:
-                yield self._stop()
+                if len(self.async_killing_futures) == 0:
+                    yield self._stop(True)
                 break
             delay = self.warmup_delay
             if isinstance(res, float):
@@ -746,7 +759,7 @@ class Watcher(object):
             if self.stop_children:
                 self.send_signal_process(process, stop_signal)
             else:
-                self.send_signal(process.pid, stop_signal)
+                self._send_signal(process, stop_signal)
                 self.notify_event("kill", {"process_pid": process.pid,
                                            "time": time.time()})
         except NoSuchProcess:
@@ -788,18 +801,22 @@ class Watcher(object):
                 raise
 
     @util.debuglog
-    def send_signal(self, pid, signum):
+    def _send_signal(self, process, signum):
         is_sigkill = hasattr(signal, 'SIGKILL') and signum == signal.SIGKILL
+        pid = process.pid
+        hook_result = self.call_hook("before_signal",
+                                     pid=pid, signum=signum)
+        if not is_sigkill and not hook_result:
+            logger.debug("before_signal hook didn't return True "
+                         "=> signal %i is not sent to %i" % (signum, pid))
+        else:
+            process.send_signal(signum)
+        self.call_hook("after_signal", pid=pid, signum=signum)
+
+    @util.debuglog
+    def send_signal(self, pid, signum):
         if pid in self.processes:
-            process = self.processes[pid]
-            hook_result = self.call_hook("before_signal",
-                                         pid=pid, signum=signum)
-            if not is_sigkill and not hook_result:
-                logger.debug("before_signal hook didn't return True "
-                             "=> signal %i is not sent to %i" % (signum, pid))
-            else:
-                process.send_signal(signum)
-            self.call_hook("after_signal", pid=pid, signum=signum)
+            self._send_signal(self.processes[pid], signum)
         else:
             logger.debug('process %s does not exist' % pid)
 
@@ -866,6 +883,9 @@ class Watcher(object):
             # We ignore the hook result
             self.call_hook('before_stop')
             yield self.kill_processes()
+            if len(self.async_killing_futures) > 0:
+                yield self.async_killing_futures.values()
+                self.async_killing_futures = {}
             self.reap_processes()
 
         # stop redirectors
