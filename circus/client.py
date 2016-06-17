@@ -50,8 +50,10 @@ class AsyncCircusClient(object):
             self.socket.disconnect(self.endpoint)
         self.stream.close()
 
+    @tornado.gen.coroutine
     def send_message(self, command, **props):
-        return self.call(make_message(command, **props))
+        res = yield self.call(make_message(command, **props))
+        raise tornado.gen.Return(res)
 
     @tornado.gen.coroutine
     def call(self, cmd):
