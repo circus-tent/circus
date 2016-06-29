@@ -63,7 +63,7 @@ class Controller(object):
                                   self.handle_autodiscover_message,
                                   ioloop.IOLoop.READ)
         except (IOError, OSError, ValueError):
-            message = ("Multicast discovery is disabled, there was an"
+            message = ("Multicast discovery is disabled, there was an "
                        "error during udp socket creation.")
             logger.warning(message, exc_info=True)
 
