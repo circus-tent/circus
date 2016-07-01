@@ -724,7 +724,7 @@ class Watcher(object):
             children = process.children()
 
             # sending the signal to the process itself
-            self.send_signal(process.pid, signum)
+            self._send_signal(process, signum)
             self.notify_event("kill", {"process_pid": process.pid,
                                        "time": time.time()})
         except NoSuchProcess:
