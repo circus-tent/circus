@@ -49,7 +49,7 @@ class StdinSocketTest(TestCircus):
         sk = CircusSocket(name='test', host='localhost', port=0)
         yield self.start_arbiter(cmd=cmd, stdout_stream=stdout_stream,
                                  arbiter_kw={'sockets': [sk]},
-                                 stdin_socket = 'test')
+                                 stdin_socket = 'test', use_sockets = True)
 
         # check same socket in child fd 0 
         addr_string_actual = yield read_from_stream(stream)
