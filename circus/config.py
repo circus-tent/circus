@@ -189,15 +189,19 @@ def get_config(config_file):
     sockets = []
 
     for section in cfg.sections():
+        section_items = dict(cfg.items(section))
+        if list(section_items.keys()) in [[], ['__name__']]:
+            # Skip empty sections
+            continue
         if section.startswith("socket:"):
-            sock = dict(cfg.items(section))
+            sock = section_items
             sock['name'] = section.split("socket:")[-1].lower()
             sock['so_reuseport'] = dget(section, "so_reuseport", False, bool)
             sock['replace'] = dget(section, "replace", False, bool)
             sockets.append(sock)
 
         if section.startswith("plugin:"):
-            plugin = dict(cfg.items(section))
+            plugin = section_items
             plugin['name'] = section
             if 'priority' in plugin:
                 plugin['priority'] = int(plugin['priority'])
