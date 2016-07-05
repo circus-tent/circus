@@ -621,7 +621,7 @@ class Watcher(object):
 
     def _get_stdin_socket_fd(self):
         if self.stdin_socket is not None:
-            if not self.sockets.has_key(self.stdin_socket):
+            if self.stdin_socket not in self.sockets:
                 raise Exception("stdin_socket '%s' does not exist" % self.stdin_socket)
             return self.sockets[self.stdin_socket].fileno()
 
