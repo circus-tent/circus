@@ -1,17 +1,15 @@
 import sys
-import os
 import tornado
-import signal
 import time
 import socket
 
-from circus.tests.support import TestCircus, EasyTestSuite, TimeoutException
+from circus.tests.support import TestCircus, TimeoutException
 from circus.tests.support import skipIf, IS_WINDOWS
 from circus.stream import QueueStream, Empty
 from circus.util import tornado_sleep
 from zmq.utils.strtypes import u
 from circus.sockets import CircusSocket
-from circus.watcher import Watcher
+
 
 def run_process(test_file):
     # get stdin socket and output bound address
@@ -19,6 +17,7 @@ def run_process(test_file):
     hostaddr, port = sock.getsockname()
     sys.stdout.write("%s %s" % (hostaddr, port))
     return 1
+
 
 @tornado.gen.coroutine
 def read_from_stream(stream, timeout=5):
@@ -49,9 +48,9 @@ class StdinSocketTest(TestCircus):
         sk = CircusSocket(name='test', host='localhost', port=0)
         yield self.start_arbiter(cmd=cmd, stdout_stream=stdout_stream,
                                  arbiter_kw={'sockets': [sk]},
-                                 stdin_socket = 'test', use_sockets = True)
+                                 stdin_socket='test', use_sockets=True)
 
-        # check same socket in child fd 0 
+        # check same socket in child fd 0
         addr_string_actual = yield read_from_stream(stream)
         addr_string_expected = "%s %s" % (sk.host, sk.port)
         self.assertEqual(addr_string_actual, addr_string_expected)
@@ -64,10 +63,9 @@ class StdinSocketTest(TestCircus):
         raised = False
         try:
             # expecting exception for no such socket
-            yield self.start_arbiter(stdin_socket = 'test')
+            yield self.start_arbiter(stdin_socket='test')
         except Exception:
             raised = True
         self.assertTrue(raised)
 
         yield self.stop_arbiter()
-

@@ -206,7 +206,8 @@ class Watcher(object):
                  copy_env=False, copy_path=False, max_age=0,
                  max_age_variance=30, hooks=None, respawn=True,
                  autostart=True, on_demand=False, virtualenv=None,
-                 stdin_socket=None, close_child_stdin=True, close_child_stdout=False,
+                 stdin_socket=None, close_child_stdin=True,
+                 close_child_stdout=False,
                  close_child_stderr=False, virtualenv_py_ver=None,
                  use_papa=False, **options):
         self.name = name
@@ -622,9 +623,9 @@ class Watcher(object):
     def _get_stdin_socket_fd(self):
         if self.stdin_socket is not None:
             if self.stdin_socket not in self.sockets:
-                raise Exception("stdin_socket '%s' does not exist" % self.stdin_socket)
+                raise Exception("stdin_socket '%s' does not exist" %
+                                self.stdin_socket)
             return self.sockets[self.stdin_socket].fileno()
-
 
     def spawn_process(self, recovery_wid=None):
         """Spawn process.
