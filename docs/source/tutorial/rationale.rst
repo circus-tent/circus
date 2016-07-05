@@ -66,19 +66,21 @@ If you are coming from `Supervisor <http://supervisord.org>`_, this page
 tries to give an overview of how the tools differ.
 
 
-Differences overview
---------------------
+Similarities overview
+---------------------
 
 Supervisor & Circus have the same goals - they both manage processes and
 provide a command-line script — respectively **supervisord** and **circusd** —
 that reads a configuration file, forks new processes and keep them alive.
 
-Circus has an extra feature: the ability to bind sockets and
-let the processes it manages use them. This "pre-fork" model is used
+Circus & Supervisor both have the ability to bind sockets and
+let the processes they manage use them. This "pre-fork" model is used
 by many web servers out there, like `Apache <https://httpd.apache.org/>`_ or
-`Unicorn <http://unicorn.bogomips.org/>`_. Having this option in Circus
-can simplify a web app stack: all processes and sockets are managed by
-a single tool.
+`Unicorn <http://unicorn.bogomips.org/>`_. Having this option in a process
+manager can simplify a web app stack: all processes and sockets are managed
+by a single tool. For Python, `Chaussette <https://chaussette.readthedocs.io/>`_
+allows WSGI severs to use the already-opened sockets provided by the socket
+managers in both **circusd** and **supervisord**.
 
 Both projects provide a way to control a running daemon via another script.
 respectively **supervisorctl** and **circusctl**. They also both have
