@@ -13,7 +13,6 @@ from circus.tests.support import skipIf, PYTHON, IS_WINDOWS
 import os
 import shutil
 import tempfile
-from pipes import quote as shell_escape_arg
 import subprocess
 import time
 import yaml
@@ -74,42 +73,27 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
                 coverage = "coverage"
             argv = [coverage, "run", "-p", "-m"] + argv
 
-        child = subprocess.Popen(argv, cwd=temp_dir, stdin=subprocess.PIPE,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT,
-                                 env=env)
+        child = subprocess.Popen(argv, cwd=temp_dir, env=env)
         try:
+            # firt, wait for the process to start
             touch_path = os.path.join(temp_dir, "workerstart.txt")
-            while True:
-                child.poll()
-                if os.path.exists(touch_path):
-                    break
-                if child.returncode is not None:
-                    break
+            while not os.path.exists(touch_path):
                 time.sleep(0.01)
+
+            # then, make sure that circus started and the log are going
+            # to their destination
+            log_file_path = os.path.join(temp_dir, log_capture_path)
+            start = time.time()
+            timedout = True
+            while time.time() - start < 5:
+                with open(log_file_path, 'r') as f:
+                    if "[INFO] Arbiter now waiting for commands" in f.read():
+                        timedout = False
+                        break
+            assert timedout is False
         finally:
-            child.terminate()
+            child.kill()
             child.wait()
-
-        log_file_path = os.path.join(temp_dir, log_capture_path)
-
-        try:
-            if os.path.exists(log_file_path):
-                with open(log_file_path, "r") as fh:
-                    return fh.read()
-            else:
-                if child.stdout is not None:
-                    raise Exception(child.stdout.read().decode("ascii"))
-        finally:
-            if child.stdout is not None:
-                child.stdout.close()
-            if child.stderr is not None:
-                child.stderr.close()
-            if child.stdin is not None:
-                child.stdin.close()
-
-        assert child.returncode == 0, \
-            " ".join(shell_escape_arg(a) for a in argv)
     finally:
         for basename in sorted(os.listdir(temp_dir)):
             if basename.startswith(".coverage."):
@@ -146,8 +130,6 @@ root:
   level: DEBUG
   handlers: [logfile]
 """
-
-EXPECTED_LOG_MESSAGE = "[INFO] Arbiter now waiting for commands"
 
 
 def logging_dictconfig_to_ini(config):
@@ -211,75 +193,73 @@ def hasDictConfig():
 class TestLoggingConfig(TestCase):
 
     def test_loggerconfig_default_ini(self):
-        logs = run_circusd(
+        run_circusd(
             [], {"circus.logoutput": "log_ini.txt"},
-            log_capture_path="log_ini.txt")
-        self.assertTrue(EXPECTED_LOG_MESSAGE in logs, logs)
+            log_capture_path="log_ini.txt"
+        )
 
     def test_loggerconfig_default_opt(self):
-        logs = run_circusd(
+        run_circusd(
             ["--log-output", "log_opt.txt"], {},
-            log_capture_path="log_opt.txt")
-        self.assertTrue(EXPECTED_LOG_MESSAGE in logs, logs)
+            log_capture_path="log_opt.txt"
+        )
 
     @skipIf(not hasDictConfig(), "Needs logging.config.dictConfig()")
     def test_loggerconfig_yaml_ini(self):
         config = yaml.load(EXAMPLE_YAML)
         config["handlers"]["logfile"]["filename"] = "log_yaml_ini.txt"
-        logs = run_circusd(
+        run_circusd(
             [], {"circus.loggerconfig": "logging.yaml"},
             log_capture_path="log_yaml_ini.txt",
-            additional_files={"logging.yaml": yaml.dump(config)})
-        self.assertTrue(EXPECTED_LOG_MESSAGE in logs, logs)
+            additional_files={"logging.yaml": yaml.dump(config)}
+        )
 
     @skipIf(not hasDictConfig(), "Needs logging.config.dictConfig()")
     def test_loggerconfig_yaml_opt(self):
         config = yaml.load(EXAMPLE_YAML)
         config["handlers"]["logfile"]["filename"] = "log_yaml_opt.txt"
-        logs = run_circusd(
+        run_circusd(
             ["--logger-config", "logging.yaml"], {},
             log_capture_path="log_yaml_opt.txt",
-            additional_files={"logging.yaml": yaml.dump(config)})
-        self.assertTrue(EXPECTED_LOG_MESSAGE in logs, logs)
+            additional_files={"logging.yaml": yaml.dump(config)}
+        )
 
     @skipIf(not hasDictConfig(), "Needs logging.config.dictConfig()")
     def test_loggerconfig_json_ini(self):
         config = yaml.load(EXAMPLE_YAML)
         config["handlers"]["logfile"]["filename"] = "log_json_ini.txt"
-        logs = run_circusd(
+        run_circusd(
             [], {"circus.loggerconfig": "logging.json"},
             log_capture_path="log_json_ini.txt",
-            additional_files={"logging.json": json.dumps(config)})
-        self.assertTrue(EXPECTED_LOG_MESSAGE in logs, logs)
+            additional_files={"logging.json": json.dumps(config)}
+        )
 
     @skipIf(not hasDictConfig(), "Needs logging.config.dictConfig()")
     def test_loggerconfig_json_opt(self):
         config = yaml.load(EXAMPLE_YAML)
         config["handlers"]["logfile"]["filename"] = "log_json_opt.txt"
-        logs = run_circusd(
+        run_circusd(
             ["--logger-config", "logging.json"], {},
             log_capture_path="log_json_opt.txt",
-            additional_files={"logging.json": json.dumps(config)})
-        self.assertTrue(EXPECTED_LOG_MESSAGE in logs, logs)
+            additional_files={"logging.json": json.dumps(config)}
+        )
 
     def test_loggerconfig_ini_ini(self):
         config = yaml.load(EXAMPLE_YAML)
         config["handlers"]["logfile"]["filename"] = "log_ini_ini.txt"
-        logs = run_circusd(
+        run_circusd(
             [], {"circus.loggerconfig": "logging.ini"},
             log_capture_path="log_ini_ini.txt",
-            additional_files={
-                "logging.ini": logging_dictconfig_to_ini(config)})
-        self.assertTrue(EXPECTED_LOG_MESSAGE in logs, logs)
+            additional_files={"logging.ini": logging_dictconfig_to_ini(config)}
+        )
 
     def test_loggerconfig_ini_opt(self):
         config = yaml.load(EXAMPLE_YAML)
         config["handlers"]["logfile"]["filename"] = "log_ini_opt.txt"
-        logs = run_circusd(
+        run_circusd(
             ["--logger-config", "logging.ini"], {},
             log_capture_path="log_ini_opt.txt",
-            additional_files={
-                "logging.ini": logging_dictconfig_to_ini(config)})
-        self.assertTrue(EXPECTED_LOG_MESSAGE in logs, logs)
+            additional_files={"logging.ini": logging_dictconfig_to_ini(config)}
+        )
 
 test_suite = EasyTestSuite(__name__)

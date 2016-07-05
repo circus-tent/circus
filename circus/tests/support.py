@@ -169,10 +169,15 @@ class TestCircus(AsyncTestCase):
 
     def tearDown(self):
         for file in self.files + self.tmpfiles:
-            if os.path.exists(file):
+            try:
                 os.remove(file)
+            except OSError:
+                pass
         for dir in self.dirs:
-            shutil.rmtree(dir)
+            try:
+                shutil.rmtree(dir)
+            except OSError:
+                pass
 
         self._stop_clients()
 

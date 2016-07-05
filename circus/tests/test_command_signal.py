@@ -64,7 +64,7 @@ def run_process_recursive(child_id):
 
 
 @tornado.gen.coroutine
-def read_from_stream(stream, desired_channel, timeout=5):
+def read_from_stream(stream, desired_channel, timeout=10):
     start = time.time()
     accumulator = ''
     if desired_channel not in channels:

@@ -97,7 +97,13 @@ class Redirector(object):
 
     def remove_redirections(self, process):
         for _, pipe in self.get_process_pipes(process):
-            self.remove_fd(pipe.fileno())
+            try:
+                fileno = pipe.fileno()
+            except ValueError:
+                # the pipe was already closed
+                pass
+            else:
+                self.remove_fd(fileno)
         process.redirected = False
 
     def change_stream(self, stream_name, redirect_writer):

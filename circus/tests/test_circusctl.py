@@ -92,7 +92,7 @@ class CommandlineTest(TestCircus):
     @gen_test
     def test_add(self):
         yield self.start_arbiter()
-        async_poll_for(self.test_file, 'START')
+        yield async_poll_for(self.test_file, 'START')
         ep = self.arbiter.endpoint
 
         stdout, stderr = yield async_run_ctl('add test2 "%s"' % SLEEP % 1,
@@ -112,7 +112,7 @@ class CommandlineTest(TestCircus):
     @gen_test
     def test_add_start(self):
         yield self.start_arbiter()
-        async_poll_for(self.test_file, 'START')
+        yield async_poll_for(self.test_file, 'START')
         ep = self.arbiter.endpoint
 
         stdout, stderr = yield async_run_ctl('add --start test2 "%s"'
@@ -144,7 +144,7 @@ class CLITest(TestCircus):
     @gen_test
     def test_launch_cli(self):
         yield self.start_arbiter()
-        async_poll_for(self.test_file, 'START')
+        yield async_poll_for(self.test_file, 'START')
 
         stdout, stderr = yield self.run_ctl(endpoint=self.arbiter.endpoint)
         if stderr:

@@ -7,8 +7,8 @@ from circus.tests.support import async_run_plugin, EasyTestSuite
 from circus.plugins.resource_watcher import ResourceWatcher
 
 # Make sure we don't allow more than 300MB in case things go wrong
-MAX_CHUNKS = 10000
-CHUNK_SIZE = 30000
+MAX_CHUNKS = 1000000
+CHUNK_SIZE = 300
 
 
 class Leaky(Process):
@@ -61,8 +61,8 @@ class TestResourceWatcher(TestCircus):
     @gen_test
     def test_resource_watcher_max_mem(self):
         yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'START')
-        config = {'loop_rate': 0.1, 'max_mem': 0.05, 'watcher': 'test'}
+        yield async_poll_for(self.test_file, 'START')
+        config = {'loop_rate': 0.1, 'max_mem': 0.01, 'watcher': 'test'}
         kw = {'endpoint': self.arbiter.endpoint,
               'pubsub_endpoint': self.arbiter.pubsub_endpoint}
 
@@ -77,7 +77,7 @@ class TestResourceWatcher(TestCircus):
     @gen_test
     def test_resource_watcher_max_mem_abs(self):
         yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'START')
+        yield async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'max_mem': '1M', 'watcher': 'test'}
         kw = {'endpoint': self.arbiter.endpoint,
               'pubsub_endpoint': self.arbiter.pubsub_endpoint}
@@ -93,7 +93,7 @@ class TestResourceWatcher(TestCircus):
     @gen_test
     def test_resource_watcher_min_mem(self):
         yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'START')
+        yield async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'min_mem': 100000.1, 'watcher': 'test'}
         kw = {'endpoint': self.arbiter.endpoint,
               'pubsub_endpoint': self.arbiter.pubsub_endpoint}
@@ -109,7 +109,7 @@ class TestResourceWatcher(TestCircus):
     @gen_test
     def test_resource_watcher_min_mem_abs(self):
         yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'START')
+        yield async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'min_mem': '100M', 'watcher': 'test'}
         kw = {'endpoint': self.arbiter.endpoint,
               'pubsub_endpoint': self.arbiter.pubsub_endpoint}
@@ -126,7 +126,7 @@ class TestResourceWatcher(TestCircus):
     @gen_test
     def test_resource_watcher_max_cpu(self):
         yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'START')
+        yield async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'max_cpu': 0.1, 'watcher': 'test'}
         kw = {'endpoint': self.arbiter.endpoint,
               'pubsub_endpoint': self.arbiter.pubsub_endpoint}
@@ -142,7 +142,7 @@ class TestResourceWatcher(TestCircus):
     @gen_test
     def test_resource_watcher_min_cpu(self):
         yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'START')
+        yield async_poll_for(self.test_file, 'START')
         config = {'loop_rate': 0.1, 'min_cpu': 99.0, 'watcher': 'test'}
 
         kw = {'endpoint': self.arbiter.endpoint,

@@ -21,7 +21,6 @@ class DummyWatchDogged(Process):
                 message = "{pid};{time}".format(pid=my_pid, time=time.time())
                 sock.sendto(message.encode('utf-8'), ('127.0.0.1', 1664))
                 time.sleep(0.5)
-            self._write('STOPWD')
         finally:
             sock.close()
 
@@ -44,7 +43,7 @@ class TestPluginWatchDog(TestCircus):
     @gen_test
     def test_watchdog_discovery_found(self):
         yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'STARTWD')
+        yield async_poll_for(self.test_file, 'STARTWD')
         pubsub = self.arbiter.pubsub_endpoint
 
         config = {'loop_rate': 0.1, 'watchers_regex': "^test.*$"}
@@ -55,12 +54,11 @@ class TestPluginWatchDog(TestCircus):
                                    pubsub_endpoint=pubsub)
         self.assertEqual(len(pid_status), 1, pid_status)
         yield self.stop_arbiter()
-        async_poll_for(self.test_file, 'STOPWD')
 
     @gen_test
     def test_watchdog_discovery_not_found(self):
         yield self.start_arbiter(fqn)
-        async_poll_for(self.test_file, 'START')
+        yield async_poll_for(self.test_file, 'START')
         pubsub = self.arbiter.pubsub_endpoint
 
         config = {'loop_rate': 0.1, 'watchers_regex': "^foo.*$"}

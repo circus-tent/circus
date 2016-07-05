@@ -516,9 +516,9 @@ class Process(object):
 
         return info
 
-    def children(self):
+    def children(self, recursive=False):
         """Return a list of children pids."""
-        return [child.pid for child in get_children(self._worker)]
+        return [child.pid for child in get_children(self._worker, recursive)]
 
     def is_child(self, pid):
         """Return True is the given *pid* is a child of that process."""

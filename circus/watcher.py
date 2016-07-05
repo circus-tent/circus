@@ -680,7 +680,7 @@ class Watcher(object):
         return False
 
     @util.debuglog
-    def send_signal_process(self, process, signum):
+    def send_signal_process(self, process, signum, recursive=False):
         """Send the signum signal to the process
 
         The signal is sent to the process itself then to all the children
@@ -688,7 +688,7 @@ class Watcher(object):
         children = None
         try:
             # getting the process children
-            children = process.children()
+            children = process.children(recursive=recursive)
 
             # sending the signal to the process itself
             self.send_signal(process.pid, signum)
@@ -745,7 +745,8 @@ class Watcher(object):
             # later anyway
             if hasattr(signal, 'SIGKILL'):
                 # We are not smart anymore
-                self.send_signal_process(process, signal.SIGKILL)
+                self.send_signal_process(process, signal.SIGKILL,
+                                         recursive=True)
         if self.stream_redirector:
             self.stream_redirector.remove_redirections(process)
         process.stopping = False

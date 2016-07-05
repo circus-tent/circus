@@ -10,12 +10,14 @@ class TestSigHandler(TestCircus):
         yield self.start_arbiter()
 
         # wait for the process to be started
-        self.assertTrue(async_poll_for(self.test_file, 'START'))
+        res = yield async_poll_for(self.test_file, 'START')
+        self.assertTrue(res)
 
         # stopping...
         yield self.arbiter.stop()
 
         # wait for the process to be stopped
-        self.assertTrue(async_poll_for(self.test_file, 'QUIT'))
+        res = yield async_poll_for(self.test_file, 'QUIT')
+        self.assertTrue(res)
 
 test_suite = EasyTestSuite(__name__)

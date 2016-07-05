@@ -51,9 +51,15 @@ class TestTrainer(TestCircus):
     def setUp(self):
         super(TestTrainer, self).setUp()
         self.old = watcher_mod.tornado_sleep
+        self.to_remove = []
 
     def tearDown(self):
         watcher_mod.tornado_sleep = self.old
+        for path in self.to_remove:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
         super(TestTrainer, self).tearDown()
 
     @tornado.gen.coroutine
@@ -111,6 +117,7 @@ class TestTrainer(TestCircus):
     def _get_cmd(self):
         fd, testfile = mkstemp()
         os.close(fd)
+        self.to_remove.append(testfile)
         cmd = '%s %s %s %s' % (
             PYTHON, _GENERIC,
             'circus.tests.support.run_process',
@@ -307,7 +314,8 @@ class TestTrainer(TestCircus):
         truncate_file(self.test_file)  # clean slate
 
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')
+        self.assertTrue(res)  # restarted
 
         resp = yield self._call("list", name=name)
         processes2 = resp.get('pids')
@@ -328,7 +336,8 @@ class TestTrainer(TestCircus):
         truncate_file(self.test_file)  # clean slate
 
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')
+        self.assertTrue(res)  # restarted
 
         resp = yield self._call("list", name=name)
         processes2 = resp.get('pids')
@@ -347,7 +356,8 @@ class TestTrainer(TestCircus):
         processes1 = resp.get('pids')
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload", sequential=True)
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
         resp = yield self._call("list", name=name)
         processes2 = resp.get('pids')
         self.assertNotEqual(processes1, processes2)
@@ -362,7 +372,8 @@ class TestTrainer(TestCircus):
 
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
 
         resp = yield self._call("list", name="test")
         processes2 = resp.get('pids')
@@ -382,7 +393,8 @@ class TestTrainer(TestCircus):
 
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
 
         resp = yield self._call("stats", name="test")
         processes2 = list(resp['info'].keys())
@@ -393,7 +405,8 @@ class TestTrainer(TestCircus):
 
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
 
         resp = yield self._call("stats", name="test")
         processes3 = list(resp['info'].keys())
@@ -418,7 +431,8 @@ class TestTrainer(TestCircus):
 
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
 
         resp = yield self._call("stats", name="test")
         processes2 = list(resp['info'].keys())
@@ -429,7 +443,8 @@ class TestTrainer(TestCircus):
 
         truncate_file(self.test_file)  # clean slate
         yield self._call("reload")
-        self.assertTrue(async_poll_for(self.test_file, 'START'))  # restarted
+        res = yield async_poll_for(self.test_file, 'START')  # restarted
+        self.assertTrue(res)
 
         resp = yield self._call("stats", name="test")
         processes3 = list(resp['info'].keys())
@@ -496,24 +511,28 @@ class TestTrainer(TestCircus):
             return cli.send_message('incr', name='test')
 
         # wait for the plugin to be started
-        self.assertTrue(async_poll_for(datafile, 'PLUGIN STARTED'))
+        res = yield async_poll_for(datafile, 'PLUGIN STARTED')
+        self.assertTrue(res)
 
         cli = CircusClient()
         self.assertEqual(nb_processes(), 1)
         incr_processes()
         self.assertEqual(nb_processes(), 2)
         # wait for the plugin to receive the signal
-        self.assertTrue(async_poll_for(datafile, 'test:spawn'))
+        res = yield async_poll_for(datafile, 'test:spawn')
+        self.assertTrue(res)
         truncate_file(datafile)
         incr_processes()
         self.assertEqual(nb_processes(), 3)
         # wait for the plugin to receive the signal
-        self.assertTrue(async_poll_for(datafile, 'test:spawn'))
+        res = yield async_poll_for(datafile, 'test:spawn')
+        self.assertTrue(res)
+        os.remove(datafile)
 
     # XXX TODO
     @tornado.testing.gen_test
     def _test_singleton(self):
-        self._stop_runners()
+        yield self._stop_runners()
 
         dummy_process = 'circus.tests.support.run_process'
         self._run_circus(dummy_process, singleton=True)
@@ -529,7 +548,7 @@ class TestTrainer(TestCircus):
         """test_udp_discovery: Test that when the circusd answer UDP call.
 
         """
-        self._stop_runners()
+        yield self._stop_runners()
 
         dummy_process = 'circus.tests.support.run_process'
         self._run_circus(dummy_process)

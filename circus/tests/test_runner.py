@@ -13,7 +13,8 @@ class TestRunner(TestCircus):
     @gen_test
     def test_dummy(self):
         yield self.start_arbiter('circus.tests.test_runner.Dummy')
-        self.assertTrue(async_poll_for(self.test_file, '..........'))
+        res = yield async_poll_for(self.test_file, '..........')
+        self.assertTrue(res)
         yield self.stop_arbiter()
 
 test_suite = EasyTestSuite(__name__)
