@@ -1,6 +1,21 @@
 Changelog history
 =================
 
+0.14.0 2016-08-12
+-----------------
+This release fixes several bugs and add new options to
+Circus sockets and watchers.
+
+- Add stdin_socket option to the watcher - #975
+- Add a blocking option to Circus sockets - #973
+- Ignore errors when parsing the Pidfile - #866, #969
+- Fixes for papa sockets - #930, #968
+- Remove I/O operations on closed files - #979, #980
+- Accept empty ini sections - #970
+- Send SIGKILL to children recursively - #986
+- Improve tests stability - #984
+- Doc updates - #982, #983, 985
+
 0.13 - 2016-01-27
 ----------
 This release brings Python 3.5 support, a better handling
