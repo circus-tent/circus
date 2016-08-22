@@ -2,3 +2,7 @@ include CONTRIBUTORS.txt
 include README.rst
 include LICENSE
 include pip-requirements.txt
+include tox.ini
+recursive-include examples *
+recursive-include docs *
+recursive-include extras *
