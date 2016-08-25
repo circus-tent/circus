@@ -1,5 +1,6 @@
 import subprocess
 import shlex
+from mock import patch
 from multiprocessing import Process, Queue
 
 from tornado.testing import gen_test
@@ -27,6 +28,7 @@ def run_ctl(args, queue=None, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
     if queue:
         queue.put(stderr)
         queue.put(stdout)
+        queue.put(proc.returncode)
     try:
         import gevent
         if hasattr(gevent, 'shutdown'):
@@ -51,9 +53,12 @@ def async_run_ctl(args, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
     circusctl_process.start()
     while queue.empty():
         yield tornado_sleep(.1)
+
     stderr = queue.get()
     stdout = queue.get()
-    raise Return((stdout, stderr))
+    retcode = queue.get()
+
+    raise Return((retcode, stdout, stderr))
 
 
 class CommandlineTest(TestCircus):
@@ -61,21 +66,23 @@ class CommandlineTest(TestCircus):
     @skipIf(DEBUG, 'Py_DEBUG=1')
     @gen_test
     def test_help_switch_no_command(self):
-        stdout, stderr = yield async_run_ctl('--help')
+        retcode, stdout, stderr = yield async_run_ctl('--help')
         if stderr:
             self.assertIn('UserWarning', stderr)
         output = stdout.splitlines()
+        self.assertEqual(retcode, 0)
         self.assertEqual(output[0], 'usage: ' + USAGE)
         self.assertEqual(output[2], 'Controls a Circus daemon')
         self.assertEqual(output[4], 'Commands:')
 
     @gen_test
     def test_help_invalid_command(self):
-        stdout, stderr = yield async_run_ctl('foo')
+        retcode, stdout, stderr = yield async_run_ctl('foo')
         self.assertEqual(stdout, '')
         err = stderr.splitlines()
         while err and 'import' in err[0]:
             del err[0]
+        self.assertEqual(retcode, 2)
         self.assertEqual(err[0], 'usage: ' + USAGE)
         self.assertEqual(err[1],
                          'circusctl.py: error: unrecognized arguments: foo')
@@ -83,9 +90,10 @@ class CommandlineTest(TestCircus):
     @skipIf(DEBUG, 'Py_DEBUG=1')
     @gen_test
     def test_help_for_add_command(self):
-        stdout, stderr = yield async_run_ctl('--help add')
+        retcode, stdout, stderr = yield async_run_ctl('--help add')
         if stderr:
             self.assertIn('UserWarning', stderr)
+        self.assertEqual(retcode, 0)
         self.assertEqual(stdout.splitlines()[0], 'Add a watcher')
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
@@ -95,16 +103,18 @@ class CommandlineTest(TestCircus):
         yield async_poll_for(self.test_file, 'START')
         ep = self.arbiter.endpoint
 
-        stdout, stderr = yield async_run_ctl('add test2 "%s"' % SLEEP % 1,
-                                             endpoint=ep)
+        retcode, stdout, stderr = yield async_run_ctl(
+            'add test2 "%s"' % SLEEP % 1, endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
+        self.assertEqual(retcode, 0)
         self.assertEqual(stdout.strip(), 'ok')
 
-        stdout, stderr = yield async_run_ctl('status test2',
-                                             endpoint=ep)
+        retcode, stdout, stderr = yield async_run_ctl(
+            'status test2', endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
+        self.assertEqual(retcode, 0)
         self.assertEqual(stdout.strip(), 'stopped')
         yield self.stop_arbiter()
 
@@ -115,18 +125,34 @@ class CommandlineTest(TestCircus):
         yield async_poll_for(self.test_file, 'START')
         ep = self.arbiter.endpoint
 
-        stdout, stderr = yield async_run_ctl('add --start test2 "%s"'
-                                             % SLEEP % 1,
-                                             endpoint=ep)
+        retcode, stdout, stderr = yield async_run_ctl(
+            'add --start test2 "%s"' % SLEEP % 1, endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
+        self.assertEqual(retcode, 0)
         self.assertEqual(stdout.strip(), 'ok')
-        stdout, stderr = yield async_run_ctl('status test2',
-                                             endpoint=ep)
+        retcode, stdout, stderr = yield async_run_ctl(
+            'status test2', endpoint=ep)
         if stderr:
             self.assertIn('UserWarning', stderr)
+        self.assertEqual(retcode, 0)
         self.assertEqual(stdout.strip(), 'active')
         yield self.stop_arbiter()
+
+    @skipIf(DEBUG, 'Py_DEBUG=1')
+    @gen_test
+    def test_command_already_running(self):
+        yield self.start_arbiter()
+        yield async_poll_for(self.test_file, 'START')
+
+        with patch.object(self.arbiter, '_exclusive_running_command', 'foo'):
+            retcode, stdout, stderr = yield async_run_ctl(
+                'restart', endpoint=self.arbiter.endpoint)
+
+        self.assertEqual(retcode, 3)
+        self.assertEqual(stdout.strip(), '')
+        self.assertEqual(stderr.strip(),
+                         'error: arbiter is already running foo command')
 
 
 class CLITest(TestCircus):
@@ -136,9 +162,9 @@ class CLITest(TestCircus):
         """Send the given command to the CLI, and ends with EOF."""
         if command:
             command += '\n'
-        stdout, stderr = yield async_run_ctl('', command + 'EOF\n',
-                                             endpoint=endpoint)
-        raise Return((stdout, stderr))
+        retcode, stdout, stderr = yield async_run_ctl(
+            '', command + 'EOF\n', endpoint=endpoint)
+        raise Return((retcode, stdout, stderr))
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
     @gen_test
@@ -146,7 +172,8 @@ class CLITest(TestCircus):
         yield self.start_arbiter()
         yield async_poll_for(self.test_file, 'START')
 
-        stdout, stderr = yield self.run_ctl(endpoint=self.arbiter.endpoint)
+        retcode, stdout, stderr = yield self.run_ctl(
+            endpoint=self.arbiter.endpoint)
         if stderr:
             self.assertIn('UserWarning', stderr)
         output = stdout.splitlines()
@@ -161,8 +188,8 @@ class CLITest(TestCircus):
     @gen_test
     def test_cli_help(self):
         yield self.start_arbiter()
-        stdout, stderr = yield self.run_ctl('help',
-                                            endpoint=self.arbiter.endpoint)
+        retcode, stdout, stderr = yield self.run_ctl(
+            'help', endpoint=self.arbiter.endpoint)
         self.assertEqual(stderr, '')
         prompt = stdout.splitlines()
         # first two lines are VERSION and prompt, followed by a blank line
