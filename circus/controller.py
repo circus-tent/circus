@@ -175,8 +175,6 @@ class Controller(object):
             if cid is not None:
                 self.stream.flush()
 
-            self.arbiter.stop()
-
     def dispatch(self, job, future=None):
         cid, msg = job
         try:
