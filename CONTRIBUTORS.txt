@@ -90,3 +90,4 @@ List of contributors:
 - Mike Dunn <mike@eikonomega.com>
 - Yannick PEROUX <yannick.peroux@gmail.com>
 - David Douard <david.douard@logilab.fr>
+- Sergii Mikhtoniuk <mikhtoniuk@gmail.com>
