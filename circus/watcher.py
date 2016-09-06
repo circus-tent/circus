@@ -435,7 +435,7 @@ class Watcher(object):
             self.evpub_socket.send_multipart(multipart_msg)
 
     @util.debuglog
-    def reap_process(self, pid, status=None):
+    def reap_process(self, pid, status=None, commanded_reap=True):
         """ensure that the process is killed (and not a zombie)"""
         if pid not in self.processes:
             return
@@ -476,7 +476,8 @@ class Watcher(object):
                     "reap",
                     {"process_pid": pid,
                      "time": time.time(),
-                     "exit_code": process.returncode()})
+                     "exit_code": process.returncode(),
+                     "commanded_reap": commanded_reap})
                 process.stop()
                 return
 
@@ -512,10 +513,11 @@ class Watcher(object):
         self.notify_event("reap",
                           {"process_pid": pid,
                            "time": time.time(),
-                           "exit_code": exit_code})
+                           "exit_code": exit_code,
+                           "commanded_reap": commanded_reap})
 
     @util.debuglog
-    def reap_processes(self):
+    def reap_processes(self, commanded_reap=True):
         """Reap all the processes for this watcher.
         """
         if self.is_stopped():
@@ -524,7 +526,7 @@ class Watcher(object):
 
         # reap_process changes our dict, look through the copy of keys
         for pid in list(self.processes.keys()):
-            self.reap_process(pid)
+            self.reap_process(pid, commanded_reap=commanded_reap)
 
     @gen.coroutine
     @util.debuglog

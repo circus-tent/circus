@@ -619,7 +619,7 @@ class Arbiter(object):
 
                     if pid in watchers_pids:
                         watcher = watchers_pids[pid]
-                        watcher.reap_process(pid, status)
+                        watcher.reap_process(pid, status, commanded_reap=False)
                 except OSError as e:
                     if e.errno == errno.EAGAIN:
                         sleep(0)

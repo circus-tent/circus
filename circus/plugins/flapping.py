@@ -54,12 +54,19 @@ class Flapping(CircusPlugin):
 
     def handle_recv(self, data):
         watcher_name, action, msg = self.split_data(data)
-        if action == "reap":
-            timeline = self.timelines.get(watcher_name, [])
-            timeline.append(time.time())
-            self.timelines[watcher_name] = timeline
+        try:
+            message = self.load_message(msg)
+        except (ValueError, TypeError):
+            message = None
+            logger.error("Error while decoding json for message: %s", msg)
 
-            self.check(watcher_name)
+        if action == "reap":
+            commanded_reap = message and message.get('commanded_reap', False)
+            if not commanded_reap:
+                timeline = self.timelines.get(watcher_name, [])
+                timeline.append(time.time())
+                self.timelines[watcher_name] = timeline
+                self.check(watcher_name)
         elif action == "updated":
             self.update_conf(watcher_name)
 
