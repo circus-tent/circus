@@ -228,7 +228,7 @@ class Watcher(object):
         self.stdout_stream = get_stream(self.stdout_stream_conf)
         self.stderr_stream = get_stream(self.stderr_stream_conf)
         self.stream_redirector = None
-        self.max_retry = max_retry
+        self.max_retry = int(max_retry)
         self._options = options
         self.singleton = singleton
         self.copy_env = copy_env
