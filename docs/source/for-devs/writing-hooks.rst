@@ -89,6 +89,11 @@ Just before starting the second watcher, it will run the **check_redis**
 function, and in case it returns **False** will abort the watcher
 starting process.
 
+Hook Location
+=============
+
+Circus looks for the hook in the loaded modules (specifically **sys.modules**), and will also look for the hook in the directory that the **.ini** file is in.  If you are having trouble loading a hook, then check whether it's findable on your **sys.path**.
+
 
 Hook signature
 ==============

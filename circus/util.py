@@ -569,6 +569,10 @@ def resolve_name(import_name, silent=False, reload=False):
                    reloaded
     :return: imported object
     """
+    print("i think travis is messing up sys.path, let's see:")
+    for p in sys.path:
+        print("    %s" % p)
+
     # force the import name to automatically convert to strings
     import_name = bytestring(import_name)
     try:
