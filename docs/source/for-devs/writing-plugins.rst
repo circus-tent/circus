@@ -139,3 +139,8 @@ Performances
 Since every plugin is loaded in its own process, it should not impact
 the overall performances of the system as long as the work done by the
 plugin is not doing too many calls to the **circusd** process.
+
+Plugin Location
+===============
+
+Circus looks for the plugin in the loaded modules (specifically **sys.modules**), and will also look for the plugin in the directory that the **.ini** file is in.  If you are having trouble loading a plugin, then check whether it's findable on your **sys.path**.
