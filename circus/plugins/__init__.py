@@ -1,5 +1,6 @@
 """ Base class to create Circus subscribers plugins.
 """
+import os
 import sys
 import errno
 import uuid
@@ -244,6 +245,11 @@ def main():
     if args.plugin is None:
         parser.print_usage()
         sys.exit(0)
+
+    # add to path
+    cwd = os.getcwd()
+    if cwd not in sys.path:
+        sys.path.append(cwd)
 
     factory = resolve_name(args.plugin)
 

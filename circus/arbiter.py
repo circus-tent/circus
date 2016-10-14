@@ -421,6 +421,12 @@ class Arbiter(object):
     @classmethod
     def load_from_config(cls, config_file, loop=None):
         cfg = get_config(config_file)
+
+        # Add config dir to sys.path to find relative hooks and plugins
+        config_dir = os.path.dirname(os.path.abspath(config_file))
+        if config_dir not in sys.path:
+            sys.path.append(config_dir)
+
         watchers = []
         for watcher in cfg.get('watchers', []):
             watchers.append(Watcher.load_from_config(watcher))
