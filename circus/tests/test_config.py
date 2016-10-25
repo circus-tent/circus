@@ -23,6 +23,7 @@ _CONF = {
     'issue310': os.path.join(CONFIG_DIR, 'issue310.ini'),
     'issue395': os.path.join(CONFIG_DIR, 'issue395.ini'),
     'hooks': os.path.join(CONFIG_DIR, 'hooks.ini'),
+    'find_hook_in_pythonpath': os.path.join(CONFIG_DIR, 'find_hook_in_pythonpath.ini'),
     'env_var': os.path.join(CONFIG_DIR, 'env_var.ini'),
     'env_section': os.path.join(CONFIG_DIR, 'env_section.ini'),
     'multiple_wildcard': os.path.join(CONFIG_DIR, 'multiple_wildcard.ini'),
@@ -213,6 +214,13 @@ class TestConfig(TestCase):
         conf = get_config(_CONF['hooks'])
         watcher = Watcher.load_from_config(conf['watchers'][0])
         self.assertEqual(watcher.hooks['before_start'].__doc__, hook.__doc__)
+        self.assertTrue('before_start' not in watcher.ignore_hook_failure)
+
+    def test_find_hook_in_pythonpath(self):
+        arbiter = Arbiter.load_from_config(_CONF['find_hook_in_pythonpath'])
+        watcher = arbiter.iter_watchers()[0]
+        self.assertEqual(watcher.hooks['before_start'].__doc__,
+                         'relative_hook')
         self.assertTrue('before_start' not in watcher.ignore_hook_failure)
 
     def test_watcher_env_var(self):
