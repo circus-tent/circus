@@ -100,9 +100,9 @@ PYTHONPATH in *[env:watchername]*.
     hooks.before_start = hooks.my_hook.hook
 
     [env:foo]
-    PYTHONPATH = $PWD/circus/tests/config
+    PYTHONPATH = $PYTHONPATH:$PWD
 
-You can use bash commands like *$PWD* in the *PYTHONPATH*.
+You can use environment variables like *$PWD* in the *PYTHONPATH*.
 
 
 Hook signature
