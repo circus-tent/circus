@@ -89,6 +89,21 @@ Just before starting the second watcher, it will run the **check_redis**
 function, and in case it returns **False** will abort the watcher
 starting process.
 
+If you'd like to use a hook that is defined in a relative python module
+(as opposed to a globally installed module) then you need to define the
+PYTHONPATH in *[env:watchername]*.
+
+.. code-block:: ini
+
+    [watcher:foo]
+    copy_env = True
+    hooks.before_start = hooks.my_hook.hook
+
+    [env:foo]
+    PYTHONPATH = $PYTHONPATH:$PWD
+
+You can use environment variables like *$PWD* in the *PYTHONPATH*.
+
 
 Hook signature
 ==============
