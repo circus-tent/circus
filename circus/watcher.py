@@ -424,6 +424,10 @@ class Watcher(object):
     def __len__(self):
         return len(self.processes)
 
+    def __repr__(self):
+        return "<circus.Watcher name=%s numprocesses=%s>" % (self.name,
+                                                             self.numprocesses)
+
     def notify_event(self, topic, msg):
         """Publish a message on the event publisher channel"""
 

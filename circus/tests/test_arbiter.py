@@ -12,16 +12,15 @@ except ImportError:
     from urlparse import urlparse  # NOQA
 
 from circus.arbiter import Arbiter
-from circus.client import CircusClient
+from circus.client import AsyncCircusClient
 from circus.plugins import CircusPlugin
 from circus.tests.support import (TestCircus, async_poll_for, truncate_file,
                                   EasyTestSuite, skipIf, get_ioloop, SLEEP,
                                   PYTHON)
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
                          DEFAULT_ENDPOINT_SUB)
-from circus.watcher import Watcher
-from circus.tests.support import (has_circusweb, poll_for_callable,
-                                  get_available_port)
+from circus.tests.support import (MockWatcher, has_circusweb,
+                                  poll_for_callable, get_available_port)
 from circus import watcher as watcher_mod
 from circus.py3compat import s
 
@@ -490,57 +489,60 @@ class TestTrainer(TestCircus):
         self.assertEqual(resp.get('status'), "active")
         yield self.stop_arbiter()
 
-    # XXX TODO
     @tornado.testing.gen_test
-    def _test_plugins(self):
-
+    def test_plugins(self):
         fd, datafile = mkstemp()
         os.close(fd)
 
         # setting up a circusd with a plugin
-        dummy_process = 'circus.tests.support.run_process'
         plugin = 'circus.tests.test_arbiter.Plugin'
         plugins = [{'use': plugin, 'file': datafile}]
-        self._run_circus(dummy_process, plugins=plugins)
 
-        # doing a few operations
-        def nb_processes():
-            return len(cli.send_message('list', name='test').get('pids'))
+        yield self.start_arbiter(graceful_timeout=0, plugins=plugins,
+                                 loop=get_ioloop())
 
-        def incr_processes():
+        def incr_processes(cli):
             return cli.send_message('incr', name='test')
 
         # wait for the plugin to be started
         res = yield async_poll_for(datafile, 'PLUGIN STARTED')
         self.assertTrue(res)
 
-        cli = CircusClient()
-        self.assertEqual(nb_processes(), 1)
-        incr_processes()
-        self.assertEqual(nb_processes(), 2)
+        cli = AsyncCircusClient(endpoint=self.arbiter.endpoint)
+
+        res = yield cli.send_message('list', name='test')
+        self.assertEqual(len(res.get('pids')), 1)
+
+        incr_processes(cli)
+        res = yield cli.send_message('list', name='test')
+        self.assertEqual(len(res.get('pids')), 2)
         # wait for the plugin to receive the signal
         res = yield async_poll_for(datafile, 'test:spawn')
         self.assertTrue(res)
         truncate_file(datafile)
-        incr_processes()
-        self.assertEqual(nb_processes(), 3)
+
+        incr_processes(cli)
+        res = yield cli.send_message('list', name='test')
+        self.assertEqual(len(res.get('pids')), 3)
+
         # wait for the plugin to receive the signal
         res = yield async_poll_for(datafile, 'test:spawn')
         self.assertTrue(res)
         os.remove(datafile)
+        yield self.stop_arbiter()
 
-    # XXX TODO
     @tornado.testing.gen_test
-    def _test_singleton(self):
-        yield self._stop_runners()
+    def test_singleton(self):
+        # yield self._stop_runners()
+        yield self.start_arbiter(singleton=True, loop=get_ioloop())
 
-        dummy_process = 'circus.tests.support.run_process'
-        self._run_circus(dummy_process, singleton=True)
-        cli = CircusClient()
+        cli = AsyncCircusClient(endpoint=self.arbiter.endpoint)
 
         # adding more than one process should fail
-        res = cli.send_message('incr', name='test')
-        self.assertEqual(res['numprocesses'], 1)
+        yield cli.send_message('incr', name='test')
+        res = yield cli.send_message('list', name='test')
+        self.assertEqual(len(res.get('pids')), 1)
+        yield self.stop_arbiter()
 
     # TODO XXX
     @tornado.testing.gen_test
@@ -611,15 +613,6 @@ class TestTrainer(TestCircus):
         yield self.arbiter.start_watcher(watcher)
         self.assertTrue(called, [self.arbiter.warmup_delay])
         yield self.stop_arbiter()
-
-
-class MockWatcher(Watcher):
-
-    def start(self):
-        self.started = True
-
-    def spawn_process(self):
-        self.processes[1] = 'dummy'
 
 
 class TestArbiter(TestCircus):
