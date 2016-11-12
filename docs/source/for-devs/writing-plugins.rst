@@ -91,6 +91,21 @@ by Python.
 For example, :class:`Logger` may be found in a *plugins* module within a
 *myproject* package.
 
+If you'd like to use a plugin that is defined in a relative python module
+(as opposed to a globally installed module) then you need to define the
+PYTHONPATH in *[env:pluginname]*.
+
+.. code-block:: ini
+
+    [plugin:foo]
+    use = 'myplugin.MyPlugin'
+
+    [env:foo]
+    PYTHONPATH = $PYTHONPATH:$PWD
+
+You can use environment variables like *$PWD* in the *PYTHONPATH*.
+
+
 Async requests
 --------------
 

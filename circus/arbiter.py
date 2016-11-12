@@ -20,7 +20,7 @@ from circus.util import debuglog, _setproctitle, parse_env_dict
 from circus.util import DictDiffer, synchronized, tornado_sleep, papa
 from circus.util import IS_WINDOWS
 from circus.config import get_config
-from circus.plugins import get_plugin_cmd
+from circus.plugins import CircusPlugin, get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
 
 
@@ -429,6 +429,10 @@ class Arbiter(object):
         for socket_ in cfg.get('sockets', []):
             sockets.append(CircusSocket.load_from_config(socket_))
 
+        plugins = []
+        for plugin in cfg.get('plugins', []):
+            plugins.append(CircusPlugin.load_from_config(plugin))
+
         httpd = cfg.get('httpd', False)
         if httpd:
             # controlling that we have what it takes to run the web UI
@@ -446,7 +450,9 @@ class Arbiter(object):
                       statsd=cfg.get('statsd', False),
                       stats_endpoint=cfg.get('stats_endpoint'),
                       multicast_endpoint=cfg.get('multicast_endpoint'),
-                      plugins=cfg.get('plugins'), sockets=sockets,
+                      plugins=plugins,
+                      # plugins=cfg.get('plugins'),
+                      sockets=sockets,
                       warmup_delay=cfg.get('warmup_delay', 0),
                       httpd=httpd,
                       loop=loop,
