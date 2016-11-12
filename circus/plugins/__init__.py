@@ -178,9 +178,10 @@ class CircusPlugin(object):
 def _cfg2str(cfg):
     json_cfg = json.dumps(cfg, separators=(',', ':'))
     if get_python_version() < (3, 0, 0):
-        return json_cfg.encode('unicode-escape').replace(b'"', b'\\"')
+        return json_cfg.encode('unicode-escape')
     else:
-        return json_cfg.encode('string-escape').replace('"', '\\"')
+        # zmq in py3 returns bytes
+        return json_cfg.decode("utf-8")
 
 
 def _str2cfg(data):
@@ -200,7 +201,7 @@ def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server,
     if ssh_server is not None:
         cmd += ' --ssh %s' % ssh_server
     if len(config) > 0:
-        cmd += ' --config %s' % config
+        cmd += ' --config %r' % config
     if debug:
         cmd += ' --log-level DEBUG'
     elif loglevel:

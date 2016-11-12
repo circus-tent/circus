@@ -21,8 +21,6 @@ class TestPluginUtils(TestCase):
         # passing an arg into and out of the commandline
         if get_python_version() < (3, 0, 0):
             return data_strung.decode('unicode-escape')
-        else:
-            return data_strung.decode('string-escape')
         data_unstrung = _str2cfg(data_strung)
         self.assertEqual(data_obj, data_unstrung)
 

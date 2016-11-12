@@ -213,7 +213,7 @@ def get_config(config_file):
             # plugin = section_items
             plugin = plugin_defaults()
             plugin.update(section_items)
-            plugin['name'] = section.split('plugin:', 1)[1]
+            plugin['name'] = section
 
             # create watcher options
             for opt, val in cfg.items(section, noreplace=True):
