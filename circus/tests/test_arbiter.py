@@ -493,6 +493,7 @@ class TestTrainer(TestCircus):
     @tornado.testing.gen_test
     def test_plugins(self):
         fd, datafile = mkstemp()
+        os.close(fd)
 
         # setting up a circusd with a plugin
         plugin = 'circus.tests.test_arbiter.EventLoggingTestPlugin'
@@ -534,6 +535,7 @@ class TestTrainer(TestCircus):
     @tornado.testing.gen_test
     def test_relative_plugin(self):
         fd, datafile = mkstemp()
+        os.close(fd)
 
         # setting up a circusd with a plugin
         plugin = 'plugins_uniquename.my_plugin.MyPlugin'
