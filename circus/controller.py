@@ -130,7 +130,12 @@ class Controller(object):
         self.sys_hdl.stop()
 
     def handle_message(self, raw_msg):
-        cid, msg = raw_msg
+        try:
+            cid, msg = raw_msg
+        except:
+            logger.warning("Got unexpected msg %s", str(raw_msg))
+            return
+
         msg = msg.strip()
 
         if not msg:
