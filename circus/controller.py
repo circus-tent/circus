@@ -132,7 +132,7 @@ class Controller(object):
     def handle_message(self, raw_msg):
         try:
             cid, msg = raw_msg
-        except:
+        except (TypeError, ValueError):
             logger.warning("Got unexpected msg %s", str(raw_msg))
             return
 
