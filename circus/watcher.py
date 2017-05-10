@@ -457,12 +457,13 @@ class Watcher(object):
                     continue
             else:
                 try:
-                    _, status = os.waitpid(pid, os.WNOHANG)
-                except OSError as e:
-                    if e.errno == errno.EAGAIN:
+                    resulting_pid, status = os.waitpid(pid, os.WNOHANG)
+                    if (resulting_pid, status) == (0, 0):
+                        status = None
                         time.sleep(timeout)
                         continue
-                    elif e.errno == errno.ECHILD:
+                except OSError as e:
+                    if e.errno == errno.ECHILD:
                         status = None
                     else:
                         raise
