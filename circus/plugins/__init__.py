@@ -159,7 +159,9 @@ class CircusPlugin(object):
 
 
 def _cfg2str(cfg):
-    return ':::'.join(['%s:%s' % (key, val) for key, val in cfg.items()])
+    return ':::'.join([
+         '%s:%s' % (key, val) for key, val in sorted(cfg.items())
+    ])
 
 
 def _str2cfg(data):
