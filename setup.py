@@ -1,3 +1,4 @@
+import os
 import sys
 from setuptools import setup, find_packages
 from circus import __version__
@@ -5,8 +6,12 @@ from circus import __version__
 if not hasattr(sys, 'version_info') or sys.version_info < (2, 6, 0, 'final'):
     raise SystemExit("Circus requires Python 2.6 or higher.")
 
+IS_WINDOWS = os.name == 'nt'
 
-install_requires = ['psutil', 'pyzmq>=13.1.0', 'tornado>=3.0', 'six']
+if IS_WINDOWS:
+    install_requires = ['psutil', 'pyzmq>=13.1.0', 'tornado>=3.0', 'six', 'PyMI']
+else:
+    install_requires = ['psutil', 'pyzmq>=13.1.0', 'tornado>=3.0', 'six']
 
 try:
     import argparse     # NOQA
