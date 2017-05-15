@@ -61,12 +61,16 @@ class IncrProc(Command):
     def execute(self, arbiter, props):
         watcher = self._get_watcher(arbiter, props.get('name'))
         if watcher.singleton:
-            return {"numprocesses": watcher.numprocesses, "singleton": True}
+            return {
+                "numprocesses": watcher.numprocesses,
+                "singleton": True,
+                "pids": []
+            }
         else:
             nb = props.get("nb", 1)
             resp = TransformableFuture()
             resp.set_upstream_future(watcher.incr(nb))
-            resp.set_transform_function(lambda x: {"numprocesses": x})
+            resp.set_transform_function(lambda x: x)
             return resp
 
     def console_msg(self, msg):
