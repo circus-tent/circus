@@ -546,6 +546,17 @@ class Watcher(object):
         if self.max_age:
             yield self.remove_expired_processes()
 
+        # removing strange zombie like process
+        for process in list(self.processes.itervalues()):
+            try:
+                get_info(process.pid)
+            except NoSuchProcess:
+                logger.debug('%s: zombie, respawning', self.name)
+                self.notify_event("zombie", {"process_pid": process.pid,
+                              "time": time.time()})
+                self.processes.pop(process.pid)
+                self.kill_process(process)
+ 
         # adding fresh processes
         if len(self.processes) < self.numprocesses and not self.is_stopping():
             if self.respawn:
