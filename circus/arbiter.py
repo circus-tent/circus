@@ -156,8 +156,7 @@ class Arbiter(object):
         self.stats_endpoint = stats_endpoint
 
         if self.statsd:
-            cmd = "%s -c 'from circus import stats; stats.main()'" % \
-                sys.executable
+            cmd = '-c "from circus import stats; stats.main()"'
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --pubsub %s' % self.pubsub_endpoint
             cmd += ' --statspoint %s' % self.stats_endpoint
@@ -169,7 +168,8 @@ class Arbiter(object):
                 cmd += ' --log-level ' + self.loglevel
             if self.logoutput:
                 cmd += ' --log-output ' + self.logoutput
-            stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True,
+            stats_watcher = Watcher('circusd-stats', cmd=sys.executable,
+                                    args=cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=self.stdout_stream,
                                     stderr_stream=self.stderr_stream,
@@ -189,15 +189,15 @@ class Arbiter(object):
             else:
                 sockets.append(httpd_socket)
 
-            cmd = ("%s -c 'from circusweb import circushttpd; "
-                   "circushttpd.main()'") % sys.executable
+            cmd = '-c "from circusweb import circushttpd; circushttpd.main()"'
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --fd $(circus.sockets.circushttpd)'
             if ssh_server is not None:
                 cmd += ' --ssh %s' % ssh_server
 
             # Adding the watcher
-            httpd_watcher = Watcher('circushttpd', cmd, use_sockets=True,
+            httpd_watcher = Watcher('circushttpd', cmd=sys.executable,
+                                    args=cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=self.stdout_stream,
                                     stderr_stream=self.stderr_stream,
@@ -213,12 +213,14 @@ class Arbiter(object):
         if plugins is not None:
             for plugin in plugins:
                 fqn = plugin['use']
-                cmd = get_plugin_cmd(plugin, self.endpoint,
-                                     self.pubsub_endpoint, self.check_delay,
-                                     ssh_server, debug=self.debug,
-                                     loglevel=self.loglevel,
-                                     logoutput=self.logoutput)
-                plugin_cfg = dict(cmd=cmd, priority=1, singleton=True,
+                cmd, args = get_plugin_cmd(plugin, self.endpoint,
+                                           self.pubsub_endpoint,
+                                           self.check_delay,
+                                           ssh_server, debug=self.debug,
+                                           loglevel=self.loglevel,
+                                           logoutput=self.logoutput)
+                plugin_cfg = dict(cmd=cmd, args=args, priority=1,
+                                  singleton=True,
                                   stdout_stream=self.stdout_stream,
                                   stderr_stream=self.stderr_stream,
                                   copy_env=True, copy_path=True,
@@ -266,11 +268,12 @@ class Arbiter(object):
         for i in config.get('plugins', []):
             if i['name'] == name:
                 cfg = i.copy()
-                cmd = get_plugin_cmd(cfg, self.endpoint,
-                                     self.pubsub_endpoint, self.check_delay,
-                                     self.ssh_server, debug=self.debug)
+                cmd, args = get_plugin_cmd(cfg, self.endpoint,
+                                           self.pubsub_endpoint,
+                                           self.check_delay,
+                                           self.ssh_server, debug=self.debug)
 
-                cfg.update(dict(cmd=cmd, priority=1, singleton=True,
+                cfg.update(dict(cmd=cmd, args=args, priority=1, singleton=True,
                                 stdout_stream=self.stdout_stream,
                                 stderr_stream=self.stderr_stream,
                                 copy_env=True, copy_path=True))
