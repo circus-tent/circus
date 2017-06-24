@@ -259,6 +259,8 @@ class Controller(object):
         resp['id'] = mid
         resp = json.dumps(resp)
 
+        logger.debug("sending response %s", resp)
+
         try:
             self.stream.send(cid, zmq.SNDMORE)
             self.stream.send(resp)
