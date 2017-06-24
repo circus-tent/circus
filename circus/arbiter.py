@@ -388,7 +388,7 @@ class Arbiter(object):
             if diff == set(['numprocesses']):
                 # if nothing but the number of processes is
                 # changed, just changes this
-                w.set_numprocesses(int(new_watcher_cfg['numprocesses']))
+                yield w.set_numprocesses(int(new_watcher_cfg['numprocesses']))
                 changed = False
             else:
                 changed = len(diff) > 0
