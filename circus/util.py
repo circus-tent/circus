@@ -327,7 +327,7 @@ def to_signum(signum):
     m = re.match(r'(\w+)(\+(\d+))?', signum)
     if m:
         name = m.group(1).upper()
-        if not name.startswith('SIG'):
+        if not name.startswith('SIG') and not name.startswith('CTRL'):
             name = 'SIG' + name
 
         offset = int(m.group(3)) if m.group(3) else 0
@@ -1091,3 +1091,4 @@ def check_future_exception_and_log(future):
                 exc_info = future.exc_info()
                 traceback.print_tb(exc_info[2])
             return exception
+
