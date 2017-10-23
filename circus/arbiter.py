@@ -181,23 +181,28 @@ class Arbiter(object):
 
         # adding the httpd
         if httpd:
-            # adding the socket
-            httpd_socket = CircusSocket(name='circushttpd', host=httpd_host,
-                                        port=httpd_port)
-            if sockets is None:
-                sockets = [httpd_socket]
-            else:
-                sockets.append(httpd_socket)
-
             cmd = '-c "from circusweb import circushttpd; circushttpd.main()"'
             cmd += ' --endpoint %s' % self.endpoint
-            cmd += ' --fd $(circus.sockets.circushttpd)'
+            if hasattr(socket, 'fromfd'):
+                use_sockets = True
+                # adding the socket
+                httpd_socket = CircusSocket(name='circushttpd', host=httpd_host,
+                                            port=httpd_port)
+                if sockets is None:
+                    sockets = [httpd_socket]
+                else:
+                    sockets.append(httpd_socket)
+                cmd += ' --fd $(circus.sockets.circushttpd)'
+            else:
+                use_sockets = False
+                cmd += ' --host %s' % (httpd_host)
+                cmd += ' --port %d' % (httpd_port)
             if ssh_server is not None:
                 cmd += ' --ssh %s' % ssh_server
 
             # Adding the watcher
             httpd_watcher = Watcher('circushttpd', cmd=sys.executable,
-                                    args=cmd, use_sockets=True,
+                                    args=cmd, use_sockets=use_sockets,
                                     singleton=True,
                                     stdout_stream=self.stdout_stream,
                                     stderr_stream=self.stderr_stream,

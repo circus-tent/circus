@@ -122,6 +122,7 @@ class SocketStatsCollector(BaseStatsCollector):
         BaseStatsCollector.stop(self)
 
     def _select(self):
+        rlist = []
         try:
             rlist, wlist, xlist = select.select(self.sockets, [], [], .01)
         except socket.error as err:
