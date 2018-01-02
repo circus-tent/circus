@@ -72,7 +72,7 @@ class ArbiterHandler(object):
             - **hooks**: callback functions for hooking into the watcher
               startup and shutdown process. **hooks** is a dict where each key
               is the hook name and each value is a 2-tuple with the name of the
-              callable or the callabled itself and a boolean flag indicating if
+              callable or the callable itself and a boolean flag indicating if
               an exception occuring in the hook should not be ignored.
               Possible values for the hook name: *before_start*, *after_start*,
               *before_spawn*, *after_spawn*, *before_stop*, *after_stop*,

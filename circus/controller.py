@@ -175,8 +175,6 @@ class Controller(object):
             if cid is not None:
                 self.stream.flush()
 
-            self.arbiter.stop()
-
     def dispatch(self, job, future=None):
         cid, msg = job
         try:
@@ -260,6 +258,8 @@ class Controller(object):
 
         resp['id'] = mid
         resp = json.dumps(resp)
+
+        logger.debug("sending response %s", resp)
 
         try:
             self.stream.send(cid, zmq.SNDMORE)

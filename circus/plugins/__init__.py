@@ -175,13 +175,19 @@ class CircusPlugin(object):
         return config
 
 
-def _cfg2str(cfg):
+def DERP_cfg2str(cfg):
     json_cfg = json.dumps(cfg, separators=(',', ':'))
     if get_python_version() < (3, 0, 0):
         return json_cfg.encode('unicode-escape')
     else:
         # zmq in py3 returns bytes
         return json_cfg.decode("utf-8")
+
+
+def _cfg2str(cfg):
+    return ':::'.join([
+         '%s:%s' % (key, val) for key, val in sorted(cfg.items())
+    ])
 
 
 def _str2cfg(data):

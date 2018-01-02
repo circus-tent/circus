@@ -4,7 +4,6 @@ import os
 import gc
 from circus.fixed_threading import Thread, get_ident
 import sys
-from time import sleep
 import select
 import socket
 from tornado import gen
@@ -389,7 +388,7 @@ class Arbiter(object):
             if diff == set(['numprocesses']):
                 # if nothing but the number of processes is
                 # changed, just changes this
-                w.set_numprocesses(int(new_watcher_cfg['numprocesses']))
+                yield w.set_numprocesses(int(new_watcher_cfg['numprocesses']))
                 changed = False
             else:
                 changed = len(diff) > 0
@@ -627,10 +626,7 @@ class Arbiter(object):
                         watcher = watchers_pids[pid]
                         watcher.reap_process(pid, status)
                 except OSError as e:
-                    if e.errno == errno.EAGAIN:
-                        sleep(0)
-                        continue
-                    elif e.errno == errno.ECHILD:
+                    if e.errno == errno.ECHILD:
                         # process already reaped
                         return
                     else:

@@ -16,7 +16,7 @@ The get_arbiter function
 ========================
 
 :func:`get_arbiter` is just a convenience on top of the various
-circus classes. It creates a :term:`arbiter` (class :class:`Arbiter`) instance
+circus classes. It creates an :term:`arbiter` (class :class:`Arbiter`) instance
 with the provided options, which in turn runs a single :class:`Watcher` with a
 single :class:`Process`.
 
@@ -48,7 +48,7 @@ manager:
 - :class:`Watcher`: run several instances of :class:`Process` against the same
   command. Manage the death and life of processes.
 
-- :class:`Arbiter`: manages several :class:`Watcher`.
+- :class:`Arbiter`: manages several :class:`Watcher` instances.
 
 
 .. autoclass:: circus.process.Process

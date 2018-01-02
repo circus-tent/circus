@@ -163,13 +163,18 @@ class ControllerApp(object):
         return 0
 
     def _console(self, client, command, opts, msg):
+        response = client.call(msg)
+
         if opts['json']:
-            return prettify(client.call(msg), prettify=opts['prettify'])
+            return 0, prettify(response, prettify=opts['prettify'])
         else:
-            return command.console_msg(client.call(msg))
+            retcode = 3 if response['status'] == 'error' else 0
+            return retcode, command.console_msg(response)
 
     def handle_dealer(self, command, opts, msg, endpoint, timeout, ssh_server,
                       ssh_keyfile):
+        retcode = 0
+
         if endpoint is not None:
             client = CircusClient(endpoint=endpoint, timeout=timeout,
                                   ssh_server=ssh_server,
@@ -180,11 +185,18 @@ class ControllerApp(object):
         try:
             if isinstance(msg, list):
                 for i, c in enumerate(msg):
-                    clm = self._console(client, c['cmd'], opts,
-                                        c['msg'])
-                    print("%s: %s" % (i, clm))
+                    rc, clm = self._console(client, c['cmd'], opts, c['msg'])
+                    if not rc:
+                        print("%s: %s" % (i, clm))
+                    else:
+                        retcode = rc
+                        sys.stderr.write("%s: %s\n" % (i, clm))
             else:
-                print(self._console(client, command, opts, msg))
+                retcode, output = self._console(client, command, opts, msg)
+                if not retcode:
+                    print(output)
+                else:
+                    sys.stderr.write(output + '\n')
         except CallError as e:
             msg = str(e)
             if 'timed out' in str(e).lower():
@@ -195,7 +207,7 @@ class ControllerApp(object):
             if endpoint is not None:
                 client.stop()
 
-        return 0
+        return retcode
 
 
 class CircusCtl(cmd.Cmd, object):

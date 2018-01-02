@@ -91,3 +91,4 @@ List of contributors:
 - Yannick PEROUX <yannick.peroux@gmail.com>
 - David Douard <david.douard@logilab.fr>
 - Peter Conerly <pconerly@gmail.com>
+- Sergii Mikhtoniuk <mikhtoniuk@gmail.com>
