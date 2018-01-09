@@ -174,6 +174,7 @@ class CircusPlugin(object):
             config['env'] = parse_env_dict(config['env'])
         return config
 
+
 def _cfg2str(cfg):
     json_cfg = json.dumps(cfg, separators=(',', ':'))
     if get_python_version() < (3, 0, 0):
@@ -182,8 +183,10 @@ def _cfg2str(cfg):
         # zmq in py3 returns bytes
         return json_cfg.decode("utf-8")
 
+
 def _str2cfg(data):
     return json.loads(data)
+
 
 def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server,
                    debug=False, loglevel=None, logoutput=None):
