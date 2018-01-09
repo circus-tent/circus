@@ -15,14 +15,14 @@ class TestPluginUtils(TestCase):
                 'more_truth': True,
             },
         }
-        data_strung = _cfg2str(data_obj)
+        data_string = _cfg2str(data_obj)
 
         # need to decode, like what would happen automatically when
         # passing an arg into and out of the commandline
         if get_python_version() < (3, 0, 0):
-            return data_strung.decode('unicode-escape')
-        data_unstrung = _str2cfg(data_strung)
-        self.assertEqual(data_obj, data_unstrung)
+            return data_string.decode('unicode-escape')
+        data_unstrung = _str2cfg(data_string)
+        self.assertEqual(data_obj, data_string)
 
 
 test_suite = EasyTestSuite(__name__)

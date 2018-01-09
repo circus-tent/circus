@@ -450,7 +450,6 @@ class Arbiter(object):
                       stats_endpoint=cfg.get('stats_endpoint'),
                       multicast_endpoint=cfg.get('multicast_endpoint'),
                       plugins=plugins,
-                      # plugins=cfg.get('plugins'),
                       sockets=sockets,
                       warmup_delay=cfg.get('warmup_delay', 0),
                       httpd=httpd,
