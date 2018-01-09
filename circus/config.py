@@ -212,7 +212,6 @@ def get_config(config_file):
             sockets.append(sock)
 
         if section.startswith("plugin:"):
-            # plugin = section_items
             plugin = plugin_defaults()
             plugin.update(section_items)
             plugin['name'] = section
