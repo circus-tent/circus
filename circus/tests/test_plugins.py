@@ -20,9 +20,9 @@ class TestPluginUtils(TestCase):
         # need to decode, like what would happen automatically when
         # passing an arg into and out of the commandline
         if get_python_version() < (3, 0, 0):
-            return data_string.decode('unicode-escape')
+            data_string = data_string.decode('unicode-escape')
         data_unstrung = _str2cfg(data_string)
-        self.assertEqual(data_obj, data_string)
+        self.assertEqual(data_obj, data_unstrung)
 
 
 test_suite = EasyTestSuite(__name__)
