@@ -122,6 +122,9 @@ class SocketStatsCollector(BaseStatsCollector):
         BaseStatsCollector.stop(self)
 
     def _select(self):
+        if len(self.sockets) == 0:
+            return
+
         rlist = []
         try:
             rlist, wlist, xlist = select.select(self.sockets, [], [], .01)
