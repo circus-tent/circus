@@ -1,4 +1,5 @@
 import sys
+import os
 from setuptools import setup, find_packages
 from circus import __version__
 
@@ -12,6 +13,9 @@ try:
     import argparse     # NOQA
 except ImportError:
     install_requires.append('argparse')
+
+if os.name == 'nt':
+    install_requires.append('pypiwin32')
 
 with open("README.rst") as f:
     README = f.read()
@@ -40,6 +44,7 @@ setup(name='circus',
       entry_points="""
       [console_scripts]
       circusd = circus.circusd:main
+      circusrv = circus.circusrv:main
       circusd-stats = circus.stats:main
       circusctl = circus.circusctl:main
       circus-top = circus.stats.client:main
