@@ -11,7 +11,8 @@ except ImportError:
 import sys
 import errno
 import os
-from subprocess import PIPE
+import subprocess
+import signal
 import time
 import shlex
 import warnings
@@ -345,18 +346,19 @@ class Process(object):
             if stdin_socket_fd is not None:
                 os.dup2(stdin_socket_fd, 0)
 
+        extra = {}
         if IS_WINDOWS:
             # On Windows we can't use a pre-exec function
             preexec_fn = None
+            extra['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
         else:
             preexec_fn = preexec
 
-        extra = {}
         if self.pipe_stdout:
-            extra['stdout'] = PIPE
+            extra['stdout'] = subprocess.PIPE
 
         if self.pipe_stderr:
-            extra['stderr'] = PIPE
+            extra['stderr'] = subprocess.PIPE
 
         self._worker = Popen(args, cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
@@ -447,7 +449,10 @@ class Process(object):
     def send_signal(self, sig):
         """Sends a signal **sig** to the process."""
         logger.debug("sending signal %s to %s" % (sig, self.pid))
-        return self._worker.send_signal(sig)
+        if sig == signal.CTRL_BREAK_EVENT or sig == signal.CTRL_C_EVENT:
+            return os.kill(self._worker.pid, sig)
+        else:
+            return self._worker.send_signal(sig)
 
     @debuglog
     def stop(self):

@@ -25,7 +25,10 @@ class SysHandler(object):
         # init signals
         logger.info('Registering signals...')
         self._old = {}
-        self._register()
+        try:
+            self._register()
+        except ValueError as e:
+            logger.warning("Can't register signals: %s" % e)
 
     def stop(self):
         for sig, callback in self._old.items():
