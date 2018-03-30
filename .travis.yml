@@ -9,8 +9,14 @@ addons:
 before_install:
   # Try https://github.com/travis-ci/travis-ci/issues/8363#issuecomment-327857631
   # to workaround Travis having broken Python3.5, and flaky 3.4
-  - pyenv global system $TRAVIS_PYTHON_VERSION
-
+  #
+  #
+  - pyenv global ${TRAVIS_PYTHON_VERSION}
+  - >
+    if [[ $TRAVIS_PYTHON_VERSION = "3.5" ]]; then deactivate; sudo rm -rf /opt/python /home/travis/virtualenv; sudo add-apt-repository -y ppa:deadsnakes/ppa;
+    sudo apt-get update; sudo apt-get install -y python3.5 python3.5-dev; pyenv rehash; pyenv global system; pip install -U virtualenv pip;
+    virtualenv --python=/usr/bin/python3.5 --no-site-packages ~/working_venv; source ~/working_venv/bin/activate;
+    python --version; which python; pip --version; fi
 before_script:
   # Add an IPv6 config - see the corresponding Travis issue
   # https://github.com/travis-ci/travis-ci/issues/8361
@@ -41,7 +47,7 @@ jobs:
       env: TOX_ENV=py26-no-gevent
 
 script:
-    - tox -e $TOX_ENV
+    - tox -v -e $TOX_ENV
 
 install:
     - pip install tox
