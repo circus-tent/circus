@@ -444,6 +444,7 @@ class Arbiter(object):
                       prereload_fn=cfg.get('prereload_fn'),
                       statsd=cfg.get('statsd', False),
                       stats_endpoint=cfg.get('stats_endpoint'),
+                      papa_endpoint=cfg.get('papa_endpoint'),
                       multicast_endpoint=cfg.get('multicast_endpoint'),
                       plugins=cfg.get('plugins'), sockets=sockets,
                       warmup_delay=cfg.get('warmup_delay', 0),
