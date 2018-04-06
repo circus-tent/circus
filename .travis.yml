@@ -1,24 +1,58 @@
 language: python
 sudo: false
-python: 3.5
 addons:
   apt:
     packages:
       - libev-dev
       - libevent-dev
-env:
-  - TOX_ENV=py26
-  - TOX_ENV=py26-no-gevent
-  - TOX_ENV=py27
-  - TOX_ENV=py27-no-gevent
-  - TOX_ENV=py33
-  - TOX_ENV=py34
-  - TOX_ENV=py35
-  - TOX_ENV=docs
-  - TOX_ENV=flake8
+
+before_install:
+  # Try https://github.com/travis-ci/travis-ci/issues/8363#issuecomment-327857631
+  # to workaround Travis having broken Python3.5, and flaky 3.4
+  #
+  #
+  - pyenv global ${TRAVIS_PYTHON_VERSION}
+  - >
+    if [[ $TRAVIS_PYTHON_VERSION = "3.5" ]]; then deactivate; sudo rm -rf /opt/python /home/travis/virtualenv; sudo add-apt-repository -y ppa:deadsnakes/ppa;
+    sudo apt-get update; sudo apt-get install -y python3.5 python3.5-dev; pyenv rehash; pyenv global system; pip install -U virtualenv pip;
+    virtualenv --python=/usr/bin/python3.5 --no-site-packages ~/working_venv; source ~/working_venv/bin/activate; 
+    python --version; which python; pip --version; fi
+
+
+before_script:
+  # Add an IPv6 config - see the corresponding Travis issue
+  # https://github.com/travis-ci/travis-ci/issues/8361
+  # Taken from https://github.com/travis-ci/travis-ci/issues/8361#issuecomment-350497804
+  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then 
+      sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6';
+    fi
+
+jobs:
+  include:
+    - python: 3.6
+      env: TOX_ENV=py36
+    - python: 3.5
+      env: TOX_ENV=py35
+    - python: 3.5
+      env: TOX_ENV=docs
+    - python: 3.5
+      env: TOX_ENV=flake8
+    - python: 3.4
+      env: TOX_ENV=py34
+    - python: 3.3
+      env: TOX_ENV=py33
+    - python: 2.7
+      env: TOX_ENV=py27
+    - python: 2.7
+      env: TOX_ENV=py27-no-gevent
+    - python: 2.6
+      env: TOX_ENV=py26
+    - python: 2.6
+      env: TOX_ENV=py26-no-gevent
 
 script:
-    - tox -e $TOX_ENV
+    - tox -v -e $TOX_ENV
+
 install:
     - pip install tox
 
