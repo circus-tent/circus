@@ -30,6 +30,7 @@ from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
                          ObjectDict, replace_gnu_args, get_default_gid,
                          get_username_from_uid, IS_WINDOWS)
 from circus import logger
+from circus.pipe import make_pipe
 
 
 _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
@@ -211,9 +212,7 @@ class Process(object):
             self.gid = get_default_gid(self.uid)
 
         if IS_WINDOWS:
-            if not self.use_fds and (self.pipe_stderr or self.pipe_stdout):
-                raise ValueError("On Windows, you can't close the fds if "
-                                 "you are redirecting stdout or stderr")
+            self.use_fds = True
 
         if spawn:
             self.spawn()
@@ -354,16 +353,28 @@ class Process(object):
         else:
             preexec_fn = preexec
 
+        stdout = None
+        stderr = None
         if self.pipe_stdout:
-            extra['stdout'] = subprocess.PIPE
+            stdout, extra['stdout'] = make_pipe()
 
         if self.pipe_stderr:
-            extra['stderr'] = subprocess.PIPE
+            stderr, extra['stderr'] = make_pipe()
 
-        self._worker = Popen(args, cwd=self.working_dir,
-                             shell=self.shell, preexec_fn=preexec_fn,
-                             env=self.env, close_fds=not self.use_fds,
-                             executable=self.executable, **extra)
+        try:
+            self._worker = Popen(args, cwd=self.working_dir,
+                                 shell=self.shell, preexec_fn=preexec_fn,
+                                 env=self.env, close_fds=not self.use_fds,
+                                 executable=self.executable, **extra)
+        finally:
+            if 'stdout' in extra:
+                extra['stdout'].close()
+
+            if 'stderr' in extra:
+                extra['stderr'].close()
+
+        self._worker.stderr = stderr
+        self._worker.stdout = stdout
 
         # let go of sockets created only for self._worker to inherit
         self._sockets = []
