@@ -59,8 +59,11 @@ SLEEP = PYTHON + " -c 'import time;time.sleep(%d)'"
 
 
 def get_ioloop():
-    from zmq.eventloop.ioloop import ZMQPoller
-    from zmq.eventloop.ioloop import ZMQError, ETERM
+    try:
+        from zmq.eventloop._deprecated import ZMQPoller, ZMQError, ETERM
+    except ImportError:
+        from zmq.eventloop.ioloop import ZMQPoller
+        from zmq.eventloop.ioloop import ZMQError, ETERM
     from tornado.ioloop import PollIOLoop
 
     class DebugPoller(ZMQPoller):
