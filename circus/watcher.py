@@ -255,10 +255,6 @@ class Watcher(object):
                              " watcher" % self.numprocesses)
 
         if IS_WINDOWS:
-            if self.stdout_stream or self.stderr_stream:
-                raise NotImplementedError("Streams are not supported"
-                                          " on Windows.")
-
             if not copy_env and not env:
                 # Copy the env by default on Windows as we can't run any
                 # executable without some env variables
@@ -686,7 +682,7 @@ class Watcher(object):
             # catch ValueError as well, as a misconfigured rlimit setting could
             # lead to bad infinite retries here
             except (OSError, ValueError) as e:
-                logger.warning('error in %r: %s', self.name, str(e))
+                logger.exception('error in %r: %s', self.name, str(e))
 
             if process is None:
                 nb_tries += 1
