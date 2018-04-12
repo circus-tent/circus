@@ -1,4 +1,5 @@
 import win32serviceutil
+import win32security
 import servicemanager
 import os
 import logging
@@ -6,6 +7,15 @@ import traceback
 
 from circus.arbiter import Arbiter
 from circus.util import check_future_exception_and_log, LOG_LEVELS
+
+
+def grant_service_login_right(account_name):
+    policy_handle = win32security.GetPolicyHandle('', win32security.POLICY_ALL_ACCESS)
+    try:
+        sid = win32security.LookupAccountName('', account_name)[0]
+        win32security.LsaAddAccountRights(policy_handle, sid, ['SeServiceLogonRight'])
+    finally:
+        win32security.LsaClose(policy_handle)
 
 
 class ServiceManagerHandler(logging.Handler):
@@ -72,7 +82,10 @@ class CircusSrv(win32serviceutil.ServiceFramework):
 
     @classmethod
     def OptionsHandler(cls, opts):
+        username = None
         for opt, val in opts:
+            if opt == '--username':
+                username = val
             if opt == '-c':
                 win32serviceutil.SetServiceCustomOption(cls._svc_name_,
                                     cls._parameter_config,
@@ -81,6 +94,10 @@ class CircusSrv(win32serviceutil.ServiceFramework):
                 win32serviceutil.SetServiceCustomOption(cls._svc_name_,
                                     cls._parameter_loglevel,
                                     val)
+        if username is not None:
+            # Take only user from domain\user
+            username = username.split('\\')[-1]
+            grant_service_login_right(username)
 
         # Register now the source (rights of service's user may be different)
         servicemanager.SetEventSourceName(cls._svc_name_, True)
