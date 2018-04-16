@@ -22,6 +22,9 @@ from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
 
+if IS_WINDOWS:
+    import win32event
+
 
 _ENV_EXCEPTIONS = ('__CF_USER_TEXT_ENCODING', 'PS1', 'COMP_WORDBREAKS',
                    'PROMPT_COMMAND')
@@ -611,10 +614,16 @@ class Arbiter(object):
     def reap_processes(self):
         # map watcher to pids
         watchers_pids = {}
+        watchers_handles = {}
+        handles = []
         for watcher in self.iter_watchers():
             if not watcher.is_stopped():
                 for process in watcher.processes.values():
-                    watchers_pids[process.pid] = watcher
+                    if not IS_WINDOWS:
+                        watchers_pids[process.pid] = watcher
+                    else:
+                        watchers_handles[process._worker._handle] = (watcher, process.pid)
+                        handles.append(process._worker._handle)
 
         # detect dead children
         if not IS_WINDOWS:
@@ -634,6 +643,17 @@ class Arbiter(object):
                         return
                     else:
                         raise
+        else:
+            import win32event
+            while True:
+                rc = win32event.WaitForMultipleObjects(handles, False, 0)
+                if not(win32event.WAIT_OBJECT_0 <= rc < win32event.WAIT_OBJECT_0 + len(handles)):
+                    break
+                handle = handles[rc - win32event.WAIT_OBJECT_0]
+                handles.remove(handle)
+                if handle in watchers_handles:
+                    watcher, pid = watchers_handles[handle]
+                    watcher.reap_process(pid, None)
 
     @synchronized("manage_watchers")
     @gen.coroutine
