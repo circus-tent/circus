@@ -1,4 +1,5 @@
 from mock import patch
+import json
 
 from circus.tests.support import TestCircus, EasyTestSuite
 from circus.plugins.flapping import Flapping
@@ -27,6 +28,17 @@ class TestFlapping(TestCircus):
         plugin.handle_recv([topic, None])
 
         check_mock.assert_called_with('test')
+
+    @patch.object(Flapping, 'check')
+    def test_command_generated_reap_message_doesnt_call_check(self,
+                                                              check_mock):
+        plugin = self._flapping_plugin()
+        topic = 'watcher.test.reap'
+        message = json.dumps({'commanded_reap': True})
+
+        plugin.handle_recv([topic, message])
+
+        check_mock.assert_not_called()
 
     @patch.object(Flapping, 'cast')
     @patch('circus.plugins.flapping.Timer')
