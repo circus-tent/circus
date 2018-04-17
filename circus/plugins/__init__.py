@@ -179,7 +179,7 @@ def _str2cfg(data):
     return cfg
 
 
-def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server,
+def get_plugin_cmd(py_exe, config, endpoint, pubsub, check_delay, ssh_server,
                    debug=False, loglevel=None, logoutput=None):
     fqn = config['use']
     # makes sure the name exists
@@ -202,7 +202,7 @@ def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server,
     if logoutput:
         cmd += ' --log-output ' + logoutput
     cmd += ' %s' % fqn
-    return (sys.executable, cmd)
+    return (py_exe, cmd)
 
 
 def main():

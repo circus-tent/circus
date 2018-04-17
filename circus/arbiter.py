@@ -90,7 +90,7 @@ class Arbiter(object):
                  ssh_server=None, proc_name='circusd', pidfile=None,
                  loglevel=None, logoutput=None, loggerconfig=None,
                  fqdn_prefix=None, umask=None, endpoint_owner=None,
-                 papa_endpoint=None):
+                 papa_endpoint=None, py_exe=None):
 
         self.watchers = watchers
         self.endpoint = endpoint
@@ -107,6 +107,7 @@ class Arbiter(object):
         self.loggerconfig = loggerconfig
         self.umask = umask
         self.endpoint_owner = endpoint_owner
+        self.py_exe = py_exe or sys.executable
         self._running = False
         try:
             # getfqdn appears to fail in Python3.3 in the unittest
@@ -171,7 +172,7 @@ class Arbiter(object):
                 cmd += ' --log-level ' + self.loglevel
             if self.logoutput:
                 cmd += ' --log-output ' + self.logoutput
-            stats_watcher = Watcher('circusd-stats', cmd=sys.executable,
+            stats_watcher = Watcher('circusd-stats', cmd=self.py_exe,
                                     args=cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=self.stdout_stream,
@@ -204,7 +205,7 @@ class Arbiter(object):
                 cmd += ' --ssh %s' % ssh_server
 
             # Adding the watcher
-            httpd_watcher = Watcher('circushttpd', cmd=sys.executable,
+            httpd_watcher = Watcher('circushttpd', cmd=self.py_exe,
                                     args=cmd, use_sockets=use_sockets,
                                     singleton=True,
                                     stdout_stream=self.stdout_stream,
@@ -221,7 +222,7 @@ class Arbiter(object):
         if plugins is not None:
             for plugin in plugins:
                 fqn = plugin['use']
-                cmd, args = get_plugin_cmd(plugin, self.endpoint,
+                cmd, args = get_plugin_cmd(self.py_exe, plugin, self.endpoint,
                                            self.pubsub_endpoint,
                                            self.check_delay,
                                            ssh_server, debug=self.debug,
@@ -276,7 +277,7 @@ class Arbiter(object):
         for i in config.get('plugins', []):
             if i['name'] == name:
                 cfg = i.copy()
-                cmd, args = get_plugin_cmd(cfg, self.endpoint,
+                cmd, args = get_plugin_cmd(self.py_exe, cfg, self.endpoint,
                                            self.pubsub_endpoint,
                                            self.check_delay,
                                            self.ssh_server, debug=self.debug)
@@ -471,7 +472,8 @@ class Arbiter(object):
                       loggerconfig=cfg.get('loggerconfig', None),
                       fqdn_prefix=cfg.get('fqdn_prefix', None),
                       umask=cfg['umask'],
-                      endpoint_owner=cfg.get('endpoint_owner', None))
+                      endpoint_owner=cfg.get('endpoint_owner', None),
+                      py_exe=cfg.get('py_exe', sys.executable))
 
         # store the cfg which will be used, so it can be used later
         # for checking if the cfg has been changed
