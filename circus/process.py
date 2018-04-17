@@ -416,13 +416,23 @@ class Process(object):
         if self.args is not None:
             if isinstance(self.args, string_types):
                 args = shlex.split(bytestring(replace_gnu_args(
-                    self.args, **format_kwargs)))
+                    self.args, **format_kwargs)), posix=not IS_WINDOWS)
             else:
                 args = [bytestring(replace_gnu_args(arg, **format_kwargs))
                         for arg in self.args]
             args = shlex.split(bytestring(cmd), posix=not IS_WINDOWS) + args
         else:
             args = shlex.split(bytestring(cmd), posix=not IS_WINDOWS)
+
+        def unquote(cmd):
+            if cmd.startswith('"') and cmd.endswith('"'):
+                return cmd[1:-1]
+            elif cmd.startswith("'") and cmd.endswith("'"):
+                return cmd[1:-1]
+            else:
+                return cmd
+
+        args = [unquote(cmd) for cmd in args]
 
         if self.shell:
             # subprocess.Popen(shell=True) implies that 1st arg is the
