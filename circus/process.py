@@ -41,6 +41,11 @@ UNEXISTING = 2
 OTHER = 3
 
 
+DEFAULT_PROCESS = "default"
+PAPA = "papa"
+WIN_SERVICE = "win_service"
+
+
 # psutil < 2.x compat
 def get_children(proc, recursive=False):
     try:

@@ -29,6 +29,21 @@ from circus.util import papa
 from circus.py3compat import bytestring, is_callable, b, PY2
 
 
+from circus.process import DEFAULT_PROCESS, PAPA, WIN_SERVICE
+if IS_WINDOWS:
+    from circus.win_process import WinService
+    PROCESS_TYPES = {
+        DEFAULT_PROCESS: Process,
+        PAPA: PapaProcessProxy,
+        WIN_SERVICE: WinService
+    }
+else:
+    PROCESS_TYPES = {
+        DEFAULT_PROCESS: Process,
+        PAPA: PapaProcessProxy
+    }
+
+
 class Watcher(object):
 
     """
@@ -194,6 +209,9 @@ class Watcher(object):
 
     - **use_papa**: If True, use the papa process kernel for this process.
       default: False.
+
+    - **proc_type**: Type of the process to start. Local, win_service,
+      win_remote, linux_remote
     """
 
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
@@ -209,7 +227,7 @@ class Watcher(object):
                  stdin_socket=None, close_child_stdin=True,
                  close_child_stdout=False,
                  close_child_stderr=False, virtualenv_py_ver=None,
-                 use_papa=False, **options):
+                 use_papa=False, proc_type=None, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.on_demand = on_demand
@@ -248,7 +266,13 @@ class Watcher(object):
         self.close_child_stdout = close_child_stdout
         self.close_child_stderr = close_child_stderr
         self.use_papa = use_papa and papa is not None
+        self.proc_type = proc_type.lower() if proc_type else DEFAULT_PROCESS
+        self.proc_type = PAPA if self.use_papa else self.proc_type
         self.loop = loop or ioloop.IOLoop.instance()
+
+        if self.proc_type not in PROCESS_TYPES:
+            raise ValueError("Watcher: {}, Invalid process type supplied: {}"
+                             .format(self.name, self.proc_type))
 
         if singleton and self.numprocesses not in (0, 1):
             raise ValueError("Cannot have %d processes with a singleton "
@@ -340,7 +364,7 @@ class Watcher(object):
 
     @property
     def _process_class(self):
-        return PapaProcessProxy if self.use_papa else Process
+        return PROCESS_TYPES[self.proc_type]
 
     def _reload_stream(self, key, val):
         parts = key.split('.', 1)
@@ -658,6 +682,7 @@ class Watcher(object):
             # noinspection PyPep8Naming
             ProcCls = self._process_class
             try:
+                logger.debug("Cmd: {}".format(cmd))
                 process = ProcCls(self.name, recovery_wid or self._nextwid,
                                   cmd, args=self.args,
                                   working_dir=self.working_dir,
