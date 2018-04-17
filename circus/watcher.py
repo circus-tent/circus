@@ -851,6 +851,8 @@ class Watcher(object):
     @gen.coroutine
     def _stop(self, close_output_streams=False, for_shutdown=False):
         if self.is_stopped():
+            if self.evpub_socket is not None:
+                self.notify_event("stop", {"time": time.time(), "already": True})
             return
         self._status = "stopping"
         skip = for_shutdown and self.use_papa
