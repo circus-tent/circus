@@ -22,6 +22,9 @@ from circus.config import get_config
 from circus.plugins import get_plugin_cmd
 from circus.sockets import CircusSocket, CircusSockets
 
+if IS_WINDOWS:
+    import win32event
+
 
 _ENV_EXCEPTIONS = ('__CF_USER_TEXT_ENCODING', 'PS1', 'COMP_WORDBREAKS',
                    'PROMPT_COMMAND')
@@ -156,8 +159,7 @@ class Arbiter(object):
         self.stats_endpoint = stats_endpoint
 
         if self.statsd:
-            cmd = "%s -c 'from circus import stats; stats.main()'" % \
-                sys.executable
+            cmd = '-c "from circus import stats; stats.main()"'
             cmd += ' --endpoint %s' % self.endpoint
             cmd += ' --pubsub %s' % self.pubsub_endpoint
             cmd += ' --statspoint %s' % self.stats_endpoint
@@ -169,7 +171,8 @@ class Arbiter(object):
                 cmd += ' --log-level ' + self.loglevel
             if self.logoutput:
                 cmd += ' --log-output ' + self.logoutput
-            stats_watcher = Watcher('circusd-stats', cmd, use_sockets=True,
+            stats_watcher = Watcher('circusd-stats', cmd=sys.executable,
+                                    args=cmd, use_sockets=True,
                                     singleton=True,
                                     stdout_stream=self.stdout_stream,
                                     stderr_stream=self.stderr_stream,
@@ -181,23 +184,29 @@ class Arbiter(object):
 
         # adding the httpd
         if httpd:
-            # adding the socket
-            httpd_socket = CircusSocket(name='circushttpd', host=httpd_host,
-                                        port=httpd_port)
-            if sockets is None:
-                sockets = [httpd_socket]
-            else:
-                sockets.append(httpd_socket)
-
-            cmd = ("%s -c 'from circusweb import circushttpd; "
-                   "circushttpd.main()'") % sys.executable
+            cmd = '-c "from circusweb import circushttpd; circushttpd.main()"'
             cmd += ' --endpoint %s' % self.endpoint
-            cmd += ' --fd $(circus.sockets.circushttpd)'
+            if hasattr(socket, 'fromfd'):
+                use_sockets = True
+                # adding the socket
+                httpd_socket = CircusSocket(name='circushttpd',
+                                            host=httpd_host,
+                                            port=httpd_port)
+                if sockets is None:
+                    sockets = [httpd_socket]
+                else:
+                    sockets.append(httpd_socket)
+                cmd += ' --fd $(circus.sockets.circushttpd)'
+            else:
+                use_sockets = False
+                cmd += ' --host %s' % (httpd_host)
+                cmd += ' --port %d' % (httpd_port)
             if ssh_server is not None:
                 cmd += ' --ssh %s' % ssh_server
 
             # Adding the watcher
-            httpd_watcher = Watcher('circushttpd', cmd, use_sockets=True,
+            httpd_watcher = Watcher('circushttpd', cmd=sys.executable,
+                                    args=cmd, use_sockets=use_sockets,
                                     singleton=True,
                                     stdout_stream=self.stdout_stream,
                                     stderr_stream=self.stderr_stream,
@@ -213,12 +222,14 @@ class Arbiter(object):
         if plugins is not None:
             for plugin in plugins:
                 fqn = plugin['use']
-                cmd = get_plugin_cmd(plugin, self.endpoint,
-                                     self.pubsub_endpoint, self.check_delay,
-                                     ssh_server, debug=self.debug,
-                                     loglevel=self.loglevel,
-                                     logoutput=self.logoutput)
-                plugin_cfg = dict(cmd=cmd, priority=1, singleton=True,
+                cmd, args = get_plugin_cmd(plugin, self.endpoint,
+                                           self.pubsub_endpoint,
+                                           self.check_delay,
+                                           ssh_server, debug=self.debug,
+                                           loglevel=self.loglevel,
+                                           logoutput=self.logoutput)
+                plugin_cfg = dict(cmd=cmd, args=args, priority=1,
+                                  singleton=True,
                                   stdout_stream=self.stdout_stream,
                                   stderr_stream=self.stderr_stream,
                                   copy_env=True, copy_path=True,
@@ -266,11 +277,12 @@ class Arbiter(object):
         for i in config.get('plugins', []):
             if i['name'] == name:
                 cfg = i.copy()
-                cmd = get_plugin_cmd(cfg, self.endpoint,
-                                     self.pubsub_endpoint, self.check_delay,
-                                     self.ssh_server, debug=self.debug)
+                cmd, args = get_plugin_cmd(cfg, self.endpoint,
+                                           self.pubsub_endpoint,
+                                           self.check_delay,
+                                           self.ssh_server, debug=self.debug)
 
-                cfg.update(dict(cmd=cmd, priority=1, singleton=True,
+                cfg.update(dict(cmd=cmd, args=args, priority=1, singleton=True,
                                 stdout_stream=self.stdout_stream,
                                 stderr_stream=self.stderr_stream,
                                 copy_env=True, copy_path=True))
@@ -603,10 +615,16 @@ class Arbiter(object):
     def reap_processes(self):
         # map watcher to pids
         watchers_pids = {}
+        watchers_handles = {}
+        handles = []
         for watcher in self.iter_watchers():
             if not watcher.is_stopped():
                 for process in watcher.processes.values():
-                    watchers_pids[process.pid] = watcher
+                    if not IS_WINDOWS:
+                        watchers_pids[process.pid] = watcher
+                    else:
+                        watchers_handles[process._worker._handle] = (watcher, process.pid)
+                        handles.append(process._worker._handle)
 
         # detect dead children
         if not IS_WINDOWS:
@@ -626,6 +644,17 @@ class Arbiter(object):
                         return
                     else:
                         raise
+        else:
+            import win32event
+            while True:
+                rc = win32event.WaitForMultipleObjects(handles, False, 0)
+                if not(win32event.WAIT_OBJECT_0 <= rc < win32event.WAIT_OBJECT_0 + len(handles)):
+                    break
+                handle = handles[rc - win32event.WAIT_OBJECT_0]
+                handles.remove(handle)
+                if handle in watchers_handles:
+                    watcher, pid = watchers_handles[handle]
+                    watcher.reap_process(pid, None)
 
     @synchronized("manage_watchers")
     @gen.coroutine

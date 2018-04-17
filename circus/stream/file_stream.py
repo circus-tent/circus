@@ -38,6 +38,8 @@ class _FileStreamBase(object):
     def write_data(self, data):
         # data to write on file
         file_data = s(data['data'])
+        if os.linesep != '\n':
+            file_data = file_data.replace(os.linesep, '\n')
 
         # If we want to prefix the stream with the current datetime
         if self._time_format is not None:

@@ -11,7 +11,8 @@ except ImportError:
 import sys
 import errno
 import os
-from subprocess import PIPE
+import subprocess
+import signal
 import time
 import shlex
 import warnings
@@ -29,6 +30,7 @@ from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
                          ObjectDict, replace_gnu_args, get_default_gid,
                          get_username_from_uid, IS_WINDOWS)
 from circus import logger
+from circus.pipe import make_pipe
 
 
 _INFOLINE = ("%(pid)s  %(cmdline)s %(username)s %(nice)s %(mem_info1)s "
@@ -210,9 +212,7 @@ class Process(object):
             self.gid = get_default_gid(self.uid)
 
         if IS_WINDOWS:
-            if not self.use_fds and (self.pipe_stderr or self.pipe_stdout):
-                raise ValueError("On Windows, you can't close the fds if "
-                                 "you are redirecting stdout or stderr")
+            self.use_fds = True
 
         if spawn:
             self.spawn()
@@ -345,23 +345,36 @@ class Process(object):
             if stdin_socket_fd is not None:
                 os.dup2(stdin_socket_fd, 0)
 
+        extra = {}
         if IS_WINDOWS:
             # On Windows we can't use a pre-exec function
             preexec_fn = None
+            extra['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
         else:
             preexec_fn = preexec
 
-        extra = {}
+        stdout = None
+        stderr = None
         if self.pipe_stdout:
-            extra['stdout'] = PIPE
+            stdout, extra['stdout'] = make_pipe()
 
         if self.pipe_stderr:
-            extra['stderr'] = PIPE
+            stderr, extra['stderr'] = make_pipe()
 
-        self._worker = Popen(args, cwd=self.working_dir,
-                             shell=self.shell, preexec_fn=preexec_fn,
-                             env=self.env, close_fds=not self.use_fds,
-                             executable=self.executable, **extra)
+        try:
+            self._worker = Popen(args, cwd=self.working_dir,
+                                 shell=self.shell, preexec_fn=preexec_fn,
+                                 env=self.env, close_fds=not self.use_fds,
+                                 executable=self.executable, **extra)
+        finally:
+            if 'stdout' in extra:
+                extra['stdout'].close()
+
+            if 'stderr' in extra:
+                extra['stderr'].close()
+
+        self._worker.stderr = stderr
+        self._worker.stdout = stdout
 
         # let go of sockets created only for self._worker to inherit
         self._sockets = []
@@ -403,13 +416,23 @@ class Process(object):
         if self.args is not None:
             if isinstance(self.args, string_types):
                 args = shlex.split(bytestring(replace_gnu_args(
-                    self.args, **format_kwargs)))
+                    self.args, **format_kwargs)), posix=not IS_WINDOWS)
             else:
                 args = [bytestring(replace_gnu_args(arg, **format_kwargs))
                         for arg in self.args]
             args = shlex.split(bytestring(cmd), posix=not IS_WINDOWS) + args
         else:
             args = shlex.split(bytestring(cmd), posix=not IS_WINDOWS)
+
+        def unquote(cmd):
+            if cmd.startswith('"') and cmd.endswith('"'):
+                return cmd[1:-1]
+            elif cmd.startswith("'") and cmd.endswith("'"):
+                return cmd[1:-1]
+            else:
+                return cmd
+
+        args = [unquote(cmd) for cmd in args]
 
         if self.shell:
             # subprocess.Popen(shell=True) implies that 1st arg is the
@@ -447,6 +470,9 @@ class Process(object):
     def send_signal(self, sig):
         """Sends a signal **sig** to the process."""
         logger.debug("sending signal %s to %s" % (sig, self.pid))
+        if os.name == 'nt':
+            if sig == signal.CTRL_BREAK_EVENT or sig == signal.CTRL_C_EVENT:
+                return os.kill(self._worker.pid, sig)
         return self._worker.send_signal(sig)
 
     @debuglog
