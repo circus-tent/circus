@@ -18,12 +18,16 @@ from circus.tests.support import (TestCircus, async_poll_for, truncate_file,
                                   EasyTestSuite, skipIf, get_ioloop, SLEEP,
                                   PYTHON)
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
-                         DEFAULT_ENDPOINT_SUB)
+                         DEFAULT_ENDPOINT_SUB, IS_WINDOWS)
 from circus.tests.support import (MockWatcher, has_circusweb,
                                   poll_for_callable, get_available_port)
 from circus import watcher as watcher_mod
 from circus.py3compat import s
 
+if IS_WINDOWS:
+    import win32api
+    import win32con
+    import pywintypes
 
 _GENERIC = os.path.join(os.path.dirname(__file__), 'generic.py')
 
@@ -283,8 +287,20 @@ class TestTrainer(TestCircus):
             pid = pids[0]
             os.kill(pid, 0)
             os.kill(pid, signal.SIGTERM)
-            os.waitpid(pid, 0)
-        except OSError:
+            if not IS_WINDOWS:
+                os.waitpid(pid, 0)
+            else:
+                handle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, True, pid)
+                if handle:
+                    try:
+                        os.waitpid(handle, 0)
+                    finally:
+                        try:
+                            win32api.CloseHandle(handle)
+                        except pywintypes.error:
+                            pass
+
+        except OSError as e:
             self.assertFalse(True, "process was incorrectly killed")
         yield self.stop_arbiter()
 

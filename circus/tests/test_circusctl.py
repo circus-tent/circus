@@ -9,7 +9,7 @@ from tornado.gen import coroutine, Return
 from circus.circusctl import USAGE, VERSION, CircusCtl
 from circus.tests.support import (TestCircus, async_poll_for, EasyTestSuite,
                                   skipIf, DEBUG, PYTHON, SLEEP)
-from circus.util import tornado_sleep, DEFAULT_ENDPOINT_DEALER
+from circus.util import tornado_sleep, DEFAULT_ENDPOINT_DEALER, IS_WINDOWS
 from circus.py3compat import b, s
 
 
@@ -18,6 +18,8 @@ def run_ctl(args, queue=None, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
     if '--endpoint' not in args:
         args = '--endpoint %s ' % endpoint + args
 
+    if IS_WINDOWS:
+        args = args.replace('\\', '\\\\')
     proc = subprocess.Popen(cmd.split() + shlex.split(args),
                             stdin=subprocess.PIPE if stdin else None,
                             stdout=subprocess.PIPE,
