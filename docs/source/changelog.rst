@@ -1,6 +1,21 @@
 Changelog history
 =================
 
+0.15.0 unreleased
+-----------------
+This release fixes several bugs and explicitely mark Circus as incompatible
+with Tornado 5 & PyZMQ 17.
+
+- Born Tornado version to < 5 & PyZMQ version to < 17 - #1030, #1064, #1055
+- Fix 'papa_enpoint' config option - #1066
+- Circusctl returns non-zero exit code when command fails - #1001
+- Fix potential process leaking - #998
+- Fix behavior when increasing numprocesses - #997
+- Fix Watcher.reap_process - #1036
+- Coerce 'max_retry' value to int - #1008
+- Drop iowait from the requirements - #1003
+- Doc updates - #1022, #1013
+
 0.14.0 2016-08-12
 -----------------
 This release fixes several bugs and add new options to
