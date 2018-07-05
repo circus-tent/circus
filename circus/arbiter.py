@@ -2,6 +2,7 @@ import errno
 import logging
 import os
 import gc
+import operator
 from circus.fixed_threading import Thread, get_ident
 import sys
 import select
@@ -473,6 +474,16 @@ class Arbiter(object):
     def iter_watchers(self, reverse=True):
         return sorted(self.watchers, key=lambda a: a.priority, reverse=reverse)
 
+    def iter_active_watchers(self, fd, reverse=True):
+        a_watchers = []
+        for watcher in self.watchers:
+            wanted_sockets = [name for name, sock in watcher.sockets.items()
+                              if sock.fileno() == fd]
+            if len(set(watcher.sockets).intersection(set(wanted_sockets))) > 0:
+                a_watchers.append(watcher)
+        return sorted(a_watchers, key=operator.attrgetter('priority'),
+                      reverse=reverse)
+
     @debuglog
     def initialize(self):
         # set process title
@@ -647,9 +658,9 @@ class Arbiter(object):
         if need_on_demand:
             sockets = [x.fileno() for x in self.sockets.values()]
             rlist, wlist, xlist = select.select(sockets, [], [], 0)
-            if rlist:
+            for r in rlist:
                 self.socket_event = True
-                self._start_watchers()
+                self._start_watchers(watcher_fd=r)
                 self.socket_event = False
 
     @synchronized("arbiter_reload")
@@ -743,8 +754,10 @@ class Arbiter(object):
         yield self._start_watchers(watcher_iter_func=watcher_iter_func)
 
     @gen.coroutine
-    def _start_watchers(self, watcher_iter_func=None):
-        if watcher_iter_func is None:
+    def _start_watchers(self, watcher_iter_func=None, watcher_fd=None):
+        if watcher_fd is not None:
+            watchers = self.iter_active_watchers(watcher_fd)
+        elif watcher_iter_func is None:
             watchers = self.iter_watchers()
         else:
             watchers = watcher_iter_func()

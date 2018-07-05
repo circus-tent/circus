@@ -37,7 +37,8 @@ class PapaSocketProxy(object):
     def __init__(self, name='', host=None, port=None,
                  family=None, type=None,
                  proto=None, backlog=None, path=None, umask=None, replace=None,
-                 interface=None, so_reuseport=False, blocking=False):
+                 interface=None, so_reuseport=False, blocking=False,
+                 group=None):
         if path is not None:
             if not hasattr(socket, 'AF_UNIX'):
                 raise NotImplementedError("AF_UNIX not supported on this"
@@ -73,6 +74,7 @@ class PapaSocketProxy(object):
         self.so_reuseport = papa_socket.get('so_reuseport', False)
         self._fileno = papa_socket.get('fileno')
         self.use_papa = True
+        self.group = group
         if log_differences:
             differences = []
             if host != self.host:
@@ -122,7 +124,8 @@ class CircusSocket(socket.socket):
     def __init__(self, name='', host='localhost', port=8080,
                  family=socket.AF_INET, type=socket.SOCK_STREAM,
                  proto=0, backlog=2048, path=None, umask=None, replace=False,
-                 interface=None, so_reuseport=False, blocking=False):
+                 interface=None, so_reuseport=False, blocking=False,
+                 group=None):
         if path is not None:
             if not hasattr(socket, 'AF_UNIX'):
                 raise NotImplementedError("AF_UNIX not supported on this"
@@ -138,6 +141,7 @@ class CircusSocket(socket.socket):
         self.umask = umask
         self.replace = replace
         self.use_papa = False
+        self.group = group
 
         if hasattr(socket, 'AF_UNIX') and family == socket.AF_UNIX:
             self.host = self.port = None
@@ -246,7 +250,8 @@ class CircusSocket(socket.socket):
                   'so_reuseport': to_bool(config.get('so_reuseport')),
                   'umask': int(config.get('umask', 8)),
                   'replace': config.get('replace'),
-                  'blocking': to_bool(config.get('blocking'))}
+                  'blocking': to_bool(config.get('blocking')),
+                  'group': config.get('group')}
         use_papa = to_bool(config.get('use_papa')) and papa is not None
         proto_name = config.get('proto')
         if proto_name is not None:

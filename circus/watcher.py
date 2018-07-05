@@ -138,6 +138,10 @@ class Watcher(object):
       descriptors, thus can reuse the sockets opened by circusd.
       (default: False)
 
+    - **socket_group** -- Name of the group that sockets need to be in, to be
+      attached to this watcher. If unset, all sockets can be used.
+      (default: None)
+
     - **on_demand** -- If True, the processes will be started only
       at the first connection to the socket
       (default: False)
@@ -203,8 +207,8 @@ class Watcher(object):
                  graceful_timeout=30.0, prereload_fn=None, rlimits=None,
                  executable=None, stdout_stream=None, stderr_stream=None,
                  priority=0, loop=None, singleton=False, use_sockets=False,
-                 copy_env=False, copy_path=False, max_age=0,
-                 max_age_variance=30, hooks=None, respawn=True,
+                 socket_group=None, copy_env=False, copy_path=False,
+                 max_age=0, max_age_variance=30, hooks=None, respawn=True,
                  autostart=True, on_demand=False, virtualenv=None,
                  stdin_socket=None, close_child_stdin=True,
                  close_child_stdout=False,
@@ -212,6 +216,7 @@ class Watcher(object):
                  use_papa=False, **options):
         self.name = name
         self.use_sockets = use_sockets
+        self.socket_group = socket_group
         self.on_demand = on_demand
         self.res_name = name.lower().replace(" ", "_")
         self.numprocesses = int(numprocesses)
@@ -271,7 +276,7 @@ class Watcher(object):
                           "stop_children", "shell", "shell_args",
                           "env", "max_retry", "cmd", "args", "respawn",
                           "graceful_timeout", "executable", "use_sockets",
-                          "priority", "copy_env", "singleton",
+                          "socket_group", "priority", "copy_env", "singleton",
                           "stdout_stream_conf", "on_demand",
                           "stderr_stream_conf", "max_age", "max_age_variance",
                           "close_child_stdin", "close_child_stdout",
@@ -418,7 +423,11 @@ class Watcher(object):
     @util.debuglog
     def initialize(self, evpub_socket, sockets, arbiter):
         self.evpub_socket = evpub_socket
-        self.sockets = sockets
+        if self.socket_group is None:
+            self.sockets = sockets
+        else:
+            self.sockets = {name: socket for (name, socket) in sockets.items()
+                            if socket.group == self.socket_group}
         self.arbiter = arbiter
 
     def __len__(self):
