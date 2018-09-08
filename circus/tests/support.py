@@ -217,7 +217,7 @@ class TestCircus(AsyncTestCase):
                       stdout_stream=None, debug=True, **kw):
         testfile, arbiter = self._create_circus(
             cmd, stdout_stream=stdout_stream,
-            debug=debug, async=True, **kw)
+            debug=debug, use_async=True, **kw)
         self.test_file = testfile
         self.arbiter = arbiter
         self.arbiters.append(arbiter)
@@ -265,7 +265,7 @@ class TestCircus(AsyncTestCase):
 
     @classmethod
     def _create_circus(cls, callable_path, plugins=None, stats=False,
-                       async=False, arbiter_kw=None, **kw):
+                       use_async=False, arbiter_kw=None, **kw):
         fd, testfile = mkstemp()
         os.close(fd)
         wdir = os.path.dirname(os.path.dirname(os.path.dirname(
@@ -292,7 +292,7 @@ class TestCircus(AsyncTestCase):
             arbiter_kw['stats_endpoint'] = "tcp://127.0.0.1:%d" % _gp()
             arbiter_kw['statsd_close_outputs'] = not debug
 
-        if async:
+        if use_async:
             arbiter_kw['background'] = False
             arbiter_kw['loop'] = get_ioloop()
         else:
