@@ -90,7 +90,7 @@ class TestWithHook(TestCircus):
         self.stream = QueueStream()
         self.errstream = QueueStream()
         dummy_process = 'circus.tests.support.run_process'
-        return self._create_circus(dummy_process, async=True,
+        return self._create_circus(dummy_process, use_async=True,
                                    stdout_stream={'stream': self.stream},
                                    stderr_stream={'stream': self.errstream},
                                    hooks=hooks)

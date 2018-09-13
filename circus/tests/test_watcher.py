@@ -376,7 +376,7 @@ class TestWatcherHooks(TestCircus):
         return self._create_circus(dummy_process,
                                    stdout_stream=stdout_stream,
                                    stderr_stream=stderr_stream,
-                                   hooks=hooks, debug=True, async=True)
+                                   hooks=hooks, debug=True, use_async=True)
 
     @tornado.gen.coroutine
     def _stop(self):
@@ -601,7 +601,7 @@ class RespawnTest(TestCircus):
     def test_not_respawning(self):
         oneshot_process = 'circus.tests.test_watcher.oneshot_process'
         testfile, arbiter = self._create_circus(oneshot_process,
-                                                respawn=False, async=True)
+                                                respawn=False, use_async=True)
         yield arbiter.start()
         watcher = arbiter.watchers[-1]
         try:
