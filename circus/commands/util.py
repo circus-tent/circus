@@ -59,6 +59,8 @@ def convert_option(key, val):
         return util.to_bool(val)
     elif key == "close_child_stderr":
         return util.to_bool(val)
+    elif key == "use_papa":
+        return util.to_bool(val)
     elif key.startswith('stderr_stream.') or key.startswith('stdout_stream.'):
         subkey = key.split('.', 1)[-1]
         if subkey in ('max_bytes', 'backup_count'):
@@ -99,7 +101,7 @@ def validate_option(key, val):
                   'max_retry', 'graceful_timeout', 'stdout_stream',
                   'stderr_stream', 'max_age', 'max_age_variance', 'respawn',
                   'singleton', 'hooks', 'close_child_stdin',
-                  'close_child_stdout', 'close_child_stderr')
+                  'close_child_stdout', 'close_child_stderr', 'use_papa')
 
     valid_prefixes = ('stdout_stream.', 'stderr_stream.', 'hooks.', 'rlimit_')
 
