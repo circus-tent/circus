@@ -21,22 +21,27 @@ before_script:
   # Add an IPv6 config - see the corresponding Travis issue
   # https://github.com/travis-ci/travis-ci/issues/8361
   # Taken from https://github.com/travis-ci/travis-ci/issues/8361#issuecomment-350497804
-  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then 
+  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
       sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6';
     fi
 
 jobs:
   include:
+    - python: 3.7
+      env: TOX_ENV=py37
+      # cf https://github.com/travis-ci/travis-ci/issues/9069#issuecomment-425720905
+      sudo: required
+      dist: xenial
+    - python: 3.6
+      env: TOX_ENV=docs
+    - python: 3.6
+      env: TOX_ENV=flake8
+    - python: 3.6
+      env: TOX_ENV=py36
     - python: 3.5
       env: TOX_ENV=py35
-    - python: 3.5
-      env: TOX_ENV=docs
-    - python: 3.5
-      env: TOX_ENV=flake8
     - python: 3.4
       env: TOX_ENV=py34
-    - python: 3.3
-      env: TOX_ENV=py33
     - python: 2.7
       env: TOX_ENV=py27
     - python: 2.7
