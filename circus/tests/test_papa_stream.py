@@ -29,11 +29,14 @@ def run_process(testfile, *args, **kw):
 
 @skipIf(papa is None, "papa not available")
 @skipIf('TRAVIS' in os.environ, "Skipped on Travis")
+@skipIf(IS_WINDOWS, "papa not supported")
 class TestPapaStream(TestCircus):
     dummy_process = 'circus.tests.test_stream.run_process'
     papa_port = random.randint(20000, 30000)
 
     def setUp(self):
+        import papa
+
         super(TestPapaStream, self).setUp()
         papa.set_debug_mode(quit_when_connection_closed=True)
         papa.set_default_port(self.papa_port)
@@ -72,7 +75,6 @@ class TestPapaStream(TestCircus):
         resp = yield self.cli.call(msg)
         raise tornado.gen.Return(resp)
 
-    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_file_stream(self):
         yield self._start_arbiter()
@@ -82,7 +84,6 @@ class TestPapaStream(TestCircus):
         yield self.stop_arbiter()
         stream.close()
 
-    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_watched_file_stream(self):
         yield self._start_arbiter()
@@ -92,7 +93,6 @@ class TestPapaStream(TestCircus):
         yield self.stop_arbiter()
         stream.close()
 
-    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_timed_rotating_file_stream(self):
         yield self._start_arbiter()
@@ -110,7 +110,6 @@ class TestPapaStream(TestCircus):
         yield self.stop_arbiter()
         stream.close()
 
-    @skipIf(IS_WINDOWS, "Streams not supported")
     @tornado.testing.gen_test
     def test_stream(self):
         yield self._start_arbiter()
