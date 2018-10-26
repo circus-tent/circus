@@ -1,6 +1,7 @@
 import errno
 import logging
 import os
+import time
 import gc
 from circus.fixed_threading import Thread, get_ident
 import sys
@@ -716,6 +717,7 @@ class Arbiter(object):
             watcher.initialize(self.evpub_socket, self.sockets, self)
         self.watchers.append(watcher)
         self._watchers_names[watcher.name.lower()] = watcher
+        watcher.notify_event("add", {"time": time.time()})
         return watcher
 
     @synchronized("arbiter_rm_watcher")
@@ -731,6 +733,7 @@ class Arbiter(object):
 
         # remove the watcher from the list
         watcher = self._watchers_names.pop(name.lower())
+        watcher.notify_event("remove", {"time": time.time()})
         del self.watchers[self.watchers.index(watcher)]
 
         if not nostop:
