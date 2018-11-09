@@ -321,8 +321,11 @@ def to_signum(signum):
         'SIGKILL' - signal names with SIG prefix
         'SIGRTMIN+1' - signal names with offsets
     """
-    if isinstance(signum, int):
-        return signum
+    try:
+        val = int(signum)
+        return val
+    except ValueError:
+        pass
 
     m = re.match(r'(\w+)(\+(\d+))?', signum)
     if m:

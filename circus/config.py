@@ -27,6 +27,7 @@ def watcher_defaults():
         'warmup_delay': 0,
         'executable': None,
         'working_dir': None,
+        'on_demand': False,
         'shell': False,
         'uid': None,
         'gid': None,
@@ -227,7 +228,7 @@ def get_config(config_file):
                     watcher['executable'] = dget(section, 'executable', None,
                                                  str)
                 # default bool to False
-                elif opt in ('shell', 'send_hup', 'stop_children',
+                elif opt in ('on_demand', 'shell', 'send_hup', 'stop_children',
                              'close_child_stderr', 'use_sockets', 'singleton',
                              'copy_env', 'copy_path', 'close_child_stdout'):
                     watcher[opt] = dget(section, opt, False, bool)
