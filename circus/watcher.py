@@ -22,7 +22,8 @@ from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus.papa_process_proxy import PapaProcessProxy
 from circus import logger
 from circus import util
-from circus.stream import get_stream, Redirector, FileStream
+from circus.stream import get_stream, Redirector
+from circus.stream.file_stream import FileStream
 from circus.stream.papa_redirector import PapaRedirector
 from circus.util import parse_env_dict, resolve_name, tornado_sleep, IS_WINDOWS
 from circus.util import papa
