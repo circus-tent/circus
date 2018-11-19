@@ -1167,6 +1167,9 @@ class Watcher(object):
     @util.debuglog
     def options(self, *args):
         options = []
+        for rlimit in self.rlimits:
+            rlimit_name = "rlimit_{0}".format(rlimit)
+            options.append((rlimit_name, self.rlimits[rlimit]))
         for hook in self.hooks:
             hook_name = "hooks.{0}".format(hook)
             hook_module = "{0}.{1}".format(
