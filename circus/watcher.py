@@ -1199,7 +1199,13 @@ class Watcher(object):
                         options.append((name, getattr(self, name).__class__.__name__))
                 else:
                     options.append((name, getattr(self, name)))
-        return options
+                    
+        # for sorting
+        def getKey(item):
+            return item[0]
+        
+        # return the options sorted by name
+        return sorted(options, key=getKey)
 
     def is_stopping(self):
         return self._status == 'stopping'
