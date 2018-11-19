@@ -22,7 +22,7 @@ from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
 from circus.papa_process_proxy import PapaProcessProxy
 from circus import logger
 from circus import util
-from circus.stream import get_stream, Redirector
+from circus.stream import get_stream, Redirector, FileStream
 from circus.stream.papa_redirector import PapaRedirector
 from circus.util import parse_env_dict, resolve_name, tornado_sleep, IS_WINDOWS
 from circus.util import papa
@@ -1167,11 +1167,34 @@ class Watcher(object):
     @util.debuglog
     def options(self, *args):
         options = []
+        for hook in self.hooks:
+            hook_name = "hooks.{0}".format(hook)
+            hook_module = "{0}.{1}".format(
+                    self.hooks[hook].__module__,
+                    self.hooks[hook].__name__)
+            options.append((hook_name, hook_module))
         for name in sorted(self.optnames):
+            # ignore names stored for internal purposes
+            if (name in [
+                '__name__',
+                'stdout_stream_conf',
+                'stderr_stream_conf',]):
+                continue
+
             if name in self._options:
                 options.append((name, self._options[name]))
             else:
-                options.append((name, getattr(self, name)))
+                # some of the options are FileStream class/subclass
+                # add the 'name' of the class to the options, no the
+                # class object
+                if (issubclass(type(getattr(self, name)), FileStream)):
+                    # ignore std[out|err|in]_stream as these are actual class
+                    # objects hoding data
+                    if (name not in ['stdout_stream', 'stderr_stream',
+                        'stdin_stream']):
+                        options.append((name, getattr(self, name).__class__.__name__))
+                else:
+                    options.append((name, getattr(self, name)))
         return options
 
     def is_stopping(self):
