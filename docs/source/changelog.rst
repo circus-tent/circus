@@ -1,7 +1,7 @@
 Changelog history
 =================
 
-0.15.0 unreleased
+0.15.0 2018-06-15
 -----------------
 This release fixes several bugs and explicitely mark Circus as incompatible
 with Tornado 5 & PyZMQ 17.
