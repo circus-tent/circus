@@ -9,7 +9,7 @@ except ImportError:
 
 _HOOKS = ('before_start', 'after_start', 'before_stop', 'after_stop',
           'before_spawn', 'after_spawn', 'before_signal', 'after_signal',
-          'extended_stats')
+          'before_reap', 'after_reap', 'extended_stats')
 
 
 def convert_option(key, val):

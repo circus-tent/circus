@@ -443,6 +443,9 @@ class Watcher(object):
         """ensure that the process is killed (and not a zombie)"""
         if pid not in self.processes:
             return
+
+        self.call_hook("before_reap", process_pid=pid, time=time.time())
+
         process = self.processes.pop(pid)
 
         timeout = 0.001
@@ -477,12 +480,12 @@ class Watcher(object):
                 # the underlying process.
                 logger.debug('reaping already dead process %s [%s]',
                              pid, self.name)
-                self.notify_event(
-                    "reap",
-                    {"process_pid": pid,
-                     "time": time.time(),
-                     "exit_code": process.returncode()})
+                msg = {"process_pid": pid,
+                       "time": time.time(),
+                       "exit_code": process.returncode()}
+                self.notify_event("reap", msg)
                 process.stop()
+                self.call_hook("after_reap", process_status=None, **msg)
                 return
 
         # get return code
@@ -510,14 +513,16 @@ class Watcher(object):
             exit_code = status
 
         # if the process is dead or a zombie try to definitely stop it.
-        if process.status in (DEAD_OR_ZOMBIE, UNEXISTING):
+        process_status = process.status
+        if process_status in (DEAD_OR_ZOMBIE, UNEXISTING):
             process.stop()
 
         logger.debug('reaping process %s [%s]', pid, self.name)
-        self.notify_event("reap",
-                          {"process_pid": pid,
-                           "time": time.time(),
-                           "exit_code": exit_code})
+        msg = {"process_pid": pid,
+               "time": time.time(),
+               "exit_code": exit_code}
+        self.notify_event("reap", msg)
+        self.call_hook("after_reap", process_status=process_status, **msg)
 
     @util.debuglog
     def reap_processes(self):
