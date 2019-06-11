@@ -33,6 +33,15 @@ events.  Available hooks are:
 
 - **after_signal**: called after a signal is sent to a watcher's process.
 
+- **before_reap**: called before a process is reaped. `kwargs` contains
+  `process_pid` and `time`.
+
+- **after_reap**: called after a process is reaped. `kwargs` contains
+  information about the process (`exit_code`, `process_pid`, `time`, `process_status`).
+  In case a process exited by itself, `process_status` should worth
+  either `circus.process.DEAD_OR_ZOMBIE` or `circus.process.UNEXISTING`.
+  In case a process exited using a circus command, `process_status` will be `None`.
+
 - **extended_stats**: called when stats are requested with extended=True.
   Used for adding process-specific stats to the regular stats output.
 

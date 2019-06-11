@@ -584,6 +584,29 @@ class TestWatcherHooks(TestCircus):
         yield self._test_hooks(behavior=FAILURE, status='stopped',
                                hook_name='after_spawn', call=self._stop)
 
+    def _hook_before_reap_kwargs_test_function(self, kwargs):
+        self.assertIn('process_pid', kwargs)
+        self.assertIn('time', kwargs)
+
+    @tornado.testing.gen_test
+    def test_before_reap(self):
+        func = self._hook_before_reap_kwargs_test_function
+        yield self._test_hooks(hook_name='before_reap',
+                               hook_kwargs_test_function=func)
+
+    def _hook_after_reap_kwargs_test_function(self, kwargs):
+        self.assertIn('process_pid', kwargs)
+        self.assertIn('time', kwargs)
+        self.assertEqual(-15, kwargs['exit_code'])
+        # process_status is None because process is stopped by circus
+        self.assertIsNone(kwargs['process_status'])
+
+    @tornado.testing.gen_test
+    def test_after_reap(self):
+        func = self._hook_after_reap_kwargs_test_function
+        yield self._test_hooks(hook_name='after_reap',
+                               hook_kwargs_test_function=func)
+
     @tornado.testing.gen_test
     def test_extended_stats(self):
         yield self._test_extended_stats()
