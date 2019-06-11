@@ -444,6 +444,7 @@ class Watcher(object):
         if pid not in self.processes:
             return
 
+        # We ignore the hook result
         self.call_hook("before_reap", process_pid=pid, time=time.time())
 
         process = self.processes.pop(pid)
@@ -485,6 +486,7 @@ class Watcher(object):
                        "exit_code": process.returncode()}
                 self.notify_event("reap", msg)
                 process.stop()
+                # We ignore the hook result
                 self.call_hook("after_reap", process_status=None, **msg)
                 return
 
@@ -522,6 +524,7 @@ class Watcher(object):
                "time": time.time(),
                "exit_code": exit_code}
         self.notify_event("reap", msg)
+        # We ignore the hook result
         self.call_hook("after_reap", process_status=process_status, **msg)
 
     @util.debuglog

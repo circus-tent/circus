@@ -124,7 +124,7 @@ circus - single section
         A path to an INI, JSON or YAML file to configure standard Python
         logging for the Arbiter.  The special value "default" uses the builtin
         logging configuration based on the optional loglevel and logoutput options.
-	
+
         **Example YAML Configuration File**
 
     .. code-block:: yaml
@@ -332,6 +332,7 @@ watcher:NAME - as many sections as you want
         **before_spawn**, **after_spawn**,
         **before_stop**, **after_stop**,
         **before_signal**, **after_signal**,
+        **before_reap**, **after_reap**,
         **extended_stats**
 
         Define callback functions that hook into the watcher startup/shutdown process.
@@ -758,4 +759,3 @@ Example:
     stdout_stream.class = FancyStdoutStream
     stdout_stream.color = green
     stdout_stream.time_format = %Y/%m/%d | %H:%M:%S
-
