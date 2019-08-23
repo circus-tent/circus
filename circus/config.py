@@ -50,6 +50,15 @@ def watcher_defaults():
         'use_papa': False}
 
 
+def plugin_defaults():
+    return {
+        'name': '',
+        'stderr_stream': dict(),
+        'stdout_stream': dict(),
+        'priority': 0,
+    }
+
+
 class DefaultConfigParser(StrictConfigParser):
 
     def __init__(self, *args, **kw):
@@ -204,10 +213,24 @@ def get_config(config_file):
             sockets.append(sock)
 
         if section.startswith("plugin:"):
-            plugin = section_items
+            plugin = plugin_defaults()
+            plugin.update(section_items)
             plugin['name'] = section
-            if 'priority' in plugin:
-                plugin['priority'] = int(plugin['priority'])
+
+            # create watcher options
+            for opt, val in cfg.items(section, noreplace=True):
+                if opt == 'priority':
+                    plugin['priority'] = int(plugin['priority'])
+                elif opt.startswith('stderr_stream') or \
+                        opt.startswith('stdout_stream'):
+                    stream_name, stream_opt = opt.split(".", 1)
+                    plugin[stream_name][stream_opt] = val
+
+            if plugin.get('copy_env'):
+                plugin['env'] = dict(global_env)
+            else:
+                plugin['env'] = dict(local_env)
+
             plugins.append(plugin)
 
         if section.startswith("watcher:"):

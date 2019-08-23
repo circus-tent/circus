@@ -25,6 +25,8 @@ _CONF = {
     'hooks': os.path.join(CONFIG_DIR, 'hooks.ini'),
     'find_hook_in_pythonpath': os.path.join(CONFIG_DIR,
                                             'find_hook_in_pythonpath.ini'),
+    'find_plugin_in_pythonpath': os.path.join(CONFIG_DIR,
+                                              'find_plugin_in_pythonpath.ini'),
     'env_var': os.path.join(CONFIG_DIR, 'env_var.ini'),
     'env_section': os.path.join(CONFIG_DIR, 'env_section.ini'),
     'multiple_wildcard': os.path.join(CONFIG_DIR, 'multiple_wildcard.ini'),
@@ -229,6 +231,12 @@ class TestConfig(TestCase):
         watcher = Watcher.load_from_config(conf['watchers'][0])
         self.assertEqual("%s:/bin" % os.getenv('PATH'), watcher.env['PATH'])
         watcher.stop()
+
+    def test_find_plugin_in_pythonpath(self):
+        # this tests that the config was loaded, NOT that the config works.
+        arbiter = Arbiter.load_from_config(_CONF['find_plugin_in_pythonpath'])
+        watchers = arbiter.iter_watchers()
+        self.assertEqual(watchers[0].name, 'plugin:relative_plugin')
 
     def test_env_section(self):
         conf = get_config(_CONF['env_section'])

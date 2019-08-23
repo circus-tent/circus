@@ -1,9 +1,12 @@
 """ Base class to create Circus subscribers plugins.
 """
-import sys
-import errno
-import uuid
 import argparse
+import copy
+import errno
+import os
+import site
+import sys
+import uuid
 
 import zmq
 import zmq.utils.jsonapi as json
@@ -12,9 +15,10 @@ from zmq.eventloop import ioloop, zmqstream
 from circus import logger, __version__
 from circus.client import make_message, cast_message
 from circus.py3compat import b, s
+from circus.stream import get_stream
 from circus.util import (debuglog, to_bool, resolve_name, configure_logger,
                          DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
-                         get_connection)
+                         get_connection, get_python_version, parse_env_dict)
 
 
 class CircusPlugin(object):
@@ -30,7 +34,8 @@ class CircusPlugin(object):
     """
     name = ''
 
-    def __init__(self, endpoint, pubsub_endpoint, check_delay, ssh_server=None,
+    def __init__(self, endpoint, pubsub_endpoint, check_delay,
+                 ssh_server=None, stdout_stream=None, stderr_stream=None,
                  **config):
         self.daemon = True
         self.config = config
@@ -41,6 +46,12 @@ class CircusPlugin(object):
         self.ssh_server = ssh_server
         self._id = b(uuid.uuid4().hex)
         self.running = False
+
+        self.stdout_stream_conf = copy.copy(stdout_stream)
+        self.stderr_stream_conf = copy.copy(stderr_stream)
+        self.stdout_stream = get_stream(self.stdout_stream_conf)
+        self.stderr_stream = get_stream(self.stderr_stream_conf)
+
         self.loop = ioloop.IOLoop()
 
     @debuglog
@@ -157,33 +168,29 @@ class CircusPlugin(object):
     def load_message(msg):
         return json.loads(msg)
 
+    @classmethod
+    def load_from_config(cls, config):
+        if 'env' in config:
+            config['env'] = parse_env_dict(config['env'])
+        return config
+
 
 def _cfg2str(cfg):
-    return ':::'.join([
-         '%s:%s' % (key, val) for key, val in sorted(cfg.items())
-    ])
+    json_cfg = json.dumps(cfg, separators=(',', ':'))
+    if get_python_version() < (3, 0, 0):
+        return json_cfg.encode('unicode-escape')
+    else:
+        # zmq in py3 returns bytes
+        return json_cfg.decode("utf-8")
 
 
 def _str2cfg(data):
-    cfg = {}
-    if data is None:
-        return cfg
-
-    for item in data.split(':::'):
-        item = item.split(':', 1)
-        if len(item) != 2:
-            continue
-        key, value = item
-        cfg[key.strip()] = value.strip()
-
-    return cfg
+    return json.loads(data)
 
 
 def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server,
                    debug=False, loglevel=None, logoutput=None):
     fqn = config['use']
-    # makes sure the name exists
-    resolve_name(fqn)
 
     # we're good, serializing the config
     del config['use']
@@ -194,7 +201,7 @@ def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server,
     if ssh_server is not None:
         cmd += ' --ssh %s' % ssh_server
     if len(config) > 0:
-        cmd += ' --config %s' % config
+        cmd += ' --config %r' % config
     if debug:
         cmd += ' --log-level DEBUG'
     elif loglevel:
@@ -247,6 +254,16 @@ def main():
         parser.print_usage()
         sys.exit(0)
 
+    cfg = _str2cfg(args.config)
+
+    # load directories in PYTHONPATH if provided
+    # so if a hook is there, it can be loaded
+    if 'env' in cfg and 'PYTHONPATH' in cfg['env']:
+        for path in cfg['env']['PYTHONPATH'].split(os.pathsep):
+            if path in sys.path:
+                continue
+            site.addsitedir(path)
+
     factory = resolve_name(args.plugin)
 
     # configure the logger
@@ -258,7 +275,7 @@ def main():
     logger.info('Pub/sub: %r' % args.pubsub)
     plugin = factory(args.endpoint, args.pubsub,
                      args.check_delay, args.ssh,
-                     **_str2cfg(args.config))
+                     **cfg)
     logger.info('Starting')
     try:
         plugin.start()

@@ -18,7 +18,7 @@ from circus.tests.support import (TestCircus, async_poll_for, truncate_file,
                                   EasyTestSuite, skipIf, get_ioloop, SLEEP,
                                   PYTHON)
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
-                         DEFAULT_ENDPOINT_SUB)
+                         DEFAULT_ENDPOINT_SUB, parse_env_dict)
 from circus.tests.support import (MockWatcher, has_circusweb,
                                   poll_for_callable, get_available_port)
 from circus import watcher as watcher_mod
@@ -28,11 +28,12 @@ from circus.py3compat import s
 _GENERIC = os.path.join(os.path.dirname(__file__), 'generic.py')
 
 
-class Plugin(CircusPlugin):
+class EventLoggingTestPlugin(CircusPlugin):
     name = 'dummy'
 
     def __init__(self, *args, **kwargs):
-        super(Plugin, self).__init__(*args, **kwargs)
+        super(EventLoggingTestPlugin, self).__init__(*args, **kwargs)
+        self.name = kwargs.get('name')
         with open(self.config['file'], 'a+') as f:
             f.write('PLUGIN STARTED')
 
@@ -495,8 +496,56 @@ class TestTrainer(TestCircus):
         os.close(fd)
 
         # setting up a circusd with a plugin
-        plugin = 'circus.tests.test_arbiter.Plugin'
+        plugin = 'circus.tests.test_arbiter.EventLoggingTestPlugin'
         plugins = [{'use': plugin, 'file': datafile}]
+
+        yield self.start_arbiter(graceful_timeout=0, plugins=plugins,
+                                 loop=get_ioloop())
+
+        def incr_processes(cli):
+            return cli.send_message('incr', name='test')
+
+        # wait for the plugin to be started
+        res = yield async_poll_for(datafile, 'PLUGIN STARTED')
+        self.assertTrue(res)
+
+        cli = AsyncCircusClient(endpoint=self.arbiter.endpoint)
+
+        res = yield cli.send_message('list', name='test')
+        self.assertEqual(len(res.get('pids')), 1)
+
+        incr_processes(cli)
+        res = yield cli.send_message('list', name='test')
+        self.assertEqual(len(res.get('pids')), 2)
+        # wait for the plugin to receive the signal
+        res = yield async_poll_for(datafile, 'test:spawn')
+        self.assertTrue(res)
+        truncate_file(datafile)
+
+        incr_processes(cli)
+        res = yield cli.send_message('list', name='test')
+        self.assertEqual(len(res.get('pids')), 3)
+
+        # wait for the plugin to receive the signal
+        res = yield async_poll_for(datafile, 'test:spawn')
+        self.assertTrue(res)
+        os.remove(datafile)
+        yield self.stop_arbiter()
+
+    @tornado.testing.gen_test
+    def test_relative_plugin(self):
+        fd, datafile = mkstemp()
+        os.close(fd)
+
+        # setting up a circusd with a plugin
+        plugin = 'plugins_uniquename.my_plugin.MyPlugin'
+        plugins = [{
+            'use': plugin,
+            'file': datafile,
+            'env': parse_env_dict({
+                'PYTHONPATH': '$PWD/circus/tests/config'
+            }),
+        }]
 
         yield self.start_arbiter(graceful_timeout=0, plugins=plugins,
                                  loop=get_ioloop())
