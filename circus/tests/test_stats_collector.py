@@ -3,7 +3,7 @@ import time
 from collections import defaultdict
 from circus.fixed_threading import Thread
 
-from zmq.eventloop import ioloop
+from tornado import ioloop
 
 from circus.stats import collector as collector_module
 from circus.stats.collector import SocketStatsCollector, WatcherStatsCollector

@@ -10,7 +10,7 @@ import socket
 from tornado import gen
 
 import zmq
-from zmq.eventloop import ioloop
+from tornado import ioloop
 
 from circus.controller import Controller
 from circus.exc import AlreadyExist
@@ -242,7 +242,6 @@ class Arbiter(object):
     def _init_context(self, context):
         self.context = context or zmq.Context.instance()
         if self.loop is None:
-            ioloop.install()
             self.loop = ioloop.IOLoop.instance()
         self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
                                self.context, self.loop, self, self.check_delay,

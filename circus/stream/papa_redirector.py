@@ -1,4 +1,4 @@
-from zmq.eventloop import ioloop
+from tornado import ioloop
 from circus.stream import Redirector
 
 

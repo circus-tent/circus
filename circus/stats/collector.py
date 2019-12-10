@@ -5,7 +5,7 @@ import socket
 
 from circus import util
 from circus import logger
-from zmq.eventloop import ioloop
+from tornado import ioloop
 
 
 class BaseStatsCollector(ioloop.PeriodicCallback):

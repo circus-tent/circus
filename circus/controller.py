@@ -12,7 +12,8 @@ except ImportError:
 
 import zmq
 import zmq.utils.jsonapi as json
-from zmq.eventloop import ioloop, zmqstream
+from tornado import ioloop
+from zmq.eventloop import zmqstream
 from tornado.concurrent import Future
 
 from circus.util import create_udp_socket

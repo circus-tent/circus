@@ -2,7 +2,7 @@ import errno
 import os
 import sys
 
-from zmq.eventloop import ioloop
+from tornado import ioloop
 
 
 class Redirector(object):

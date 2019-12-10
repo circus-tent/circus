@@ -6,7 +6,8 @@ import socket
 
 import zmq
 import zmq.utils.jsonapi as json
-from zmq.eventloop import ioloop, zmqstream
+from tornado import ioloop
+from zmq.eventloop import zmqstream
 
 from circus.commands import get_commands
 from circus.client import CircusClient

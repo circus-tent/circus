@@ -2,7 +2,7 @@ import os
 
 from circus.plugins import CircusPlugin
 from circus import logger
-from zmq.eventloop import ioloop
+from tornado import ioloop
 
 
 class CommandReloader(CircusPlugin):
