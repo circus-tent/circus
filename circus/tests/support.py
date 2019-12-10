@@ -10,13 +10,8 @@ import shutil
 import functools
 import multiprocessing
 import socket
-try:
-    import sysconfig
-    DEBUG = sysconfig.get_config_var('Py_DEBUG') == 1
-except ImportError:
-    # py2.6, we don't really care about that flage here
-    # since no one will run Python --with-pydebug in 2.6
-    DEBUG = 0
+import sysconfig
+DEBUG = sysconfig.get_config_var('Py_DEBUG') == 1
 
 try:
     from unittest import skip, skipIf, TestCase, TestSuite, findTestCases

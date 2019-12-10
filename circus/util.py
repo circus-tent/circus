@@ -790,10 +790,7 @@ class StrictConfigParser(ConfigParser):
                     raise MissingSectionHeaderError(fpname, lineno, line)
                 # an option line?
                 else:
-                    try:
-                        mo = self._optcre.match(line)   # 2.7
-                    except AttributeError:
-                        mo = self.OPTCRE.match(line)    # 2.6
+                    mo = self._optcre.match(line)   # 2.7
                     if mo:
                         optname, vi, optval = mo.group('option', 'vi', 'value')
                         self.optionxform = text_type
