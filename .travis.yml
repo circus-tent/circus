@@ -33,14 +33,15 @@ jobs:
       env: TOX_ENV=py34
     - python: 2.7
       env: TOX_ENV=py27
-    - python: 2.7
-      env: TOX_ENV=py27-no-gevent
 
 script:
     - tox -v -e $TOX_ENV
 
 install:
-    - pip install tox
+    - pip install tox coveralls
+
+after_success:
+    - coveralls
 
 notifications:
     email: tarek@mozilla.com
