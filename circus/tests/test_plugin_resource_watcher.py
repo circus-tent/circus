@@ -157,4 +157,5 @@ class TestResourceWatcher(TestCircus):
                            '_resource_watcher.test.under_cpu')
         yield self.stop_arbiter()
 
+
 test_suite = EasyTestSuite(__name__)

@@ -45,5 +45,5 @@ if __name__ == '__main__':
             sys.exit(callback(test_file))
         else:
             sys.exit(callback())
-    except:
+    except:  # noqa: E722
         sys.exit(1)

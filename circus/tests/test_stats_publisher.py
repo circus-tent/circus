@@ -36,4 +36,5 @@ class TestStatsPublisher(TestCase):
         stat = {'subtopic': 1, 'foo': 'bar'}
         publisher.publish('foobar', stat)
 
+
 test_suite = EasyTestSuite(__name__)

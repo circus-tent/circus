@@ -80,4 +80,5 @@ class TestPidfile(TestCase):
         except Exception as e:
             self.fail(str(e))
 
+
 test_suite = EasyTestSuite(__name__)

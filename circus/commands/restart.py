@@ -48,6 +48,7 @@ def execute_watcher_start_stop_restart(command, arbiter, props,
     else:
         return arbiter_function()
 
+
 match_options = ('match', 'match', 'glob',
                  "Watcher name matching method (simple, glob or regex)")
 

@@ -11,7 +11,6 @@ import functools
 import multiprocessing
 import socket
 import sysconfig
-DEBUG = sysconfig.get_config_var('Py_DEBUG') == 1
 
 try:
     from unittest import skip, skipIf, TestCase, TestSuite, findTestCases
@@ -30,6 +29,8 @@ from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
 from circus.util import tornado_sleep, ConflictError
 from circus.util import IS_WINDOWS
 from circus.watcher import Watcher
+
+DEBUG = sysconfig.get_config_var('Py_DEBUG') == 1
 
 ioloop.install()
 if 'ASYNC_TEST_TIMEOUT' not in os.environ:

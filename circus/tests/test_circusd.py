@@ -119,4 +119,5 @@ class TestCircusd(TestCase):
         main()
         self.assertFalse(os.path.exists(pid_file))
 
+
 test_suite = EasyTestSuite(__name__)

@@ -130,6 +130,7 @@ class UmaskTest(TestCircus):
         mode = oct(os.stat(self.test_file).st_mode)[-3:]
         self.assertEqual(mode, '777')
 
+
 test_suite = EasyTestSuite(__name__)
 
 if __name__ == '__main__':

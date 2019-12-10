@@ -22,7 +22,7 @@ def run_process(*args, **kw):
                                                       os.getpid(), i))
             sys.stderr.flush()
             time.sleep(.25)
-    except:
+    except:  # noqa: E722
         return 1
 
 
@@ -88,5 +88,6 @@ class TestStatsClient(TestCircus):
             self.assertTrue(watcher in ('test', 'circusd-stats', 'circus'),
                             watcher)
         yield self.stop_arbiter()
+
 
 test_suite = EasyTestSuite(__name__)

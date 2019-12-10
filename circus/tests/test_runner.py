@@ -17,4 +17,5 @@ class TestRunner(TestCircus):
         self.assertTrue(res)
         yield self.stop_arbiter()
 
+
 test_suite = EasyTestSuite(__name__)

@@ -309,4 +309,5 @@ class TestUtil(TestCase):
         finally:
             util.os.stat = _old_os_stat
 
+
 test_suite = EasyTestSuite(__name__)

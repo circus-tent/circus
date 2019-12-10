@@ -70,4 +70,5 @@ class TestPluginWatchDog(TestCircus):
         self.assertEqual(len(pid_status), 0, pid_status)
         yield self.stop_arbiter()
 
+
 test_suite = EasyTestSuite(__name__)

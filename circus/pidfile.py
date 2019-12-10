@@ -62,7 +62,7 @@ class Pidfile(object):
 
             if pid1 == self.pid:
                 os.unlink(self.fname)
-        except:
+        except:  # noqa: E722
             pass
 
     def validate(self):

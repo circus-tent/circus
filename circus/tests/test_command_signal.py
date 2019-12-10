@@ -250,6 +250,7 @@ class SignalRecursiveCommandTest(TestCircus):
 
         yield self.stop_arbiter()
 
+
 test_suite = EasyTestSuite(__name__)
 
 if __name__ == '__main__':

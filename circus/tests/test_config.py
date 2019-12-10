@@ -192,7 +192,7 @@ class TestConfig(TestCase):
         """https://github.com/circus-tent/circus/pull/473"""
         try:
             get_config(_CONF['empty_include'])
-        except:
+        except:  # noqa: E722
             self.fail('Non-existent includes should not raise')
         self.assertTrue(mock_logger_warn.called)
 

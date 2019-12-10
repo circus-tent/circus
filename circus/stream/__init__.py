@@ -9,9 +9,9 @@ except ImportError:
 
 from circus.util import resolve_name
 from circus.stream.file_stream import FileStream
-from circus.stream.file_stream import WatchedFileStream  # flake8: noqa
-from circus.stream.file_stream import TimedRotatingFileStream  # flake8: noqa
-from circus.stream.redirector import Redirector
+from circus.stream.file_stream import WatchedFileStream  # noqa: F401
+from circus.stream.file_stream import TimedRotatingFileStream  # noqa: F401
+from circus.stream.redirector import Redirector  # noqa: F401
 from circus.py3compat import s
 
 
@@ -125,7 +125,7 @@ def get_stream(conf, reload=False):
         # we can have 'stream' or 'class' or 'filename'
         if 'class' in conf:
             class_name = conf.pop('class')
-            if not "." in class_name:
+            if "." not in class_name:
                 cls = globals()[class_name]
                 inst = cls(**conf)
             else:

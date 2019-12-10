@@ -54,7 +54,7 @@ def prettify(jsonobj, prettify=True):
         try:
             lexer = get_lexer_for_mimetype("application/json")
             return pygments.highlight(json_str, lexer, TerminalFormatter())
-        except:
+        except:  # noqa: E722
             pass
 
     return json_str
