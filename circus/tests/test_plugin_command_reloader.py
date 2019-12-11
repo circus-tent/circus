@@ -89,4 +89,5 @@ class TestCommandReloader(TestCircus):
         plugin = self.make_plugin(CommandReloader, active=True)
         plugin.handle_recv('whatever')
 
+
 test_suite = EasyTestSuite(__name__)

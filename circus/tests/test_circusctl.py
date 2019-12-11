@@ -196,4 +196,5 @@ class CLITest(TestCircus):
         self.assertEqual(prompt[3], "Documented commands (type help <topic>):")
         yield self.stop_arbiter()
 
+
 test_suite = EasyTestSuite(__name__)

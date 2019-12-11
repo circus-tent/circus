@@ -64,4 +64,5 @@ class SetTest(TestCircus):
         watcher = arbiter.watchers[0]
         self.assertEqual(watcher.options['args'], '--arg1 1 --arg2 2')
 
+
 test_suite = EasyTestSuite(__name__)

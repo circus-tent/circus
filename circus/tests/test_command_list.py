@@ -19,4 +19,5 @@ class ListCommandTest(TestCircus):
         cmd = List()
         self.assertTrue("error" in cmd.console_msg({'foo': 'bar'}))
 
+
 test_suite = EasyTestSuite(__name__)

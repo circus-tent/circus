@@ -109,6 +109,7 @@ def run_circusd(options=(), config=(), log_capture_path="log.txt",
             # use (lock).
             pass
 
+
 EXAMPLE_YAML = """\
 version: 1
 disable_existing_loggers: false
@@ -261,5 +262,6 @@ class TestLoggingConfig(TestCase):
             log_capture_path="log_ini_opt.txt",
             additional_files={"logging.ini": logging_dictconfig_to_ini(config)}
         )
+
 
 test_suite = EasyTestSuite(__name__)

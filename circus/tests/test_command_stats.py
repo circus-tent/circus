@@ -73,4 +73,5 @@ class StatsCommandTest(TestCircus):
         props = {'name': 'meh', 'process': 'meh'}
         self.assertRaises(MessageError, cmd.execute, arbiter, props)
 
+
 test_suite = EasyTestSuite(__name__)

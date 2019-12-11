@@ -671,4 +671,5 @@ class RespawnTest(TestCircus):
         # And be sure we don't spawn new processes in the meantime.
         self.assertFalse(watcher.spawn_processes.called)
 
+
 test_suite = EasyTestSuite(__name__)

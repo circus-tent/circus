@@ -169,4 +169,5 @@ class TestConfig(tornado.testing.AsyncTestCase):
         yield a.reload_from_config(_CONF['reload_statsd'])
         self.assertEqual(statsd, a.get_watcher('circusd-stats'))
 
+
 test_suite = EasyTestSuite(__name__)

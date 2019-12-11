@@ -23,7 +23,7 @@ def run_process(testfile, *args, **kw):
         with open(testfile, 'a+') as f:
             f.write('START')
         time.sleep(1.)
-    except:
+    except:  # noqa: E722
         return 1
 
 

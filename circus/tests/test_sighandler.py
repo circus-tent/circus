@@ -20,4 +20,5 @@ class TestSigHandler(TestCircus):
         res = yield async_poll_for(self.test_file, 'QUIT')
         self.assertTrue(res)
 
+
 test_suite = EasyTestSuite(__name__)

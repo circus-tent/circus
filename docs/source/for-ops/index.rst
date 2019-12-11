@@ -13,7 +13,7 @@ The first step to manage a Circus daemon is to write its configuration file.
 See :ref:`configuration`. If you are deploying a web stack, have a look at
 :ref:`sockets`.
 
-Circus can be deployed using Python 2.6, 2.7, 3.2 or 3.3 - most deployments
+Circus can be deployed using Python 2.7, 3.2 or 3.3 - most deployments
 out there are done in 2.7. To learn how to deploy Circus, check out
 :ref:`deployment`.
 

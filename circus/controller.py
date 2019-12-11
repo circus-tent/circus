@@ -229,7 +229,7 @@ class Controller(object):
         except OSError as e:
             return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.OS_ERROR)
-        except:
+        except:  # noqa: E722
             exctype, value = sys.exc_info()[:2]
             tb = traceback.format_exc()
             reason = "command %r: %s" % (msg, value)

@@ -46,4 +46,5 @@ class TestConvertOption(TestCase):
         self.assertRaises(ArgumentError, convert_option, 'hooks',
                           'before_start:one:two')
 
+
 test_suite = EasyTestSuite(__name__)

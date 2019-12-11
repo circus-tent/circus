@@ -194,4 +194,5 @@ class TestCollector(TestCase):
         self.assertTrue(stat['fd'] in self.fds)
         self.assertTrue(stat['reads'] > 1)
 
+
 test_suite = EasyTestSuite(__name__)

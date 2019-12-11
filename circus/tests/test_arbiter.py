@@ -709,4 +709,5 @@ class TestCircusWeb(TestCircus):
         finally:
             yield arbiter.stop()
 
+
 test_suite = EasyTestSuite(__name__)

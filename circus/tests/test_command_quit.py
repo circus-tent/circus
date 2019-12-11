@@ -12,4 +12,5 @@ class QuitTest(TestCircus):
         cmd.execute(arbiter, props)
         self.assertEqual(len(arbiter.watchers), 0)
 
+
 test_suite = EasyTestSuite(__name__)

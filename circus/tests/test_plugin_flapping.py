@@ -72,4 +72,5 @@ class TestFlapping(TestCircus):
         cast_mock.assert_called_with("stop", name="test")
         self.assertTrue(timer_mock.called)
 
+
 test_suite = EasyTestSuite(__name__)

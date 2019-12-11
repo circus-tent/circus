@@ -293,6 +293,7 @@ def get_info(process=None, interval=0, with_childs=False):
 
     return info
 
+
 TRUTHY_STRINGS = ('yes', 'true', 'on', '1')
 FALSY_STRINGS = ('no', 'false', 'off', '0')
 
@@ -618,7 +619,7 @@ def resolve_name(import_name, silent=False, reload=False):
             raise_with_tb(ImportStringError(import_name, e))
 
 
-_SECTION_NAME = '\w\.\-'
+_SECTION_NAME = r'\w\.\-'
 _PATTERN1 = r'\$\(%%s\.([%s]+)\)' % _SECTION_NAME
 _PATTERN2 = r'\(\(%%s\.([%s]+)\)\)' % _SECTION_NAME
 _CIRCUS_VAR = re.compile(_PATTERN1 % 'circus' + '|' +
@@ -790,10 +791,7 @@ class StrictConfigParser(ConfigParser):
                     raise MissingSectionHeaderError(fpname, lineno, line)
                 # an option line?
                 else:
-                    try:
-                        mo = self._optcre.match(line)   # 2.7
-                    except AttributeError:
-                        mo = self.OPTCRE.match(line)    # 2.6
+                    mo = self._optcre.match(line)   # 2.7
                     if mo:
                         optname, vi, optval = mo.group('option', 'vi', 'value')
                         self.optionxform = text_type
