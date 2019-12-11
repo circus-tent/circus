@@ -2,7 +2,7 @@ import re
 import socket
 import time
 
-from zmq.eventloop import ioloop
+from tornado import ioloop
 from circus.plugins import CircusPlugin
 from circus import logger
 from circus import util

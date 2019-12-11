@@ -7,7 +7,8 @@ import argparse
 
 import zmq
 import zmq.utils.jsonapi as json
-from zmq.eventloop import ioloop, zmqstream
+from tornado import ioloop
+from zmq.eventloop import zmqstream
 
 from circus import logger, __version__
 from circus.client import make_message, cast_message

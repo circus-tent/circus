@@ -1,6 +1,6 @@
 import socket
 
-from zmq.eventloop import ioloop
+from tornado import ioloop
 
 from circus.plugins import CircusPlugin
 from circus.util import human2bytes
