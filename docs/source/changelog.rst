@@ -1,6 +1,20 @@
 Changelog history
 =================
 
+0.16.0 2019-12-27
+-----------------
+This release remove support for Python 2.6 & 3.3, and add official support
+for Python 3.6, 3.7 & 3.8. It also adds support for PyZMQ 17+.
+
+- Remove support for Python 2.6 & 3.3 - #1110
+- Fix compatibility with PyZMQ 17+ - #1111
+- Fix compatibility for Python 3.6, 3.7 & 3.8 - #1079, #1085, #1113
+- Send add/remove events to plugins - #1086
+- Allow 'use_papa' to be called programmatically - #1083
+- Allow integer to be used for stop_signal in ini file - #1089
+- Add 'on_demand' option to watchers - #1089
+- Add before_reap and after_reap hooks - #1104
+
 0.15.0 2018-06-15
 -----------------
 This release fixes several bugs and explicitely mark Circus as incompatible
