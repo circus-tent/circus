@@ -1,6 +1,10 @@
 Changelog history
 =================
 
+0.16.1 2019-12-27
+-----------------
+Fix packaging issue.
+
 0.16.0 2019-12-27
 -----------------
 This release remove support for Python 2.6 & 3.3, and add official support
