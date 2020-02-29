@@ -46,6 +46,7 @@ _CONF = {
     'issue680': os.path.join(CONFIG_DIR, 'issue680.ini'),
     'virtualenv': os.path.join(CONFIG_DIR, 'virtualenv.ini'),
     'empty_section': os.path.join(CONFIG_DIR, 'empty_section.ini'),
+    'issue1088': os.path.join(CONFIG_DIR, 'issue1088.ini')
 }
 
 
@@ -386,6 +387,14 @@ class TestConfig(TestCase):
         conf = get_config(_CONF['empty_section'])
         self.assertEqual([], conf.get('sockets'))
         self.assertEqual([], conf.get('plugins'))
+
+    def test_issue1088(self):
+        # #1088 - graceful_timeout should be float
+        conf = get_config(_CONF['issue1088'])
+        watcher = conf['watchers'][0]
+        self.assertEqual(watcher['graceful_timeout'], 25.5)
+        watcher = Watcher.load_from_config(conf['watchers'][0])
+        watcher.stop()
 
 
 test_suite = EasyTestSuite(__name__)
