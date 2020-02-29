@@ -162,8 +162,12 @@ def main():
             pass
         finally:
             arbiter = None
-            if pidfile is not None:
-                pidfile.unlink()
+
+    # Do not delete pid file during restart loop
+    # i.e. delete it only when exiting
+    if pidfile is not None:
+        pidfile.unlink()
+
     sys.exit(0)
 
 
