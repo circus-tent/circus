@@ -705,7 +705,7 @@ class Arbiter(object):
         - **cmd**: command to run.
         - all other options defined in the Watcher constructor.
         """
-        if name in self._watchers_names:
+        if name.lower() in self._watchers_names:
             raise AlreadyExist("%r already exist" % name)
 
         if not name:
