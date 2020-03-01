@@ -238,7 +238,7 @@ def get_config(config_file):
                     watcher['max_retry'] = dget(section, "max_retry", 5, int)
                 elif opt == 'graceful_timeout':
                     watcher['graceful_timeout'] = dget(
-                        section, "graceful_timeout", 30, int)
+                        section, "graceful_timeout", 30., float)
                 elif opt.startswith('stderr_stream') or \
                         opt.startswith('stdout_stream'):
                     stream_name, stream_opt = opt.split(".", 1)
