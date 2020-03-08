@@ -294,7 +294,9 @@ class Arbiter(object):
 
         # Gather socket names.
         current_sn = set([i.name for i in self.sockets.values()]) - ignore_sn
-        new_sockets = dict((i['name'], i.copy()) for i in new_cfg.get('sockets', []))
+        new_sockets = dict(
+            (i['name'], i.copy()) for i in new_cfg.get('sockets', [])
+        )
         new_sn = set(new_sockets.keys())
         added_sn = new_sn - current_sn
         deleted_sn = current_sn - new_sn
