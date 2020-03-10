@@ -13,7 +13,7 @@ try:
 except ImportError:
     install_requires.append('argparse')
 
-with open("README.rst") as f:
+with open("README.md") as f:
     README = f.read()
 
 
