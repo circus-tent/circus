@@ -13,6 +13,7 @@ except ImportError:
 
 from circus.arbiter import Arbiter
 from circus.client import AsyncCircusClient
+from circus.exc import AlreadyExist
 from circus.plugins import CircusPlugin
 from circus.tests.support import (TestCircus, async_poll_for, truncate_file,
                                   EasyTestSuite, skipIf, get_ioloop, SLEEP,
@@ -689,6 +690,15 @@ class TestArbiter(TestCircus):
             self.assertEqual(arbiter.watchers[0].status(), 'stopped')
         finally:
             yield arbiter.stop()
+
+    @tornado.testing.gen_test
+    def test_add_watcher_same_lowercase_names(self):
+        controller = "tcp://127.0.0.1:%d" % get_available_port()
+        sub = "tcp://127.0.0.1:%d" % get_available_port()
+        arbiter = Arbiter([], controller, sub, loop=get_ioloop(),
+                          check_delay=-1)
+        arbiter.add_watcher('foo', SLEEP % 5)
+        self.assertRaises(AlreadyExist, arbiter.add_watcher, 'Foo', SLEEP % 5)
 
 
 @skipIf(not has_circusweb(), 'Tests for circus-web')
