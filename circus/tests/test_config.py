@@ -47,7 +47,7 @@ _CONF = {
     'virtualenv': os.path.join(CONFIG_DIR, 'virtualenv.ini'),
     'empty_section': os.path.join(CONFIG_DIR, 'empty_section.ini'),
     'issue1088': os.path.join(CONFIG_DIR, 'issue1088.ini'),
-    'watcher_include': os.path.join(CONFIG_DIR, 'issue1119.ini')
+    'issue1119': os.path.join(CONFIG_DIR, 'issue1119.ini')
 }
 
 
@@ -197,11 +197,6 @@ class TestConfig(TestCase):
         except:  # noqa: E722
             self.fail('Non-existent includes should not raise')
         self.assertTrue(mock_logger_warn.called)
-
-    def test_watcher_include(self):
-        conf = get_config(_CONF['watcher_include'])
-        watchers = conf['watchers']
-        self.assertEqual(watchers[0]['numprocesses'], 5)
 
     def test_watcher_graceful_timeout(self):
         conf = get_config(_CONF['issue210'])
@@ -401,6 +396,12 @@ class TestConfig(TestCase):
         self.assertEqual(watcher['graceful_timeout'], 25.5)
         watcher = Watcher.load_from_config(conf['watchers'][0])
         watcher.stop()
+
+    def test_watcher_issue_1119(self):
+        # #1119 - add support for include directive in watcher section
+        conf = get_config(_CONF['issue1119'])
+        watchers = conf['watchers']
+        self.assertEqual(watchers[0]['numprocesses'], 5)
 
 
 test_suite = EasyTestSuite(__name__)

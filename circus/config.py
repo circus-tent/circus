@@ -138,13 +138,14 @@ def read_config(config_path):
         watcher_includes = []
         for include_file in cfg.dget(section, 'include', '').split():
             _scan(include_file, watcher_includes)
-        for p in watcher_includes:
-            ini_str = '[root]\n' + open(p, 'r').read()
+        for include_path in watcher_includes:
+            # add section header for ConfigParser to understand it
+            ini_str = '[tmp]\n' + open(include_path, 'r').read()
             ini_fp = StringIO(ini_str)
             config = RawConfigParser()
             config.readfp(ini_fp)
-            # replace watcher config option
-            # with ones from config
+            for name, value in config.items('tmp'):
+                cfg.set(section, name, value)
 
     return cfg
 
