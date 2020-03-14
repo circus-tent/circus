@@ -2,6 +2,7 @@ import glob
 import os
 import signal
 import warnings
+from configparser import RawConfigParser
 from fnmatch import fnmatch
 try:
     import resource
@@ -11,7 +12,7 @@ except ImportError:
 import six
 
 from circus import logger
-from circus.py3compat import sort_by_field
+from circus.py3compat import sort_by_field, StringIO
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
                          StrictConfigParser, replace_gnu_args, to_signum,
@@ -127,7 +128,25 @@ def read_config(config_path):
         _scan(os.path.join(include_dir, '*.ini'), includes)
 
     logger.debug('Reading config files: %s' % includes)
-    return cfg, [config_path] + cfg.read(includes)
+    cfg.read(includes)
+
+    # after all sections are included we try to include
+    # watcher specific files
+    for section in cfg.sections():
+        if not section.startswith("watcher:"):
+            continue
+        watcher_includes = []
+        for include_file in cfg.dget(section, 'include', '').split():
+            _scan(include_file, watcher_includes)
+        for p in watcher_includes:
+            ini_str = '[root]\n' + open(p, 'r').read()
+            ini_fp = StringIO(ini_str)
+            config = RawConfigParser()
+            config.readfp(ini_fp)
+            # replace watcher config option
+            # with ones from config
+
+    return cfg
 
 
 def get_config(config_file):
@@ -135,7 +154,7 @@ def get_config(config_file):
         raise IOError("the configuration file %r does not exist\n" %
                       config_file)
 
-    cfg, cfg_files_read = read_config(config_file)
+    cfg = read_config(config_file)
     dget = cfg.dget
     config = {}
 

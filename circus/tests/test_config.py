@@ -46,7 +46,8 @@ _CONF = {
     'issue680': os.path.join(CONFIG_DIR, 'issue680.ini'),
     'virtualenv': os.path.join(CONFIG_DIR, 'virtualenv.ini'),
     'empty_section': os.path.join(CONFIG_DIR, 'empty_section.ini'),
-    'issue1088': os.path.join(CONFIG_DIR, 'issue1088.ini')
+    'issue1088': os.path.join(CONFIG_DIR, 'issue1088.ini'),
+    'watcher_include': os.path.join(CONFIG_DIR, 'issue1119.ini')
 }
 
 
@@ -196,6 +197,11 @@ class TestConfig(TestCase):
         except:  # noqa: E722
             self.fail('Non-existent includes should not raise')
         self.assertTrue(mock_logger_warn.called)
+
+    def test_watcher_include(self):
+        conf = get_config(_CONF['watcher_include'])
+        watchers = conf['watchers']
+        self.assertEqual(watchers[0]['numprocesses'], 5)
 
     def test_watcher_graceful_timeout(self):
         conf = get_config(_CONF['issue210'])
