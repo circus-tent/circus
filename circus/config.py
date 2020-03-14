@@ -2,7 +2,7 @@ import glob
 import os
 import signal
 import warnings
-from configparser import RawConfigParser
+
 from fnmatch import fnmatch
 try:
     import resource
@@ -142,7 +142,7 @@ def read_config(config_path):
             # add section header for ConfigParser to understand it
             ini_str = '[tmp]\n' + open(include_path, 'r').read()
             ini_fp = StringIO(ini_str)
-            config = RawConfigParser()
+            config = StrictConfigParser()
             config.readfp(ini_fp)
             for name, value in config.items('tmp'):
                 cfg.set(section, name, value)
