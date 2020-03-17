@@ -12,7 +12,7 @@ except ImportError:
 import six
 
 from circus import logger
-from circus.py3compat import sort_by_field, StringIO
+from circus.py3compat import sort_by_field
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
                          StrictConfigParser, replace_gnu_args, to_signum,
@@ -98,19 +98,17 @@ def rlimit_value(val):
 
 
 def read_config(config_path):
-    cfg = DefaultConfigParser()
-    with open(config_path) as f:
-        if hasattr(cfg, 'read_file'):
-            cfg.read_file(f)
-        else:
-            cfg.readfp(f)
 
-    current_dir = os.path.dirname(config_path)
+    def _init_config(config_path_, parser=DefaultConfigParser):
+        config = parser()
+        with open(config_path_) as f:
+            if hasattr(config, 'read_file'):
+                config.read_file(f)
+            else:
+                config.readfp(f)
+        return config
 
-    # load included config files
-    includes = []
-
-    def _scan(filename, includes):
+    def _scan(filename, includes_):
         if os.path.abspath(filename) != filename:
             filename = os.path.join(current_dir, filename)
 
@@ -119,32 +117,36 @@ def read_config(config_path):
             logger.warn('%r does not lead to any config. Make sure '
                         'include paths are relative to the main config '
                         'file' % filename)
-        includes += paths
+        includes_ += paths
 
-    for include_file in cfg.dget('circus', 'include', '').split():
-        _scan(include_file, includes)
+    def _get_includes(config, section_):
+        incl = []
 
-    for include_dir in cfg.dget('circus', 'include_dir', '').split():
-        _scan(os.path.join(include_dir, '*.ini'), includes)
+        for include_file in config.dget(section_, 'include', '').split():
+            _scan(include_file, incl)
+
+        for include_dir in config.dget(section_, 'include_dir', '').split():
+            _scan(os.path.join(include_dir, '*.ini'), incl)
+
+        return incl
+
+    current_dir = os.path.dirname(config_path)
+    cfg = _init_config(config_path)
+
+    # load included config files in circus section
+    includes = _get_includes(cfg, 'circus')
 
     logger.debug('Reading config files: %s' % includes)
     cfg.read(includes)
 
-    # after all sections are included we try to include
-    # watcher specific files
+    # load included config files in watcher sections
     for section in cfg.sections():
-        if not section.startswith("watcher:"):
+        if not section.startswith('watcher:'):
             continue
-        watcher_includes = []
-        for include_file in cfg.dget(section, 'include', '').split():
-            _scan(include_file, watcher_includes)
+        watcher_includes = _get_includes(cfg, section)
         for include_path in watcher_includes:
-            # add section header for ConfigParser to understand it
-            ini_str = '[tmp]\n' + open(include_path, 'r').read()
-            ini_fp = StringIO(ini_str)
-            config = StrictConfigParser()
-            config.readfp(ini_fp)
-            for name, value in config.items('tmp'):
+            included_cfg = _init_config(include_path)
+            for name, value in included_cfg.items('included'):
                 cfg.set(section, name, value)
 
     return cfg

@@ -397,11 +397,18 @@ class TestConfig(TestCase):
         watcher = Watcher.load_from_config(conf['watchers'][0])
         watcher.stop()
 
-    def test_watcher_issue_1119(self):
+    def test_ssue_1119_include(self):
         # #1119 - add support for include directive in watcher section
         conf = get_config(_CONF['issue1119'])
         watchers = conf['watchers']
+        # numprocesses is overriden in issue1119_included.ini
         self.assertEqual(watchers[0]['numprocesses'], 5)
+        # this is to make sure wid is properly populated
+        self.assertEqual(watchers[0]['stdout_stream']['filename'], '/var/logs/$(circus.wid).log')
+        # this option is in the included directory
+        self.assertEqual(watchers[0]['stderr_stream']['max_bytes'], '1000001')
+        # this option is in the included sub-directory
+        self.assertEqual(watchers[0]['stderr_stream']['backup_count'], '13')
 
 
 test_suite = EasyTestSuite(__name__)
