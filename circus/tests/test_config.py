@@ -404,7 +404,10 @@ class TestConfig(TestCase):
         # numprocesses is overriden in issue1119_included.ini
         self.assertEqual(watchers[0]['numprocesses'], 5)
         # this is to make sure wid is properly populated
-        self.assertEqual(watchers[0]['stdout_stream']['filename'], '/var/logs/$(circus.wid).log')
+        self.assertEqual(
+            watchers[0]['stdout_stream']['filename'],
+            '/var/logs/$(circus.wid).log',
+        )
         # this option is in the included directory
         self.assertEqual(watchers[0]['stderr_stream']['max_bytes'], '1000001')
         # this option is in the included sub-directory
