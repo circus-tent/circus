@@ -53,6 +53,9 @@ testsuite under the different supported python versions.
 Please use : http://issue2pr.herokuapp.com/ to reference a commit to an
 existing circus issue, if any.
 
+Please also add a changelog entry in the 'unreleased' section with a short
+description of the change and a reference to the issue (if any).
+
 Avoiding merge commits
 ======================
 
