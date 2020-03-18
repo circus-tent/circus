@@ -1,6 +1,14 @@
 Changelog history
 =================
 
+unreleased
+----------
+
+- Speedup reloadconfig for large number of sockets - #834
+- Do not allow adding watchers with the same lowercase names - #936
+- Do not delete pid file during restart - #1080
+- Fix graceful_timeout watcher config option type - #1088
+
 0.16.1 2019-12-27
 -----------------
 Fix packaging issue.
