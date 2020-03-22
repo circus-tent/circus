@@ -23,7 +23,7 @@ except ImportError:
 from psutil import (Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess,
                     AccessDenied)
 
-from circus.py3compat import bytestring, quote
+from shlex import quote
 from circus.sockets import CircusSocket
 from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
                          ObjectDict, replace_gnu_args, get_default_gid,
@@ -370,7 +370,7 @@ class Process(object):
         """ It's possible to use environment variables and some other variables
         that are available in this context, when spawning the processes.
         """
-        logger.debug('cmd: ' + bytestring(self.cmd))
+        logger.debug('cmd: ' + self.cmd)
         logger.debug('args: ' + str(self.args))
 
         current_env = ObjectDict(self.env.copy())
@@ -402,14 +402,14 @@ class Process(object):
 
         if self.args is not None:
             if isinstance(self.args, str):
-                args = shlex.split(bytestring(replace_gnu_args(
-                    self.args, **format_kwargs)))
+                args = shlex.split(replace_gnu_args(
+                    self.args, **format_kwargs))
             else:
-                args = [bytestring(replace_gnu_args(arg, **format_kwargs))
+                args = [replace_gnu_args(arg, **format_kwargs)
                         for arg in self.args]
-            args = shlex.split(bytestring(cmd), posix=not IS_WINDOWS) + args
+            args = shlex.split(cmd, posix=not IS_WINDOWS) + args
         else:
-            args = shlex.split(bytestring(cmd), posix=not IS_WINDOWS)
+            args = shlex.split(cmd, posix=not IS_WINDOWS)
 
         if self.shell:
             # subprocess.Popen(shell=True) implies that 1st arg is the
@@ -420,10 +420,10 @@ class Process(object):
                 logger.warn("shell_args won't apply for "
                             "windows platforms: %s", shell_args)
             elif isinstance(shell_args, str):
-                args += shlex.split(bytestring(replace_gnu_args(
-                    shell_args, **format_kwargs)))
+                args += shlex.split(replace_gnu_args(
+                    shell_args, **format_kwargs))
             elif shell_args:
-                args += [bytestring(replace_gnu_args(arg, **format_kwargs))
+                args += [replace_gnu_args(arg, **format_kwargs)
                          for arg in shell_args]
 
         elif format_kwargs.get('shell_args', False):

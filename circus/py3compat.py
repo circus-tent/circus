@@ -1,12 +1,5 @@
 import io
 import sys
-import collections
-from shlex import quote  # NOQA
-
-
-text_type = str
-long = int
-unicode = str
 
 
 def sort_by_field(obj, field='name'):       # NOQA
@@ -14,10 +7,6 @@ def sort_by_field(obj, field='name'):       # NOQA
         return item[field]
 
     obj.sort(key=_by_field)
-
-
-def bytestring(s):  # NOQA
-    return s
 
 
 def cast_bytes(s, encoding='utf8'):  # NOQA
@@ -44,10 +33,6 @@ BytesIO = io.BytesIO        # NOQA
 
 def raise_with_tb(E):     # NOQA
     raise E.with_traceback(sys.exc_info()[2])
-
-
-def is_callable(c):  # NOQA
-    return isinstance(c, collections.Callable)
 
 
 def get_next(c):  # NOQA
