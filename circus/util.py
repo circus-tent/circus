@@ -29,7 +29,6 @@ except ImportError:
 from tornado.ioloop import IOLoop
 from tornado import gen
 from tornado import concurrent
-from circus.py3compat import raise_with_tb
 
 from configparser import (
     ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
@@ -605,7 +604,7 @@ def resolve_name(import_name, silent=False, reload=False):
             return __import__(import_name)
     except ImportError as e:
         if not silent:
-            raise_with_tb(ImportStringError(import_name, e))
+            raise ImportStringError(import_name, e).with_traceback(sys.exc_info()[2])
 
 
 _SECTION_NAME = r'\w\.\-'

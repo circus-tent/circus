@@ -19,10 +19,6 @@ def cast_unicode(s, encoding='utf8', errors='replace'):  # NOQA
 cast_string = cast_unicode
 
 
-def raise_with_tb(E):     # NOQA
-    raise E.with_traceback(sys.exc_info()[2])
-
-
 b = cast_bytes
 s = cast_string
 u = cast_unicode
