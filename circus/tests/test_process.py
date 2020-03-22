@@ -1,3 +1,4 @@
+import io
 import os
 import sys
 import time
@@ -5,7 +6,6 @@ import time
 from circus.process import Process
 from circus.tests.support import (TestCircus, skipIf, EasyTestSuite, DEBUG,
                                   poll_for, IS_WINDOWS, PYTHON, SLEEP)
-from circus.py3compat import StringIO
 
 
 RLIMIT = """\
@@ -43,7 +43,7 @@ USE_FDS = IS_WINDOWS
 
 
 def _nose_no_s():
-    return isinstance(sys.stdout, StringIO)
+    return isinstance(sys.stdout, io.StringIO)
 
 
 class TestProcess(TestCircus):

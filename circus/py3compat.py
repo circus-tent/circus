@@ -1,12 +1,4 @@
-import io
 import sys
-
-
-def sort_by_field(obj, field='name'):       # NOQA
-    def _by_field(item):
-        return item[field]
-
-    obj.sort(key=_by_field)
 
 
 def cast_bytes(s, encoding='utf8'):  # NOQA
@@ -27,19 +19,9 @@ def cast_unicode(s, encoding='utf8', errors='replace'):  # NOQA
 cast_string = cast_unicode
 
 
-StringIO = io.StringIO      # NOQA
-BytesIO = io.BytesIO        # NOQA
-
-
 def raise_with_tb(E):     # NOQA
     raise E.with_traceback(sys.exc_info()[2])
 
-
-def get_next(c):  # NOQA
-    return c.__next__
-
-
-MAXSIZE = sys.maxsize       # NOQA
 
 b = cast_bytes
 s = cast_string
