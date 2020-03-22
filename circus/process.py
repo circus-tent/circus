@@ -23,7 +23,7 @@ except ImportError:
 from psutil import (Popen, STATUS_ZOMBIE, STATUS_DEAD, NoSuchProcess,
                     AccessDenied)
 
-from circus.py3compat import bytestring, string_types, quote
+from circus.py3compat import bytestring, quote
 from circus.sockets import CircusSocket
 from circus.util import (get_info, to_uid, to_gid, debuglog, get_working_dir,
                          ObjectDict, replace_gnu_args, get_default_gid,
@@ -401,7 +401,7 @@ class Process(object):
             self.cmd = cmd.replace('$WID', str(self.wid))
 
         if self.args is not None:
-            if isinstance(self.args, string_types):
+            if isinstance(self.args, str):
                 args = shlex.split(bytestring(replace_gnu_args(
                     self.args, **format_kwargs)))
             else:
@@ -419,7 +419,7 @@ class Process(object):
             if shell_args and IS_WINDOWS:
                 logger.warn("shell_args won't apply for "
                             "windows platforms: %s", shell_args)
-            elif isinstance(shell_args, string_types):
+            elif isinstance(shell_args, str):
                 args += shlex.split(bytestring(replace_gnu_args(
                     shell_args, **format_kwargs)))
             elif shell_args:

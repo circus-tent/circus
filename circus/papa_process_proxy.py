@@ -4,14 +4,8 @@ from circus import logger
 import psutil
 import select
 import time
-from circus.py3compat import PY2, string_types
 
 __author__ = 'Scott Maxwell'
-
-
-if PY2:
-    class TimeoutError(Exception):
-        """The operation timed out."""
 
 
 def _bools_to_papa_out(pipe, close):
@@ -61,7 +55,7 @@ class PapaProcessProxy(Process):
         socket_names = set(socket_name.lower()
                            for socket_name in self.watcher._get_sockets_fds())
         self.cmd = self._fix_socket_name(self.cmd, socket_names)
-        if isinstance(self.args, string_types):
+        if isinstance(self.args, str):
             self.args = self._fix_socket_name(self.args, socket_names)
         else:
             self.args = [self._fix_socket_name(arg, socket_names)

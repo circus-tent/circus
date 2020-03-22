@@ -22,7 +22,6 @@ from circus.util import to_uid
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError, ConflictError
-from circus.py3compat import string_types
 from circus.sighandler import SysHandler
 
 
@@ -254,7 +253,7 @@ class Controller(object):
         if cid is None:
             return
 
-        if isinstance(resp, string_types):
+        if isinstance(resp, str):
             raise DeprecationWarning('Takes only a mapping')
 
         resp['id'] = mid

@@ -9,7 +9,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 import tornado
 
 from circus.exc import CallError
-from circus.py3compat import string_types, b
+from circus.py3compat import b
 from circus.util import DEFAULT_ENDPOINT_DEALER, get_connection
 
 
@@ -57,7 +57,7 @@ class AsyncCircusClient(object):
 
     @tornado.gen.coroutine
     def call(self, cmd):
-        if isinstance(cmd, string_types):
+        if isinstance(cmd, str):
             raise DeprecationWarning('call() takes a mapping')
 
         call_id = uuid.uuid4().hex
@@ -116,7 +116,7 @@ class CircusClient(object):
         return self.call(make_message(command, **props))
 
     def call(self, cmd):
-        if isinstance(cmd, string_types):
+        if isinstance(cmd, str):
             raise DeprecationWarning('call() takes a mapping')
 
         call_id = uuid.uuid4().hex

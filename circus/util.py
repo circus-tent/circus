@@ -29,21 +29,13 @@ except ImportError:
 from tornado.ioloop import IOLoop
 from tornado import gen
 from tornado import concurrent
-from circus.py3compat import (
-    integer_types, bytestring, raise_with_tb, text_type
+from circus.py3compat import raise_with_tb
+
+from configparser import (
+    ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
 )
-try:
-    from configparser import (
-        ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
-    )
-except ImportError:
-    from ConfigParser import (  # NOQA
-        ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
-    )
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse  # NOQA
+
+from urllib.parse import urlparse
 
 from datetime import timedelta
 from functools import wraps
@@ -63,7 +55,6 @@ from psutil import AccessDenied, NoSuchProcess, Process
 
 from circus.exc import ConflictError
 from circus import logger
-from circus.py3compat import string_types
 
 
 # default endpoints
@@ -135,7 +126,7 @@ def get_working_dir():
 def bytes2human(n):
     """Translates bytes into a human repr.
     """
-    if not isinstance(n, integer_types):
+    if not isinstance(n, int):
         raise TypeError(n)
 
     prefix = {}
@@ -369,7 +360,7 @@ else:
             except KeyError:
                 raise ValueError("%r isn't a valid user id" % name)
 
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError(name)
 
         try:
@@ -404,7 +395,7 @@ else:
             except (KeyError, OverflowError):
                 raise ValueError("No such group: %r" % name)
 
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError(name)
 
         try:
@@ -573,8 +564,6 @@ def resolve_name(import_name, silent=False, reload=False):
                    reloaded
     :return: imported object
     """
-    # force the import name to automatically convert to strings
-    import_name = bytestring(import_name)
     try:
         if ':' in import_name:
             module, obj = import_name.split(':', 1)
@@ -738,7 +727,9 @@ def configure_logger(logger, level='INFO', output="-", loggerconfig=None,
                                 "Try: pip install PyYAML"
                                 % (shell_escape_arg(loggerconfig),))
             with open(loggerconfig, "r") as fh:
-                logging.config.dictConfig(yaml.load(fh.read()))
+                logging.config.dictConfig(
+                    yaml.load(fh.read(), Loader=yaml.FullLoader)
+                )
         else:
             raise Exception("Logger configuration file %s is not in one "
                             "of the recognized formats.  The file name "
@@ -794,7 +785,7 @@ class StrictConfigParser(ConfigParser):
                     mo = self._optcre.match(line)   # 2.7
                     if mo:
                         optname, vi, optval = mo.group('option', 'vi', 'value')
-                        self.optionxform = text_type
+                        self.optionxform = str
                         optname = self.optionxform(optname.rstrip())
                         # We don't want to override.
                         if optname in cursect:
@@ -876,7 +867,7 @@ def load_virtualenv(watcher, py_ver=None):
         packages = set()
         fullname = os.path.join(sitedir, name)
         try:
-            f = open(fullname, "rU")
+            f = open(fullname, "r")
         except IOError:
             return
         with f:
