@@ -1,6 +1,3 @@
-import sys
-
-
 def cast_bytes(s, encoding='utf8'):  # NOQA
     """cast unicode or bytes to bytes"""
     if isinstance(s, bytes):
