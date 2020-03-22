@@ -26,7 +26,6 @@ from circus.stream import get_stream, Redirector
 from circus.stream.papa_redirector import PapaRedirector
 from circus.util import parse_env_dict, resolve_name, tornado_sleep, IS_WINDOWS
 from circus.util import papa
-from circus.py3compat import b
 
 
 class Watcher(object):
@@ -433,7 +432,9 @@ class Watcher(object):
 
         name = self.res_name
 
-        multipart_msg = [b("watcher.%s.%s" % (name, topic)), json.dumps(msg)]
+        multipart_msg = [
+            ("watcher.%s.%s" % (name, topic)).encode('utf8'), json.dumps(msg)
+        ]
 
         if self.evpub_socket is not None and not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)

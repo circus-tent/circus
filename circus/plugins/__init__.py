@@ -12,7 +12,7 @@ from zmq.eventloop import zmqstream
 
 from circus import logger, __version__
 from circus.client import make_message, cast_message
-from circus.py3compat import b, s
+from circus.py3compat import s
 from circus.util import (debuglog, to_bool, resolve_name, configure_logger,
                          DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          get_connection)
@@ -40,7 +40,7 @@ class CircusPlugin(object):
         self.endpoint = endpoint
         self.check_delay = check_delay
         self.ssh_server = ssh_server
-        self._id = b(uuid.uuid4().hex)
+        self._id = uuid.uuid4().hex.encode('utf8')
         self.running = False
         self.loop = ioloop.IOLoop()
 

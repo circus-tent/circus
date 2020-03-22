@@ -16,6 +16,5 @@ def cast_unicode(s, encoding='utf8', errors='replace'):  # NOQA
 cast_string = cast_unicode
 
 
-b = cast_bytes
 s = cast_string
 u = cast_unicode
