@@ -37,6 +37,8 @@ class _FileStreamBase(object):
     def write_data(self, data):
         # data to write on file
         file_data = data['data']
+        if isinstance(data['data'], bytes):
+            file_data = data['data'].decode('utf8', errors='replace')
 
         # If we want to prefix the stream with the current datetime
         if self._time_format is not None:
