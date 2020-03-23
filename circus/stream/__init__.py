@@ -7,7 +7,7 @@ try:
 except ImportError:
     from Queue import Queue, Empty  # NOQA
 
-from circus.util import resolve_name
+from circus.util import resolve_name, to_str
 from circus.stream.file_stream import FileStream
 from circus.stream.file_stream import WatchedFileStream  # noqa: F401
 from circus.stream.file_stream import TimedRotatingFileStream  # noqa: F401
@@ -31,7 +31,7 @@ class StdoutStream(object):
         pass
 
     def __call__(self, data):
-        sys.stdout.write(data['data'].decode('utf8', errors='replace'))
+        sys.stdout.write(to_str(data['data']))
         sys.stdout.flush()
 
     def close(self):
@@ -110,7 +110,7 @@ class FancyStdoutStream(StdoutStream):
         return color + prefix
 
     def __call__(self, data):
-        for line in data['data'].split('\n'):
+        for line in to_str(data['data']).split('\n'):
             if line:
                 self.out.write(self.prefix(data))
                 self.out.write(line)

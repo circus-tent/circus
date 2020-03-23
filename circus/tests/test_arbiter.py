@@ -19,7 +19,7 @@ from circus.tests.support import (TestCircus, async_poll_for, truncate_file,
                                   EasyTestSuite, skipIf, get_ioloop, SLEEP,
                                   PYTHON)
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
-                         DEFAULT_ENDPOINT_SUB)
+                         DEFAULT_ENDPOINT_SUB, to_str)
 from circus.tests.support import (MockWatcher, has_circusweb,
                                   poll_for_callable, get_available_port)
 from circus import watcher as watcher_mod
@@ -38,7 +38,7 @@ class Plugin(CircusPlugin):
 
     def handle_recv(self, data):
         topic, msg = data
-        topic_parts = topic.decode('utf8', errors='replace').split(".")
+        topic_parts = to_str(topic).split(".")
         watcher = topic_parts[1]
         action = topic_parts[2]
         with open(self.config['file'], 'a+') as f:

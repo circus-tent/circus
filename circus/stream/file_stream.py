@@ -6,6 +6,7 @@ import time as time_
 import re
 from stat import ST_DEV, ST_INO, ST_MTIME
 from circus import logger
+from circus.util import to_str
 
 
 class _FileStreamBase(object):
@@ -36,9 +37,7 @@ class _FileStreamBase(object):
 
     def write_data(self, data):
         # data to write on file
-        file_data = data['data']
-        if isinstance(data['data'], bytes):
-            file_data = data['data'].decode('utf8', errors='replace')
+        file_data = to_str(data['data'])
 
         # If we want to prefix the stream with the current datetime
         if self._time_format is not None:

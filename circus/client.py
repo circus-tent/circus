@@ -9,7 +9,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 import tornado
 
 from circus.exc import CallError
-from circus.util import DEFAULT_ENDPOINT_DEALER, get_connection
+from circus.util import DEFAULT_ENDPOINT_DEALER, get_connection, to_bytes
 
 
 def make_message(command, **props):
@@ -30,7 +30,7 @@ class AsyncCircusClient(object):
                  timeout=5.0, ssh_server=None, ssh_keyfile=None):
         self._init_context(context)
         self.endpoint = endpoint
-        self._id = uuid.uuid4().hex.encode('utf8')
+        self._id = to_bytes(uuid.uuid4().hex)
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)
@@ -89,7 +89,7 @@ class CircusClient(object):
                  timeout=5.0, ssh_server=None, ssh_keyfile=None):
         self._init_context(context)
         self.endpoint = endpoint
-        self._id = uuid.uuid4().hex.encode('utf8')
+        self._id = to_bytes(uuid.uuid4().hex)
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)

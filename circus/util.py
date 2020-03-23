@@ -334,6 +334,21 @@ def to_signum(signum):
     raise ValueError('signal invalid: {}'.format(signum))
 
 
+def to_str(s, encoding='utf8', errors='replace'):
+    """cast bytes or string to string.
+    errors options are strict, ignore or replace"""
+    if isinstance(s, bytes):
+        return s.decode(encoding, errors=errors)
+    return str(s)
+
+
+def to_bytes(s, encoding='utf8'):  # NOQA
+    """cast str or bytes to bytes"""
+    if isinstance(s, bytes):
+        return s
+    return str(s).encode(encoding)
+
+
 if pwd is None:
 
     def to_uid(name):

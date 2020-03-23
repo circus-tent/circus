@@ -26,7 +26,7 @@ from circus.tests.support import TestCircus, truncate_file
 from circus.tests.support import async_poll_for, EasyTestSuite
 from circus.tests.support import MagicMockFuture, skipIf, IS_WINDOWS
 from circus.tests.support import PYTHON
-from circus.util import get_python_version, tornado_sleep
+from circus.util import get_python_version, tornado_sleep, to_str
 from circus.watcher import Watcher
 
 if hasattr(signal, 'SIGKILL'):
@@ -244,10 +244,7 @@ class TestWatcherInitialization(TestCircus):
                 messages.append(m)
             except Queue.Empty:
                 pass
-            data = ''.join(
-                m['data'].decode('utf8', errors='replace')
-                for m in messages
-            )
+            data = ''.join(to_str(m['data']) for m in messages)
             if 'XYZ' in data:
                 resp = True
                 break
