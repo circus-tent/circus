@@ -63,7 +63,9 @@ class StreamReader(object):
         while time.time() - start < timeout:
             try:
                 msg = self._stream.get_nowait()
-                raw_lines = msg['data'].decode('utf8', errors='replace').split('\n')
+                raw_lines = msg['data'].decode(
+                    'utf8', errors='replace'
+                ).split('\n')
                 lines = [l for l in raw_lines if l]
                 self._buffer.extend(lines)
                 raise tornado.gen.Return(self._buffer.pop(0))

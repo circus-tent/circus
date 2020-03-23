@@ -604,7 +604,9 @@ def resolve_name(import_name, silent=False, reload=False):
             return __import__(import_name)
     except ImportError as e:
         if not silent:
-            raise ImportStringError(import_name, e).with_traceback(sys.exc_info()[2])
+            raise ImportStringError(import_name, e).with_traceback(
+                sys.exc_info()[2]
+            )
 
 
 _SECTION_NAME = r'\w\.\-'

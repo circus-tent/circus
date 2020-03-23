@@ -244,7 +244,10 @@ class TestWatcherInitialization(TestCircus):
                 messages.append(m)
             except Queue.Empty:
                 pass
-            data = ''.join(m['data'].decode('utf8', errors='replace') for m in messages)
+            data = ''.join(
+                m['data'].decode('utf8', errors='replace')
+                for m in messages
+            )
             if 'XYZ' in data:
                 resp = True
                 break
