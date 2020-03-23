@@ -9,7 +9,6 @@ from circus.tests.support import skipIf, IS_WINDOWS
 from circus.client import AsyncCircusClient
 from circus.stream import QueueStream, Empty
 from circus.util import tornado_sleep
-from circus.py3compat import s
 
 
 exiting = False
@@ -72,7 +71,7 @@ def read_from_stream(stream, desired_channel, timeout=10):
     while not channels[desired_channel] and time.time() - start < timeout:
         try:
             data = stream.get_nowait()
-            data = s(data['data']).split('\n')
+            data = data['data'].decode('utf8', errors='replace').split('\n')
             accumulator += data.pop(0)
             if data:
                 data.insert(0, accumulator)

@@ -12,7 +12,6 @@ from circus.stream.file_stream import FileStream
 from circus.stream.file_stream import WatchedFileStream  # noqa: F401
 from circus.stream.file_stream import TimedRotatingFileStream  # noqa: F401
 from circus.stream.redirector import Redirector  # noqa: F401
-from circus.py3compat import s
 
 
 class QueueStream(Queue):
@@ -32,7 +31,7 @@ class StdoutStream(object):
         pass
 
     def __call__(self, data):
-        sys.stdout.write(s(data['data']))
+        sys.stdout.write(data['data'].decode('utf8', errors='replace'))
         sys.stdout.flush()
 
     def close(self):
@@ -111,7 +110,7 @@ class FancyStdoutStream(StdoutStream):
         return color + prefix
 
     def __call__(self, data):
-        for line in s(data['data']).split('\n'):
+        for line in data['data'].decode('utf8', errors='replace').split('\n'):
             if line:
                 self.out.write(self.prefix(data))
                 self.out.write(line)

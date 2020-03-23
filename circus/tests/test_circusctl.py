@@ -10,7 +10,6 @@ from circus.circusctl import USAGE, VERSION, CircusCtl
 from circus.tests.support import (TestCircus, async_poll_for, EasyTestSuite,
                                   skipIf, DEBUG, PYTHON, SLEEP)
 from circus.util import tornado_sleep, DEFAULT_ENDPOINT_DEALER
-from circus.py3compat import s
 
 
 def run_ctl(args, queue=None, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
@@ -23,8 +22,8 @@ def run_ctl(args, queue=None, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     stdout, stderr = proc.communicate(stdin.encode('utf8') if stdin else None)
-    stdout = s(stdout)
-    stderr = s(stderr)
+    stdout = stdout.decode('utf8', errors='replace')
+    stderr = stderr.decode('utf8', errors='replace')
     if queue:
         queue.put(stderr)
         queue.put(stdout)

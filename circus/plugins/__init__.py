@@ -12,7 +12,6 @@ from zmq.eventloop import zmqstream
 
 from circus import logger, __version__
 from circus.client import make_message, cast_message
-from circus.py3compat import s
 from circus.util import (debuglog, to_bool, resolve_name, configure_logger,
                          DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          get_connection)
@@ -151,7 +150,7 @@ class CircusPlugin(object):
     @staticmethod
     def split_data(data):
         topic, msg = data
-        topic_parts = s(topic).split(".")
+        topic_parts = str(topic).split(".")
         return topic_parts[1], topic_parts[2], msg
 
     @staticmethod
