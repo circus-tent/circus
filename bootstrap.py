@@ -68,10 +68,7 @@ try:
 except ImportError:
     ez = {}
 
-    try:
-        from urllib.request import urlopen
-    except ImportError:
-        from urllib2 import urlopen
+    from urllib.request import urlopen
 
     exec(urlopen('http://python-distribute.org/distribute_setup.py').read(), ez)
     setup_args = dict(to_dir=tmpeggs, download_delay=0, no_fake=True)

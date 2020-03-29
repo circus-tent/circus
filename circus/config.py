@@ -8,8 +8,6 @@ try:
 except ImportError:
     resource = None     # NOQA
 
-import six
-
 from circus import logger
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
@@ -293,7 +291,7 @@ def get_config(config_file):
             target[name] = value
 
     def _expand_vars(target, key, env):
-        if isinstance(target[key], six.string_types):
+        if isinstance(target[key], str):
             target[key] = replace_gnu_args(target[key], env=env)
         elif isinstance(target[key], dict):
             for k in target[key].keys():

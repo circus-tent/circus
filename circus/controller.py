@@ -2,12 +2,8 @@ import os
 import sys
 import traceback
 import functools
-try:
-    from queue import Queue, Empty
-    from urllib.parse import urlparse
-except ImportError:
-    from Queue import Queue, Empty  # NOQA
-    from urlparse import urlparse  # NOQA
+from queue import Queue, Empty
+from urllib.parse import urlparse
 
 
 import zmq

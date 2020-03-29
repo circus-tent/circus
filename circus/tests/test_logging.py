@@ -1,12 +1,6 @@
-try:
-    from io import StringIO
-    from io import BytesIO
-except ImportError:
-    from cStringIO import StringIO  # NOQA
-try:
-    from configparser import ConfigParser
-except ImportError:
-    from ConfigParser import ConfigParser  # NOQA
+from io import StringIO
+from io import BytesIO
+from configparser import ConfigParser
 from circus.tests.support import TestCase
 from circus.tests.support import EasyTestSuite
 from circus.tests.support import skipIf, PYTHON, IS_WINDOWS

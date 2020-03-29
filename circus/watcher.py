@@ -6,11 +6,6 @@ import time
 import sys
 from random import randint
 
-try:
-    from itertools import zip_longest as izip_longest
-except ImportError:
-    # noinspection PyUnresolvedReferences
-    from itertools import izip_longest  # NOQA
 import site
 from tornado import gen
 

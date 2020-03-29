@@ -6,10 +6,7 @@ from tempfile import mkstemp
 from time import time
 import zmq.utils.jsonapi as json
 import mock
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse  # NOQA
+from urllib.parse import urlparse
 
 from circus.arbiter import Arbiter
 from circus.client import AsyncCircusClient
