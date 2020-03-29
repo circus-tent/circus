@@ -16,7 +16,7 @@ from circus.tests.support import (TestCircus, async_poll_for, truncate_file,
                                   EasyTestSuite, skipIf, get_ioloop, SLEEP,
                                   PYTHON)
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
-                         DEFAULT_ENDPOINT_SUB, to_str)
+                         DEFAULT_ENDPOINT_SUB, to_str, IS_WINDOWS)
 from circus.tests.support import (MockWatcher, has_circusweb,
                                   poll_for_callable, get_available_port)
 from circus import watcher as watcher_mod
@@ -486,6 +486,7 @@ class TestTrainer(TestCircus):
         self.assertEqual(resp.get('status'), "active")
         yield self.stop_arbiter()
 
+    @skipIf(IS_WINDOWS, "Streams not supported on Windows")
     @tornado.testing.gen_test
     def test_plugins(self):
         fd, datafile = mkstemp()
