@@ -33,15 +33,3 @@ if not debugger:
                     raise
 
         threading.Thread._delete = _delete
-
-    # see http://bugs.python.org/issue14308
-    if get_python_version() < (2, 7, 0):
-        def _stop(self):
-            # DummyThreads delete self.__block, but they have no waiters to
-            # notify anyway (join() is forbidden on them).
-            if not hasattr(self, '_Thread__block'):
-                return
-            self._Thread__stop_old()
-
-        threading.Thread._Thread__stop_old = threading.Thread._Thread__stop
-        threading.Thread._Thread__stop = _stop
