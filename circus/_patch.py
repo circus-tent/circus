@@ -1,6 +1,5 @@
 import threading
 from threading import _active_limbo_lock, _active, _sys
-from .util import get_python_version
 
 
 debugger = False
