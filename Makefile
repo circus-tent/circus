@@ -36,3 +36,4 @@ clean:
 	rm -rf bin .tox include/ lib/ man/ circus.egg-info/ build/
 	find . -name "*.pyc" | xargs rm -f
 	find . -name "*.un~" | xargs rm -f
+	find . -name "__pycache__" | xargs rm -rf
