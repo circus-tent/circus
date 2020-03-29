@@ -2,7 +2,7 @@ import sys
 import random
 
 from datetime import datetime
-from queue import Queue, Empty
+from queue import Queue, Empty  # noqa: F401
 
 from circus.util import resolve_name, to_str
 from circus.stream.file_stream import FileStream

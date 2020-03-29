@@ -2,7 +2,7 @@ import os
 import sys
 import traceback
 import functools
-from queue import Queue, Empty
+from queue import Queue, Empty  # noqa: F401
 from urllib.parse import urlparse
 
 
