@@ -92,8 +92,11 @@ class TestUtil(TestCase):
         self.assertEqual(util.convert_opt('test', 1), '1')
 
     def test_bytes2human(self):
-        self.assertEqual(bytes2human(10000), '9K')
-        self.assertEqual(bytes2human(100001221), '95M')
+        self.assertEqual(bytes2human(100), '100B')
+        self.assertEqual(bytes2human(10000), '9.76K')
+        self.assertEqual(bytes2human(100001221), '95.36M')
+        self.assertEqual(bytes2human(1024 * 1024 * 2047), '1.99G')
+        self.assertEqual(bytes2human(1024 * 1024 * 2048), '2.00G')
         self.assertRaises(TypeError, bytes2human, '1')
 
     def test_human2bytes(self):
@@ -102,6 +105,8 @@ class TestUtil(TestCase):
         self.assertEqual(human2bytes('1129M'), 1183842304)
         self.assertEqual(human2bytes('67T'), 73667279060992)
         self.assertEqual(human2bytes('13P'), 14636698788954112)
+        self.assertEqual(human2bytes('1.99G'), 2136746229)
+        self.assertEqual(human2bytes('2.00G'), 2147483648)
         self.assertRaises(ValueError, human2bytes, '')
         self.assertRaises(ValueError, human2bytes, 'faoej')
         self.assertRaises(ValueError, human2bytes, '123KB')
