@@ -93,10 +93,9 @@ class TestUtil(TestCase):
 
     def test_bytes2human(self):
         self.assertEqual(bytes2human(100), '100B')
-        self.assertEqual(bytes2human(10000), '9.76K')
-        self.assertEqual(bytes2human(100001221), '95.36M')
-        self.assertEqual(bytes2human(1024 * 1024 * 2047), '1.99G')
-        self.assertEqual(bytes2human(1024 * 1024 * 2048), '2.00G')
+        self.assertEqual(bytes2human(10000), '9.77K')
+        self.assertEqual(bytes2human(100001221), '95.37M')
+        self.assertEqual(bytes2human(1024 * 1024 * 2047), '2.00G')
         self.assertRaises(TypeError, bytes2human, '1')
 
     def test_human2bytes(self):

@@ -144,13 +144,8 @@ def bytes2human(n):
 
     for s in reversed(_SYMBOLS):
         if n >= prefix[s]:
-            # truncate to 2 decimal places without rounding
-            # https://stackoverflow.com/questions/783897/truncating-floats-in-python
-            value = '{}'.format(float(n) / prefix[s])
-            i, p, d = value.partition('.')
-            decimal_places = 2
-            value = '.'.join([i, (d+'0'*decimal_places)[:decimal_places]])
-            return '%s%s' % (value, s)
+            value = round(float(n) / prefix[s], 2)
+            return '{:.2f}{}'.format(value, s)
     return "%sB" % n
 
 
