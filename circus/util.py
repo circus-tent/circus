@@ -144,8 +144,8 @@ def bytes2human(n):
 
     for s in reversed(_SYMBOLS):
         if n >= prefix[s]:
-            value = int(float(n) / prefix[s])
-            return '%s%s' % (value, s)
+            value = round(float(n) / prefix[s], 2)
+            return '{:.2f}{}'.format(value, s)
     return "%sB" % n
 
 
