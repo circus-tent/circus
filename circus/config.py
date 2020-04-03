@@ -1,4 +1,5 @@
 import glob
+import operator
 import os
 import signal
 import warnings
@@ -278,9 +279,10 @@ def get_config(config_file):
             watchers.append(watcher)
 
     # making sure we return consistent lists
-    watchers.sort(key=lambda x: x['name'])
-    plugins.sort(key=lambda x: x['name'])
-    sockets.sort(key=lambda x: x['name'])
+    name = operator.itemgetter('name')
+    watchers.sort(key=name)
+    plugins.sort(key=name)
+    sockets.sort(key=name)
 
     # Second pass to make sure env sections apply to all watchers.
 
