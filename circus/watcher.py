@@ -6,11 +6,6 @@ import time
 import sys
 from random import randint
 
-try:
-    from itertools import zip_longest as izip_longest
-except ImportError:
-    # noinspection PyUnresolvedReferences
-    from itertools import izip_longest  # NOQA
 import site
 from tornado import gen
 
@@ -26,7 +21,6 @@ from circus.stream import get_stream, Redirector
 from circus.stream.papa_redirector import PapaRedirector
 from circus.util import parse_env_dict, resolve_name, tornado_sleep, IS_WINDOWS
 from circus.util import papa
-from circus.py3compat import bytestring, is_callable, b, PY2
 
 
 class Watcher(object):
@@ -382,7 +376,7 @@ class Watcher(object):
 
     def _resolve_hook(self, name, callable_or_name, ignore_failure,
                       reload_module=False):
-        if is_callable(callable_or_name):
+        if callable(callable_or_name):
             self.hooks[name] = callable_or_name
         else:
             # will raise ImportError on failure
@@ -431,9 +425,11 @@ class Watcher(object):
     def notify_event(self, topic, msg):
         """Publish a message on the event publisher channel"""
 
-        name = bytestring(self.res_name)
+        name = self.res_name
 
-        multipart_msg = [b("watcher.%s.%s" % (name, topic)), json.dumps(msg)]
+        multipart_msg = [
+            ("watcher.%s.%s" % (name, topic)).encode('utf8'), json.dumps(msg)
+        ]
 
         if self.evpub_socket is not None and not self.evpub_socket.closed:
             self.evpub_socket.send_multipart(multipart_msg)
@@ -1123,12 +1119,7 @@ class Watcher(object):
             self.shell = val
             action = 1
         elif key == "env":
-            if PY2 and IS_WINDOWS:
-                # Windows on Python 2 does not accept Unicode values
-                # in env dictionary
-                self.env = dict((b(k), b(v)) for k, v in val.iteritems())
-            else:
-                self.env = val
+            self.env = val
             action = 1
         elif key == "cmd":
             self.cmd = val

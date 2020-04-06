@@ -1,3 +1,4 @@
+import io
 import time
 import sys
 import os
@@ -5,7 +6,6 @@ import tempfile
 import tornado
 
 from datetime import datetime
-from circus.py3compat import StringIO
 
 from circus.client import make_message
 from circus.tests.support import TestCircus, async_poll_for, truncate_file
@@ -181,7 +181,7 @@ class TestFancyStdoutStream(TestCase):
         stream = FancyStdoutStream(*args, **kw)
 
         # patch some details that will be used
-        stream.out = StringIO()
+        stream.out = io.StringIO()
         stream.now = lambda: now
 
         return stream
@@ -261,7 +261,7 @@ class TestFileStream(TestCase):
 
         # patch some details that will be used
         stream._file.close()
-        stream._file = StringIO()
+        stream._file = io.StringIO()
         stream._open = lambda: stream._file
         stream.now = lambda: now
 

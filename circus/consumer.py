@@ -1,8 +1,7 @@
 import errno
 import zmq
 
-from circus.util import DEFAULT_ENDPOINT_SUB, get_connection
-from circus.py3compat import b
+from circus.util import DEFAULT_ENDPOINT_SUB, get_connection, to_bytes
 
 
 class CircusConsumer(object):
@@ -15,7 +14,7 @@ class CircusConsumer(object):
         self.pubsub_socket = self.context.socket(zmq.SUB)
         get_connection(self.pubsub_socket, self.endpoint, ssh_server)
         for topic in self.topics:
-            self.pubsub_socket.setsockopt(zmq.SUBSCRIBE, b(topic))
+            self.pubsub_socket.setsockopt(zmq.SUBSCRIBE, to_bytes(topic))
         self._init_poller()
         self.timeout = timeout
 

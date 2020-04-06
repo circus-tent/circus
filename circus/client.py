@@ -1,5 +1,3 @@
-
-# -*- coding: utf-8 -
 import errno
 import uuid
 
@@ -9,8 +7,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 import tornado
 
 from circus.exc import CallError
-from circus.py3compat import string_types, b
-from circus.util import DEFAULT_ENDPOINT_DEALER, get_connection
+from circus.util import DEFAULT_ENDPOINT_DEALER, get_connection, to_bytes
 
 
 def make_message(command, **props):
@@ -31,7 +28,7 @@ class AsyncCircusClient(object):
                  timeout=5.0, ssh_server=None, ssh_keyfile=None):
         self._init_context(context)
         self.endpoint = endpoint
-        self._id = b(uuid.uuid4().hex)
+        self._id = to_bytes(uuid.uuid4().hex)
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)
@@ -57,7 +54,7 @@ class AsyncCircusClient(object):
 
     @tornado.gen.coroutine
     def call(self, cmd):
-        if isinstance(cmd, string_types):
+        if isinstance(cmd, str):
             raise DeprecationWarning('call() takes a mapping')
 
         call_id = uuid.uuid4().hex
@@ -90,7 +87,7 @@ class CircusClient(object):
                  timeout=5.0, ssh_server=None, ssh_keyfile=None):
         self._init_context(context)
         self.endpoint = endpoint
-        self._id = b(uuid.uuid4().hex)
+        self._id = to_bytes(uuid.uuid4().hex)
         self.socket = self.context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self._id)
         self.socket.setsockopt(zmq.LINGER, 0)
@@ -116,7 +113,7 @@ class CircusClient(object):
         return self.call(make_message(command, **props))
 
     def call(self, cmd):
-        if isinstance(cmd, string_types):
+        if isinstance(cmd, str):
             raise DeprecationWarning('call() takes a mapping')
 
         call_id = uuid.uuid4().hex

@@ -6,10 +6,7 @@ from tempfile import mkstemp
 from time import time
 import zmq.utils.jsonapi as json
 import mock
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse  # NOQA
+from urllib.parse import urlparse
 
 from circus.arbiter import Arbiter
 from circus.client import AsyncCircusClient
@@ -19,11 +16,10 @@ from circus.tests.support import (TestCircus, async_poll_for, truncate_file,
                                   EasyTestSuite, skipIf, get_ioloop, SLEEP,
                                   PYTHON)
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_MULTICAST,
-                         DEFAULT_ENDPOINT_SUB)
+                         DEFAULT_ENDPOINT_SUB, to_str, IS_WINDOWS)
 from circus.tests.support import (MockWatcher, has_circusweb,
                                   poll_for_callable, get_available_port)
 from circus import watcher as watcher_mod
-from circus.py3compat import s
 
 
 _GENERIC = os.path.join(os.path.dirname(__file__), 'generic.py')
@@ -39,7 +35,7 @@ class Plugin(CircusPlugin):
 
     def handle_recv(self, data):
         topic, msg = data
-        topic_parts = s(topic).split(".")
+        topic_parts = to_str(topic).split(".")
         watcher = topic_parts[1]
         action = topic_parts[2]
         with open(self.config['file'], 'a+') as f:
@@ -490,6 +486,7 @@ class TestTrainer(TestCircus):
         self.assertEqual(resp.get('status'), "active")
         yield self.stop_arbiter()
 
+    @skipIf(IS_WINDOWS, "Streams not supported on Windows")
     @tornado.testing.gen_test
     def test_plugins(self):
         fd, datafile = mkstemp()

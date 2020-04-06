@@ -9,8 +9,8 @@ from tornado.gen import coroutine, Return
 from circus.circusctl import USAGE, VERSION, CircusCtl
 from circus.tests.support import (TestCircus, async_poll_for, EasyTestSuite,
                                   skipIf, DEBUG, PYTHON, SLEEP)
-from circus.util import tornado_sleep, DEFAULT_ENDPOINT_DEALER
-from circus.py3compat import b, s
+from circus.util import (tornado_sleep, DEFAULT_ENDPOINT_DEALER, to_str,
+                         to_bytes)
 
 
 def run_ctl(args, queue=None, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
@@ -22,9 +22,9 @@ def run_ctl(args, queue=None, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
                             stdin=subprocess.PIPE if stdin else None,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
-    stdout, stderr = proc.communicate(b(stdin) if stdin else None)
-    stdout = s(stdout)
-    stderr = s(stderr)
+    stdout, stderr = proc.communicate(to_bytes(stdin) if stdin else None)
+    stdout = to_str(stdout)
+    stderr = to_str(stderr)
     if queue:
         queue.put(stderr)
         queue.put(stdout)

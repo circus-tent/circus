@@ -8,8 +8,7 @@ from circus.tests.support import TestCircus, TimeoutException
 from circus.tests.support import skipIf, IS_WINDOWS
 from circus.client import AsyncCircusClient
 from circus.stream import QueueStream, Empty
-from circus.util import tornado_sleep
-from circus.py3compat import s
+from circus.util import tornado_sleep, to_str
 
 
 def send(msg):
@@ -64,7 +63,7 @@ class StreamReader(object):
         while time.time() - start < timeout:
             try:
                 msg = self._stream.get_nowait()
-                lines = [l for l in s(msg['data']).split('\n') if l]
+                lines = [l for l in to_str(msg['data']).split('\n') if l]
                 self._buffer.extend(lines)
                 raise tornado.gen.Return(self._buffer.pop(0))
             except Empty:

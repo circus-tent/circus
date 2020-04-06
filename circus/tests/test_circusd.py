@@ -1,7 +1,6 @@
 import sys
 import os
 import tempfile
-import six
 from copy import copy
 
 from circus.circusd import get_maxfd, daemonize, main
@@ -84,7 +83,7 @@ class TestCircusd(TestCase):
         # daemonize() to work
         self.assertRaises(ValueError, daemonize)
 
-        for module in sys.modules.keys():
+        for module in list(sys.modules):
             if module.startswith('gevent'):
                 del sys.modules[module]
 
@@ -94,7 +93,7 @@ class TestCircusd(TestCase):
 
     def test_maxfd(self):
         max = get_maxfd()
-        self.assertTrue(isinstance(max, six.integer_types))
+        self.assertTrue(isinstance(max, int))
 
     @skipIf(has_gevent(), "Gevent is loaded")
     @skipIf(IS_WINDOWS, "Daemonizing not supported on Windows")

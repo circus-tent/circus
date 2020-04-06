@@ -1,8 +1,8 @@
 import zmq
 import zmq.utils.jsonapi as json
-from circus.py3compat import b
 
 from circus import logger
+from circus.util import to_bytes
 
 
 class StatsPublisher(object):
@@ -22,7 +22,7 @@ class StatsPublisher(object):
 
             stat = json.dumps(stat)
             logger.debug('Sending %s' % stat)
-            self.socket.send_multipart([b(topic), stat])
+            self.socket.send_multipart([to_bytes(topic), stat])
 
         except zmq.ZMQError:
             if self.socket.closed:

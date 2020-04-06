@@ -12,11 +12,7 @@ import multiprocessing
 import socket
 import sysconfig
 
-try:
-    from unittest import skip, skipIf, TestCase, TestSuite, findTestCases
-except ImportError:
-    from unittest2 import skip, skipIf, TestCase, TestSuite  # NOQA
-    from unittest2 import findTestCases  # NOQA
+from unittest import skip, skipIf, TestCase, TestSuite, findTestCases  # noqa: F401
 
 from tornado.testing import AsyncTestCase
 import mock

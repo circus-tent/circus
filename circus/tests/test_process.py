@@ -1,3 +1,4 @@
+import io
 import os
 import sys
 import time
@@ -5,8 +6,6 @@ import time
 from circus.process import Process
 from circus.tests.support import (TestCircus, skipIf, EasyTestSuite, DEBUG,
                                   poll_for, IS_WINDOWS, PYTHON, SLEEP)
-import circus.py3compat
-from circus.py3compat import StringIO, PY2
 
 
 RLIMIT = """\
@@ -44,10 +43,7 @@ USE_FDS = IS_WINDOWS
 
 
 def _nose_no_s():
-    if PY2:
-        return not hasattr(sys.stdout, 'fileno')
-    else:
-        return isinstance(sys.stdout, StringIO)
+    return isinstance(sys.stdout, io.StringIO)
 
 
 class TestProcess(TestCircus):
@@ -95,9 +91,9 @@ class TestProcess(TestCircus):
                 output[limit] = value
 
         def srt2ints(val):
-            return [circus.py3compat.long(key) for key in val[1:-1].split(',')]
+            return [int(key) for key in val[1:-1].split(',')]
 
-        wanted = [circus.py3compat.long(20), circus.py3compat.long(20)]
+        wanted = [int(20), int(20)]
 
         self.assertEqual(srt2ints(output['NOFILE']), wanted)
         self.assertEqual(srt2ints(output['NPROC']), wanted)

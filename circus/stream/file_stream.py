@@ -6,7 +6,7 @@ import time as time_
 import re
 from stat import ST_DEV, ST_INO, ST_MTIME
 from circus import logger
-from circus.py3compat import s, PY2
+from circus.util import to_str
 
 
 class _FileStreamBase(object):
@@ -37,7 +37,7 @@ class _FileStreamBase(object):
 
     def write_data(self, data):
         # data to write on file
-        file_data = s(data['data'])
+        file_data = to_str(data['data'])
 
         # If we want to prefix the stream with the current datetime
         if self._time_format is not None:
@@ -55,13 +55,9 @@ class _FileStreamBase(object):
         try:
             self._file.write(file_data)
         except Exception:
-            # we can strip the string down on Py3 but not on Py2
-            if not PY2:
-                file_data = file_data.encode('latin-1', errors='replace')
-                file_data = file_data.decode('latin-1')
-                self._file.write(file_data)
-            else:
-                raise
+            file_data = file_data.encode('latin-1', errors='replace')
+            file_data = file_data.decode('latin-1')
+            self._file.write(file_data)
 
         self._file.flush()
 

@@ -1,4 +1,5 @@
 import glob
+import operator
 import os
 import signal
 import warnings
@@ -8,10 +9,7 @@ try:
 except ImportError:
     resource = None     # NOQA
 
-import six
-
 from circus import logger
-from circus.py3compat import sort_by_field
 from circus.util import (DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB,
                          DEFAULT_ENDPOINT_MULTICAST, DEFAULT_ENDPOINT_STATS,
                          StrictConfigParser, replace_gnu_args, to_signum,
@@ -281,9 +279,10 @@ def get_config(config_file):
             watchers.append(watcher)
 
     # making sure we return consistent lists
-    sort_by_field(watchers)
-    sort_by_field(plugins)
-    sort_by_field(sockets)
+    name = operator.itemgetter('name')
+    watchers.sort(key=name)
+    plugins.sort(key=name)
+    sockets.sort(key=name)
 
     # Second pass to make sure env sections apply to all watchers.
 
@@ -294,7 +293,7 @@ def get_config(config_file):
             target[name] = value
 
     def _expand_vars(target, key, env):
-        if isinstance(target[key], six.string_types):
+        if isinstance(target[key], str):
             target[key] = replace_gnu_args(target[key], env=env)
         elif isinstance(target[key], dict):
             for k in target[key].keys():

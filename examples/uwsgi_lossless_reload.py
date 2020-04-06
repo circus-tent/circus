@@ -28,7 +28,6 @@ import socket
 from json import loads
 import signal
 from circus import logger
-from circus.py3compat import PY2
 import re
 
 worker_states = {
@@ -54,8 +53,7 @@ def get_uwsgi_stats(name, wid, base_port):
             "Error: No stats seem available for WID %d of %s", wid, name)
         return
     # recent versions of uWSGI had some garbage in the JSON so strip it out
-    if not PY2:
-        data = data.decode('latin', 'replace')
+    data = data.decode('latin', 'replace')
     data = NON_JSON_CHARACTERS.sub('', data)
     return loads(data)
 
