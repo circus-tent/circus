@@ -4,7 +4,7 @@ Changelog history
 unreleased
 ----------
 
-- Fix mem_info readings to be more reliable - #1127
+- Fix mem_info readings to be more reliable - #1128
 - Drop support for Python 2.7 & 3.4 - #1126
 - Speedup reloadconfig for large number of sockets - #1121
 - Do not allow adding watchers with the same lowercase names - #1117
