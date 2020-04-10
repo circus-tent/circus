@@ -4,10 +4,12 @@ Changelog history
 unreleased
 ----------
 
-- Speedup reloadconfig for large number of sockets - #834
-- Do not allow adding watchers with the same lowercase names - #936
-- Do not delete pid file during restart - #1080
-- Fix graceful_timeout watcher config option type - #1088
+- Fix mem_info readings to be more reliable - #1127
+- Drop support for Python 2.7 & 3.4 - #1126
+- Speedup reloadconfig for large number of sockets - #1121
+- Do not allow adding watchers with the same lowercase names - #1117
+- Do not delete pid file during restart - #1116
+- Fix graceful_timeout watcher config option type - #1115
 
 0.16.1 2019-12-27
 -----------------
