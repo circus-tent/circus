@@ -11,6 +11,7 @@ import functools
 import multiprocessing
 import socket
 import sysconfig
+import concurrent
 
 from unittest import skip, skipIf, TestCase, TestSuite, findTestCases  # noqa: F401
 
@@ -472,8 +473,7 @@ class FakeProcess(object):
     def stop(self):
         pass
 
-
-class MagicMockFuture(mock.MagicMock, tornado.concurrent.Future):
+class MagicMockFuture(mock.MagicMock, concurrent.futures.Future):
 
     def cancel(self):
         return False
