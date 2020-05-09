@@ -511,7 +511,8 @@ class TestTrainer(TestCircus):
         res = yield cli.send_message('list', name='test')
         self.assertEqual(len(res.get('pids')), 1)
 
-        incr_processes(cli)
+        # XXX: NOT SURE, yield make procedure sync
+        yield incr_processes(cli)
         res = yield cli.send_message('list', name='test')
         self.assertEqual(len(res.get('pids')), 2)
         # wait for the plugin to receive the signal
@@ -519,7 +520,7 @@ class TestTrainer(TestCircus):
         self.assertTrue(res)
         truncate_file(datafile)
 
-        incr_processes(cli)
+        yield incr_processes(cli)
         res = yield cli.send_message('list', name='test')
         self.assertEqual(len(res.get('pids')), 3)
 
@@ -595,8 +596,7 @@ class TestTrainer(TestCircus):
         @tornado.gen.coroutine
         def _sleep(duration):
             called.append(duration)
-            loop = get_ioloop()
-            yield tornado.gen.Task(loop.add_timeout, time() + duration)
+            yield tornado.gen.sleep(duration)
 
         watcher_mod.tornado_sleep = _sleep
 

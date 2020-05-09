@@ -26,7 +26,6 @@ except ImportError:
     fcntl = None
     grp = None
     pwd = None
-from tornado.ioloop import IOLoop
 from tornado import gen
 from tornado import concurrent
 
@@ -1048,7 +1047,7 @@ def tornado_sleep(duration):
     To use with a gen.coroutines decorated function
     Thanks to http://stackoverflow.com/a/11135204/433050
     """
-    return gen.Task(IOLoop.instance().add_timeout, time.time() + duration)
+    return gen.sleep(duration)
 
 
 class TransformableFuture(concurrent.Future):
