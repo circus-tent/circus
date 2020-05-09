@@ -633,6 +633,21 @@ class TestArbiter(TestCircus):
 
         self.assertEqual(callee.call_count, 1)
 
+    def test_start_with_callback_delay(self):
+        controller = "tcp://127.0.0.1:%d" % get_available_port()
+        sub = "tcp://127.0.0.1:%d" % get_available_port()
+        arbiter = Arbiter([], controller, sub, check_delay=1)
+
+        callee = mock.MagicMock()
+
+        def callback(*args):
+            callee()
+            arbiter.stop()
+
+        arbiter.start(cb=callback)
+
+        self.assertEqual(callee.call_count, 1)
+
     @tornado.testing.gen_test
     def test_start_with_callback_and_given_loop(self):
         controller = "tcp://127.0.0.1:%d" % get_available_port()

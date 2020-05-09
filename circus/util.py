@@ -1032,7 +1032,7 @@ def synchronized(name):
             finally:
                 if isinstance(resp, concurrent.Future):
                     cb = functools.partial(_synchronized_cb, arbiter)
-                    resp.add_done_callback(cb)
+                    concurrent.future_add_done_callback(resp, cb)
                 else:
                     if arbiter is not None:
                         arbiter._exclusive_running_command = None
