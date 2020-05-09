@@ -36,6 +36,21 @@ setup(name='circus',
           "License :: OSI Approved :: Apache Software License"
       ],
       install_requires=install_requires,
+      extras_require={
+        'test': [
+            'nose',
+            'nose-cov',
+            'coverage',
+            'mock',
+            'circus-web',
+            'gevent',
+            'papa',
+            'PyYAML',
+            'tornado>=3.0,<5.0',
+            'pyzmq>=17.0',
+            'flake8==2.1.0',
+        ],
+      },
       test_suite='circus.tests',
       entry_points="""
       [console_scripts]
