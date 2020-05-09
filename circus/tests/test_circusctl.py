@@ -1,6 +1,6 @@
 import subprocess
 import shlex
-from mock import patch
+from unittest.mock import patch
 from multiprocessing import Process, Queue
 
 from tornado.testing import gen_test

@@ -13,7 +13,7 @@ except ImportError:
 
 import psutil
 from psutil import Popen
-import mock
+from unittest import mock
 
 from circus.tests.support import (TestCase, EasyTestSuite, skipIf,
                                   IS_WINDOWS, SLEEP)

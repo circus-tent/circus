@@ -5,7 +5,7 @@ import tornado
 from tempfile import mkstemp
 from time import time
 import zmq.utils.jsonapi as json
-import mock
+from unittest import mock
 from urllib.parse import urlparse
 
 from circus.arbiter import Arbiter

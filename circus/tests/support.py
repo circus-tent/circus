@@ -15,7 +15,7 @@ import sysconfig
 from unittest import skip, skipIf, TestCase, TestSuite, findTestCases  # noqa: F401
 
 from tornado.testing import AsyncTestCase
-import mock
+from unittest import mock
 import tornado
 
 from circus import get_arbiter

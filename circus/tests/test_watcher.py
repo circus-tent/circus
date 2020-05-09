@@ -16,7 +16,7 @@ except ImportError:
         captured_output = None  # NOQA
 
 import tornado
-import mock
+from unittest import mock
 
 from circus import logger
 from circus.process import RUNNING, UNEXISTING

@@ -5,7 +5,7 @@ try:
     import IN
 except ImportError:
     pass
-import mock
+from unittest import mock
 import fcntl
 
 from circus.tests.support import TestCase, skipIf, EasyTestSuite, IS_WINDOWS

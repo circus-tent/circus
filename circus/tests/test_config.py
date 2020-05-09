@@ -1,6 +1,6 @@
 import os
 import signal
-from mock import patch
+from unittest.mock import patch
 
 from circus import logger
 from circus.arbiter import Arbiter

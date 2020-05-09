@@ -1,7 +1,7 @@
 import os
 import tempfile
 
-import mock
+from unittest import mock
 
 from circus.tests.support import TestCircus, EasyTestSuite
 from circus.stats.streamer import StatsStreamer
