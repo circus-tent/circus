@@ -79,8 +79,7 @@ class WatchDog(CircusPlugin):
         - create the listening UDP socket
         """
         self.period = ioloop.PeriodicCallback(self.look_after,
-                                              self.loop_rate * 1000,
-                                              self.loop)
+                                              self.loop_rate * 1000)
         self.period.start()
         self._bind_socket()
 

@@ -58,6 +58,7 @@ class CircusPlugin(object):
 
     @debuglog
     def start(self):
+        self.loop.make_current()
         if not self.active:
             raise ValueError('Will not start an inactive plugin')
         self.handle_init()

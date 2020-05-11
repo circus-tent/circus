@@ -48,8 +48,7 @@ class CommandReloader(CircusPlugin):
 
     def handle_init(self):
         self.period = ioloop.PeriodicCallback(self.look_after,
-                                              self.loop_rate * 1000,
-                                              self.loop)
+                                              self.loop_rate * 1000)
         self.period.start()
 
     def handle_stop(self):

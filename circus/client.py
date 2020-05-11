@@ -36,7 +36,7 @@ class AsyncCircusClient(object):
         get_connection(self.socket, endpoint, ssh_server, ssh_keyfile)
         self._timeout = timeout
         self.timeout = timeout * 1000
-        self.stream = ZMQStream(self.socket, tornado.ioloop.IOLoop.instance())
+        self.stream = ZMQStream(self.socket, tornado.ioloop.IOLoop.current())
 
     def _init_context(self, context):
         self.context = context or zmq.Context.instance()

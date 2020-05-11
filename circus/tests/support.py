@@ -51,7 +51,7 @@ SLEEP = PYTHON + " -c 'import time;time.sleep(%d)'"
 
 def get_ioloop():
     from tornado import ioloop
-    return ioloop.IOLoop.instance()
+    return ioloop.IOLoop.current()
 
 
 def get_available_port():
