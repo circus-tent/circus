@@ -473,6 +473,7 @@ class FakeProcess(object):
     def stop(self):
         pass
 
+
 class MagicMockFuture(mock.MagicMock, concurrent.futures.Future):
 
     def cancel(self):

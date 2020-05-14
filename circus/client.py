@@ -67,6 +67,7 @@ class AsyncCircusClient(object):
 
         try:
             future = concurrent.Future()
+
             def cb(msg, status):
                 future.set_result(msg)
             self.stream.send(cmd, callback=cb)

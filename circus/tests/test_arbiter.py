@@ -500,6 +500,7 @@ class TestTrainer(TestCircus):
                                  loop=get_ioloop())
 
         def incr_processes(cli):
+            # return a coroutine if cli is Async
             return cli.send_message('incr', name='test')
 
         # wait for the plugin to be started
@@ -511,7 +512,6 @@ class TestTrainer(TestCircus):
         res = yield cli.send_message('list', name='test')
         self.assertEqual(len(res.get('pids')), 1)
 
-        # XXX: NOT SURE, yield make procedure sync
         yield incr_processes(cli)
         res = yield cli.send_message('list', name='test')
         self.assertEqual(len(res.get('pids')), 2)
