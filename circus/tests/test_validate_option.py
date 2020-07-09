@@ -1,5 +1,5 @@
 from circus.tests.support import TestCase, EasyTestSuite, IS_WINDOWS
-from mock import patch
+from unittest.mock import patch
 
 from circus.commands.util import validate_option
 from circus.exc import MessageError

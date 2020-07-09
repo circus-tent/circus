@@ -109,7 +109,7 @@ class Controller(object):
             # so with no period callback to manage_watchers
             # is probably "unit tests only"
             self.caller = ioloop.PeriodicCallback(self.manage_watchers,
-                                                  self.check_delay, self.loop)
+                                                  self.check_delay)
             self.caller.start()
         self.started = True
 

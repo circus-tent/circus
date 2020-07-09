@@ -16,7 +16,7 @@ except ImportError:
         captured_output = None  # NOQA
 
 import tornado
-import mock
+from unittest import mock
 
 from circus import logger
 from circus.process import RUNNING, UNEXISTING
@@ -317,7 +317,7 @@ class SomeWatcher(object):
         self.watcher = None
         self.kw = kw
         if loop is None:
-            self.loop = tornado.ioloop.IOLoop.instance()
+            self.loop = tornado.ioloop.IOLoop.current()
         else:
             self.loop = loop
 

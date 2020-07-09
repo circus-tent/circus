@@ -5,7 +5,7 @@ import tornado
 from tempfile import mkstemp
 from time import time
 import zmq.utils.jsonapi as json
-import mock
+from unittest import mock
 from urllib.parse import urlparse
 
 from circus.arbiter import Arbiter
@@ -500,6 +500,7 @@ class TestTrainer(TestCircus):
                                  loop=get_ioloop())
 
         def incr_processes(cli):
+            # return a coroutine if cli is Async
             return cli.send_message('incr', name='test')
 
         # wait for the plugin to be started
@@ -511,7 +512,7 @@ class TestTrainer(TestCircus):
         res = yield cli.send_message('list', name='test')
         self.assertEqual(len(res.get('pids')), 1)
 
-        incr_processes(cli)
+        yield incr_processes(cli)
         res = yield cli.send_message('list', name='test')
         self.assertEqual(len(res.get('pids')), 2)
         # wait for the plugin to receive the signal
@@ -519,7 +520,7 @@ class TestTrainer(TestCircus):
         self.assertTrue(res)
         truncate_file(datafile)
 
-        incr_processes(cli)
+        yield incr_processes(cli)
         res = yield cli.send_message('list', name='test')
         self.assertEqual(len(res.get('pids')), 3)
 
@@ -595,8 +596,7 @@ class TestTrainer(TestCircus):
         @tornado.gen.coroutine
         def _sleep(duration):
             called.append(duration)
-            loop = get_ioloop()
-            yield tornado.gen.Task(loop.add_timeout, time() + duration)
+            yield tornado.gen.sleep(duration)
 
         watcher_mod.tornado_sleep = _sleep
 
@@ -622,6 +622,21 @@ class TestArbiter(TestCircus):
         controller = "tcp://127.0.0.1:%d" % get_available_port()
         sub = "tcp://127.0.0.1:%d" % get_available_port()
         arbiter = Arbiter([], controller, sub, check_delay=-1)
+
+        callee = mock.MagicMock()
+
+        def callback(*args):
+            callee()
+            arbiter.stop()
+
+        arbiter.start(cb=callback)
+
+        self.assertEqual(callee.call_count, 1)
+
+    def test_start_with_callback_delay(self):
+        controller = "tcp://127.0.0.1:%d" % get_available_port()
+        sub = "tcp://127.0.0.1:%d" % get_available_port()
+        arbiter = Arbiter([], controller, sub, check_delay=1)
 
         callee = mock.MagicMock()
 

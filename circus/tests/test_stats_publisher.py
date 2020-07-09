@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 import zmq
 import zmq.utils.jsonapi as json

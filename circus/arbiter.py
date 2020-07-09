@@ -242,7 +242,7 @@ class Arbiter(object):
     def _init_context(self, context):
         self.context = context or zmq.Context.instance()
         if self.loop is None:
-            self.loop = ioloop.IOLoop.instance()
+            self.loop = ioloop.IOLoop.current()
         self.ctrl = Controller(self.endpoint, self.multicast_endpoint,
                                self.context, self.loop, self, self.check_delay,
                                self.endpoint_owner)

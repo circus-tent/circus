@@ -42,7 +42,7 @@ class Redirector(object):
         self._active = {}
         self.redirect = {'stdout': stdout_redirect, 'stderr': stderr_redirect}
         self.buffer = buffer
-        self.loop = loop or ioloop.IOLoop.instance()
+        self.loop = loop or ioloop.IOLoop.current()
 
     def _start_one(self, fd, stream_name, process, pipe):
         if fd not in self._active:

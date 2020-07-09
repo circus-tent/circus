@@ -1,4 +1,4 @@
-from mock import patch
+from unittest.mock import patch
 
 from circus.plugins.command_reloader import CommandReloader
 from circus.tests.support import TestCircus, EasyTestSuite

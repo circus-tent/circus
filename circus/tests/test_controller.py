@@ -4,7 +4,7 @@ from circus.util import DEFAULT_ENDPOINT_MULTICAST
 from circus import logger
 import circus.controller
 
-import mock
+from unittest import mock
 
 
 class TestController(TestCase):

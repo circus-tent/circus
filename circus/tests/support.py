@@ -11,11 +11,12 @@ import functools
 import multiprocessing
 import socket
 import sysconfig
+import concurrent
 
 from unittest import skip, skipIf, TestCase, TestSuite, findTestCases  # noqa: F401
 
 from tornado.testing import AsyncTestCase
-import mock
+from unittest import mock
 import tornado
 
 from circus import get_arbiter
@@ -50,7 +51,7 @@ SLEEP = PYTHON + " -c 'import time;time.sleep(%d)'"
 
 def get_ioloop():
     from tornado import ioloop
-    return ioloop.IOLoop.instance()
+    return ioloop.IOLoop.current()
 
 
 def get_available_port():
@@ -473,7 +474,7 @@ class FakeProcess(object):
         pass
 
 
-class MagicMockFuture(mock.MagicMock, tornado.concurrent.Future):
+class MagicMockFuture(mock.MagicMock, concurrent.futures.Future):
 
     def cancel(self):
         return False
