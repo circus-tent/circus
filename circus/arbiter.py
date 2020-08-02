@@ -571,8 +571,18 @@ class Arbiter(object):
 
     @synchronized("arbiter_stop")
     @gen.coroutine
-    def stop(self):
-        yield self.__stop(True)
+    def stop(self, for_shutdown=True):
+        logger.info('Arbiter exiting')
+        self._stopping = True
+        yield self._stop_watchers(close_output_streams=True,
+                                  for_shutdown=for_shutdown)
+        if self._provided_loop:
+            cb = self.stop_controller_and_close_sockets
+            self.loop.add_callback(cb)
+        else:
+            # stop_controller_and_close_sockets will be
+            # called in the end of start() method
+            self.loop.add_callback(self.loop.stop)
 
     @gen.coroutine
     def _emergency_stop(self):
@@ -760,8 +770,9 @@ class Arbiter(object):
             watchers = self.iter_watchers(reverse=False)
         else:
             watchers = watcher_iter_func(reverse=False)
-        yield [w._stop(close_output_streams, for_shutdown)
-               for w in watchers]
+        futures = [w._stop(close_output_streams, for_shutdown)
+                   for w in watchers]
+        yield gen.multi(futures)
 
     @synchronized("arbiter_stop_watchers")
     @gen.coroutine
@@ -780,8 +791,22 @@ class Arbiter(object):
     @synchronized("arbiter_restart")
     @gen.coroutine
     def restart(self, inside_circusd=False, watcher_iter_func=None):
-        yield self._restart(inside_circusd=inside_circusd,
-                            watcher_iter_func=watcher_iter_func)
+        if inside_circusd:
+            self._restarting = True
+            logger.info('Arbiter exiting')
+            self._stopping = True
+            yield self._stop_watchers(close_output_streams=True,
+                                      for_shutdown=False)
+            if self._provided_loop:
+                cb = self.stop_controller_and_close_sockets
+                self.loop.add_callback(cb)
+            else:
+                # stop_controller_and_close_sockets will be
+                # called in the end of start() method
+                self.loop.add_callback(self.loop.stop)
+        else:
+            yield self._stop_watchers(watcher_iter_func=watcher_iter_func)
+            yield self._start_watchers(watcher_iter_func=watcher_iter_func)
 
     @property
     def endpoint_owner_mode(self):
