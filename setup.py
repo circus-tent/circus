@@ -10,7 +10,7 @@ install_requires = [
     'psutil',
     'pyzmq>=17.0',
     'tornado>=5.0.2',
-    'windows-curses>=2.10;platform_system=="Windows"',
+    'windows-curses>=2.1.0;platform_system=="Windows"',
 ]
 
 try:
