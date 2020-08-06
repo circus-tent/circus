@@ -1,0 +1,74 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+
+  ubuntu:
+    runs-on: ubuntu-18.04
+    timeout-minutes: 5
+
+    strategy:
+      matrix:
+        python-version: [3.5, 3.6, 3.7, 3.8]
+        include:
+          - python-version: 3.5
+            tox-env: py35
+          - python-version: 3.6
+            tox-env: py36
+          - python-version: 3.7
+            tox-env: py37
+          - python-version: 3.8
+            tox-env: py38
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install system dependencies
+      run: |
+        sudo rm -f /etc/apt/sources.list.d/dotnetdev.list /etc/apt/sources.list.d/microsoft-prod.list
+        sudo apt update
+        sudo apt install libev-dev libevent-dev
+    - name: Install test dependencies
+      run: |
+        pip install tox coveralls
+    - name: Run test suite
+      run: tox -v -e $TOX_ENV
+      env:
+        TOX_ENV: ${{ matrix.tox-env }}
+
+
+  multi-os:
+    # Run tests for one python version on different operating systems
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+
+    strategy:
+      matrix:
+        os: ['macos-10.15', 'windows-2019']
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install test dependencies
+      run: |
+        pip install tox coveralls
+
+    - name: Run test suite
+      shell: bash -l {0}
+      run: tox -v -e $TOX_ENV
+      # Todo: remove after macos & windows builds pass
+      continue-on-error: true
+      env:
+        TOX_ENV: py38

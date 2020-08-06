@@ -1,4 +1,4 @@
 include CONTRIBUTORS.txt
-include README.rst
+include README.md
 include LICENSE
 include pip-requirements.txt
