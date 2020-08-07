@@ -13,13 +13,12 @@ We're going to supervise a WSGI application.
 Installation
 ------------
 
-Circus is tested on Mac OS X and Linux with the latest Python 2.7,
-3.2 and 3.3.  To run a full Circus, you will also need **libzmq**,
+Circus is tested on Mac OS X and Linux with the latest Python 3.5+. To run a full Circus, you will also need **libzmq**,
 **libevent** & **virtualenv**.
 
 On Debian-based systems::
 
-    $ sudo apt-get install libzmq-dev libevent-dev python-dev python-virtualenv
+    $ sudo apt-get install libzmq3-dev libevent-dev python-dev python-virtualenv
 
 Create a virtualenv and install *circus*, *circus-web* and *chaussette*
 in it ::
