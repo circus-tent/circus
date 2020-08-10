@@ -4,6 +4,7 @@ Changelog history
 unreleased
 ----------
 
+- Change ConfigParser to RawConfigParser to avoid interpolation errors - #1133
 - Drop support for tornado<5 and start using asyncio eventl loop - #1129
 - Fix mem_info readings to be more reliable - #1128
 - Drop support for Python 2.7 & 3.4 - #1126

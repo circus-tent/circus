@@ -30,7 +30,7 @@ from tornado import gen
 from tornado import concurrent
 
 from configparser import (
-    ConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
+    RawConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
 )
 
 from urllib.parse import urlparse
@@ -752,7 +752,7 @@ def configure_logger(logger, level='INFO', output="-", loggerconfig=None,
                             % (shell_escape_arg(loggerconfig),))
 
 
-class StrictConfigParser(ConfigParser):
+class StrictConfigParser(RawConfigParser):
 
     def _read(self, fp, fpname):
         cursect = None                        # None, or a dictionary
