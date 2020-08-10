@@ -181,7 +181,7 @@ class WatchDog(CircusPlugin):
         :return: decoded message
         :rtype: dict or None
         """
-        result = re.match(self.msg_regex, data)
+        result = re.match(self.msg_regex, data.decode())
         if result is not None:
             return result.groupdict()
 
@@ -200,7 +200,7 @@ class WatchDog(CircusPlugin):
                 self.pid_status[heartbeat["pid"]][
                     'last_activity'] = time.time()
             else:
-                logger.warning("received watchdog for a"
+                logger.warning("received watchdog for a "
                                "non monitored process:%s",
                                heartbeat)
         logger.debug("watchdog message: %s", heartbeat)
