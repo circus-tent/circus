@@ -1,5 +1,5 @@
-![Build Status](https://github.com/circus-tent/circus/workflows/ci/badge.svg)](https://github.com/circus-tent/circus/actions)
-[![Coverage Status](https://coveralls.io/repos/github/circus-tent/circus/badge.svg?branch=master)](https://coveralls.io/github/circus-tent/circus?branch=master) 
+![Build Status](https://github.com/circus-tent/circus/workflows/ci/badge.svg)
+![Coverage Status](https://coveralls.io/repos/github/circus-tent/circus/badge.svg?branch=master)
 ![PyPI](https://img.shields.io/pypi/v/circus) 
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/circus)
 # Circus
