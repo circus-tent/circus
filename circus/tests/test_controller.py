@@ -71,5 +71,26 @@ class TestController(TestCase):
             controller._init_multicast_endpoint()
             self.assertTrue(mock_logger_warn.called)
 
+    def test_garbage_message(self):
+        class MockedController(Controller):
+            called = False
+
+            def dispatch(self, job, future=None):
+                self.called = True
+
+            def send_response(self, mid, cid, msg, resp, cast=False):
+                self.called = True
+
+        arbiter = mock.MagicMock()
+        loop = mock.MagicMock()
+        context = mock.sentinel.context
+        controller = MockedController('endpoint', 'multicast_endpoint',
+                                      context, loop, arbiter)
+        controller.handle_message(b'hello')
+        self.assertFalse(controller.called)
+        controller.handle_message([b'383ec229eb5d47f7bdd470dd3d6734a3',
+                                   b'{"command":"add", "foo": "bar"}'])
+        self.assertTrue(controller.called)
+
 
 test_suite = EasyTestSuite(__name__)

@@ -126,7 +126,14 @@ class Controller(object):
         self.sys_hdl.stop()
 
     def handle_message(self, raw_msg):
-        cid, msg = raw_msg
+        try:
+            # Handle garbage messages,
+            # which are not originating from circus
+            cid, msg = raw_msg
+        except (TypeError, ValueError):
+            logger.warning("got unexpected message %s", raw_msg)
+            return
+
         msg = msg.strip()
 
         if not msg:
