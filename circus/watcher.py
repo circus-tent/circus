@@ -782,10 +782,11 @@ class Watcher(object):
         """
         active_processes = self.get_active_processes()
         try:
-            yield [self.kill_process(process,
-                                     stop_signal=stop_signal,
-                                     graceful_timeout=graceful_timeout)
-                   for process in active_processes]
+            futures = [self.kill_process(process,
+                       stop_signal=stop_signal,
+                       graceful_timeout=graceful_timeout)
+                       for process in active_processes]
+            yield gen.multi(futures)
         except OSError as e:
             if e.errno != errno.ESRCH:
                 raise
