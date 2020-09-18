@@ -1,10 +1,10 @@
 Changelog history
 =================
 
-0.18.0 unreleased
+0.17.1 2020-09-18
 -----------------
 
-- Nothing changed yet
+Fix packaging issue.
 
 0.17.0 2020-09-18
 -----------------
