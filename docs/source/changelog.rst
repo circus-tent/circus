@@ -1,11 +1,21 @@
 Changelog history
 =================
 
-unreleased
-----------
+0.18.0 unreleased
+-----------------
 
+- Nothing changed yet
+
+0.17.0 2020-09-18
+-----------------
+This release removes support for Python 2.7 & 3.4, and adds support for
+Tornado 5+.
+
+- Improve resiliency of the Controller - #1142
+- Add CI tests for Mac OS via Github Actions - #1137, #1141
+- Fix encoding issue in the Watchdog plugin - #1136
 - Change ConfigParser to RawConfigParser to avoid interpolation errors - #1133
-- Drop support for tornado<5 and start using asyncio eventl loop - #1129
+- Drop support for tornado<5 and start using asyncio eventl loop - #1129, #1132
 - Fix mem_info readings to be more reliable - #1128
 - Drop support for Python 2.7 & 3.4 - #1126
 - Speedup reloadconfig for large number of sockets - #1121
