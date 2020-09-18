@@ -1,6 +1,11 @@
 Changelog history
 =================
 
+0.18.0 unreleased
+-----------------
+
+- Nothing changed yet
+
 0.17.0 2020-09-18
 -----------------
 This release removes support for Python 2.7 & 3.4, and adds support for
