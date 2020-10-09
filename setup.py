@@ -1,6 +1,7 @@
 import sys
-from setuptools import setup, find_packages
+
 from circus import __version__
+from setuptools import find_packages, setup
 
 if not hasattr(sys, 'version_info') or sys.version_info < (3, 5, 0, 'final'):
     raise SystemExit("Circus requires Python 3.5 or higher.")
@@ -23,6 +24,7 @@ setup(name='circus',
       description=("Circus is a program that will let you run and watch "
                    " multiple processes and sockets."),
       long_description=README,
+      long_description_content_type="text/markdown",
       author="Mozilla Foundation & contributors",
       author_email="services-dev@lists.mozila.org",
       include_package_data=True,
