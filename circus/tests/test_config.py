@@ -45,7 +45,8 @@ _CONF = {
     'issue680': os.path.join(CONFIG_DIR, 'issue680.ini'),
     'virtualenv': os.path.join(CONFIG_DIR, 'virtualenv.ini'),
     'empty_section': os.path.join(CONFIG_DIR, 'empty_section.ini'),
-    'issue1088': os.path.join(CONFIG_DIR, 'issue1088.ini')
+    'issue1088': os.path.join(CONFIG_DIR, 'issue1088.ini'),
+    'issue1119': os.path.join(CONFIG_DIR, 'issue1119.ini')
 }
 
 
@@ -391,6 +392,22 @@ class TestConfig(TestCase):
         self.assertEqual(watcher['graceful_timeout'], 25.5)
         watcher = Watcher.load_from_config(conf['watchers'][0])
         watcher.stop()
+
+    def test_ssue_1119_include(self):
+        # #1119 - add support for include directive in watcher section
+        conf = get_config(_CONF['issue1119'])
+        watchers = conf['watchers']
+        # numprocesses is overriden in issue1119_included.ini
+        self.assertEqual(watchers[0]['numprocesses'], 5)
+        # this is to make sure wid is properly populated
+        self.assertEqual(
+            watchers[0]['stdout_stream']['filename'],
+            '/var/logs/$(circus.wid).log',
+        )
+        # this option is in the included directory
+        self.assertEqual(watchers[0]['stderr_stream']['max_bytes'], '1000001')
+        # this option is in the included sub-directory
+        self.assertEqual(watchers[0]['stderr_stream']['backup_count'], '13')
 
 
 test_suite = EasyTestSuite(__name__)

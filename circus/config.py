@@ -3,6 +3,7 @@ import operator
 import os
 import signal
 import warnings
+
 from fnmatch import fnmatch
 try:
     import resource
@@ -95,19 +96,17 @@ def rlimit_value(val):
 
 
 def read_config(config_path):
-    cfg = DefaultConfigParser()
-    with open(config_path) as f:
-        if hasattr(cfg, 'read_file'):
-            cfg.read_file(f)
-        else:
-            cfg.readfp(f)
 
-    current_dir = os.path.dirname(config_path)
+    def _init_config(config_path_, parser=DefaultConfigParser):
+        config = parser()
+        with open(config_path_) as f:
+            if hasattr(config, 'read_file'):
+                config.read_file(f)
+            else:
+                config.readfp(f)
+        return config
 
-    # load included config files
-    includes = []
-
-    def _scan(filename, includes):
+    def _scan(filename, includes_):
         if os.path.abspath(filename) != filename:
             filename = os.path.join(current_dir, filename)
 
@@ -116,16 +115,39 @@ def read_config(config_path):
             logger.warn('%r does not lead to any config. Make sure '
                         'include paths are relative to the main config '
                         'file' % filename)
-        includes += paths
+        includes_ += paths
 
-    for include_file in cfg.dget('circus', 'include', '').split():
-        _scan(include_file, includes)
+    def _get_includes(config, section_):
+        incl = []
 
-    for include_dir in cfg.dget('circus', 'include_dir', '').split():
-        _scan(os.path.join(include_dir, '*.ini'), includes)
+        for include_file in config.dget(section_, 'include', '').split():
+            _scan(include_file, incl)
+
+        for include_dir in config.dget(section_, 'include_dir', '').split():
+            _scan(os.path.join(include_dir, '*.ini'), incl)
+
+        return incl
+
+    current_dir = os.path.dirname(config_path)
+    cfg = _init_config(config_path)
+
+    # load included config files in circus section
+    includes = _get_includes(cfg, 'circus')
 
     logger.debug('Reading config files: %s' % includes)
-    return cfg, [config_path] + cfg.read(includes)
+    cfg.read(includes)
+
+    # load included config files in watcher sections
+    for section in cfg.sections():
+        if not section.startswith('watcher:'):
+            continue
+        watcher_includes = _get_includes(cfg, section)
+        for include_path in watcher_includes:
+            included_cfg = _init_config(include_path)
+            for name, value in included_cfg.items('included'):
+                cfg.set(section, name, value)
+
+    return cfg
 
 
 def get_config(config_file):
@@ -133,7 +155,7 @@ def get_config(config_file):
         raise IOError("the configuration file %r does not exist\n" %
                       config_file)
 
-    cfg, cfg_files_read = read_config(config_file)
+    cfg = read_config(config_file)
     dget = cfg.dget
     config = {}
 
