@@ -11,7 +11,7 @@ except ImportError:
 import sys
 import errno
 import os
-from subprocess import PIPE
+from subprocess import PIPE, DEVNULL
 import time
 import shlex
 import warnings
@@ -354,9 +354,13 @@ class Process(object):
         extra = {}
         if self.pipe_stdout:
             extra['stdout'] = PIPE
+        else:
+            extra['stdout'] = DEVNULL
 
         if self.pipe_stderr:
             extra['stderr'] = PIPE
+        else:
+            extra['stderr'] = DEVNULL
 
         self._worker = Popen(args, cwd=self.working_dir,
                              shell=self.shell, preexec_fn=preexec_fn,
