@@ -4,6 +4,7 @@ Changelog history
 0.18.0 unreleased
 -----------------
 
+- Fix custom syslog server #1159
 - Nothing changed yet
 
 0.17.1 2020-09-18
