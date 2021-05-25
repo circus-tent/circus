@@ -9,7 +9,7 @@ from circus.watcher import Watcher
 from circus.process import Process
 from circus.sockets import CircusSocket
 from circus.tests.support import TestCase, EasyTestSuite, IS_WINDOWS
-from circus.util import replace_gnu_args
+from circus.util import replace_gnu_args, configure_logger
 
 
 HERE = os.path.join(os.path.dirname(__file__))
@@ -391,6 +391,10 @@ class TestConfig(TestCase):
         self.assertEqual(watcher['graceful_timeout'], 25.5)
         watcher = Watcher.load_from_config(conf['watchers'][0])
         watcher.stop()
+
+    def test_syslog_configuration(self):
+        # this test will fail, if the syslog formatter is configured incorrectly
+        configure_logger(None, output='syslog://localhost:514?test')
 
 
 test_suite = EasyTestSuite(__name__)

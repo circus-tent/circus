@@ -694,10 +694,13 @@ def configure_logger(logger, level='INFO', output="-", loggerconfig=None,
             # URLs are syslog://host[:port]?facility or syslog:///path?facility
             info = urlparse(output)
             facility = 'user'
+
+            # find out the specified facility
             if info.query in logging.handlers.SysLogHandler.facility_names:
                 facility = info.query
+
             if info.netloc:
-                address = (info.netloc, info.port or 514)
+                address = (info.hostname, info.port or 514)
             else:
                 address = info.path
             datefmt = LOG_DATE_SYSLOG_FMT
