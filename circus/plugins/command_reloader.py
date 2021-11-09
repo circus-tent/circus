@@ -2,7 +2,7 @@ import os
 
 from circus.plugins import CircusPlugin
 from circus import logger
-from tornado import ioloop
+from circus.util import AsyncPeriodicCallback
 
 
 class CommandReloader(CircusPlugin):
@@ -47,8 +47,8 @@ class CommandReloader(CircusPlugin):
             }
 
     def handle_init(self):
-        self.period = ioloop.PeriodicCallback(self.look_after,
-                                              self.loop_rate * 1000)
+        self.period = AsyncPeriodicCallback(self.look_after,
+                                            self.loop_rate * 1000)
         self.period.start()
 
     def handle_stop(self):

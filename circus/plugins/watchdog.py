@@ -2,10 +2,11 @@ import re
 import socket
 import time
 
-from tornado import ioloop
+from tornado.ioloop import IOLoop
+
 from circus.plugins import CircusPlugin
 from circus import logger
-from circus import util
+from circus.util import to_signum, AsyncPeriodicCallback
 
 
 class WatchDog(CircusPlugin):
@@ -63,7 +64,7 @@ class WatchDog(CircusPlugin):
         self.watchdog_port = int(config.get("port", 1664))
         self.stop_signal = config.get("watchers_stop_signal")
         if self.stop_signal:
-            self.stop_signal = util.to_signum(self.stop_signal)
+            self.stop_signal = to_signum(self.stop_signal)
         self.graceful_timeout = config.get("watchers_graceful_timeout")
         if self.graceful_timeout:
             self.graceful_timeout = float(self.graceful_timeout)
@@ -78,8 +79,8 @@ class WatchDog(CircusPlugin):
         - set the periodic call back for the process monitoring (at loop_rate)
         - create the listening UDP socket
         """
-        self.period = ioloop.PeriodicCallback(self.look_after,
-                                              self.loop_rate * 1000)
+        self.period = AsyncPeriodicCallback(self.look_after,
+                                            self.loop_rate * 1000)
         self.period.start()
         self._bind_socket()
 
@@ -164,7 +165,7 @@ class WatchDog(CircusPlugin):
             self.sock.settimeout(1)
             self.loop.add_handler(self.sock.fileno(),
                                   self.receive_udp_socket,
-                                  ioloop.IOLoop.READ)
+                                  IOLoop.READ)
             logger.info("Watchdog listening UDP on %s:%s",
                         self.watchdog_ip, self.watchdog_port)
 

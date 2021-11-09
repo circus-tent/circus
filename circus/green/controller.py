@@ -1,7 +1,8 @@
+from circus.util import AsyncPeriodicCallback
 from circus.controller import Controller as _Controller
 from circus.green.sighandler import SysHandler
 
-from zmq.green.eventloop import ioloop, zmqstream
+from zmq.green.eventloop import zmqstream
 
 
 class Controller(_Controller):
@@ -16,6 +17,6 @@ class Controller(_Controller):
     def start(self):
         self.loop.make_current()
         self.initialize()
-        self.caller = ioloop.PeriodicCallback(self.arbiter.manage_watchers,
-                                              self.check_delay)
+        self.caller = AsyncPeriodicCallback(self.arbiter.manage_watchers,
+                                            self.check_delay)
         self.caller.start()
