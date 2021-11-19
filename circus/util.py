@@ -867,10 +867,10 @@ def load_virtualenv(watcher, py_ver=None):
         raise ValueError('copy_env must be True to to use virtualenv')
 
     if not py_ver:
-        py_ver = sys.version.split()[0][:3]
+        py_ver = "%s.%s" % sys.version_info[:2]
 
     # XXX Posix scheme - need to add others
-    sitedir = os.path.join(watcher.virtualenv, 'lib', 'python' + py_ver,
+    sitedir = os.path.join(watcher.virtualenv, 'lib', 'python%s' % py_ver,
                            'site-packages')
 
     if not os.path.exists(sitedir):
