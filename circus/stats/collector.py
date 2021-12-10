@@ -5,14 +5,14 @@ import socket
 
 from circus import util
 from circus import logger
-from tornado import ioloop
+from circus.util import AsyncPeriodicCallback
 
 
-class BaseStatsCollector(ioloop.PeriodicCallback):
+class BaseStatsCollector(AsyncPeriodicCallback):
 
     def __init__(self, streamer, name, callback_time=1., io_loop=None):
-        ioloop.PeriodicCallback.__init__(self, self._callback,
-                                         callback_time * 1000)
+        AsyncPeriodicCallback.__init__(self, self._callback,
+                                       callback_time * 1000)
         self.streamer = streamer
         self.name = name
 
@@ -91,7 +91,7 @@ class WatcherStatsCollector(BaseStatsCollector):
 # RESOLUTION is a value in seconds that will be used
 # to determine the poller timeout of the sockets stats collector
 #
-# The PeriodicCallback calls the poller every LOOP_RES ms, and block
+# The AsyncPeriodicCallback calls the poller every LOOP_RES ms, and block
 # for RESOLUTION seconds unless a read ready event occurs in the
 # socket.
 #
@@ -110,7 +110,7 @@ class SocketStatsCollector(BaseStatsCollector):
                                                    callback_time, io_loop)
         self._rstats = defaultdict(int)
         self.sockets = [sock for sock, address, fd in self.streamer.sockets]
-        self._p = ioloop.PeriodicCallback(self._select, _LOOP_RES)
+        self._p = AsyncPeriodicCallback(self._select, _LOOP_RES)
 
     def start(self):
         self._p.start()

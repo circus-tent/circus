@@ -10,6 +10,10 @@ import time
 import traceback
 import json
 import struct
+from inspect import isawaitable
+
+import tornado
+
 try:
     import yaml
 except ImportError:
@@ -28,6 +32,7 @@ except ImportError:
     pwd = None
 from tornado import gen
 from tornado import concurrent
+from tornado.ioloop import PeriodicCallback
 
 from configparser import (
     RawConfigParser, MissingSectionHeaderError, ParsingError, DEFAULTSECT
@@ -1101,3 +1106,23 @@ def check_future_exception_and_log(future):
                 exc_info = future.exc_info()
                 traceback.print_tb(exc_info[2])
             return exception
+
+
+if tornado.version_info[:2] >= (6, 2):
+    AsyncPeriodicCallback = PeriodicCallback
+else:
+    class AsyncPeriodicCallback(PeriodicCallback):
+
+        @gen.coroutine
+        def _run(self):
+            if not self._running:
+                return
+
+            try:
+                val = self.callback()
+                if val is not None and isawaitable(val):
+                    yield val
+            except Exception:
+                self.io_loop.handle_callback_exception(self.callback)
+            finally:
+                self._schedule_next()

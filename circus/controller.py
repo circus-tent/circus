@@ -15,6 +15,7 @@ from tornado.concurrent import Future
 from circus.util import create_udp_socket
 from circus.util import check_future_exception_and_log
 from circus.util import to_uid
+from circus.util import AsyncPeriodicCallback
 from circus.commands import get_commands, ok, error, errors
 from circus import logger
 from circus.exc import MessageError, ConflictError
@@ -34,7 +35,6 @@ class Controller(object):
         self.check_delay = check_delay * 1000
         self.endpoint_owner = endpoint_owner
         self.started = False
-        self._managing_watchers_future = None
 
         # initialize the sys handler
         self._init_syshandler()
@@ -88,28 +88,14 @@ class Controller(object):
         if self.multicast_endpoint:
             self._init_multicast_endpoint()
 
-    def manage_watchers(self):
-        if self._managing_watchers_future is not None:
-            logger.debug("manage_watchers is already running...")
-            return
-        try:
-            self._managing_watchers_future = self.arbiter.manage_watchers()
-            self.loop.add_future(self._managing_watchers_future,
-                                 self._manage_watchers_cb)
-        except ConflictError:
-            logger.debug("manage_watchers is conflicting with another command")
-
-    def _manage_watchers_cb(self, future):
-        self._managing_watchers_future = None
-
     def start(self):
         self.initialize()
         if self.check_delay > 0:
             # The specific case (check_delay < 0)
             # so with no period callback to manage_watchers
             # is probably "unit tests only"
-            self.caller = ioloop.PeriodicCallback(self.manage_watchers,
-                                                  self.check_delay)
+            self.caller = AsyncPeriodicCallback(self.arbiter.manage_watchers,
+                                                self.check_delay)
             self.caller.start()
         self.started = True
 
@@ -178,7 +164,7 @@ class Controller(object):
             if cid is not None:
                 self.stream.flush()
 
-    def dispatch(self, job, future=None):
+    def dispatch(self, job):
         cid, msg = job
         try:
             json_msg = json.loads(msg)
@@ -219,13 +205,6 @@ class Controller(object):
             return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.MESSAGE_ERROR)
         except ConflictError as e:
-            if self._managing_watchers_future is not None:
-                logger.debug("the command conflicts with running "
-                             "manage_watchers, re-executing it at "
-                             "the end")
-                cb = functools.partial(self.dispatch, job)
-                self.loop.add_future(self._managing_watchers_future, cb)
-                return
             # conflicts between two commands, sending error...
             return self.send_error(mid, cid, msg, str(e), cast=cast,
                                    errno=errors.COMMAND_ERROR)

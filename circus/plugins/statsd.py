@@ -1,9 +1,7 @@
 import socket
 
-from tornado import ioloop
-
 from circus.plugins import CircusPlugin
-from circus.util import human2bytes
+from circus.util import human2bytes, AsyncPeriodicCallback
 
 
 class StatsdClient(object):
@@ -80,8 +78,8 @@ class BaseObserver(StatsdEmitter):
         self.loop_rate = float(config.get("loop_rate", 60))  # in seconds
 
     def handle_init(self):
-        self.period = ioloop.PeriodicCallback(self.look_after,
-                                              self.loop_rate * 1000)
+        self.period = AsyncPeriodicCallback(self.look_after,
+                                            self.loop_rate * 1000)
         self.period.start()
 
     def handle_stop(self):
