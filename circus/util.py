@@ -1108,7 +1108,7 @@ def check_future_exception_and_log(future):
             return exception
 
 
-if tornado.version >= "6.2":
+if tornado.version_info[:2] >= (6, 2):
     AsyncPeriodicCallback = PeriodicCallback
 else:
     class AsyncPeriodicCallback(PeriodicCallback):
