@@ -419,11 +419,21 @@ class Arbiter(object):
         cfg = get_config(config_file)
         watchers = []
         for watcher in cfg.get('watchers', []):
-            watchers.append(Watcher.load_from_config(watcher))
+            try:
+                _watcher = Watcher.load_from_config(watcher)
+            except Exception as e:
+                logger.warning('Failed to create watcher', exc_info=e)
+            else:
+                watchers.append(_watcher)
 
         sockets = []
         for socket_ in cfg.get('sockets', []):
-            sockets.append(CircusSocket.load_from_config(socket_))
+            try:
+                _socket = CircusSocket.load_from_config(socket_)
+            except Exception as e:
+                logger.warning('Failed to create socket', exc_info=e)
+            else:
+                sockets.append(_socket)
 
         httpd = cfg.get('httpd', False)
         if httpd:
