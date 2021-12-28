@@ -248,6 +248,10 @@ class Watcher(object):
             raise ValueError("Cannot have %d processes with a singleton "
                              " watcher" % self.numprocesses)
 
+        if not singleton and self.numprocesses == 0:
+            logger.warning("Non-singleton watcher %s with numprocesses=0 "
+                           "won't start any process", self.name)
+
         if IS_WINDOWS:
             if self.stdout_stream or self.stderr_stream:
                 raise NotImplementedError("Streams are not supported"
