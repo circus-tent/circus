@@ -1099,6 +1099,8 @@ class Watcher(object):
             if self.singleton and val > 1:
                 raise ValueError('Singleton watcher has a single process')
             self.numprocesses = val
+            if int(self.numprocesses) == 0 and not self.singleton:
+                logger.warning('watcher numprocess=0, %s will not start', self.name)
         elif key == "warmup_delay":
             self.warmup_delay = float(val)
         elif key == "working_dir":
