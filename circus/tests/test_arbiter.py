@@ -712,6 +712,14 @@ class TestArbiter(TestCircus):
         arbiter.add_watcher('foo', SLEEP % 5)
         self.assertRaises(AlreadyExist, arbiter.add_watcher, 'Foo', SLEEP % 5)
 
+    @tornado.testing.gen_test
+    def test_ioloop_has_handle_callback_exception(self):
+        controller = "tcp://127.0.0.1:%d" % get_available_port()
+        sub = "tcp://127.0.0.1:%d" % get_available_port()
+        arbiter = Arbiter([], controller, sub, loop=get_ioloop(),
+                          check_delay=-1)
+        self.assertTrue(hasattr(arbiter.loop, 'handle_callback_exception'))
+
 
 @skipIf(not has_circusweb(), 'Tests for circus-web')
 class TestCircusWeb(TestCircus):
