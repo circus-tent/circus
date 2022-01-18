@@ -874,12 +874,20 @@ def load_virtualenv(watcher, py_ver=None):
     if not py_ver:
         py_ver = "%s.%s" % sys.version_info[:2]
 
-    # XXX Posix scheme - need to add others
-    sitedir = os.path.join(watcher.virtualenv, 'lib', 'python%s' % py_ver,
-                           'site-packages')
+    def determine_sitedir():
+        try_dirs = ['python', 'pypy']
+        tried_dirs = []
+        for try_dir in try_dirs:
+            # XXX Posix scheme - need to add others
+            _sitedir = os.path.join(watcher.virtualenv, 'lib', '%s%s' % (try_dir, py_ver),
+                                    'site-packages')
+            tried_dirs.append(_sitedir)
+            if os.path.exists(_sitedir):
+                return _sitedir
 
-    if not os.path.exists(sitedir):
-        raise ValueError("%s does not exist" % sitedir)
+        raise ValueError("%s does not exist" % ','.join(tried_dirs))
+
+    sitedir = determine_sitedir()
 
     bindir = os.path.join(watcher.virtualenv, 'bin')
 

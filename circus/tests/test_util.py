@@ -287,6 +287,7 @@ class TestUtil(TestCase):
         watcher.env = {}
         load_virtualenv(watcher)
         self.assertEqual(site_pkg, watcher.env['PYTHONPATH'])
+        os.removedirs(site_pkg)
 
         # test with a specific python version for the virtualenv site packages
         py_ver = "my_python_version"
@@ -296,6 +297,18 @@ class TestUtil(TestCase):
         watcher.env = {}
         load_virtualenv(watcher, py_ver=py_ver)
         self.assertEqual(site_pkg, watcher.env['PYTHONPATH'])
+        os.removedirs(site_pkg)
+
+        # test with a pypy virtual environment
+        watcher.env = {}
+        py_ver = sys.version.split()[0][:3]
+        site_pkg_pypy = os.path.join(watcher.virtualenv, 'lib',
+                                     'pypy%s' % py_ver, 'site-packages')
+
+        os.makedirs(site_pkg_pypy)
+        load_virtualenv(watcher, py_ver=py_ver)
+        self.assertEqual(site_pkg_pypy, watcher.env['PYTHONPATH'])
+        os.removedirs(site_pkg_pypy)
 
     @mock.patch('circus.util.os.environ', {'PWD': '/path/to/pwd'})
     @mock.patch('circus.util.os.getcwd', lambda: '/path/to/cwd')
