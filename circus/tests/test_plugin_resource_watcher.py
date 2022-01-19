@@ -127,7 +127,7 @@ class TestResourceWatcher(TestCircus):
     def test_resource_watcher_max_cpu(self):
         yield self.start_arbiter(fqn)
         yield async_poll_for(self.test_file, 'START')
-        config = {'loop_rate': 0.1, 'max_cpu': 0.1, 'watcher': 'test'}
+        config = {'loop_rate': 0.1, 'max_cpu': 0.001, 'watcher': 'test'}
         kw = {'endpoint': self.arbiter.endpoint,
               'pubsub_endpoint': self.arbiter.pubsub_endpoint}
 

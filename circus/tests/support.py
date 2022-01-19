@@ -23,7 +23,7 @@ from circus import get_arbiter
 from circus.client import AsyncCircusClient, make_message
 from circus.util import DEFAULT_ENDPOINT_DEALER, DEFAULT_ENDPOINT_SUB
 from circus.util import tornado_sleep, ConflictError
-from circus.util import IS_WINDOWS
+from circus.util import IS_WINDOWS, IS_MACOS
 from circus.watcher import Watcher
 
 DEBUG = sysconfig.get_config_var('Py_DEBUG') == 1

@@ -17,27 +17,34 @@ class TestValidateOption(TestCase):
 
     @patch('warnings.warn')
     def test_stdout_stream(self, warn):
+        key = 'stdout_stream'
         self.assertRaises(
-            MessageError, validate_option, 'stdout_stream', 'something')
-        self.assertRaises(MessageError, validate_option, 'stdout_stream', {})
-        validate_option('stdout_stream', {'class': 'MyClass'})
+            MessageError, validate_option, key, 'something')
+        self.assertRaises(MessageError, validate_option, key, {})
+        validate_option(key, {'class': 'MyClass'})
         validate_option(
-            'stdout_stream', {'class': 'MyClass', 'my_option': '1'})
+            key, {'class': 'MyClass', 'my_option': '1'})
         validate_option(
-            'stdout_stream', {'class': 'MyClass', 'refresh_time': 1})
-        self.assertEqual(warn.call_count, 1)
+            key, {'class': 'MyClass', 'refresh_time': 1})
+
+        msg = "'refresh_time' is deprecated and not useful anymore for %r" % key
+        warn.assert_any_call(msg)
 
     @patch('warnings.warn')
     def test_stderr_stream(self, warn):
+        key = 'stderr_stream'
         self.assertRaises(
-            MessageError, validate_option, 'stderr_stream', 'something')
-        self.assertRaises(MessageError, validate_option, 'stderr_stream', {})
-        validate_option('stderr_stream', {'class': 'MyClass'})
+            MessageError, validate_option, key, 'something')
+        self.assertRaises(MessageError, validate_option, key, {})
+
+        validate_option(key, {'class': 'MyClass'})
         validate_option(
-            'stderr_stream', {'class': 'MyClass', 'my_option': '1'})
+            key, {'class': 'MyClass', 'my_option': '1'})
         validate_option(
-            'stderr_stream', {'class': 'MyClass', 'refresh_time': 1})
-        self.assertEqual(warn.call_count, 1)
+            key, {'class': 'MyClass', 'refresh_time': 1})
+
+        msg = "'refresh_time' is deprecated and not useful anymore for %r" % key
+        warn.assert_any_call(msg)
 
     def test_hooks(self):
         validate_option('hooks', {'before_start': ['all', False]})

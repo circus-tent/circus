@@ -1,5 +1,6 @@
 import os
 import signal
+from unittest import skipIf
 from unittest.mock import patch
 
 from circus import logger
@@ -8,7 +9,7 @@ from circus.config import get_config
 from circus.watcher import Watcher
 from circus.process import Process
 from circus.sockets import CircusSocket
-from circus.tests.support import TestCase, EasyTestSuite, IS_WINDOWS
+from circus.tests.support import TestCase, EasyTestSuite, IS_WINDOWS, IS_MACOS
 from circus.util import replace_gnu_args, configure_logger
 
 
@@ -392,6 +393,7 @@ class TestConfig(TestCase):
         watcher = Watcher.load_from_config(conf['watchers'][0])
         watcher.stop()
 
+    @skipIf(IS_MACOS, "No test for syslog on macOS")
     def test_syslog_configuration(self):
         # this test will fail, if the syslog formatter is configured incorrectly
         configure_logger(None, output='syslog://localhost:514?test')

@@ -2,6 +2,7 @@ import functools
 import logging
 import logging.config
 import os
+import platform
 import re
 import shlex
 import socket
@@ -97,6 +98,7 @@ _SYMBOLS = ('K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 _all_signals = {}
 
 IS_WINDOWS = os.name == 'nt'
+IS_MACOS = platform.uname()[0] == 'Darwin'
 
 
 def get_working_dir():
