@@ -16,6 +16,7 @@ class TestStatsPublisher(TestCase):
     def tearDown(self):
         self.publisher.socket = self.origin_socket
         self.publisher.stop()
+        del self.origin_socket
 
     def test_publish(self):
         stat = {'subtopic': 1, 'foo': 'bar'}
