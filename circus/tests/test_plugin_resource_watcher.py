@@ -134,7 +134,6 @@ class TestResourceWatcher(TestCircus):
         statsd_increments = yield async_run_plugin(ResourceWatcher,
                                                    config,
                                                    get_statsd_increments, **kw)
-        print(statsd_increments)
         self._check_statsd(statsd_increments,
                            '_resource_watcher.test.over_cpu')
         yield self.stop_arbiter()
