@@ -6,11 +6,11 @@ jobs:
 
   ubuntu:
     runs-on: ubuntu-18.04
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python-version: [3.5, 3.6, 3.7, 3.8, 3.9, 'pypy-3.7']
         include:
           - python-version: 3.5
             tox-env: py35
@@ -20,6 +20,10 @@ jobs:
             tox-env: py37
           - python-version: 3.8
             tox-env: py38
+          - python-version: 3.9
+            tox-env: py39
+          - python-version: pypy-3.7
+            tox-env: pypy37
 
     steps:
     - uses: actions/checkout@v2

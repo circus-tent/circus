@@ -1,16 +1,15 @@
-import time
-import sys
 import os
+import sys
 import tempfile
-import tornado
-import random
+import time
 
-from circus.util import papa
+import tornado
 from circus.client import make_message
-from circus.tests.support import TestCircus, async_poll_for, truncate_file
-from circus.tests.support import EasyTestSuite, skipIf, IS_WINDOWS
 from circus.stream import FileStream, WatchedFileStream
 from circus.stream import TimedRotatingFileStream
+from circus.tests.support import EasyTestSuite, skipIf, IS_WINDOWS
+from circus.tests.support import TestCircus, async_poll_for, truncate_file
+from circus.util import papa
 
 
 def run_process(testfile, *args, **kw):
@@ -31,13 +30,9 @@ def run_process(testfile, *args, **kw):
 @skipIf('TRAVIS' in os.environ, "Skipped on Travis")
 class TestPapaStream(TestCircus):
     dummy_process = 'circus.tests.test_stream.run_process'
-    papa_port = random.randint(20000, 30000)
 
     def setUp(self):
         super(TestPapaStream, self).setUp()
-        papa.set_debug_mode(quit_when_connection_closed=True)
-        papa.set_default_port(self.papa_port)
-        papa.set_default_connection_timeout(120)
         fd, self.stdout = tempfile.mkstemp()
         os.close(fd)
         fd, self.stderr = tempfile.mkstemp()
