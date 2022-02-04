@@ -5,17 +5,13 @@ on: [push, pull_request]
 jobs:
 
   ubuntu:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     timeout-minutes: 10
 
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8, 3.9, 'pypy-3.7']
+        python-version: [3.7, 3.8, 3.9, 'pypy-3.7', 'pypy-3.8']
         include:
-          - python-version: 3.5
-            tox-env: py35
-          - python-version: 3.6
-            tox-env: py36
           - python-version: 3.7
             tox-env: py37
           - python-version: 3.8
@@ -24,6 +20,8 @@ jobs:
             tox-env: py39
           - python-version: pypy-3.7
             tox-env: pypy37
+          - python-version: pypy-3.8
+            tox-env: pypy38
 
     steps:
     - uses: actions/checkout@v2
@@ -38,6 +36,8 @@ jobs:
         sudo rm -f /etc/apt/sources.list.d/dotnetdev.list /etc/apt/sources.list.d/microsoft-prod.list
         sudo apt update
         sudo apt install libev-dev libevent-dev
+        sudo apt install gcc make libffi-dev pkg-config zlib1g-dev libbz2-dev libsqlite3-dev libncurses5-dev libexpat1-dev libssl-dev libgdbm-dev tk-dev libgc-dev python-cffi liblzma-dev libncursesw5-dev
+        sudo ldconfig
     - name: Install test dependencies
       run: |
         pip install tox coveralls
