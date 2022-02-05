@@ -18,6 +18,7 @@ from unittest import skip, skipIf, TestCase, TestSuite, findTestCases  # noqa: F
 from tornado.testing import AsyncTestCase
 from unittest import mock
 import tornado
+from zmq import ZMQError
 
 from circus import get_arbiter
 from circus.client import AsyncCircusClient, make_message
@@ -73,6 +74,8 @@ class MockWatcher(Watcher):
 
 
 class TestCircus(AsyncTestCase):
+    # how many times we will try when "Address already in use"
+    ADDRESS_IN_USE_TRY_TIMES = 7
 
     arbiter_factory = get_arbiter
     arbiters = []
@@ -151,7 +154,22 @@ class TestCircus(AsyncTestCase):
         self.test_file = testfile
         self.arbiter = arbiter
         self.arbiters.append(arbiter)
-        yield self.arbiter.start()
+        for i in range(self.ADDRESS_IN_USE_TRY_TIMES):
+            try:
+                yield self.arbiter.start()
+            except ZMQError as e:
+                if e.strerror == 'Address already in use':
+                    # One more try to wait for the port being released by the OS
+                    yield tornado_sleep(0.1)
+                    continue
+                else:
+                    raise e
+            else:
+                # Everything goes well, just break
+                break
+        else:
+            # Cannot start after tries
+            raise RuntimeError('Cannot start arbiter after %s times try' % self.ADDRESS_IN_USE_TRY_TIMES)
 
     @tornado.gen.coroutine
     def stop_arbiter(self):
