@@ -28,7 +28,7 @@ setup(name='circus',
       author="Mozilla Foundation & contributors",
       author_email="services-dev@lists.mozila.org",
       project_urls={
-          "Documentation": "https://circus.readthedocs.io/en/latest/",
+          "Documentation": "https://circus.readthedocs.io",
           "Source": "https://github.com/circus-tent/circus",
       },
       include_package_data=True,
