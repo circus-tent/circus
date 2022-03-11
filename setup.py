@@ -27,6 +27,10 @@ setup(name='circus',
       long_description_content_type="text/markdown",
       author="Mozilla Foundation & contributors",
       author_email="services-dev@lists.mozila.org",
+      project_urls={
+          "Documentation": "https://circus.readthedocs.io",
+          "Source": "https://github.com/circus-tent/circus",
+      },
       include_package_data=True,
       zip_safe=False,
       classifiers=[
