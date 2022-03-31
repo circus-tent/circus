@@ -8,6 +8,7 @@ from circus.util import resolve_name, to_str
 from circus.stream.file_stream import FileStream
 from circus.stream.file_stream import WatchedFileStream  # noqa: F401
 from circus.stream.file_stream import TimedRotatingFileStream  # noqa: F401
+from circus.stream.syslog_stream import SyslogStream  # noqa: F401
 from circus.stream.redirector import Redirector  # noqa: F401
 
 

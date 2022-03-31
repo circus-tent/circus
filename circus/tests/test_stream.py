@@ -4,6 +4,7 @@ import sys
 import os
 import tempfile
 import tornado
+import socket
 
 from datetime import datetime
 
@@ -13,6 +14,7 @@ from circus.tests.support import TestCase, EasyTestSuite, skipIf, IS_WINDOWS
 from circus.stream import FileStream, WatchedFileStream
 from circus.stream import TimedRotatingFileStream
 from circus.stream import FancyStdoutStream
+from circus.stream import SyslogStream
 
 
 def run_process(testfile, *args, **kw):
@@ -368,6 +370,31 @@ class TestWatchedFileStream(TestFileStream):
 
         os.unlink(test_filename)
         os.unlink(file1)
+
+
+class TestSyslogStream(TestCase):
+    stream_class = SyslogStream
+
+    def get_stream(self, *args, **kw):
+        # need a constant timestamp
+        stream = self.stream_class(*args, **kw)
+        return stream
+
+    def test_syslog_udp(self):
+        local_ip = "127.0.0.1"
+        local_port = 2514
+        buffer_size = 1024
+        UDP_socket = socket.socket(
+            family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        UDP_socket.bind((local_ip, local_port))
+        stream = self.get_stream(
+            "syslog://"+str(local_ip)+":"+str(local_port), "test_udp")
+        stream({'data': "TEST SYSLOG UDP"})
+        stream.close()
+        recvd = UDP_socket.recvfrom(buffer_size)
+        message = recvd[0]
+        self.assertEqual(
+            message, "<14>test_udp:TEST SYSLOG UDP".encode("utf-8"))
 
 
 test_suite = EasyTestSuite(__name__)

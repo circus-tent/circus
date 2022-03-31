@@ -6,6 +6,7 @@ Changelog history
 
 - Fix custom syslog server #1159
 - Nothing changed yet
+- Add syslog logging for watchers (local and UDP) - #781
 
 0.17.1 2020-09-18
 -----------------
