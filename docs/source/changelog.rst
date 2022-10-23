@@ -1,11 +1,21 @@
 Changelog history
 =================
 
-0.18.0 unreleased
+0.17.2 2022-10-23
 -----------------
 
-- Fix custom syslog server #1159
-- Nothing changed yet
+- Fix virtualenv loading with Python 3.10 [[#1170]](https://github.com/circus-tent/circus/pull/1170)
+- Add support for Python 3.9 and add Python 3.9 and PyPy 3.7 to CI flow [[#1182]](https://github.com/circus-tent/circus/pull/1182)
+- Add long_description_content_type as text/markdown so README is properly rendered on Pypi [[#1150]](https://github.com/circus-tent/circus/pull/1150)
+- Fix custom syslog destination [[#1160]](https://github.com/circus-tent/circus/pull/1160)
+- Add AsyncPeriodicCallback support async func [[#1168]](https://github.com/circus-tent/circus/pull/1168)
+- AsyncPeriodicCallback to replace PeriodicCallback [[#1168]](https://github.com/circus-tent/circus/pull/1168)
+- Update site_pkg in test_util to support Py3 paths and add Py3.9 venv [[#1168]](https://github.com/circus-tent/circus/pull/1168)
+- log more information when bad things happened [[#1176]](https://github.com/circus-tent/circus/pull/1176)
+- Patch to handle pypy venv site-packages directory  [[#1178]](https://github.com/circus-tent/circus/pull/1178)
+- Patch a handle_callback_exception method to arbiter ioloop if necessary [[#1180]](https://github.com/circus-tent/circus/pull/1180)
+- Add pypy38 to ci [[#1184]](https://github.com/circus-tent/circus/pull/1184)
+
 
 0.17.1 2020-09-18
 -----------------
