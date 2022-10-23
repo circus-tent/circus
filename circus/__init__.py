@@ -1,3 +1,4 @@
+"""Circus is a program that will let you run and watch multiple processes and sockets."""
 import logging
 import os
 import warnings
