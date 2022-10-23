@@ -43,8 +43,8 @@ setup(name='circus',
       install_requires=install_requires,
       extras_require={
         'test': [
-            'nose',
-            'nose-cov',
+            'tox',
+            'nose2',
             'coverage',
             'mock',
             'gevent',
