@@ -28,6 +28,7 @@ def run_process(testfile, *args, **kw):
 
 @skipIf(papa is None, "papa not available")
 @skipIf('TRAVIS' in os.environ, "Skipped on Travis")
+@skipIf(sys.version_info[:2] >= (3, 10), "`papa` is not compatible with Python 3.10")
 class TestPapaStream(TestCircus):
     dummy_process = 'circus.tests.test_stream.run_process'
 

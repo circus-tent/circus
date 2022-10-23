@@ -11,14 +11,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9, 'pypy-3.7', 'pypy-3.8']
+        python-version: ['3.7', '3.8', '3.9', '3.10', 'pypy-3.7', 'pypy-3.8']
         include:
-          - python-version: 3.7
+          - python-version: '3.7'
             tox-env: py37
-          - python-version: 3.8
+          - python-version: '3.8'
             tox-env: py38
-          - python-version: 3.9
+          - python-version: '3.9'
             tox-env: py39
+          - python-version: '3.10'
+            tox-env: py310
           - python-version: pypy-3.7
             tox-env: pypy37
           - python-version: pypy-3.8
@@ -40,8 +42,7 @@ jobs:
         sudo apt install gcc make libffi-dev pkg-config zlib1g-dev libbz2-dev libsqlite3-dev libncurses5-dev libexpat1-dev libssl-dev libgdbm-dev tk-dev libgc-dev python-cffi liblzma-dev libncursesw5-dev
         sudo ldconfig
     - name: Install test dependencies
-      run: |
-        pip install tox coveralls
+      run: pip install tox coveralls
     - name: Run test suite
       run: tox -v -e $TOX_ENV
       env:
@@ -68,7 +69,7 @@ jobs:
     - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: '3.8'
 
     - name: Install test dependencies
       run: |
