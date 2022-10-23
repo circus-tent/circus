@@ -3,8 +3,8 @@ import sys
 from circus import __version__
 from setuptools import find_packages, setup
 
-if not hasattr(sys, 'version_info') or sys.version_info < (3, 5, 0, 'final'):
-    raise SystemExit("Circus requires Python 3.5 or higher.")
+if not hasattr(sys, 'version_info') or sys.version_info < (3, 7, 0, 'final'):
+    raise SystemExit("Circus requires Python 3.7 or higher.")
 
 
 install_requires = ['psutil', 'pyzmq>=17.0', 'tornado>=5.0.2']
@@ -38,6 +38,7 @@ setup(name='circus',
           "Programming Language :: Python :: 3.7",
           "Programming Language :: Python :: 3.8",
           "Programming Language :: Python :: 3.9",
+          "Programming Language :: Python :: 3.10",
           "License :: OSI Approved :: Apache Software License"
       ],
       install_requires=install_requires,
