@@ -18,6 +18,7 @@ from circus.papa_process_proxy import PapaProcessProxy
 from circus import logger
 from circus import util
 from circus.stream import get_stream, Redirector
+from circus.stream.file_stream import FileStream
 from circus.stream.papa_redirector import PapaRedirector
 from circus.util import parse_env_dict, resolve_name, tornado_sleep, IS_WINDOWS
 from circus.util import papa
@@ -1171,12 +1172,45 @@ class Watcher(object):
     @util.debuglog
     def options(self, *args):
         options = []
+        if (self.rlimits):
+            for rlimit in self.rlimits:
+                rlimit_name = "rlimit_{0}".format(rlimit)
+                options.append((rlimit_name, self.rlimits[rlimit]))
+        for hook in self.hooks:
+            hook_name = "hooks.{0}".format(hook)
+            hook_module = "{0}.{1}".format(
+                    self.hooks[hook].__module__,
+                    self.hooks[hook].__name__)
+            options.append((hook_name, hook_module))
         for name in sorted(self.optnames):
+            # ignore names stored for internal purposes
+            if (name in [
+                '__name__',
+                'stdout_stream_conf',
+                'stderr_stream_conf',]):
+                continue
+
             if name in self._options:
                 options.append((name, self._options[name]))
             else:
-                options.append((name, getattr(self, name)))
-        return options
+                # some of the options are FileStream class/subclass
+                # add the 'name' of the class to the options, no the
+                # class object
+                if (issubclass(type(getattr(self, name)), FileStream)):
+                    # ignore std[out|err|in]_stream as these are actual class
+                    # objects hoding data
+                    if (name not in ['stdout_stream', 'stderr_stream',
+                        'stdin_stream']):
+                        options.append((name, getattr(self, name).__class__.__name__))
+                else:
+                    options.append((name, getattr(self, name)))
+                    
+        # for sorting
+        def getKey(item):
+            return item[0]
+        
+        # return the options sorted by name
+        return sorted(options, key=getKey)
 
     def is_stopping(self):
         return self._status == 'stopping'
