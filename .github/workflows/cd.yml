@@ -1,0 +1,138 @@
+name: cd
+
+on:
+    push:
+        tags:
+        -   '[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+
+    validate-release-tag:
+
+        if: github.repository == 'circus-test/circus'
+        runs-on: ubuntu-20.04
+
+        steps:
+        -   name: Checkout source
+            uses: actions/checkout@v2
+
+        -   name: Set up Python 3.8
+            uses: actions/setup-python@v2
+            with:
+                python-version: '3.8'
+
+        -   name: Validate the tag version against the package version
+            run: python .github/workflows/validate_release_tag.py $GITHUB_REF
+
+    ubuntu:
+
+        needs: [validate-release-tag]
+        runs-on: ubuntu-20.04
+
+        strategy:
+            fail-fast: false
+            matrix:
+                python-version: ['3.7', '3.8', '3.9', '3.10', 'pypy-3.7', 'pypy-3.8']
+                include:
+                -   python-version: '3.7'
+                    tox-env: py37
+                -   python-version: '3.8'
+                    tox-env: py38
+                -   python-version: '3.9'
+                    tox-env: py39
+                -   python-version: '3.10'
+                    tox-env: py310
+                -   python-version: pypy-3.7
+                    tox-env: pypy37
+                -   python-version: pypy-3.8
+                    tox-env: pypy38
+
+        steps:
+        -   uses: actions/checkout@v2
+
+        -   name: Cache Python dependencies
+            uses: actions/cache@v1
+            with:
+                path: ~/.cache/pip
+                key: pip-pre-commit-${{ hashFiles('**/setup.json') }}
+                restore-keys:
+                    pip-pre-commit-
+
+        -   name: Set up Python
+            uses: actions/setup-python@v2
+            with:
+                python-version: '3.8'
+
+        -   name: Install system dependencies
+            run: |
+                sudo rm -f /etc/apt/sources.list.d/dotnetdev.list /etc/apt/sources.list.d/microsoft-prod.list
+                sudo apt update
+                sudo apt install libev-dev libevent-dev
+                sudo apt install gcc make libffi-dev pkg-config zlib1g-dev libbz2-dev libsqlite3-dev libncurses5-dev libexpat1-dev libssl-dev libgdbm-dev tk-dev libgc-dev python-cffi liblzma-dev libncursesw5-dev
+                sudo ldconfig
+
+        -   name: Install test dependencies
+            run: pip install tox coveralls
+
+        -   name: Run test suite
+            run: tox -v -e $TOX_ENV
+            env:
+                TOX_ENV: ${{ matrix.tox-env }}
+
+
+
+    multi-os:
+
+        needs: [validate-release-tag]
+        runs-on: ${{ matrix.os }}
+        timeout-minutes: 10
+
+        strategy:
+            matrix:
+                os: ['macos-10.15']
+                skip-tests: [false]
+                include:
+                -   os: windows-2019
+                    skip-tests: true
+
+        steps:
+        -   uses: actions/checkout@v2
+
+        -   name: Set up Python 3.8
+            uses: actions/setup-python@v2
+            with:
+                python-version: '3.8'
+
+        -   name: Install test dependencies
+            run: pip install tox coveralls
+
+        -   name: Run test suite
+            shell: bash -l {0}
+            run: tox -v -e $TOX_ENV
+            continue-on-error: ${{ matrix.skip-tests }}
+            env:
+                TOX_ENV: py38
+
+    publish:
+
+        name: Publish to PyPI
+        needs: [ubuntu]
+        runs-on: ubuntu-20.04
+
+        steps:
+        -   name: Checkout source
+            uses: actions/checkout@v2
+
+        -   name: Set up Python 3.8
+            uses: actions/setup-python@v2
+            with:
+                python-version: '3.8'
+
+        -   name: Install flit
+            run: pip install flit~=3.4
+
+        -   name: Build and publish
+            run: flit publish
+            env:
+                FLIT_USERNAME: __token__
+                FLIT_PASSWORD: ${{ secrets.PYPI_KEY }}
