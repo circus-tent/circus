@@ -76,7 +76,7 @@ class AddWatcher(Command):
         # escalation
         if arbiter.endpoint_owner_mode:
             cmd_uid = options.get('uid', None)
-            if cmd_uid != arbiter.endpoint_owner:
+            if cmd_uid not in arbiter.endpoint_owner_ids:
                 raise MessageError("uid does not match endpoint_owner")
 
         # convert all rlimit_* options into one rlimits dict which is required
