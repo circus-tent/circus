@@ -1,0 +1,103 @@
+[build-system]
+requires = ['flit_core>=3.4,<4']
+build-backend = 'flit_core.buildapi'
+
+[project]
+name = 'circus'
+dynamic = ['description', 'version']
+authors = [
+    {name = 'Mozilla Foundation & contributors', email = 'services-dev@lists.mozila.org'}
+]
+readme = 'README.md'
+license = {file = 'LICENSE'}
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'License :: OSI Approved :: Apache Software License"',
+    'Operating System :: POSIX :: Linux',
+    'Operating System :: MacOS :: MacOS X',
+    'Operating System :: POSIX :: Windows',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+]
+requires-python = '>=3.7'
+dependencies = [
+    'psutil',
+    'pyzmq>=17.0',
+    'tornado>=5.0.2',
+]
+
+[project.urls]
+Source = 'https://github.com/circus-tent/circus'
+Documentation = 'https://circus.readthedocs.io'
+
+[project.optional-dependencies]
+test = [
+    'coverage',
+    'flake8==2.1.0',
+    'gevent',
+    'mock',
+    'nose2',
+    'papa',
+    'pyyaml',
+    'tox',
+]
+
+[project.scripts]
+circusd = 'circus.circusd:main'
+circusd-stats = 'circus.stats:main'
+circusctl = 'circus.circusctl:main'
+circus-top = 'circus.stats.client:main'
+circus-plugin = 'circus.plugins:main'
+
+[tool.flit.module]
+name = 'circus'
+
+[tool.flit.sdist]
+exclude = [
+    '.github/',
+    'docs/',
+    'examples/',
+    '.gitignore',
+]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = True
+envlist = py37,py38,py39,pypy37,pypy38,flake8,docs
+
+[testenv]
+passenv = PWD
+deps =
+    coverage
+    gevent
+    mock
+    nose2
+    papa
+    pyyaml
+    pyzmq>=17.0
+    tornado>=5.0.2
+
+setenv =
+    TESTING=1
+    PYTHONUNBUFFERED=1
+
+commands =
+    nose2 --log-capture --verbose --with-coverage --coverage circus
+
+
+[testenv:docs]
+whitelist_externals = make
+deps =
+    sphinx
+    mozilla-sphinx-theme
+commands = make -C docs html
+
+
+[testenv:flake8]
+deps = flake8==2.1.0
+commands = flake8 circus
+"""
