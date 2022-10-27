@@ -44,5 +44,3 @@ Ops documentation index
    sockets
    using-plugins
    deployment
-   papa
-

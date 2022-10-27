@@ -14,13 +14,10 @@ import zmq.utils.jsonapi as json
 from tornado import ioloop
 
 from circus.process import Process, DEAD_OR_ZOMBIE, UNEXISTING
-from circus.papa_process_proxy import PapaProcessProxy
 from circus import logger
 from circus import util
 from circus.stream import get_stream, Redirector
-from circus.stream.papa_redirector import PapaRedirector
 from circus.util import parse_env_dict, resolve_name, tornado_sleep, IS_WINDOWS
-from circus.util import papa
 
 
 class Watcher(object):
@@ -185,9 +182,6 @@ class Watcher(object):
 
     - **close_child_stderr**: If True, closes the stderr after the fork.
       default: False.
-
-    - **use_papa**: If True, use the papa process kernel for this process.
-      default: False.
     """
 
     def __init__(self, name, cmd, args=None, numprocesses=1, warmup_delay=0.,
@@ -202,8 +196,7 @@ class Watcher(object):
                  autostart=True, on_demand=False, virtualenv=None,
                  stdin_socket=None, close_child_stdin=True,
                  close_child_stdout=False,
-                 close_child_stderr=False, virtualenv_py_ver=None,
-                 use_papa=False, **options):
+                 close_child_stderr=False, virtualenv_py_ver=None, **options):
         self.name = name
         self.use_sockets = use_sockets
         self.on_demand = on_demand
@@ -241,7 +234,6 @@ class Watcher(object):
         self.close_child_stdin = close_child_stdin
         self.close_child_stdout = close_child_stdout
         self.close_child_stderr = close_child_stderr
-        self.use_papa = use_papa and papa is not None
         self.loop = loop or ioloop.IOLoop.current()
 
         if singleton and self.numprocesses not in (0, 1):
@@ -273,7 +265,7 @@ class Watcher(object):
                           "stdout_stream_conf", "on_demand",
                           "stderr_stream_conf", "max_age", "max_age_variance",
                           "close_child_stdin", "close_child_stdout",
-                          "close_child_stderr", "use_papa") +
+                          "close_child_stderr") +
                          tuple(options.keys()))
 
         if not working_dir:
@@ -321,24 +313,17 @@ class Watcher(object):
         self._resolve_hooks(hooks)
         self._found_wids = []
 
-        if self.use_papa:
-            with papa.Papa() as p:
-                base_name = 'circus.{0}.*'.format(name.lower())
-                running = p.list_processes(base_name)
-                self._found_wids = [int(proc_name[len(base_name) - 1:])
-                                    for proc_name in running]
-
     def _reload_hook(self, key, hook, ignore_error):
         hook_name = key.split('.')[-1]
         self._resolve_hook(hook_name, hook, ignore_error, reload_module=True)
 
     @property
     def _redirector_class(self):
-        return PapaRedirector if self.use_papa else Redirector
+        return Redirector
 
     @property
     def _process_class(self):
-        return PapaProcessProxy if self.use_papa else Process
+        return Process
 
     def _reload_stream(self, key, val):
         parts = key.split('.', 1)
@@ -629,9 +614,7 @@ class Watcher(object):
         # XXX should be cached
         if self.sockets is None:
             return {}
-        return dict((name, sock.fileno())
-                    for name, sock in self.sockets.items()
-                    if sock.use_papa == self.use_papa)
+        return dict((name, sock.fileno()) for name, sock in self.sockets.items())
 
     def _get_stdin_socket_fd(self):
         if self.stdin_socket is not None:
@@ -862,19 +845,17 @@ class Watcher(object):
 
     @util.debuglog
     @gen.coroutine
-    def _stop(self, close_output_streams=False, for_shutdown=False):
+    def _stop(self, close_output_streams=False):
         if self.is_stopped():
             return
         self._status = "stopping"
-        skip = for_shutdown and self.use_papa
-        if not skip:
-            logger.debug('stopping the %s watcher' % self.name)
-            logger.debug('gracefully stopping processes [%s] for %ss' % (
-                         self.name, self.graceful_timeout))
-            # We ignore the hook result
-            self.call_hook('before_stop')
-            yield self.kill_processes()
-            self.reap_processes()
+        logger.debug('stopping the %s watcher' % self.name)
+        logger.debug('gracefully stopping processes [%s] for %ss' % (
+                     self.name, self.graceful_timeout))
+        # We ignore the hook result
+        self.call_hook('before_stop')
+        yield self.kill_processes()
+        self.reap_processes()
 
         # stop redirectors
         if self.stream_redirector:
@@ -885,16 +866,12 @@ class Watcher(object):
                 self.stdout_stream.close()
             if self.stderr_stream and hasattr(self.stderr_stream, 'close'):
                 self.stderr_stream.close()
-        # notify about the stop
-        if skip:
-            logger.info('%s left running in papa', self.name)
-        else:
-            if self.evpub_socket is not None:
-                self.notify_event("stop", {"time": time.time()})
-            self._status = "stopped"
-            # We ignore the hook result
-            self.call_hook('after_stop')
-            logger.info('%s stopped', self.name)
+        if self.evpub_socket is not None:
+            self.notify_event("stop", {"time": time.time()})
+        self._status = "stopped"
+        # We ignore the hook result
+        self.call_hook('after_stop')
+        logger.info('%s stopped', self.name)
 
     def get_active_processes(self):
         """return a list of pids of active processes (not already stopped)"""
