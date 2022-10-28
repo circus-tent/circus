@@ -16,10 +16,10 @@ jobs:
         -   name: Checkout source
             uses: actions/checkout@v2
 
-        -   name: Set up Python 3.8
+        -   name: Set up Python 3.9
             uses: actions/setup-python@v2
             with:
-                python-version: '3.8'
+                python-version: '3.9'
 
         -   name: Validate the tag version against the package version
             run: python .github/workflows/validate_release_tag.py $GITHUB_REF
@@ -61,7 +61,7 @@ jobs:
         -   name: Set up Python
             uses: actions/setup-python@v2
             with:
-                python-version: '3.8'
+                python-version: '3.9'
 
         -   name: Install system dependencies
             run: |
@@ -98,10 +98,10 @@ jobs:
         steps:
         -   uses: actions/checkout@v2
 
-        -   name: Set up Python 3.8
+        -   name: Set up Python 3.9
             uses: actions/setup-python@v2
             with:
-                python-version: '3.8'
+                python-version: '3.9'
 
         -   name: Install test dependencies
             run: pip install tox coveralls
@@ -111,7 +111,7 @@ jobs:
             run: tox -v -e $TOX_ENV
             continue-on-error: ${{ matrix.skip-tests }}
             env:
-                TOX_ENV: py38
+                TOX_ENV: py39
 
     publish:
 
@@ -123,10 +123,10 @@ jobs:
         -   name: Checkout source
             uses: actions/checkout@v2
 
-        -   name: Set up Python 3.8
+        -   name: Set up Python 3.9
             uses: actions/setup-python@v2
             with:
-                python-version: '3.8'
+                python-version: '3.9'
 
         -   name: Install flit
             run: pip install flit~=3.4
