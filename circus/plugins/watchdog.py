@@ -49,6 +49,7 @@ class WatchDog(CircusPlugin):
       used when killing the processes
     """
     name = 'watchdog'
+    plugin_name = 'plugin:' + name
 
     def __init__(self, endpoint, pubsub_endpoint, check_delay, ssh_server,
                  **config):
@@ -136,7 +137,9 @@ class WatchDog(CircusPlugin):
         self.pid_status = dict()
         all_watchers = self.call("list")
         for watcher_name in all_watchers['watchers']:
-            if self._match_watcher_name(watcher_name):
+            # do not discover watchdog
+            if self._match_watcher_name(watcher_name) and \
+               watcher_name != self.plugin_name:
                 processes = self.call("list", name=watcher_name)
                 if 'pids' in processes:
                     for pid in processes['pids']:
@@ -217,6 +220,9 @@ class WatchDog(CircusPlugin):
 
         max_timeout = self.loop_rate * self.max_count
         too_old_time = time.time() - max_timeout
+        # Instead of del in loop, that will cause exception in Python3,
+        # add to list and del from pid_status after loop.
+        pids_to_del = list()
         for pid, detail in self.pid_status.items():
             if detail['last_activity'] < too_old_time:
                 logger.info("watcher:%s, pid:%s is not responding. Kill it !",
@@ -233,4 +239,6 @@ class WatchDog(CircusPlugin):
 
                 # Trusting watcher to eventually stop the process after
                 # graceful timeout
-                del self.pid_status[pid]
+                pids_to_del.append(pid)
+        for pid in pids_to_del:
+            del self.pid_status[pid]
