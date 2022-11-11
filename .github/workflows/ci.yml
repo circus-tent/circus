@@ -32,8 +32,6 @@ jobs:
       run: pip install tox coveralls
     - name: Run test suite
       run: tox -v -e py
-      env:
-        TOX_ENV: ${{ matrix.tox-env }}
 
 
   multi-os:
