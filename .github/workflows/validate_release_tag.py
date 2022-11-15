@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('GITHUB_REF', help='The GITHUB_REF environmental variable')
     args = parser.parse_args()
-    tag_prefix = 'refs/tags/v'
+    tag_prefix = 'refs/tags/'
     assert args.GITHUB_REF.startswith(tag_prefix), f'GITHUB_REF should start with "{tag_prefix}": {args.GITHUB_REF}'
     tag_version = args.GITHUB_REF.removeprefix(tag_prefix)
     package_version = get_version_from_module(Path('circus/__init__.py').read_text(encoding='utf-8'))
