@@ -19,10 +19,6 @@ try:
 except ImportError:
     yaml = None  # NOQA
 try:
-    import papa
-except ImportError:
-    papa = None  # NOQA
-try:
     import pwd
     import grp
     import fcntl

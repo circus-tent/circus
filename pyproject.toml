@@ -41,7 +41,6 @@ test = [
     'gevent',
     'mock',
     'nose2',
-    'papa',
     'pyyaml',
     'tox',
 ]
@@ -77,7 +76,6 @@ deps =
     gevent
     mock
     nose2
-    papa
     pyyaml
     pyzmq>=17.0
     tornado>=5.0.2
