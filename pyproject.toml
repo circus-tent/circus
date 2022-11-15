@@ -61,13 +61,14 @@ exclude = [
     '.github/',
     'docs/',
     'examples/',
+    'tests/',
     '.gitignore',
 ]
 
 [tool.pytest.ini_options]
 minversion = '6.0'
 testpaths = [
-    'circus/tests',
+    'tests',
 ]
 
 [tool.tox]
