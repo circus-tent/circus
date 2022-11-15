@@ -1,5 +1,6 @@
 from tempfile import mkstemp, mkdtemp
 import os
+import pathlib
 import signal
 import sys
 from time import time, sleep
@@ -209,9 +210,15 @@ class TestCircus(AsyncTestCase):
         os.close(fd)
         wdir = os.path.dirname(os.path.dirname(os.path.dirname(
             os.path.realpath(__file__))))
-        args = ['tests/generic.py', callable_path, testfile]
+        filepath_tests = pathlib.Path(__file__).absolute().parent
+        args = [str(filepath_tests / 'generic.py'), callable_path, testfile]
+
+        # Add the ``tests`` folder to the ``PYTHONPATH`` such that modules like ``generic.py``
+        # can be imported by workers.
+        env = os.environ.copy()
+        env['PYTHONPATH'] = ':'.join(sys.path + [str(filepath_tests)])
         worker = {'cmd': PYTHON, 'args': args, 'working_dir': wdir,
-                  'name': 'test', 'graceful_timeout': 2}
+                  'name': 'test', 'graceful_timeout': 2, 'env': env}
         worker.update(kw)
         if not arbiter_kw:
             arbiter_kw = {}
