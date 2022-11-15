@@ -16,7 +16,7 @@ The Web Console lets you:
 
    The real-time CPU & Memory usage feature uses the stats socket.
    If you want to activate it, make sure the Circus system you'll
-   connect to has the stats enpoint enabled in its configuration::
+   connect to has the stats endpoint enabled in its configuration::
 
      [circus]
      statsd = True
@@ -71,7 +71,7 @@ status of the two Circus processes (circusd and circusd-stats).
    :height: 400px
 
 You can click on the status of each watcher to toggle it from **Active** (green)
-to **Inactive** (red). This change is effective immediatly and let you start & stop
+to **Inactive** (red). This change is effective immediately and let you start & stop
 watchers.
 
 If you click on the watcher name, you will get a web page for that particular
