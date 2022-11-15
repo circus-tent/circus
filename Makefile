@@ -21,7 +21,7 @@ docs:
 coverage: bin/coverage
 	rm -f `pwd`/.coverage
 	rm -rf `pwd`/html
-	- COVERAGE_PROCESS_START=`pwd`/.coveragerc COVERAGE_FILE=`pwd`/.coverage PYTHONPATH=`pwd` bin/pytest -s circus/tests
+	- COVERAGE_PROCESS_START=`pwd`/.coveragerc COVERAGE_FILE=`pwd`/.coverage PYTHONPATH=`pwd` bin/pytest -s tests
 	bin/coverage combine
 	bin/coverage html
 
