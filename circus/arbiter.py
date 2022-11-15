@@ -17,7 +17,7 @@ from circus.exc import AlreadyExist
 from circus import logger
 from circus.watcher import Watcher
 from circus.util import debuglog, _setproctitle, parse_env_dict
-from circus.util import DictDiffer, synchronized, tornado_sleep, papa
+from circus.util import DictDiffer, synchronized, tornado_sleep
 from circus.util import IS_WINDOWS
 from circus.config import get_config
 from circus.plugins import get_plugin_cmd
@@ -75,7 +75,6 @@ class Arbiter(object):
     - **fqdn_prefix** -- a prefix for the unique identifier of the circus
                          instance on the cluster.
     - **endpoint_owner** -- unix user to chown the endpoint to if using ipc.
-    - **papa_endpoint** -- the papa process kernel endpoint
     """
 
     def __init__(self, watchers, endpoint, pubsub_endpoint, check_delay=1.0,
@@ -87,8 +86,7 @@ class Arbiter(object):
                  httpd_close_outputs=False, debug=False, debug_gc=False,
                  ssh_server=None, proc_name='circusd', pidfile=None,
                  loglevel=None, logoutput=None, loggerconfig=None,
-                 fqdn_prefix=None, umask=None, endpoint_owner=None,
-                 papa_endpoint=None):
+                 fqdn_prefix=None, umask=None, endpoint_owner=None):
 
         self.watchers = watchers
         self.endpoint = endpoint
@@ -117,16 +115,6 @@ class Arbiter(object):
         else:
             fqdn = '{}@{}'.format(fqdn_prefix, socket_fqdn)
         self.fqdn = fqdn
-
-        if papa_endpoint and papa:
-            if papa_endpoint.startswith('ipc:/'):
-                papa_endpoint = papa_endpoint[4:]
-                while papa_endpoint[:2] == '//':
-                    papa_endpoint = papa_endpoint[1:]
-                papa.set_default_path(papa_endpoint)
-            elif papa_endpoint.startswith('tcp://'):
-                papa_endpoint = papa_endpoint[6:].partition(':')[2]
-                papa.set_default_port = papa_endpoint
 
         self.ctrl = self.loop = None
         self._provided_loop = False
@@ -461,7 +449,6 @@ class Arbiter(object):
                       prereload_fn=cfg.get('prereload_fn'),
                       statsd=cfg.get('statsd', False),
                       stats_endpoint=cfg.get('stats_endpoint'),
-                      papa_endpoint=cfg.get('papa_endpoint'),
                       multicast_endpoint=cfg.get('multicast_endpoint'),
                       plugins=cfg.get('plugins'), sockets=sockets,
                       warmup_delay=cfg.get('warmup_delay', 0),
@@ -591,11 +578,10 @@ class Arbiter(object):
 
     @synchronized("arbiter_stop")
     @gen.coroutine
-    def stop(self, for_shutdown=True):
+    def stop(self):
         logger.info('Arbiter exiting')
         self._stopping = True
-        yield self._stop_watchers(close_output_streams=True,
-                                  for_shutdown=for_shutdown)
+        yield self._stop_watchers(close_output_streams=True)
         if self._provided_loop:
             cb = self.stop_controller_and_close_sockets
             self.loop.add_callback(cb)
@@ -614,11 +600,10 @@ class Arbiter(object):
         self.stop_controller_and_close_sockets()
 
     @gen.coroutine
-    def __stop(self, for_shutdown=False):
+    def __stop(self):
         logger.info('Arbiter exiting')
         self._stopping = True
-        yield self._stop_watchers(close_output_streams=True,
-                                  for_shutdown=for_shutdown)
+        yield self._stop_watchers(close_output_streams=True)
         if self._provided_loop:
             cb = self.stop_controller_and_close_sockets
             self.loop.add_callback(cb)
@@ -785,12 +770,12 @@ class Arbiter(object):
     @gen.coroutine
     @debuglog
     def _stop_watchers(self, close_output_streams=False,
-                       watcher_iter_func=None, for_shutdown=False):
+                       watcher_iter_func=None):
         if watcher_iter_func is None:
             watchers = self.iter_watchers(reverse=False)
         else:
             watchers = watcher_iter_func(reverse=False)
-        futures = [w._stop(close_output_streams, for_shutdown)
+        futures = [w._stop(close_output_streams)
                    for w in watchers]
         yield gen.multi(futures)
 
@@ -815,8 +800,7 @@ class Arbiter(object):
             self._restarting = True
             logger.info('Arbiter exiting')
             self._stopping = True
-            yield self._stop_watchers(close_output_streams=True,
-                                      for_shutdown=False)
+            yield self._stop_watchers(close_output_streams=True)
             if self._provided_loop:
                 cb = self.stop_controller_and_close_sockets
                 self.loop.add_callback(cb)
