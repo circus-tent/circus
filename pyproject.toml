@@ -67,7 +67,7 @@ exclude = [
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py37,py38,py39,pypy37,pypy38,flake8,docs
+envlist = py37,py38,py39,py310,py311,pypy37,pypy38,pypy39,flake8,docs
 
 [testenv]
 passenv = PWD
