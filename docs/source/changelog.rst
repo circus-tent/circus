@@ -1,6 +1,24 @@
 Changelog history
 =================
 
+0.18.0 2022-11-17
+-----------------
+
+Dependencies
+............
+Remove support for the `papa` library (library last saw a release in 2016 and is incompatible with Python 3.10 and up) [[#1201]](https://github.com/circus-tent/circus/pull/1201)
+Add support for Python 3.10 [[#1195]](https://github.com/circus-tent/circus/pull/1195)
+Add support for Python 3.11 [[#1205]](https://github.com/circus-tent/circus/pull/1205)
+Update `nose` to `nose2` [[#1194]](https://github.com/circus-tent/circus/pull/1194)
+Remove `circus-web` [[#1194]](https://github.com/circus-tent/circus/pull/1194)
+
+DevOps
+......
+Adopt PEP 621 and use `pyproject.toml` for the build and install specification [[#1197]](https://github.com/circus-tent/circus/pull/1197)
+Add continuous-deployment workflow [[#1198]](https://github.com/circus-tent/circus/pull/1198)
+Add testing against PyPy 3.9 [[#1203]](https://github.com/circus-tent/circus/pull/1203)
+
+
 0.17.2 2022-10-23
 -----------------
 
