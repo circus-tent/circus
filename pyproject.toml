@@ -12,10 +12,10 @@ readme = 'README.md'
 license = {file = 'LICENSE'}
 classifiers = [
     'Development Status :: 5 - Production/Stable',
-    'License :: OSI Approved :: Apache Software License"',
+    'License :: OSI Approved :: Apache Software License',
     'Operating System :: POSIX :: Linux',
     'Operating System :: MacOS :: MacOS X',
-    'Operating System :: POSIX :: Windows',
+    'Operating System :: Microsoft :: Windows',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
