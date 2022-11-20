@@ -8,7 +8,6 @@ from circus.tests.support import TestCircus, EasyTestSuite, TimeoutException
 from circus.tests.support import skipIf, IS_WINDOWS
 from circus.stream import QueueStream, Empty
 from circus.util import tornado_sleep
-from zmq.utils.strtypes import u
 
 
 class Process(object):
@@ -53,7 +52,7 @@ def read_from_stream(stream, timeout=5):
     while time.time() - start < timeout:
         try:
             data = stream.get_nowait()
-            raise tornado.gen.Return(u(data['data']))
+            raise tornado.gen.Return(data['data'].decode('utf-8'))
         except Empty:
             yield tornado_sleep(0.1)
     raise TimeoutException('Timeout reading queue')
