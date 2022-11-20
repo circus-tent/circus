@@ -42,8 +42,8 @@ finally:
 USE_FDS = IS_WINDOWS
 
 
-def _nose_no_s():
-    return isinstance(sys.stdout, io.StringIO)
+def _no_log_capture():
+    return isinstance(sys.stdout, io.TextIOWrapper) and sys.stdout.name == '<stdout>'
 
 
 class TestProcess(TestCircus):
@@ -137,7 +137,7 @@ class TestProcess(TestCircus):
         os.environ.pop('coffee_type')
 
     @skipIf(DEBUG, 'Py_DEBUG=1')
-    @skipIf(_nose_no_s(), 'Nose runs without -s')
+    @skipIf(_no_log_capture(), '`pytest` is running without log capture option `-s`')
     @skipIf(IS_WINDOWS, "Streams not supported")
     def test_streams(self):
         script_file = self.get_tmpfile(VERBOSE)
