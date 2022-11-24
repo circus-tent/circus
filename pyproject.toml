@@ -40,7 +40,8 @@ test = [
     'flake8==2.1.0',
     'gevent',
     'mock',
-    'nose2',
+    'pytest',
+    'pytest-cov',
     'pyyaml',
     'tox',
 ]
@@ -63,6 +64,12 @@ exclude = [
     '.gitignore',
 ]
 
+[tool.pytest.ini_options]
+minversion = '6.0'
+testpaths = [
+    'circus/tests',
+]
+
 [tool.tox]
 legacy_tox_ini = """
 [tox]
@@ -75,7 +82,8 @@ deps =
     coverage
     gevent
     mock
-    nose2
+    pytest
+    pytest-cov
     pyyaml
     pyzmq>=17.0
     tornado>=5.0.2
@@ -85,7 +93,7 @@ setenv =
     PYTHONUNBUFFERED=1
 
 commands =
-    nose2 --log-capture --verbose --with-coverage --coverage circus
+    pytest --verbose -s
 
 
 [testenv:docs]

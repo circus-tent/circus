@@ -21,13 +21,13 @@ docs:
 coverage: bin/coverage
 	rm -f `pwd`/.coverage
 	rm -rf `pwd`/html
-	- COVERAGE_PROCESS_START=`pwd`/.coveragerc COVERAGE_FILE=`pwd`/.coverage PYTHONPATH=`pwd` bin/nosetests -s circus/tests
+	- COVERAGE_PROCESS_START=`pwd`/.coveragerc COVERAGE_FILE=`pwd`/.coverage PYTHONPATH=`pwd` bin/pytest -s circus/tests
 	bin/coverage combine
 	bin/coverage html
 
 bin/coverage: bin/python
 	bin/pip install -r test-requirements.txt --use-mirrors
-	bin/pip install nose coverage
+	bin/pip install pytest pytest-cov
 
 build_rpm:
 	bin/python setup.py bdist_rpm --requires "python26 python-setuptools pyzmq python26-psutil"
