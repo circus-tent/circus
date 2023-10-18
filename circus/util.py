@@ -868,7 +868,7 @@ def load_virtualenv(watcher, py_ver=None):
         raise ValueError('copy_env must be True to to use virtualenv')
 
     if not py_ver:
-        py_ver = "%s.%s" % sys.version_info[:2]
+        py_ver = "%s.%s.%s" % sys.version_info[:3]
 
     def determine_sitedir():
         try_dirs = ['python', 'pypy']
