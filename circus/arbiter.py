@@ -816,6 +816,14 @@ class Arbiter(object):
     def endpoint_owner_mode(self):
         return self.ctrl.endpoint_owner_mode  # just wrap the controller
 
+    @property
+    def endpoint_owner_ids(self):
+        owner_ids = [self.endpoint_owner]
+        # add the endpoint_owner uid, if available
+        if self.ctrl.endpoint_owner_uid is not None:
+            owner_ids.append(self.ctrl.endpoint_owner_uid)
+        return owner_ids
+
 
 class ThreadedArbiter(Thread, Arbiter):
 

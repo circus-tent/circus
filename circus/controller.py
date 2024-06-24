@@ -34,6 +34,7 @@ class Controller(object):
         self.loop = loop
         self.check_delay = check_delay * 1000
         self.endpoint_owner = endpoint_owner
+        self.endpoint_owner_uid = None
         self.started = False
 
         # initialize the sys handler
@@ -78,9 +79,9 @@ class Controller(object):
 
         # support chown'ing the zmq endpoint on unix platforms
         if self.endpoint_owner_mode:
-            uid = to_uid(self.endpoint_owner)
+            self.endpoint_owner_uid = to_uid(self.endpoint_owner)
             sockpath = self.endpoint[6:]  # length of 'ipc://' prefix
-            os.chown(sockpath, uid, -1)
+            os.chown(sockpath, self.endpoint_owner_uid, -1)
 
         self._init_stream()
 
