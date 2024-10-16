@@ -581,6 +581,8 @@ class Arbiter(object):
     def stop(self):
         logger.info('Arbiter exiting')
         self._stopping = True
+        if self.ctrl.caller is not None:
+            self.ctrl.caller.stop()
         yield self._stop_watchers(close_output_streams=True)
         if self._provided_loop:
             cb = self.stop_controller_and_close_sockets
