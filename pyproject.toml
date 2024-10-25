@@ -22,6 +22,7 @@ classifiers = [
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
 ]
 requires-python = '>=3.7'
 dependencies = [
@@ -75,7 +76,7 @@ testpaths = [
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py37,py38,py39,py310,py311,pypy37,pypy38,pypy39,flake8,docs
+envlist = py37,py38,py39,py310,py311,py312,pypy37,pypy38,pypy39,flake8,docs
 
 [testenv]
 passenv = PWD
