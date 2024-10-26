@@ -83,11 +83,11 @@ deps =
     coverage
     gevent
     mock
-    pytest
+    pytest==7.4.4
     pytest-cov
     pyyaml
     pyzmq>=17.0
-    tornado>=5.0.2
+    tornado==6.2
 
 setenv =
     TESTING=1
