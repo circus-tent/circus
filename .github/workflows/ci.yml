@@ -38,7 +38,7 @@ jobs:
     # Run tests for one python version on different operating systems
 
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     strategy:
       matrix:

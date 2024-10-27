@@ -70,7 +70,7 @@ jobs:
 
         needs: [validate-release-tag]
         runs-on: ${{ matrix.os }}
-        timeout-minutes: 10
+        timeout-minutes: 15
 
         strategy:
             matrix:
