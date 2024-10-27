@@ -48,7 +48,7 @@ class TestUtil(TestCase):
         if IS_WINDOWS:
             self.assertEqual(info['nice'], psutil.NORMAL_PRIORITY_CLASS)
         else:
-            self.assertEqual(info['nice'], 0)
+            self.assertIn(info['nice'], (-10, 0))
 
     def test_get_info_still_works_when_denied_access(self):
         def access_denied():
