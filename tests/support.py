@@ -14,7 +14,7 @@ import socket
 import sysconfig
 import concurrent
 
-from unittest import skip, skipIf, TestCase, TestSuite, findTestCases  # noqa: F401
+from unittest import skip, skipIf, TestCase, TestSuite
 
 from tornado.testing import AsyncTestCase
 from unittest import mock
@@ -100,7 +100,11 @@ class TestCircus(AsyncTestCase):
         self._clients.clear()
 
     def get_new_ioloop(self):
-        return get_ioloop()
+        # Create a new event loop instead of using the current one
+        from tornado.platform.asyncio import AsyncIOLoop
+        import asyncio
+        asyncio.set_event_loop(asyncio.new_event_loop())
+        return AsyncIOLoop()
 
     def tearDown(self):
         for file in self.files + self.tmpfiles:
@@ -128,6 +132,13 @@ class TestCircus(AsyncTestCase):
 
         self.arbiters = []
         super(TestCircus, self).tearDown()
+        # Clean up the event loop
+        loop = self.io_loop
+        if loop is not None:
+            try:
+                loop.close(all_fds=True)
+            except Exception:
+                pass
 
     def make_plugin(self, klass, endpoint=DEFAULT_ENDPOINT_DEALER,
                     sub=DEFAULT_ENDPOINT_SUB, check_delay=1,
