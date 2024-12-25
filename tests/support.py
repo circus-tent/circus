@@ -134,8 +134,11 @@ class TestCircus(AsyncTestCase):
         super(TestCircus, self).tearDown()
         # Clean up the event loop
         loop = self.io_loop
-        if loop is not None and not loop._closing:
-            loop.close(all_fds=True)
+        if loop is not None:
+            try:
+                loop.close(all_fds=True)
+            except Exception:
+                pass
 
     def make_plugin(self, klass, endpoint=DEFAULT_ENDPOINT_DEALER,
                     sub=DEFAULT_ENDPOINT_SUB, check_delay=1,
