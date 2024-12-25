@@ -14,7 +14,7 @@ import socket
 import sysconfig
 import concurrent
 
-from unittest import skip, skipIf, TestCase, TestSuite, findTestCases  # noqa: F401
+from unittest import skip, skipIf, TestCase, TestSuite
 
 from tornado.testing import AsyncTestCase
 from unittest import mock
