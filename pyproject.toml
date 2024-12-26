@@ -3,10 +3,11 @@ requires = ['flit_core>=3.4,<4']
 build-backend = 'flit_core.buildapi'
 
 [project]
-name = 'circus'
+name = 'kantoku'
 dynamic = ['description', 'version']
 authors = [
-    {name = 'Mozilla Foundation & contributors', email = 'services-dev@lists.mozila.org'}
+    {name = 'Mozilla Foundation & contributors', email = 'services-dev@lists.mozila.org'},
+    {name = 'BentoML Team', email = 'team@bentoml.com'}
 ]
 readme = 'README.md'
 license = {file = 'LICENSE'}
@@ -22,6 +23,8 @@ classifiers = [
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
 ]
 requires-python = '>=3.7'
 dependencies = [
@@ -31,7 +34,7 @@ dependencies = [
 ]
 
 [project.urls]
-Source = 'https://github.com/circus-tent/circus'
+Source = 'https://github.com/bentoml/kantoku'
 Documentation = 'https://circus.readthedocs.io'
 
 [project.optional-dependencies]
@@ -75,7 +78,7 @@ testpaths = [
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py37,py38,py39,py310,py311,pypy37,pypy38,pypy39,flake8,docs
+envlist = py39,py310,py311,py312,py313,pypy39,flake8,docs
 
 [testenv]
 passenv = PWD
