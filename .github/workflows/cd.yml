@@ -9,7 +9,7 @@ jobs:
 
     validate-release-tag:
 
-        if: github.repository == 'circus-tent/circus'
+        if: github.repository == 'bentoml/kantoku'
         runs-on: ubuntu-20.04
 
         steps:
