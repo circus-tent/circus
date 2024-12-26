@@ -34,7 +34,7 @@ dependencies = [
 ]
 
 [project.urls]
-Source = 'https://github.com/bentoml/circus'
+Source = 'https://github.com/bentoml/kantoku'
 Documentation = 'https://circus.readthedocs.io'
 
 [project.optional-dependencies]
