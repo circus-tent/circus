@@ -10,16 +10,14 @@ jobs:
     validate-release-tag:
 
         if: github.repository == 'bentoml/kantoku'
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-latest
 
         steps:
         -   name: Checkout source
-            uses: actions/checkout@v3
+            uses: actions/checkout@v4
 
-        -   name: Set up Python 3.9
-            uses: actions/setup-python@v4
-            with:
-                python-version: '3.9'
+        -   name: Set up Python
+            uses: actions/setup-python@v5
 
         -   name: Validate the tag version against the package version
             run: python .github/workflows/validate_release_tag.py $GITHUB_REF
@@ -27,7 +25,7 @@ jobs:
     ubuntu:
 
         needs: [validate-release-tag]
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-latest
 
         strategy:
             fail-fast: false
@@ -35,20 +33,13 @@ jobs:
                 python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', 'pypy-3.9']
 
         steps:
-        -   uses: actions/checkout@v3
-
-        -   name: Cache Python dependencies
-            uses: actions/cache@v3
-            with:
-                path: ~/.cache/pip
-                key: pip-pre-commit-${{ hashFiles('**/setup.json') }}
-                restore-keys:
-                    pip-pre-commit-
+        -   uses: actions/checkout@v4
 
         -   name: Set up Python
-            uses: actions/setup-python@v4
+            uses: actions/setup-python@v5
             with:
                 python-version: ${{ matrix.python-version }}
+                cache: 'pip'
 
         -   name: Install system dependencies
             run: |
@@ -74,19 +65,19 @@ jobs:
 
         strategy:
             matrix:
-                os: ['macos-12']
+                os: ['macos-latest']
                 skip-tests: [false]
                 include:
-                -   os: windows-2019
+                -   os: windows-latest
                     skip-tests: true
 
         steps:
-        -   uses: actions/checkout@v3
+        -   uses: actions/checkout@v4
 
-        -   name: Set up Python 3.9
-            uses: actions/setup-python@v4
+        -   name: Set up Python 3.11
+            uses: actions/setup-python@v5
             with:
-                python-version: '3.9'
+                python-version: '3.11'
 
         -   name: Install test dependencies
             run: pip install tox coveralls
@@ -100,22 +91,22 @@ jobs:
 
         name: Publish to PyPI
         needs: [ubuntu]
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-latest
+        permissions:
+          id-token: write
+        environment:
+          name: pypi
+          url: https://pypi.org/project/comfy-pack/${{ github.ref_name }}
 
         steps:
         -   name: Checkout source
-            uses: actions/checkout@v3
+            uses: actions/checkout@v4
 
-        -   name: Set up Python 3.9
+        -   name: Set up Python
             uses: actions/setup-python@v4
-            with:
-                python-version: '3.9'
 
-        -   name: Install flit
-            run: pip install flit~=3.4
+        -   name: Build
+            run: pipx run build
 
-        -   name: Build and publish
-            run: flit publish
-            env:
-                FLIT_USERNAME: __token__
-                FLIT_PASSWORD: ${{ secrets.PYPI_KEY }}
+        -   name: Upload package to PyPI
+            uses: pypa/gh-action-pypi-publish@release/v1

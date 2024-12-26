@@ -5,19 +5,19 @@ on: [push, pull_request]
 jobs:
 
   ubuntu:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.13', 'pypy-3.9']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', 'pypy-3.9', 'pypy-3.10']
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -42,19 +42,19 @@ jobs:
 
     strategy:
       matrix:
-        os: ['macos-15']
+        os: ['macos-latest']
         skip-tests: [false]
         include:
-          - os: windows-2019
+          - os: windows-latest
             skip-tests: true
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v4
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.8'
+        python-version: '3.11'
 
     - name: Install test dependencies
       run: |
