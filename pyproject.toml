@@ -57,7 +57,7 @@ circus-top = 'circus.stats.client:main'
 circus-plugin = 'circus.plugins:main'
 
 [tool.flit.module]
-name = 'kantoku'
+name = 'circus'
 
 [tool.flit.sdist]
 exclude = [
