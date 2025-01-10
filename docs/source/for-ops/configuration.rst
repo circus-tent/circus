@@ -697,7 +697,7 @@ TimedRotatingFileStream
             'H', Hours
             'D', Days
             'W0'-'W6', Weekday (0=Monday)
-            'midnight', Roll over at midnight
+            'MIDNIGHT', Roll over at midnight
 
     **rotate_interval**
         The rollover interval.

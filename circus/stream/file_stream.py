@@ -218,7 +218,7 @@ class TimedRotatingFileStream(FileStream):
         - utc: if True, times in UTC will be used. otherwise local time is
           used. Default: False.
         - rotate_when: the type of interval. Can be S, M, H, D,
-          'W0'-'W6' or 'midnight'. See Python's TimedRotatingFileHandler
+          'W0'-'W6' or 'MIDNIGHT'. See Python's TimedRotatingFileHandler
           for more information.
         - rotate_interval: Rollover interval in seconds. Default: 1
 
