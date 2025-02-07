@@ -699,24 +699,22 @@ class Watcher(object):
             # getting the process children
             children = process.children(recursive=recursive)
 
+            # now sending the same signal to all the children
+            for child_pid in children:
+                try:
+                    process.send_signal_child(child_pid, signum)
+                    self.notify_event("kill", {"process_pid": child_pid,
+                                      "time": time.time()})
+                except NoSuchProcess:
+                    # already dead !
+                    pass
+
             # sending the signal to the process itself
             self.send_signal(process.pid, signum)
             self.notify_event("kill", {"process_pid": process.pid,
                                        "time": time.time()})
         except NoSuchProcess:
-            # already dead !
-            if children is None:
-                return
-
-        # now sending the same signal to all the children
-        for child_pid in children:
-            try:
-                process.send_signal_child(child_pid, signum)
-                self.notify_event("kill", {"process_pid": child_pid,
-                                  "time": time.time()})
-            except NoSuchProcess:
-                # already dead !
-                pass
+            pass
 
     @gen.coroutine
     @util.debuglog
