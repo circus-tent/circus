@@ -1,5 +1,6 @@
 import signal
 import warnings
+from circus import logger
 from circus.plugins.statsd import BaseObserver
 from circus.util import to_bool
 from circus.util import human2bytes
@@ -22,13 +23,13 @@ class ResourceWatcher(BaseObserver):
             self.loop.close()
             raise NotImplementedError('watcher is mandatory for now.')
 
-        self.max_cpu = float(config.get("max_cpu", 90))     # in %
+        self.max_cpu = config.get("max_cpu")
+        if self.max_cpu is not None:
+            self.max_cpu = float(self.max_cpu)          # in %
+
         self.max_mem = config.get("max_mem")
 
-        if self.max_mem is None:
-            self.max_mem = 90.
-            self._max_percent = True
-        else:
+        if self.max_mem is not None:
             try:
                 self.max_mem = float(self.max_mem)          # float -> %
                 self._max_percent = True
@@ -47,8 +48,11 @@ class ResourceWatcher(BaseObserver):
             except ValueError:
                 self.min_mem = human2bytes(self.min_mem)    # int -> absolute
                 self._min_percent = True
-        self.health_threshold = float(config.get("health_threshold",
-                                      75))  # in %
+
+        self.health_threshold = config.get("health_threshold")
+        if self.health_threshold is not None:
+            self.health_threshold = float(self.health_threshold)  # in %
+
         self.max_count = int(config.get("max_count", 3))
 
         self.process_children = to_bool(config.get("process_children", '0'))
@@ -124,6 +128,9 @@ class ResourceWatcher(BaseObserver):
         if self.max_cpu and stats['max_cpu'] > self.max_cpu:
             self.statsd.increment("_resource_watcher.%s.over_cpu" %
                                   self.watcher)
+
+            logger.info("Watcher %s exceeded maximum CPU limit of %f\% with "
+                        "%f\%", self.watcher, self.max_cpu, stats['max_cpu'])
             self._count_over_cpu[index] += 1
         else:
             self._count_over_cpu[index] = 0
@@ -131,6 +138,8 @@ class ResourceWatcher(BaseObserver):
         if self.min_cpu is not None and stats['min_cpu'] <= self.min_cpu:
             self.statsd.increment("_resource_watcher.%s.under_cpu" %
                                   self.watcher)
+            logger.info("Watcher %s under mimimum CPU limit of %f\% with %f\%",
+                        self.watcher, self.max_cpu, stats['min_cpu'])
             self._count_under_cpu[index] += 1
         else:
             self._count_under_cpu[index] = 0
@@ -144,6 +153,17 @@ class ResourceWatcher(BaseObserver):
             if over_percent or over_value:
                 self.statsd.increment("_resource_watcher.%s.over_memory" %
                                       self.watcher)
+                mem_limit_msg = ""
+                if over_percent:
+                    mem_limit_msg = "%f\% with %f\%" % \
+                                    (self.max_mem, stats['max_mem'])
+                elif over_value:
+                    mem_limit_msg = "%s with %s" % \
+                                    (self.max_mem, stats['max_mem_abs'])
+
+                logger.info("Watcher %s exceeded maximum memory limit of %s",
+                            self.watcher, mem_limit_msg)
+
                 self._count_over_mem[index] += 1
             else:
                 self._count_over_mem[index] = 0
@@ -159,6 +179,18 @@ class ResourceWatcher(BaseObserver):
             if under_percent or under_value:
                 self.statsd.increment("_resource_watcher.%s.under_memory" %
                                       self.watcher)
+
+                mem_limit_msg = ""
+                if under_percent:
+                    mem_limit_msg = "%f\% with %f\%" % \
+                                    (self.max_mem, stats['min_mem'])
+                elif under_value:
+                    mem_limit_msg = "%s with %s" % \
+                                    (self.max_mem, stats['min_mem_abs'])
+
+                logger.info("Watcher %s under minimum memory limit of %s",
+                            self.watcher, mem_limit_msg)
+
                 self._count_under_mem[index] += 1
             else:
                 self._count_under_mem[index] = 0
@@ -172,6 +204,9 @@ class ResourceWatcher(BaseObserver):
                 (max_cpu + max_mem) / 2.0 > self.health_threshold):
             self.statsd.increment("_resource_watcher.%s.over_health" %
                                   self.watcher)
+            logger.info("Watcher %s exceeded average memory and cpu health "
+                        "threshold of %f\% with %f\% cpu and %f\% ram",
+                        self.watcher, self.health_threshold, max_cpu, max_mem)
             self._count_health[index] += 1
         else:
             self._count_health[index] = 0
@@ -181,6 +216,9 @@ class ResourceWatcher(BaseObserver):
                 self._count_health[index]]) > self.max_count:
             self.statsd.increment("_resource_watcher.%s.restarting" %
                                   self.watcher)
+
+            logger.warn("Watcher %s has exceeded a resource limit and "
+                        "is being restarted", self.watcher)
 
             # todo: restart only process instead of the whole watcher
             if index == 'parent':
