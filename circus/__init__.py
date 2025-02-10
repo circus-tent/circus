@@ -3,9 +3,7 @@ import logging
 import os
 import warnings
 
-
-version_info = (0, 18, 0)
-__version__ = ".".join(map(str, version_info))
+__version__ = "0.18.0"
 
 # This config call is done to avoid any
 #     "no handlers could be found for logger"
