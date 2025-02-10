@@ -3,7 +3,7 @@ import logging
 import os
 import warnings
 
-__version__ = "0.18.0"
+__version__ = "0.19.0"
 
 # This config call is done to avoid any
 #     "no handlers could be found for logger"

@@ -1,6 +1,23 @@
 Changelog history
 =================
 
+0.19.0 2025-02-10
+-----------------
+
+Dependencies
+............
+Address deprecation warnings regarding `pipes`, `pyzmq.utils.strtypes` and `statsd` [[#1211]](https://github.com/circus-tent/circus/pull/1211)
+Add support for Python 3.12 and 3.13 [[#1222]](https://github.com/circus-tent/circus/pull/1222)
+
+DevOps
+......
+Update version of MacOS runners to `macos-12` [[#1208]](https://github.com/circus-tent/circus/pull/1208)
+Fix the trove classifiers in the `pyproject.toml` [[#1209]](https://github.com/circus-tent/circus/pull/1209)
+Replace `nose` with `pytest` to run unit tests [[#1210]](https://github.com/circus-tent/circus/pull/1221)
+Move `tests` directory outside of `circus` package [[#1206]](https://github.com/circus-tent/circus/pull/1206)
+Fixes for failing CI [[#1218]](https://github.com/circus-tent/circus/pull/1218)
+Add Python 3.12 and 3.13 to CI [[#1221]](https://github.com/circus-tent/circus/pull/1221)
+
 0.18.0 2022-11-17
 -----------------
 
