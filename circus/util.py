@@ -7,7 +7,6 @@ import shlex
 import socket
 import sys
 import time
-import traceback
 import json
 import struct
 try:
@@ -327,7 +326,7 @@ def to_signum(signum):
     m = re.match(r'(\w+)(\+(\d+))?', signum)
     if m:
         name = m.group(1).upper()
-        if not name.startswith('SIG'):
+        if not name.startswith('SIG') and not name.startswith('CTRL'):
             name = 'SIG' + name
 
         offset = int(m.group(3)) if m.group(3) else 0
@@ -1084,10 +1083,9 @@ class TransformableFuture(concurrent.Future):
 
 def check_future_exception_and_log(future):
     if isinstance(future, concurrent.Future):
-        exception = future.exception()
-        if exception is not None:
-            logger.error("exception %s caught" % exception)
-            if hasattr(future, "exc_info"):
-                exc_info = future.exc_info()
-                traceback.print_tb(exc_info[2])
-            return exception
+        try:
+            future.result()
+            return None
+        except Exception as e:
+            logger.exception("exception %s caught" % e)
+            return e

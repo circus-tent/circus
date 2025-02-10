@@ -179,7 +179,7 @@ def _str2cfg(data):
     return cfg
 
 
-def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server,
+def get_plugin_cmd(py_exe, config, endpoint, pubsub, check_delay, ssh_server,
                    debug=False, loglevel=None, logoutput=None):
     fqn = config['use']
     # makes sure the name exists
@@ -188,7 +188,7 @@ def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server,
     # we're good, serializing the config
     del config['use']
     config = _cfg2str(config)
-    cmd = "%s -c 'from circus import plugins;plugins.main()'" % sys.executable
+    cmd = '-c "from circus import plugins;plugins.main()"'
     cmd += ' --endpoint %s' % endpoint
     cmd += ' --pubsub %s' % pubsub
     if ssh_server is not None:
@@ -202,7 +202,7 @@ def get_plugin_cmd(config, endpoint, pubsub, check_delay, ssh_server,
     if logoutput:
         cmd += ' --log-output ' + logoutput
     cmd += ' %s' % fqn
-    return cmd
+    return (py_exe, cmd)
 
 
 def main():

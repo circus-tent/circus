@@ -84,7 +84,7 @@ class TestCircusd(TestCase):
         # daemonize() to work
         self.assertRaises(ValueError, daemonize)
 
-        for module in sys.modules.keys():
+        for module in list(sys.modules):
             if module.startswith('gevent'):
                 del sys.modules[module]
 
