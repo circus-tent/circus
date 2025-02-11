@@ -362,9 +362,12 @@ class Process(object):
             stderr, extra['stderr'] = make_pipe()
 
         try:
+            env = self.env
+            if not self.env:
+                env = None
             self._worker = Popen(args, cwd=self.working_dir,
                                  shell=self.shell, preexec_fn=preexec_fn,
-                                 env=self.env, close_fds=not self.use_fds,
+                                 env=env, close_fds=not self.use_fds,
                                  executable=self.executable, **extra)
         finally:
             if 'stdout' in extra:

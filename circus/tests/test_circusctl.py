@@ -18,8 +18,8 @@ def run_ctl(args, queue=None, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
     if '--endpoint' not in args:
         args = '--endpoint %s ' % endpoint + args
 
-    #if IS_WINDOWS:
-    #    args = args.replace('\\', '\\\\')
+    if IS_WINDOWS:
+        args = args.replace('\\', '\\\\')
     proc = subprocess.Popen(cmd.split() + shlex.split(args),
                             stdin=subprocess.PIPE if stdin else None,
                             stdout=subprocess.PIPE,

@@ -295,6 +295,8 @@ class Watcher(object):
         # so if a hook is there, it can be loaded
         if self.env is not None and 'PYTHONPATH' in self.env:
             for path in self.env['PYTHONPATH'].split(os.pathsep):
+                if path.startswith(':'):
+                    path = path[1:]
                 if path in sys.path:
                     continue
                 site.addsitedir(path)
