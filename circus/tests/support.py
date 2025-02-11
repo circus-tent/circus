@@ -47,7 +47,7 @@ PYTHON = sys.executable
 # Script used to sleep for a specified amount of seconds.
 # Should be used instead of the 'sleep' command for
 # compatibility
-SLEEP = PYTHON + " -c 'import time;time.sleep(%d)'"
+SLEEP = '"' + PYTHON + '" -c "import time;time.sleep(%d)"'
 
 
 def get_ioloop():
@@ -220,7 +220,8 @@ class TestCircus(AsyncTestCase):
             os.path.realpath(__file__))))
         args = ['circus/tests/generic.py', callable_path, testfile]
         worker = {'cmd': PYTHON, 'args': args, 'working_dir': wdir,
-                  'name': 'test', 'graceful_timeout': 2}
+                  'name': 'test', 'graceful_timeout': 2,
+                  'stop_signal': signal.SIGINT if not IS_WINDOWS else signal.CTRL_BREAK_EVENT}
         worker.update(kw)
         if not arbiter_kw:
             arbiter_kw = {}
@@ -391,7 +392,7 @@ def poll_for(filename, needles, timeout=5):
 
 
 @tornado.gen.coroutine
-def async_poll_for(filename, needles, timeout=5):
+def async_poll_for(filename, needles, timeout=5 if not IS_WINDOWS else 20):
     """Async version of poll_for
     """
     if isinstance(needles, str):

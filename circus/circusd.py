@@ -88,7 +88,7 @@ def main():
         sys.exit(0)
 
     parser = argparse.ArgumentParser(description='Run some watchers.')
-    parser.add_argument('config', help='configuration file', nargs='?')
+    parser.add_argument('config', help='configuration file')
 
     # XXX we should be able to add all these options in the config file as well
     parser.add_argument('--log-level', dest='loglevel',
@@ -115,10 +115,6 @@ def main():
 
     if args.version:
         print(__version__)
-        sys.exit(0)
-
-    if args.config is None:
-        parser.print_usage()
         sys.exit(0)
 
     if args.daemonize:

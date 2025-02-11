@@ -1,6 +1,7 @@
 import glob
 import operator
 import os
+import sys
 import signal
 import warnings
 from fnmatch import fnmatch
@@ -181,6 +182,7 @@ def get_config(config_file):
     config['logoutput'] = dget('circus', 'logoutput')
     config['loggerconfig'] = dget('circus', 'loggerconfig', None)
     config['fqdn_prefix'] = dget('circus', 'fqdn_prefix', None, str)
+    config['py_exe'] = dget('circus', 'py_exe', sys.executable, str)
 
     # Initialize watchers, plugins & sockets to manage
     watchers = []

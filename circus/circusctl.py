@@ -308,7 +308,10 @@ class CircusCtl(cmd.Cmd, object):
         parser = globalopts['parser']
 
         if hasattr(args, 'command'):
-            sys.exit(self.controller.run(globalopts['args']))
+            try:
+                sys.exit(self.controller.run(globalopts['args']))
+            except:
+                sys.exit(-1)
 
         if args.help:
             for command in sorted(self.commands.keys()):

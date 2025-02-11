@@ -5,6 +5,7 @@ import subprocess
 
 from circus.pidfile import Pidfile
 from circus.tests.support import TestCase, EasyTestSuite, SLEEP
+from circus.util import IS_WINDOWS
 
 
 class TestPidfile(TestCase):
@@ -19,7 +20,8 @@ class TestPidfile(TestCase):
 
             pidfile.create(proc.pid)
             mode = os.stat(path).st_mode
-            self.assertEqual(stat.S_IMODE(mode), pidfile.perm_mode, path)
+            if not IS_WINDOWS:
+                self.assertEqual(stat.S_IMODE(mode), pidfile.perm_mode, path)
             pidfile.unlink()
             self.assertFalse(os.path.exists(path))
             pidfile.create(proc.pid)
@@ -27,7 +29,8 @@ class TestPidfile(TestCase):
             self.assertTrue(os.path.exists(rf))
             self.assertFalse(os.path.exists(path))
             mode = os.stat(rf).st_mode
-            self.assertEqual(stat.S_IMODE(mode), pidfile.perm_mode, rf)
+            if not IS_WINDOWS:
+                self.assertEqual(stat.S_IMODE(mode), pidfile.perm_mode, rf)
         finally:
             os.remove(rf)
 
