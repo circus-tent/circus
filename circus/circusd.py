@@ -1,6 +1,7 @@
 import sys
 import argparse
 import os
+import subprocess
 
 from circus.config import get_config
 
@@ -13,7 +14,7 @@ from circus import logger
 from circus.arbiter import Arbiter
 from circus.pidfile import Pidfile
 from circus import __version__
-from circus.util import MAXFD, REDIRECT_TO, configure_logger, LOG_LEVELS
+from circus.util import MAXFD, REDIRECT_TO, configure_logger, LOG_LEVELS, IS_WINDOWS
 from circus.util import check_future_exception_and_log
 
 
@@ -48,29 +49,42 @@ def daemonize():
         if module.startswith('gevent'):
             raise ValueError('Cannot daemonize if gevent is loaded')
 
-    if hasattr(os, 'fork'):
-        child_pid = os.fork()
+    if not IS_WINDOWS:
+        if hasattr(os, 'fork'):
+            child_pid = os.fork()
+        else:
+            raise ValueError("Daemonizing is not available on this platform.")
+
+        if child_pid != 0:
+            # we're in the parent
+            os._exit(0)
+
+        # child process
+        os.setsid()
+
+        subchild = os.fork()
+        if subchild:
+            os._exit(0)
+
+        # subchild
+        maxfd = get_maxfd()
+        closerange(0, maxfd)
+
+        os.open(REDIRECT_TO, os.O_RDWR)
+        os.dup2(0, 1)
+        os.dup2(0, 2)
     else:
-        raise ValueError("Daemonizing is not available on this platform.")
-
-    if child_pid != 0:
-        # we're in the parent
-        os._exit(0)
-
-    # child process
-    os.setsid()
-
-    subchild = os.fork()
-    if subchild:
-        os._exit(0)
-
-    # subchild
-    maxfd = get_maxfd()
-    closerange(0, maxfd)
-
-    os.open(REDIRECT_TO, os.O_RDWR)
-    os.dup2(0, 1)
-    os.dup2(0, 2)
+        """
+        We might use subprocess here, but the child process can't be seen in
+        GUI process manager, which brings diffuculty if a force kill is
+        required. Using VBS requires more files, but more convinent for user.
+        """
+        if '--child' not in sys.argv[1:]:
+            scriptPath = os.path.dirname(__file__)
+            batScript = os.path.join(scriptPath, 'circusd.bat')
+            vbsScript = os.path.join(scriptPath, 'circusd.vbs')
+            subprocess.Popen(['cscript', '//NoLogo', vbsScript]+sys.argv+['--child'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            sys.exit(0)
 
 
 def main():
@@ -111,7 +125,11 @@ def main():
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays Circus version and exits.')
 
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
+    if unknown:
+        for arg in unknown:
+            if arg != '--child':
+                raise ValueError(f"Unknown argument: {arg}")
 
     if args.version:
         print(__version__)
