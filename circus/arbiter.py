@@ -661,6 +661,8 @@ class Arbiter(object):
         else:
             import win32event
             while True:
+                if not handles:
+                    break
                 rc = win32event.WaitForMultipleObjects(handles, False, 0)
                 if not(win32event.WAIT_OBJECT_0 <= rc < win32event.WAIT_OBJECT_0 + len(handles)):
                     break
