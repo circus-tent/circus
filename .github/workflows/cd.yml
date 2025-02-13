@@ -9,7 +9,7 @@ jobs:
 
     validate-release-tag:
 
-        if: github.repository == 'circus-test/circus'
+        if: github.repository == 'circus-tent/circus'
         runs-on: ubuntu-20.04
 
         steps:
@@ -48,7 +48,7 @@ jobs:
         -   name: Set up Python
             uses: actions/setup-python@v4
             with:
-                python-version: '3.9'
+                python-version: ${{ matrix.python-version }}
 
         -   name: Install system dependencies
             run: |
@@ -70,11 +70,11 @@ jobs:
 
         needs: [validate-release-tag]
         runs-on: ${{ matrix.os }}
-        timeout-minutes: 10
+        timeout-minutes: 15
 
         strategy:
             matrix:
-                os: ['macos-10.15']
+                os: ['macos-12']
                 skip-tests: [false]
                 include:
                 -   os: windows-2019

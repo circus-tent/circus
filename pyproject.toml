@@ -12,16 +12,18 @@ readme = 'README.md'
 license = {file = 'LICENSE'}
 classifiers = [
     'Development Status :: 5 - Production/Stable',
-    'License :: OSI Approved :: Apache Software License"',
+    'License :: OSI Approved :: Apache Software License',
     'Operating System :: POSIX :: Linux',
     'Operating System :: MacOS :: MacOS X',
-    'Operating System :: POSIX :: Windows',
+    'Operating System :: Microsoft :: Windows',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
 ]
 requires-python = '>=3.7'
 dependencies = [
@@ -41,7 +43,8 @@ test = [
     'flake8==2.1.0',
     'gevent',
     'mock',
-    'nose2',
+    'pytest',
+    'pytest-cov',
     'pyyaml',
     'tox',
 ]
@@ -62,7 +65,14 @@ exclude = [
     '.github/',
     'docs/',
     'examples/',
+    'tests/',
     '.gitignore',
+]
+
+[tool.pytest.ini_options]
+minversion = '6.0'
+testpaths = [
+    'tests',
 ]
 
 [tool.tox]
@@ -77,17 +87,18 @@ deps =
     coverage
     gevent
     mock
-    nose2
+    pytest==7.4.4
+    pytest-cov
     pyyaml
     pyzmq>=17.0
-    tornado>=5.0.2
+    tornado==6.2
 
 setenv =
     TESTING=1
     PYTHONUNBUFFERED=1
 
 commands =
-    nose2 --log-capture --verbose --with-coverage --coverage circus
+    pytest --verbose -s
 
 
 [testenv:docs]

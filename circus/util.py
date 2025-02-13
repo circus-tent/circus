@@ -38,7 +38,7 @@ from urllib.parse import urlparse
 from datetime import timedelta
 from functools import wraps
 import signal
-from pipes import quote as shell_escape_arg
+from shlex import quote as shell_escape_arg
 
 try:
     import importlib

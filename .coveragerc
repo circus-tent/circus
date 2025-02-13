@@ -1,5 +1,5 @@
 [run]
-omit = *_patch*,circus/tests/*
+omit = *_patch*,tests/*
 source = circus
 include = circus/*
 parallel = true
