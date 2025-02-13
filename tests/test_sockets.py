@@ -6,7 +6,6 @@ try:
 except ImportError:
     pass
 from unittest import mock
-import fcntl
 
 from tests.support import TestCase, skipIf, IS_WINDOWS
 from circus.sockets import CircusSocket, CircusSockets
@@ -22,6 +21,7 @@ def so_bindtodevice_supported():
 
 
 def is_nonblock(fd):
+    import fcntl
     fl = fcntl.fcntl(fd, fcntl.F_GETFL)
     nonblock = fl & os.O_NONBLOCK
     return nonblock != 0

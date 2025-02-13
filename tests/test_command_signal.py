@@ -97,7 +97,7 @@ class SignalCommandTest(TestCircus):
         stderr_stream = {'stream': stream}
         yield self.start_arbiter(cmd=cmd, stdout_stream=stdout_stream,
                                  stderr_stream=stderr_stream, stats=True,
-                                 stop_signal=signal.SIGINT,
+                                 stop_signal=signal.SIGINT if not IS_WINDOWS else signal.CTRL_BREAK_EVENT,
                                  debug=False)
 
         # waiting for data to appear in the queue
@@ -192,7 +192,7 @@ class SignalRecursiveCommandTest(TestCircus):
         stderr_stream = {'stream': stream}
         yield self.start_arbiter(cmd=cmd, stdout_stream=stdout_stream,
                                  stderr_stream=stderr_stream, stats=True,
-                                 stop_signal=signal.SIGINT,
+                                 stop_signal=signal.SIGINT if not IS_WINDOWS else signal.CTRL_BREAK_EVENT,
                                  debug=False)
 
         def assert_read(channel, *values):

@@ -245,10 +245,6 @@ class Watcher(object):
                            "won't start any process", self.name)
 
         if IS_WINDOWS:
-            if self.stdout_stream or self.stderr_stream:
-                raise NotImplementedError("Streams are not supported"
-                                          " on Windows.")
-
             if not copy_env and not env:
                 # Copy the env by default on Windows as we can't run any
                 # executable without some env variables
@@ -299,6 +295,8 @@ class Watcher(object):
         # so if a hook is there, it can be loaded
         if self.env is not None and 'PYTHONPATH' in self.env:
             for path in self.env['PYTHONPATH'].split(os.pathsep):
+                if path.startswith(':'):
+                    path = path[1:]
                 if path in sys.path:
                     continue
                 site.addsitedir(path)
@@ -677,7 +675,7 @@ class Watcher(object):
             # catch ValueError as well, as a misconfigured rlimit setting could
             # lead to bad infinite retries here
             except (OSError, ValueError) as e:
-                logger.warning('error in %r: %s', self.name, str(e))
+                logger.exception('error in %r: %s', self.name, str(e))
 
             if process is None:
                 nb_tries += 1
@@ -847,6 +845,8 @@ class Watcher(object):
     @gen.coroutine
     def _stop(self, close_output_streams=False):
         if self.is_stopped():
+            if self.evpub_socket is not None:
+                self.notify_event("stop", {"time": time.time(), "already": True})
             return
         self._status = "stopping"
         logger.debug('stopping the %s watcher' % self.name)

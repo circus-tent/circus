@@ -2,6 +2,7 @@ import errno
 import os
 import stat
 import tempfile
+import psutil
 
 
 class Pidfile(object):
@@ -77,6 +78,9 @@ class Pidfile(object):
                     return
 
                 if wpid <= 0:
+                    return
+
+                if not psutil.pid_exists(wpid):
                     return
 
                 try:

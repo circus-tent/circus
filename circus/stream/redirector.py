@@ -20,13 +20,18 @@ class Redirector(object):
                     self.redirector.remove_fd(fd)
                 return
             try:
-                data = os.read(fd, self.redirector.buffer)
+                if hasattr(self.pipe, 'read1'):
+                    data = self.pipe.read1(self.redirector.buffer)
+                else:
+                    data = self.pipe.read(self.redirector.buffer)
                 if len(data) == 0:
                     self.redirector.remove_fd(fd)
                 else:
                     datamap = {'data': data, 'pid': self.process.pid,
                                'name': self.name}
                     self.redirector.redirect[self.name](datamap)
+            except ConnectionResetError:
+                self.redirector.remove_fd(fd)
             except IOError as ex:
                 if ex.args[0] != errno.EAGAIN:
                     raise

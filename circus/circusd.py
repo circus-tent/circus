@@ -1,6 +1,7 @@
 import sys
 import argparse
 import os
+import subprocess
 
 from circus.config import get_config
 
@@ -13,7 +14,7 @@ from circus import logger
 from circus.arbiter import Arbiter
 from circus.pidfile import Pidfile
 from circus import __version__
-from circus.util import MAXFD, REDIRECT_TO, configure_logger, LOG_LEVELS
+from circus.util import MAXFD, REDIRECT_TO, configure_logger, LOG_LEVELS, IS_WINDOWS
 from circus.util import check_future_exception_and_log
 
 
@@ -48,29 +49,48 @@ def daemonize():
         if module.startswith('gevent'):
             raise ValueError('Cannot daemonize if gevent is loaded')
 
-    if hasattr(os, 'fork'):
-        child_pid = os.fork()
+    if not IS_WINDOWS:
+        if hasattr(os, 'fork'):
+            child_pid = os.fork()
+        else:
+            raise ValueError("Daemonizing is not available on this platform.")
+
+        if child_pid != 0:
+            # we're in the parent
+            os._exit(0)
+
+        # child process
+        os.setsid()
+
+        subchild = os.fork()
+        if subchild:
+            os._exit(0)
+
+        # subchild
+        maxfd = get_maxfd()
+        closerange(0, maxfd)
+
+        os.open(REDIRECT_TO, os.O_RDWR)
+        os.dup2(0, 1)
+        os.dup2(0, 2)
     else:
-        raise ValueError("Daemonizing is not available on this platform.")
-
-    if child_pid != 0:
-        # we're in the parent
-        os._exit(0)
-
-    # child process
-    os.setsid()
-
-    subchild = os.fork()
-    if subchild:
-        os._exit(0)
-
-    # subchild
-    maxfd = get_maxfd()
-    closerange(0, maxfd)
-
-    os.open(REDIRECT_TO, os.O_RDWR)
-    os.dup2(0, 1)
-    os.dup2(0, 2)
+        """
+        We might use subprocess here, but the child process can't be seen in
+        GUI process manager, which brings diffuculty if a force kill is
+        required. Using VBS requires more files, but more convinent for user.
+        """
+        if 'CIRCUS_CHILD' not in os.environ:
+            scriptPath = os.path.dirname(__file__)
+            batScript = os.path.join(scriptPath, 'circusd.bat')
+            vbsScript = os.path.join(scriptPath, 'circusd.vbs')
+            command = ['cscript', '//NoLogo', vbsScript] + sys.argv
+            env = os.environ.copy()
+            env['CIRCUS_CHILD'] = '1'
+            subprocess.Popen(command, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            sys.exit(0)
+        else:
+            "Delete temporary environement variable in case there are conflicts"
+            del os.environ['CIRCUS_CHILD']
 
 
 def main():
@@ -88,7 +108,7 @@ def main():
         sys.exit(0)
 
     parser = argparse.ArgumentParser(description='Run some watchers.')
-    parser.add_argument('config', help='configuration file', nargs='?')
+    parser.add_argument('config', help='configuration file')
 
     # XXX we should be able to add all these options in the config file as well
     parser.add_argument('--log-level', dest='loglevel',
@@ -115,10 +135,6 @@ def main():
 
     if args.version:
         print(__version__)
-        sys.exit(0)
-
-    if args.config is None:
-        parser.print_usage()
         sys.exit(0)
 
     if args.daemonize:
