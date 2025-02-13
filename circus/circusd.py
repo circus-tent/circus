@@ -79,12 +79,18 @@ def daemonize():
         GUI process manager, which brings diffuculty if a force kill is
         required. Using VBS requires more files, but more convinent for user.
         """
-        if '--child' not in sys.argv[1:]:
+        if 'CIRCUS_CHILD' not in os.environ:
             scriptPath = os.path.dirname(__file__)
             batScript = os.path.join(scriptPath, 'circusd.bat')
             vbsScript = os.path.join(scriptPath, 'circusd.vbs')
-            subprocess.Popen(['cscript', '//NoLogo', vbsScript]+sys.argv+['--child'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            command = ['cscript', '//NoLogo', vbsScript] + sys.argv
+            env = os.environ.copy()
+            env['CIRCUS_CHILD'] = '1'
+            subprocess.Popen(command, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             sys.exit(0)
+        else:
+            "Delete temporary environement variable in case there are conflicts"
+            del os.environ['CIRCUS_CHILD']
 
 
 def main():
@@ -125,11 +131,7 @@ def main():
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays Circus version and exits.')
 
-    args, unknown = parser.parse_known_args()
-    if unknown:
-        for arg in unknown:
-            if arg != '--child':
-                raise ValueError(f"Unknown argument: {arg}")
+    args = parser.parse_args()
 
     if args.version:
         print(__version__)
