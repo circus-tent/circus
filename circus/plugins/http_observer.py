@@ -13,7 +13,8 @@ class HttpObserver(BaseObserver):
 
     def __init__(self, *args, **config):
         super(HttpObserver, self).__init__(*args, **config)
-        self.http_client = AsyncHTTPClient(io_loop=self.loop)
+        self.loop.make_current()
+        self.http_client = AsyncHTTPClient()
         self.check_url = config.get("check_url", "http://localhost/")
         self.timeout = float(config.get("timeout", 10))
 
