@@ -105,6 +105,8 @@ class FileStream(_FileStreamBase):
         if self._should_rollover(data['data']):
             self._do_rollover()
 
+        self._ensure_file_exists()
+
         self.write_data(data)
 
     def _do_rollover(self):
@@ -144,6 +146,14 @@ class FileStream(_FileStreamBase):
             if self._file.tell() + len(raw_data) >= self._max_bytes:
                 return 1
         return 0
+
+    def _ensure_file_exists(self):
+        if self._file:
+            file_link = os.fstat(self._file.fileno()).st_nlink
+            if file_link == 0:
+                self._file.close()
+                self._file = self._open()
+
 
 
 class WatchedFileStream(_FileStreamBase):
