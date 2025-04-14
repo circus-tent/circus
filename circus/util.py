@@ -869,6 +869,12 @@ def load_virtualenv(watcher, py_ver=None):
 
     if not py_ver:
         py_ver = "%s.%s" % sys.version_info[:2]
+    else:
+        # This condition modifies the user supplied py_ver variable and
+        # retains only the python version (major.minor) and omits micro version
+        # if present. For ex. if user sets py_ver=3.7.13, this conditions
+        # trims it to 3.7.
+        py_ver = ".".join(py_ver.split(".")[:2])
 
     def determine_sitedir():
         try_dirs = ['python', 'pypy']
