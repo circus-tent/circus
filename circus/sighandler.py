@@ -46,6 +46,21 @@ class SysHandler(object):
             signal.siginterrupt(signal.SIGUSR1, False)
 
     def signal(self, sig, frame=None):
+        # CRITICAL: This runs in signal context - only signal-safe operations allowed!
+        # The ONLY safe thing we can do is transfer control to the main thread
+        try:
+            self.controller.loop.add_callback_from_signal(
+                self._handle_signal_in_main_thread, sig
+            )
+        except Exception:
+            # If we can't transfer control, the system is in a bad state
+            # Only use signal-safe operations: write() to stderr and _exit()
+            import os
+            os.write(2, b"CRITICAL: Failed to handle signal safely\n")
+            os._exit(1)
+
+    def _handle_signal_in_main_thread(self, sig):
+        """Handle signal in main thread where it's safe to do complex operations."""
         signame = self.SIG_NAMES.get(sig)
         logger.info('Got signal SIG_%s' % signame.upper())
 
@@ -61,17 +76,12 @@ class SysHandler(object):
                 sys.exit(1)
 
     def quit(self):
-        # We need to transfer the control to the loop's thread
-        self.controller.loop.add_callback_from_signal(
-            self.controller.dispatch, (None, make_json("quit"))
-        )
+        # Already in main thread, dispatch directly
+        self.controller.dispatch((None, make_json("quit")))
 
     def reload(self):
-        # We need to transfer the control to the loop's thread
-        self.controller.loop.add_callback_from_signal(
-            self.controller.dispatch,
-            (None, make_json("reload", graceful=True))
-        )
+        # Already in main thread, dispatch directly
+        self.controller.dispatch((None, make_json("reload", graceful=True)))
 
     def handle_int(self):
         self.quit()

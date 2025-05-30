@@ -661,7 +661,7 @@ class Arbiter(object):
             rlist, wlist, xlist = select.select(sockets, [], [], 0)
             if rlist:
                 self.socket_event = True
-                self._start_watchers()
+                yield self._start_watchers()
                 self.socket_event = False
 
     @synchronized("arbiter_reload")
@@ -762,10 +762,14 @@ class Arbiter(object):
             watchers = self.iter_watchers()
         else:
             watchers = watcher_iter_func()
+        started_any = False
         for watcher in watchers:
-            if watcher.autostart:
+            if watcher.autostart and watcher.is_stopped():
                 yield watcher._start()
                 yield tornado_sleep(self.warmup_delay)
+                started_any = True
+        if not started_any:
+            logger.debug("All watchers already running")
 
     @gen.coroutine
     @debuglog
