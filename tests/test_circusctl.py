@@ -10,7 +10,7 @@ from circus.circusctl import USAGE, VERSION, CircusCtl
 from tests.support import (TestCircus, async_poll_for,
                                   skipIf, DEBUG, PYTHON, SLEEP)
 from circus.util import (tornado_sleep, DEFAULT_ENDPOINT_DEALER, to_str,
-                         to_bytes)
+                         to_bytes, IS_WINDOWS)
 
 
 def run_ctl(args, queue=None, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
@@ -18,6 +18,8 @@ def run_ctl(args, queue=None, stdin='', endpoint=DEFAULT_ENDPOINT_DEALER):
     if '--endpoint' not in args:
         args = '--endpoint %s ' % endpoint + args
 
+    if IS_WINDOWS:
+        args = args.replace('\\', '\\\\')
     proc = subprocess.Popen(cmd.split() + shlex.split(args),
                             stdin=subprocess.PIPE if stdin else None,
                             stdout=subprocess.PIPE,

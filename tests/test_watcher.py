@@ -157,6 +157,7 @@ class TestWatcher(TestCircus):
                          PYTHON.split(os.sep)[-1].lower())
         yield self.stop_arbiter()
 
+    @skipIf(IS_WINDOWS, "Max age timeout varies too wide")
     @tornado.testing.gen_test
     def test_max_age(self):
         yield self.start_arbiter()

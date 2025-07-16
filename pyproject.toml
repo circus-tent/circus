@@ -30,6 +30,7 @@ dependencies = [
     'psutil',
     'pyzmq>=17.0',
     'tornado>=5.0.2',
+    'pypiwin32; platform_system == "Windows"'
 ]
 
 [project.urls]
@@ -50,6 +51,7 @@ test = [
 
 [project.scripts]
 circusd = 'circus.circusd:main'
+circusrv = 'circus.circusrv:main'
 circusd-stats = 'circus.stats:main'
 circusctl = 'circus.circusctl:main'
 circus-top = 'circus.stats.client:main'

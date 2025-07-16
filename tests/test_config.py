@@ -1,5 +1,6 @@
 import os
 import signal
+from copy import deepcopy
 from unittest.mock import patch
 
 from circus import logger
@@ -57,7 +58,8 @@ def hook(watcher, hook_name):
 class TestConfig(TestCase):
 
     def setUp(self):
-        self.saved = os.environ.copy()
+        # os.environ.copy() don't keep case on windows, and case os.environ.get('ComSpec') fails on windows after restore os.environ
+        self.saved = deepcopy(os.environ)
 
     def tearDown(self):
         os.environ = self.saved

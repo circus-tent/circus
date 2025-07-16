@@ -41,6 +41,7 @@ class Flapping(CircusPlugin):
         self.timers = {}
         self.configs = {}
         self.tries = {}
+        self.stops = {}
 
         # default options
         self.attempts = int(config.get('attempts', 2))
@@ -62,6 +63,13 @@ class Flapping(CircusPlugin):
             self.check(watcher_name)
         elif action == "updated":
             self.update_conf(watcher_name)
+        elif action == "stop":
+            if watcher_name in self.stops:
+                if self.stops[watcher_name] == 0:
+                    logger.info("%s: flapping stopped: external stop", watcher_name)
+                    self.reset(watcher_name)
+                else:
+                    self.stops[watcher_name] = self.stops[watcher_name] - 1
 
     def update_conf(self, watcher_name):
         msg = self.call("options", name=watcher_name)
@@ -84,7 +92,8 @@ class Flapping(CircusPlugin):
     def reset(self, watcher_name):
         self.timelines[watcher_name] = []
         self.tries[watcher_name] = 0
-        if watcher_name is self.timers:
+        self.stops[watcher_name] = 0
+        if watcher_name in self.timers:
             timer = self.timers.pop(watcher_name)
             timer.cancel()
 
@@ -116,23 +125,30 @@ class Flapping(CircusPlugin):
                                 "(attempt number %s)", watcher_name,
                                 self._get_conf(conf, 'retry_in'), next_tries)
 
-                    self.cast("stop", name=watcher_name)
-                    self.timelines[watcher_name] = []
-                    self.tries[watcher_name] = next_tries
-
                     def _start():
                         self.cast("start", name=watcher_name)
 
+                    # Remove previous timer
+                    if watcher_name in self.timers:
+                        timer = self.timers.pop(watcher_name)
+                        timer.cancel()
                     timer = Timer(self._get_conf(conf, 'retry_in'), _start)
                     timer.start()
                     self.timers[watcher_name] = timer
+
+                    self.timelines[watcher_name] = []
+                    self.tries[watcher_name] = next_tries
+                    self.stops[watcher_name] = 1 if watcher_name not in self.stops else self.stops[watcher_name] + 1
+                    self.cast("stop", name=watcher_name)
                 else:
                     logger.info(
                         "%s: flapping detected: reached max retry limit",
                         watcher_name)
                     self.timelines[watcher_name] = []
                     self.tries[watcher_name] = 0
+                    self.stops[watcher_name] = 1 if watcher_name not in self.stops else self.stops[watcher_name] + 1
                     self.cast("stop", name=watcher_name)
             else:
                 self.timelines[watcher_name] = []
                 self.tries[watcher_name] = 0
+                self.stops[watcher_name] = 0
