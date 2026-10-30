@@ -1,6 +1,13 @@
 Changelog history
 =================
 
+Unreleased
+----------
+
+Bug fixes
+.........
+Stop configuring the root logger when importing Circus, allowing embedding applications to configure logging (#1234, #826).
+
 0.19.0 2025-02-10
 -----------------
 

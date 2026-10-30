@@ -5,11 +5,8 @@ import warnings
 
 __version__ = "0.19.0"
 
-# This config call is done to avoid any
-#     "no handlers could be found for logger"
-# However, the real configuration has to be done later
-logging.basicConfig()
 logger = logging.getLogger('circus')
+logger.addHandler(logging.NullHandler())
 
 
 class ArbiterHandler(object):
